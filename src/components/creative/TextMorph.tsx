@@ -51,7 +51,7 @@ export function TextMorph({
   color = "#c084fc",
   font,
   transition = { duration: 0.9, delay: 1.4, ease: "easeInOut" },
-  tag: Tag = "div",
+  tag: Tag = "span",
   className = "",
   style,
 }: TextMorphProps) {
@@ -149,7 +149,7 @@ export function TextMorph({
         </defs>
       </svg>
 
-      <div
+      <span
         style={{
           position: "relative",
           filter: `url(#${filterId})`,
@@ -159,7 +159,7 @@ export function TextMorph({
           ...font,
         }}
       >
-        <div
+        <span
           style={{
             position: "relative",
             display: "inline-flex",
@@ -200,8 +200,8 @@ export function TextMorph({
               {word}
             </span>
           ))}
-        </div>
-      </div>
+        </span>
+      </span>
     </Tag>
   );
 }

@@ -41,26 +41,30 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
       </div>
 
       {/* Main Kinetic Title with Originkit Gooey TextMorph */}
-      <div className="mb-6 max-w-4xl w-full">
+      <div className="mb-6 max-w-4xl w-full flex flex-col items-center">
         <h1
           suppressHydrationWarning
           className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl leading-tight"
         >
-          Dijital Araçların{" "}
-          <span className="block mt-3 h-[1.3em] flex items-center justify-center">
-            <TextMorph
-              words={[
-                "HER ŞEYİN MERKEZİ",
-                "YOUTUBE ANALİZİ",
-                "HIZLI & GÜVENLİ",
-                "MODERN STÜDYO",
-                "GİZLİLİK ODAKLI",
-              ]}
-              color="#c084fc"
-              transition={{ duration: 0.9, delay: 1.5, ease: "easeInOut" }}
-            />
-          </span>
+          Dijital Araçların Stüdyosu
         </h1>
+        <span
+          suppressHydrationWarning
+          className="mt-3 block text-3xl font-extrabold sm:text-5xl lg:text-6xl text-purple-400 h-[1.3em] flex items-center justify-center"
+        >
+          <TextMorph
+            tag="span"
+            words={[
+              "HER ŞEYİN MERKEZİ",
+              "YOUTUBE ANALİZİ",
+              "HIZLI & GÜVENLİ",
+              "MODERN STÜDYO",
+              "GİZLİLİK ODAKLI",
+            ]}
+            color="#c084fc"
+            transition={{ duration: 0.9, delay: 1.5, ease: "easeInOut" }}
+          />
+        </span>
       </div>
 
       {/* Subtitle */}

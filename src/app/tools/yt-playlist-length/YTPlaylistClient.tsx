@@ -107,7 +107,10 @@ export function YTPlaylistClient() {
     }
 
     try {
-      const res = await fetch(`/api/tools/yt-playlist?id=${encodeURIComponent(playlistId)}`);
+      let res = await fetch(`/api/tools/yt-playlist-length?id=${encodeURIComponent(playlistId)}`);
+      if (!res.ok) {
+        res = await fetch(`/api/tools/yt-playlist?id=${encodeURIComponent(playlistId)}`);
+      }
       const json = await res.json();
 
       if (!res.ok || json.error) {

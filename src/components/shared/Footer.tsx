@@ -150,17 +150,28 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-[var(--hub-text-subtle)]">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <ShieldCheck className="h-4 w-4 text-indigo-400" />
             <span>© {currentYear} <strong>aegisSoft</strong>. Tüm hakları saklıdır.</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Tüm Sistemler Operasyonel
-            </span>
+            <a
+              href="https://www.aegissoft.com.tr/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              aegisSoft Studio
+            </a>
             <span>·</span>
-            <span>Zero-Data Retention</span>
+            <a
+              href="https://github.com/MrSpy00/everythinghub"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              GitHub Deposu
+            </a>
             <span>·</span>
             <span className="flex items-center gap-1">
               Made with <Heart className="h-3 w-3 text-pink-500" /> for everyone

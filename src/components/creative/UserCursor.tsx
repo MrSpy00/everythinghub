@@ -92,12 +92,12 @@ export function UserCursor({
 
     // 120 FPS hardware-accelerated RAF render loop
     const render = () => {
-      // Spring physics interpolation
-      const cursorLerp = isPressed ? 0.45 : 0.35;
+      // High-precision instant tracking for arrow cursor + smooth fluid trailing for label
+      const cursorLerp = isPressed ? 0.95 : 0.9;
       cursorX += (mouseX - cursorX) * cursorLerp;
       cursorY += (mouseY - cursorY) * cursorLerp;
 
-      const labelLerp = 0.18;
+      const labelLerp = 0.26;
       labelX += (mouseX - labelX) * labelLerp;
       labelY += (mouseY - labelY) * labelLerp;
 
