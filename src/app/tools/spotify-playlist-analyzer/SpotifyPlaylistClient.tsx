@@ -36,6 +36,7 @@ import {
   exportPlaylistCSV,
   exportDJSetlistMarkdown,
 } from "@/lib/spotify-analyzer";
+import { trackToolUsage } from "@/lib/user-analytics";
 
 // Subcomponents
 import { SpotifySonicRadar } from "@/components/tools/spotify/SpotifySonicRadar";
@@ -60,6 +61,10 @@ export default function SpotifyPlaylistClient() {
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedMd, setCopiedMd] = useState(false);
   const [copiedPlaylistLink, setCopiedPlaylistLink] = useState(false);
+
+  useEffect(() => {
+    trackToolUsage("spotify-playlist-analyzer");
+  }, []);
 
   const handleCopyPlaylistLink = async () => {
     if (!analysisData) return;

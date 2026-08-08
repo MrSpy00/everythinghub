@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -27,6 +27,7 @@ import { NeonBorder } from "@/components/creative/NeonBorder";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { copyToClipboard } from "@/lib/utils";
 import { SpotifyProfileAnalysis, DEMO_PROFILES } from "@/lib/spotify-analyzer";
+import { trackToolUsage } from "@/lib/user-analytics";
 
 export default function SpotifyProfileClient() {
   const { lang, t } = useLanguage();
@@ -37,6 +38,10 @@ export default function SpotifyProfileClient() {
   const [profileData, setProfileData] = useState<SpotifyProfileAnalysis | null>(null);
   const [copiedProfileLink, setCopiedProfileLink] = useState(false);
   const [downloadingAvatar, setDownloadingAvatar] = useState(false);
+
+  useEffect(() => {
+    trackToolUsage("spotify-profile-analyzer");
+  }, []);
 
   const handleAnalyze = async (urlToAnalyze?: string) => {
     const targetUrl = urlToAnalyze || inputUrl;

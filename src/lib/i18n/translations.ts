@@ -10,6 +10,7 @@ export interface TranslationDictionary {
   home: string;
   tools: string;
   categories: string;
+  quickAccess: string;
   ytAnalyzerBadge: string;
   live: string;
   buyCoffee: string;
@@ -336,7 +337,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Navigation & General
     home: "Ana Sayfa",
     tools: "Araçlar",
-    categories: "Kategoriler",
+    categories: "Hızlı Erişim",
+    quickAccess: "Hızlı Erişim",
     ytAnalyzerBadge: "YT Analizörü",
     live: "Canlı",
     buyCoffee: "Kahve Ismarla",
@@ -726,7 +728,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Navigation & General
     home: "Home",
     tools: "Tools",
-    categories: "Categories",
+    categories: "Quick Access",
+    quickAccess: "Quick Access",
     ytAnalyzerBadge: "YT Analyzer",
     live: "Live",
     buyCoffee: "Buy Me a Coffee",

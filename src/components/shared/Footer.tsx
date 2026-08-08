@@ -1,18 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StudioLogo } from "@/components/shared/StudioLogo";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import {
-  Heart,
-  ExternalLink,
-  ShieldCheck,
-  PlaySquare,
-  Image as ImageIcon,
-  Code2,
-  Palette,
-  Coffee,
-} from "lucide-react";
+import { Heart, ExternalLink, ShieldCheck, Coffee } from "lucide-react";
+import { getTop4QuickAccessTools } from "@/lib/user-analytics";
+import { Tool } from "@/lib/tools-registry";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -33,7 +27,14 @@ function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
 
 export function Footer() {
   const { lang, t } = useLanguage();
+  const isTurkish = lang === "tr";
   const currentYear = new Date().getFullYear();
+
+  const [quickTools, setQuickTools] = useState<Tool[]>([]);
+
+  useEffect(() => {
+    setQuickTools(getTop4QuickAccessTools());
+  }, []);
 
   return (
     <footer className="relative border-t border-white/10 bg-[#09090b]/90 backdrop-blur-2xl py-12 sm:py-16">
@@ -75,51 +76,37 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Categories with pure vector SVG icons */}
+          {/* Dynamic Personalized Quick Access Section */}
           <div>
             <h4
               suppressHydrationWarning
-              className="text-xs font-bold uppercase tracking-wider text-white mb-4"
+              className="text-xs font-bold uppercase tracking-wider text-white mb-4 flex items-center gap-2"
             >
-              {t.categories}
+              <span>{t.quickAccess}</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                {isTurkish ? "Dinamik" : "Dynamic"}
+              </span>
             </h4>
             <ul className="space-y-3 text-xs text-[var(--hub-text-muted)]">
-              <li>
-                <Link
-                  href="/tools/yt-playlist-length"
-                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
-                >
-                  <PlaySquare className="h-3.5 w-3.5 text-red-400" />
-                  <span>{t.ytPlaylistTitle}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/image-compressor"
-                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
-                >
-                  <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
-                  <span>{t.imgCompressTitle}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/json-formatter"
-                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
-                >
-                  <Code2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>{t.jsonTitle}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/color-picker"
-                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
-                >
-                  <Palette className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{t.colorPickerTitle}</span>
-                </Link>
-              </li>
+              {quickTools.map((tool) => {
+                const IconComponent = tool.icon;
+                const localizedTitle =
+                  t.toolTranslations?.[tool.slug]?.title || tool.title;
+                return (
+                  <li key={tool.slug}>
+                    <Link
+                      href={`/tools/${tool.slug}`}
+                      className="flex items-center gap-2.5 hover:text-indigo-300 transition-colors group"
+                    >
+                      <IconComponent
+                        className="h-4 w-4 transition-transform group-hover:scale-110 shrink-0"
+                        style={{ color: tool.accentColor }}
+                      />
+                      <span className="truncate">{localizedTitle}</span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -137,7 +124,7 @@ export function Footer() {
                 data-cursor="aegisSoft"
               >
                 <div className="flex items-center gap-2.5">
-                  <Code2 className="h-4 w-4 text-indigo-400 transition-transform group-hover:scale-110" />
+                  <ExternalLink className="h-4 w-4 text-indigo-400 transition-transform group-hover:scale-110" />
                   <span>{t.designDevBy}</span>
                 </div>
                 <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
