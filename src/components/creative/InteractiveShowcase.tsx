@@ -29,18 +29,29 @@ export function InteractiveShowcase() {
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
-  // Mouse wheel listener to convert vertical mouse scroll into horizontal carousel movement
-  const handleWheel = (e: React.WheelEvent) => {
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    const currentX = x.get();
-    const newX = Math.max(dragLimit, Math.min(0, currentX - delta * 0.85));
-    x.set(newX);
-  };
+  // Non-passive wheel event listener to convert vertical mouse wheel scroll into horizontal movement and prevent outer page scroll
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheelNative = (e: WheelEvent) => {
+      // Intercept wheel event and stop outer page vertical scroll
+      e.preventDefault();
+      e.stopPropagation();
+
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      const currentX = x.get();
+      const newX = Math.max(dragLimit, Math.min(0, currentX - delta * 0.9));
+      x.set(newX);
+    };
+
+    el.addEventListener("wheel", handleWheelNative, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheelNative);
+  }, [dragLimit, x]);
 
   return (
     <div
       ref={containerRef}
-      onWheel={handleWheel}
       className="relative w-full overflow-hidden py-6 select-none cursor-grab active:cursor-grabbing"
       data-cursor="Kaydır"
     >

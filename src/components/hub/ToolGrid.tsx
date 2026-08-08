@@ -65,6 +65,23 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     if (onSearch) onSearch(val);
   };
 
+  // Restore saved viewMode from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedMode = localStorage.getItem("everythinghub_view_mode_v1") as ViewMode;
+      if (savedMode === "grid" || savedMode === "showcase" || savedMode === "compact") {
+        setViewMode(savedMode);
+      }
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("everythinghub_view_mode_v1", mode);
+    }
+  };
+
   useEffect(() => {
     const onAnalyticsUpdate = () => setAnalyticsVersion((v) => v + 1);
     window.addEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
@@ -204,21 +221,21 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search Input with Vector Magnifier */}
             <div className="relative w-full sm:w-60">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none">
-                <Search className="h-4 w-4" />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center text-indigo-400 pointer-events-none">
+                <Search className="h-4 w-4 text-indigo-400" />
               </div>
               <input
                 type="text"
                 placeholder={t.filterPlaceholder}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-9 text-xs sm:text-sm text-white placeholder:text-[var(--hub-text-subtle)] backdrop-blur-xl transition-all focus:border-indigo-500/60 focus:bg-white/[0.08] focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-10 pr-9 text-xs sm:text-sm text-white placeholder:text-[var(--hub-text-subtle)] backdrop-blur-xl transition-all focus:border-indigo-500/60 focus:bg-white/[0.08] focus:outline-none"
                 data-cursor={lang === "en" ? "Search Tools" : "Araçlarda Ara"}
               />
               {search && (
                 <button
                   onClick={() => handleSearchChange("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 text-zinc-400 hover:text-white"
                   aria-label={t.clear}
                 >
                   <X className="h-4 w-4" />
@@ -287,7 +304,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
             {/* View Mode Toggle */}
             <div className="flex rounded-xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl shrink-0 self-end sm:self-auto">
               <button
-                onClick={() => setViewMode("grid")}
+                onClick={() => handleViewModeChange("grid")}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "grid"
                     ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm"
@@ -299,7 +316,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 <span className="hidden sm:inline">{t.viewGrid}</span>
               </button>
               <button
-                onClick={() => setViewMode("showcase")}
+                onClick={() => handleViewModeChange("showcase")}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "showcase"
                     ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm"
@@ -311,7 +328,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 <span className="hidden sm:inline">{t.viewShowcase}</span>
               </button>
               <button
-                onClick={() => setViewMode("compact")}
+                onClick={() => handleViewModeChange("compact")}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "compact"
                     ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm"
