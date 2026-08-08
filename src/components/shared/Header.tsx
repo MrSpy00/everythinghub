@@ -77,13 +77,20 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full px-2 sm:px-4 lg:px-6 pt-2 pb-0 transition-all duration-500 pointer-events-none">
+      <header
+        className={cn(
+          "z-50 transition-all duration-300 ease-out",
+          scrolled
+            ? "fixed top-3 inset-x-3 sm:inset-x-6 max-w-7xl 2xl:max-w-8xl mx-auto"
+            : "sticky top-0 w-full bg-transparent border-b border-white/[0.06]"
+        )}
+      >
         <div
           className={cn(
-            "mx-auto flex h-16 max-w-7xl 2xl:max-w-8xl items-center justify-between px-4 sm:px-6 lg:px-8 pointer-events-auto transition-all duration-500 ease-out",
+            "mx-auto flex items-center justify-between transition-all duration-300 ease-out",
             scrolled
-              ? "rounded-2xl border border-white/15 bg-[#09090b]/80 backdrop-blur-3xl shadow-2xl shadow-black/80 py-2 mt-1"
-              : "rounded-none border-b border-white/5 bg-transparent py-0 mt-0"
+              ? "h-14 w-full rounded-2xl border border-white/15 bg-[#09090b]/80 backdrop-blur-3xl shadow-2xl shadow-black/80 px-4 sm:px-6"
+              : "h-16 max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8 bg-transparent"
           )}
         >
           {/* Brand Logo */}
