@@ -178,10 +178,47 @@ function extractDurationFromObject(v: Record<string, unknown>): number {
 }
 
 /**
- * Single Video Duration Fallback Engine
+ * Fast Single Video Duration Fallback Engine with 2.5s Timeout
  */
 async function fetchSingleVideoDuration(videoId: string): Promise<number> {
-  // Method 1: YouTube Watch Page HTML
+  // Method 1: Fast TVHTML5 InnerTube Player API (200ms response)
+  try {
+    const res = await fetch(
+      "https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (SmartHub; SMART-TV; Tizen 6.0) AppleWebKit/537.36",
+        },
+        body: JSON.stringify({
+          videoId,
+          context: {
+            client: {
+              clientName: "TVHTML5",
+              clientVersion: "7.20230405.00.00",
+              hl: "tr",
+              gl: "TR",
+            },
+          },
+        }),
+        signal: AbortSignal.timeout(2500),
+        next: { revalidate: 3600 },
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const secStr = data?.videoDetails?.lengthSeconds;
+      if (secStr) {
+        const sec = parseInt(secStr, 10);
+        if (sec > 0) return sec;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // Method 2: YouTube Watch Page HTML
   try {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: {
@@ -189,6 +226,7 @@ async function fetchSingleVideoDuration(videoId: string): Promise<number> {
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8",
       },
+      signal: AbortSignal.timeout(2500),
       next: { revalidate: 3600 },
     });
     if (res.ok) {
@@ -207,23 +245,6 @@ async function fetchSingleVideoDuration(videoId: string): Promise<number> {
     }
   } catch {
     // ignore
-  }
-
-  // Method 2: Invidious Video API
-  const invidiousInstances = ["https://inv.tux.pizza", "https://invidious.nerdvpn.de", "https://vid.puffyan.us"];
-  for (const inst of invidiousInstances) {
-    try {
-      const res = await fetch(`${inst}/api/v1/videos/${videoId}`, {
-        headers: { "User-Agent": "Mozilla/5.0" },
-        next: { revalidate: 3600 },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.lengthSeconds) return parseInt(data.lengthSeconds, 10);
-      }
-    } catch {
-      // ignore
-    }
   }
 
   return 0;
@@ -268,6 +289,7 @@ async function fetchViaHtmlScrape(cleanId: string): Promise<PlaylistData | null>
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
       },
+      signal: AbortSignal.timeout(5000),
       next: { revalidate: 60 },
     });
 
@@ -339,9 +361,7 @@ async function fetchViaHtmlScrape(cleanId: string): Promise<PlaylistData | null>
     let videos = Array.from(videoMap.values());
     if (videos.length === 0) return null;
 
-    // Enrich missing durations if needed
     videos = await enrichMissingDurations(videos);
-
     const totalSeconds = videos.reduce((sum, v) => sum + v.durationSeconds, 0);
 
     return {
@@ -419,6 +439,7 @@ async function fetchViaInnerTube(cleanId: string): Promise<PlaylistData | null> 
             "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
           },
           body: JSON.stringify(body),
+          signal: AbortSignal.timeout(4000),
           next: { revalidate: 60 },
         });
 
@@ -532,6 +553,7 @@ async function fetchViaInvidious(cleanId: string): Promise<PlaylistData | null> 
     try {
       const res = await fetch(`${instance}/api/v1/playlists/${cleanId}`, {
         headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(3500),
         next: { revalidate: 60 },
       });
       if (!res.ok) continue;
@@ -578,6 +600,7 @@ async function fetchViaRssFeed(cleanId: string): Promise<PlaylistData | null> {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
       },
+      signal: AbortSignal.timeout(3500),
       next: { revalidate: 60 },
     });
 

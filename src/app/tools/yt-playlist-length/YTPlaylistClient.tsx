@@ -30,6 +30,7 @@ import {
   Square,
   FileCode,
   Share2,
+  Zap,
 } from "lucide-react";
 import { parseYouTubeUrl, formatDuration, formatDurationAtSpeed, cn, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
@@ -74,11 +75,19 @@ const EXAMPLE_PLAYLISTS = [
   },
 ];
 
+type CalculationMode = "full" | "range" | "remaining";
+
 export function YTPlaylistClient() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState("Oynatma Listesi Taranıyor...");
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PlaylistData | null>(null);
+
+  // Calculation Mode State
+  const [calcMode, setCalcMode] = useState<CalculationMode>("full");
+  const [watchedCount, setWatchedCount] = useState<number>(0);
+  const [includeCurrentVideo, setIncludeCurrentVideo] = useState<boolean>(true);
 
   // Selected videos state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -103,6 +112,7 @@ export function YTPlaylistClient() {
     if (!trimmed) return;
 
     setLoading(true);
+    setLoadingStep("YouTube Oynatma Listesi Taranıyor...");
     setError(null);
     setData(null);
 
@@ -128,6 +138,7 @@ export function YTPlaylistClient() {
     }
 
     try {
+      setLoadingStep("Video Süreleri Hesaplanan Verilere Dönüştürülüyor...");
       let res = await fetch(`/api/tools/yt-playlist-length?id=${encodeURIComponent(playlistId)}`);
       if (!res.ok) {
         res = await fetch(`/api/tools/yt-playlist?id=${encodeURIComponent(playlistId)}`);
@@ -166,11 +177,23 @@ export function YTPlaylistClient() {
 
   const handleAnalyze = () => handleAnalyzeWithUrl(url);
 
-  // Active / Selected Videos Calculation
+  // Active / Selected Videos Calculation based on Calculation Mode
   const activeVideos = useMemo(() => {
     if (!data) return [];
+
+    if (calcMode === "remaining") {
+      const startIdx = includeCurrentVideo ? Math.max(0, watchedCount - 1) : Math.max(0, watchedCount);
+      return data.videos.slice(startIdx);
+    }
+
+    if (calcMode === "range") {
+      const startIdx = Math.max(0, rangeStart - 1);
+      const endIdx = Math.min(data.videos.length, rangeEnd);
+      return data.videos.slice(startIdx, endIdx);
+    }
+
     return data.videos.filter((v) => selectedIds.has(v.videoId));
-  }, [data, selectedIds]);
+  }, [data, calcMode, watchedCount, includeCurrentVideo, rangeStart, rangeEnd, selectedIds]);
 
   const activeTotalSeconds = useMemo(() => {
     return activeVideos.reduce((sum, v) => sum + v.durationSeconds, 0);
@@ -187,6 +210,7 @@ export function YTPlaylistClient() {
     const clampedEnd = Math.max(clampedStart, Math.min(end, data.videos.length));
     setRangeStart(clampedStart);
     setRangeEnd(clampedEnd);
+    setCalcMode("range");
 
     const newSet = new Set<string>();
     for (let i = clampedStart - 1; i < clampedEnd; i++) {
@@ -395,11 +419,11 @@ export function YTPlaylistClient() {
       {/* Input Box with Neon Border */}
       <div className="mb-8">
         <NeonBorder color="#8b5cf6" rounded={24} glow={70}>
-          <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl">
-            <div className="flex items-center justify-between mb-3">
+          <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                <span>YouTube Playlist URL veya ID</span>
+                <span>YouTube Playlist URL veya ID Yapıştırın</span>
               </label>
               <span className="text-[11px] text-[var(--hub-text-subtle)]">
                 Ctrl + Enter ile çalıştır
@@ -412,11 +436,79 @@ export function YTPlaylistClient() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleAnalyze();
               }}
-              placeholder="https://www.youtube.com/playlist?list=PLxxxxxx bağlantısını buraya yapıştırın..."
+              placeholder="Playlist → youtube.com/playlist?list=PLxxxxxx&#10;Birden fazla bağlantı yapıştırabilirsiniz..."
               rows={2}
-              className="w-full resize-none rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-4 py-3 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 mb-4"
+              className="w-full resize-none rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-4 py-3 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
               data-cursor="Yapıştır"
             />
+
+            {/* Calculation Mode Selector */}
+            <div className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-3 space-y-3">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--hub-text-muted)] block">
+                Hesaplama Modu Seçimi
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCalcMode("full")}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                    calcMode === "full"
+                      ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
+                      : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:text-white"
+                  )}
+                >
+                  Tüm Playlist
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCalcMode("range")}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                    calcMode === "range"
+                      ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
+                      : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:text-white"
+                  )}
+                >
+                  Özel Video Aralığı
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCalcMode("remaining")}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                    calcMode === "remaining"
+                      ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
+                      : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:text-white"
+                  )}
+                >
+                  Kalan Videolar Modu
+                </button>
+              </div>
+
+              {calcMode === "remaining" && (
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-[var(--hub-border)]">
+                  <span className="text-xs text-[var(--hub-text-muted)]">Şu ana kadar izlediğim video #:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={data?.totalVideos || 1000}
+                    value={watchedCount}
+                    onChange={(e) => setWatchedCount(parseInt(e.target.value, 10) || 0)}
+                    className="w-20 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-surface)] px-2.5 py-1 text-center text-xs text-white focus:outline-none"
+                  />
+                  <label className="flex items-center gap-1.5 text-xs text-[var(--hub-text-muted)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeCurrentVideo}
+                      onChange={(e) => setIncludeCurrentVideo(e.target.checked)}
+                      className="rounded border-[var(--hub-border)] bg-[var(--hub-surface)] accent-indigo-500"
+                    />
+                    <span>Mevcut videoyu dahil et</span>
+                  </label>
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -424,6 +516,7 @@ export function YTPlaylistClient() {
                 {EXAMPLE_PLAYLISTS.map((ex) => (
                   <button
                     key={ex.name}
+                    type="button"
                     onClick={() => {
                       setUrl(ex.url);
                       handleAnalyzeWithUrl(ex.url);
@@ -437,6 +530,7 @@ export function YTPlaylistClient() {
               </div>
 
               <button
+                type="button"
                 onClick={handleAnalyze}
                 disabled={loading || !url.trim()}
                 className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-50"
@@ -444,8 +538,8 @@ export function YTPlaylistClient() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Ayrıştırılıyor...</span>
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <span>{loadingStep}</span>
                   </>
                 ) : (
                   <>
@@ -528,6 +622,7 @@ export function YTPlaylistClient() {
                     Seçili Video: <strong className="text-indigo-300">{activeVideos.length}</strong> / {data.videos.length}
                   </span>
                   <button
+                    type="button"
                     onClick={toggleSelectAll}
                     className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] font-bold text-white hover:border-indigo-500/40 transition-all"
                   >
@@ -558,6 +653,7 @@ export function YTPlaylistClient() {
                   />
                   <span className="text-xs text-[var(--hub-text-subtle)]">arası</span>
                   <button
+                    type="button"
                     onClick={() => applyRange(rangeStart, rangeEnd)}
                     className="rounded-lg bg-indigo-500/20 border border-indigo-500/40 px-3 py-1 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all"
                   >
@@ -568,18 +664,21 @@ export function YTPlaylistClient() {
                 {/* Quick preset buttons */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <button
+                    type="button"
                     onClick={() => applyRange(1, Math.min(10, data.videos.length))}
                     className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
                   >
                     İlk 10 Video
                   </button>
                   <button
+                    type="button"
                     onClick={() => applyRange(1, Math.min(25, data.videos.length))}
                     className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
                   >
                     İlk 25 Video
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       const longIds = new Set(data.videos.filter((v) => v.durationSeconds >= 600).map((v) => v.videoId));
                       setSelectedIds(longIds);
@@ -651,7 +750,7 @@ export function YTPlaylistClient() {
 
                 <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <ZapIcon className="h-6 w-6" />
+                    <Zap className="h-6 w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
@@ -674,7 +773,7 @@ export function YTPlaylistClient() {
             )}
 
             {/* Daily Schedule Study Planner */}
-            <div className="rounded-2xl border border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-4">
+            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-4">
               <div className="flex items-center justify-between border-b border-[var(--hub-border)] pb-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-indigo-400" />
@@ -862,6 +961,7 @@ export function YTPlaylistClient() {
             {/* Export and Copy Tools */}
             <div className="flex flex-wrap items-center gap-3">
               <button
+                type="button"
                 onClick={handleDownloadCSV}
                 className="flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-4 py-2.5 text-xs font-bold text-white transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10"
                 data-cursor="CSV İndir"
@@ -871,6 +971,7 @@ export function YTPlaylistClient() {
               </button>
 
               <button
+                type="button"
                 onClick={handleDownloadJSON}
                 className="flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-4 py-2.5 text-xs font-bold text-white transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10"
                 data-cursor="JSON İndir"
@@ -880,6 +981,7 @@ export function YTPlaylistClient() {
               </button>
 
               <button
+                type="button"
                 onClick={() =>
                   handleCopy(
                     [
@@ -967,6 +1069,7 @@ export function YTPlaylistClient() {
                       >
                         {/* Selection Checkbox */}
                         <button
+                          type="button"
                           onClick={() => toggleVideoSelect(video.videoId)}
                           className="shrink-0 text-[var(--hub-text-muted)] hover:text-white"
                         >
@@ -1028,6 +1131,7 @@ export function YTPlaylistClient() {
 
                 {processedCatalogue.length > 12 && (
                   <button
+                    type="button"
                     onClick={() => setShowAllVideos(!showAllVideos)}
                     className="flex w-full items-center justify-center gap-2 border-t border-[var(--hub-border)] px-5 py-3 text-xs font-bold text-indigo-300 hover:bg-white/[0.02] transition-colors"
                   >
@@ -1082,24 +1186,5 @@ function MetricBox({
         <p className="text-[10px] text-[var(--hub-text-subtle)] mt-0.5 truncate">{subtitle}</p>
       )}
     </div>
-  );
-}
-
-function ZapIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
   );
 }
