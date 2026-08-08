@@ -1,110 +1,159 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowDown, Sparkles } from "lucide-react";
-import { getLiveTools, tools } from "@/lib/tools-registry";
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowDown, Sparkles, Search, ShieldCheck, Cpu, Code2, Globe } from "lucide-react";
+import { getLiveTools } from "@/lib/tools-registry";
+import { TextMorph } from "@/components/creative/TextMorph";
+import { NeonBorder } from "@/components/creative/NeonBorder";
 
-export function HeroSection() {
+interface HeroSectionProps {
+  onSearch?: (query: string) => void;
+}
+
+export function HeroSection({ onSearch }: HeroSectionProps) {
+  const [searchVal, setSearchVal] = useState("");
   const liveCount = getLiveTools().length;
-  const totalCount = tools.length;
+
+  const handleSearchChange = (val: string) => {
+    setSearchVal(val);
+    if (onSearch) onSearch(val);
+  };
 
   return (
-    <section className="relative flex flex-col items-center justify-center px-4 py-20 text-center sm:py-28 lg:py-36">
-      {/* Top badge */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-6 flex items-center gap-2"
-      >
-        <span className="flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-sm font-medium text-indigo-300">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500" />
-          </span>
-          {liveCount} araç aktif · Login gerektirmez
+    <section className="relative flex flex-col items-center justify-center px-4 pt-16 pb-20 text-center sm:pt-24 sm:pb-28 lg:pt-32 lg:pb-36">
+      {/* Top Studio Badge */}
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300 backdrop-blur-xl shadow-lg shadow-indigo-500/10">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-      </motion.div>
+        <span>Studio v1.0 · {liveCount} Aktif Araç · %100 Ücretsiz</span>
+      </div>
 
-      {/* Main title */}
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="mb-4 max-w-4xl text-5xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl"
-      >
-        Her Şeyin{" "}
-        <span className="gradient-text">Merkezi</span>
-      </motion.h1>
+      {/* Main Kinetic Title with TextMorph */}
+      <div className="mb-4 max-w-4xl">
+        <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+          Dijital Araçların{" "}
+          <span className="block mt-2">
+            <TextMorph
+              words={[
+                "HER ŞEYİN MERKEZİ",
+                "YOUTUBE ANALİZİ",
+                "HIZLI & GÜVENLİ",
+                "MODERN STÜDYO",
+                "GİZLİLİK ODAKLI",
+              ]}
+              duration={2600}
+            />
+          </span>
+        </h1>
+      </div>
 
       {/* Subtitle */}
-      <motion.p
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.35 }}
-        className="mb-8 max-w-2xl text-lg leading-relaxed text-[var(--hub-text-muted)] sm:text-xl"
-      >
-        YouTube araçları, görsel araçları, geliştirici araçları ve daha fazlası.
-        Tüm araçlar{" "}
-        <span className="text-white">ücretsiz</span> ve{" "}
-        <span className="text-white">tek bir yerde</span>.
-      </motion.p>
+      <p className="mb-10 max-w-2xl text-base leading-relaxed text-[var(--hub-text-muted)] sm:text-lg">
+        YouTube analizi, geliştirici yardımcıları, görsel optimizasyonu ve tasarım araçları.
+        Kayıt veya üyelik gerektirmeden, doğrudan tarayıcınızda ışık hızında çalışır.
+      </p>
 
-      {/* CTA buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.45 }}
-        className="mb-16 flex flex-wrap items-center justify-center gap-3"
-      >
+      {/* Hero Quick Search & Interactive Actions */}
+      <div className="mb-12 w-full max-w-xl">
+        <NeonBorder color="#8b5cf6" rounded={20} glow={60}>
+          <div className="relative flex items-center rounded-[18px] bg-[var(--hub-surface)]/95 p-2 shadow-2xl backdrop-blur-2xl">
+            <Search className="ml-3 h-5 w-5 text-indigo-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Araç veya özellik ara (örn: youtube, playlist, json, gradient)..."
+              value={searchVal}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full bg-transparent px-3 py-2 text-sm text-white placeholder:text-[var(--hub-text-subtle)] focus:outline-none"
+              data-cursor="Ara"
+            />
+            {searchVal && (
+              <button
+                onClick={() => handleSearchChange("")}
+                className="mr-2 text-xs text-[var(--hub-text-subtle)] hover:text-white px-2 py-1 rounded-md bg-white/5"
+              >
+                Temizle
+              </button>
+            )}
+            <a
+              href="#tools"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-500/25 transition-all hover:scale-105"
+              data-cursor="Keşfet"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Keşfet
+            </a>
+          </div>
+        </NeonBorder>
+      </div>
+
+      {/* CTA Buttons */}
+      <div className="mb-16 flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/tools/yt-playlist-length"
+          className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 hover:shadow-indigo-500/40"
+          data-cursor="YouTube"
+        >
+          <span className="text-lg">🎬</span>
+          <span>YouTube Playlist Analyzer</span>
+          <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-extrabold uppercase">
+            Canlı
+          </span>
+        </Link>
+
         <a
           href="#tools"
-          className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-105 hover:shadow-indigo-500/40"
+          className="flex items-center gap-2 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-xl transition-all hover:border-white/25 hover:bg-white/5"
+          data-cursor="Katalog"
         >
-          <Sparkles className="h-4 w-4" />
-          Araçları Keşfet
-          <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+          <ArrowDown className="h-4 w-4 text-indigo-400" />
+          <span>Tüm Araçları İncele</span>
         </a>
-        <a
-          href="/tools/yt-playlist-length"
-          className="flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-6 py-3 text-sm font-semibold text-white transition-all hover:border-white/20 hover:bg-white/5"
-        >
-          <span className="text-base">🎬</span>
-          YT Playlist Analizi
-        </a>
-      </motion.div>
+      </div>
 
-      {/* Stats row */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.55 }}
-        className="flex flex-wrap items-center justify-center gap-8"
-      >
+      {/* Highlights Grid */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-4xl w-full">
         {[
-          { value: `${liveCount}`, label: "Aktif Araç" },
-          { value: `${totalCount}+`, label: "Yakında" },
-          { value: "0", label: "Login Gereken" },
-          { value: "∞", label: "Ücretsiz Kullanım" },
-        ].map((stat) => (
-          <div key={stat.label} className="flex flex-col items-center gap-0.5">
-            <span className="text-2xl font-bold text-white">{stat.value}</span>
-            <span className="text-xs text-[var(--hub-text-subtle)]">{stat.label}</span>
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Decorative grid lines */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.02]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)
-          `,
-          backgroundSize: "80px 80px",
-        }}
-      />
+          {
+            icon: ShieldCheck,
+            title: "Sıfır Veri Saklama",
+            desc: "Tamamen gizlilik odaklı",
+            color: "text-emerald-400",
+          },
+          {
+            icon: Cpu,
+            title: "Turbopack Engine",
+            desc: "Ultra hızlı derleme",
+            color: "text-indigo-400",
+          },
+          {
+            icon: Code2,
+            title: "Açık Kaynak Kod",
+            desc: "GitHub üzerinde şeffaf",
+            color: "text-purple-400",
+          },
+          {
+            icon: Globe,
+            title: "Sonsuz Ücretsiz",
+            desc: "Login / Kredi kartı yok",
+            color: "text-pink-400",
+          },
+        ].map((item, i) => {
+          const ItemIcon = item.icon;
+          return (
+            <div
+              key={i}
+              className="flex flex-col items-center justify-center p-4 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/60 backdrop-blur-xl transition-all hover:border-indigo-500/30 hover:bg-[var(--hub-surface)]"
+            >
+              <ItemIcon className={`h-5 w-5 mb-2 ${item.color}`} />
+              <span className="text-sm font-bold text-white">{item.title}</span>
+              <span className="text-xs text-[var(--hub-text-subtle)] mt-0.5">{item.desc}</span>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }

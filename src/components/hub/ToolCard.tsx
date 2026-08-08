@@ -1,128 +1,108 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Sparkles, CheckCircle2 } from "lucide-react";
 import { type Tool, CATEGORY_LABELS } from "@/lib/tools-registry";
-import { cn } from "@/lib/utils";
 
 interface ToolCardProps {
   tool: Tool;
-  index: number;
 }
 
-export function ToolCard({ tool, index }: ToolCardProps) {
+export function ToolCard({ tool }: ToolCardProps) {
   const Icon = tool.icon;
   const isLive = tool.status === "live";
 
-  const cardContent = (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.4,
-        delay: index * 0.06,
-        ease: [0.21, 0.47, 0.32, 0.98],
-      }}
-      className={cn(
-        "tool-card group relative flex h-full flex-col p-5",
-        !isLive && "opacity-60"
-      )}
-      role={isLive ? "article" : "presentation"}
+  const cardInner = (
+    <div
+      className={`group relative flex h-full flex-col p-6 rounded-2xl border transition-all duration-300 ${
+        isLive
+          ? "border-[var(--hub-border)] bg-[var(--hub-surface)]/90 backdrop-blur-xl hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10"
+          : "border-[var(--hub-border)]/60 bg-[var(--hub-surface)]/40 backdrop-blur-md opacity-75"
+      }`}
+      data-cursor={isLive ? "Aç" : "Yakında"}
     >
-      {/* Accent gradient bar */}
-      <div
-        className="absolute inset-x-0 top-0 h-[2px] rounded-t-2xl opacity-80"
-        style={{ background: `linear-gradient(90deg, ${tool.accentColor}, transparent)` }}
-      />
-
       {/* Top row */}
-      <div className="mb-4 flex items-start justify-between">
-        {/* Icon */}
+      <div className="mb-5 flex items-start justify-between">
+        {/* Icon with radial glow */}
         <div
-          className="flex h-11 w-11 items-center justify-center rounded-xl"
+          className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-inner transition-transform group-hover:scale-110"
           style={{
-            background: `linear-gradient(135deg, ${tool.accentColor}20, ${tool.accentColor}10)`,
-            border: `1px solid ${tool.accentColor}30`,
+            background: `linear-gradient(135deg, ${tool.accentColor}25, ${tool.accentColor}08)`,
+            border: `1px solid ${tool.accentColor}40`,
           }}
         >
-          <Icon className="h-5 w-5" style={{ color: tool.accentColor }} />
+          <Icon className="h-6 w-6" style={{ color: tool.accentColor }} />
         </div>
 
         {/* Badges */}
         <div className="flex items-center gap-1.5">
           {tool.newBadge && isLive && (
-            <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-indigo-400 ring-1 ring-indigo-500/20">
+            <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+              <Sparkles className="h-2.5 w-2.5" />
               Yeni
             </span>
           )}
-          {tool.status === "beta" && (
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-400 ring-1 ring-amber-500/20">
-              Beta
+          {isLive ? (
+            <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
+              <CheckCircle2 className="h-2.5 w-2.5" />
+              Hazır
             </span>
-          )}
-          {!isLive && (
-            <span className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-[var(--hub-text-subtle)] ring-1 ring-white/10">
+          ) : (
+            <span className="flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-[var(--hub-text-subtle)] ring-1 ring-white/10">
               <Lock className="h-2.5 w-2.5" />
-              Yakında
+              Geliştiriliyor
             </span>
           )}
         </div>
       </div>
 
-      {/* Emoji */}
-      {tool.emoji && (
-        <div className="mb-2 text-2xl leading-none">{tool.emoji}</div>
-      )}
-
-      {/* Title */}
-      <h3 className="mb-1.5 text-base font-semibold text-white leading-tight">
-        {tool.title}
-      </h3>
+      {/* Emoji & Title */}
+      <div className="mb-2">
+        <h3 className="text-lg font-bold text-white leading-tight flex items-center gap-2 group-hover:text-indigo-300 transition-colors">
+          <span>{tool.emoji}</span>
+          <span>{tool.title}</span>
+        </h3>
+      </div>
 
       {/* Description */}
-      <p className="mb-4 flex-1 text-sm leading-relaxed text-[var(--hub-text-muted)]">
+      <p className="mb-6 flex-1 text-sm leading-relaxed text-[var(--hub-text-muted)]">
         {tool.description}
       </p>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between">
+      {/* Category and action footer */}
+      <div className="flex items-center justify-between border-t border-[var(--hub-border)]/60 pt-4 mt-auto">
         <span
-          className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+          className="rounded-lg px-2.5 py-1 text-[11px] font-semibold"
           style={{
-            background: `${tool.accentColor}10`,
+            background: `${tool.accentColor}15`,
             color: tool.accentColor,
+            border: `1px solid ${tool.accentColor}30`,
           }}
         >
           {CATEGORY_LABELS[tool.category]}
         </span>
 
-        {isLive && (
-          <div className="flex items-center gap-1 text-xs font-medium text-[var(--hub-text-subtle)] transition-all group-hover:text-white group-hover:gap-2">
-            Aç <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+        {isLive ? (
+          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 group-hover:text-indigo-300 transition-all group-hover:translate-x-1">
+            <span>Çalıştır</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </div>
+        ) : (
+          <span className="text-[11px] font-medium text-[var(--hub-text-subtle)]">
+            v1.1 Sürümünde
+          </span>
         )}
       </div>
-
-      {/* Shimmer effect on hover */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-2xl overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(400px circle at 50% 50%, ${tool.accentColor}08, transparent 70%)`,
-          }}
-        />
-      </div>
-    </motion.div>
+    </div>
   );
 
   if (isLive) {
     return (
       <Link href={`/tools/${tool.slug}`} className="block h-full focus:outline-none">
-        {cardContent}
+        {cardInner}
       </Link>
     );
   }
 
-  return <div className="h-full cursor-default">{cardContent}</div>;
+  return <div className="h-full cursor-default">{cardInner}</div>;
 }

@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
-import { AuroraBackground } from "@/components/shared/AuroraBackground";
+import { DottedBackground } from "@/components/creative/DottedBackground";
+import { UserCursor } from "@/components/creative/UserCursor";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -19,34 +20,36 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://everythinghub.com"),
   title: {
-    default: "everythinghub — Her Şeyin Merkezi",
+    default: "everythinghub — Dijital Araçların Merkezi",
     template: "%s — everythinghub",
   },
   description:
-    "YouTube araçları, görsel araçları, geliştirici araçları ve daha fazlası. Login gerektirmez, tamamen ücretsiz.",
+    "YouTube playlist analizi, geliştirici yardımcıları, görsel ve tasarım araçları. Sıfır hesap gereksinimi, tamamen ücretsiz ve açık kaynak.",
   keywords: [
-    "youtube playlist",
-    "araçlar",
-    "tools",
-    "everythinghub",
-    "ücretsiz araçlar",
+    "youtube playlist analyzer",
+    "youtube playlist süresi",
+    "dijital araçlar",
     "online tools",
+    "everythinghub",
+    "geliştirici araçları",
+    "free online tools",
+    "aegissoft",
   ],
-  authors: [{ name: "everythinghub" }],
-  creator: "everythinghub",
+  authors: [{ name: "aegisSoft", url: "https://www.aegissoft.com.tr/" }],
+  creator: "MrSpy00",
   openGraph: {
     type: "website",
     locale: "tr_TR",
     url: "https://everythinghub.com",
     siteName: "everythinghub",
-    title: "everythinghub — Her Şeyin Merkezi",
+    title: "everythinghub — Dijital Araçların Merkezi",
     description:
-      "YouTube araçları, görsel araçları, geliştirici araçları ve daha fazlası.",
+      "YouTube playlist analizi, geliştirici yardımcıları, görsel ve tasarım araçları. Ücretsiz ve modern.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "everythinghub",
-    description: "Her şeyin bir merkezi. Ücretsiz, login gerektirmez.",
+    title: "everythinghub — Dijital Araçların Merkezi",
+    description: "Her şeyin tek bir merkezi. Ücretsiz, login gerektirmez.",
   },
   robots: {
     index: true,
@@ -60,16 +63,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#09090b] text-[#fafafa] min-h-screen selection:bg-indigo-500/30 selection:text-white`}
       >
-        <AuroraBackground />
+        {/* Creative WebGL Ambient Background */}
+        <DottedBackground />
+
+        {/* Studio User Follower Cursor */}
+        <UserCursor name="EverythingHub" color="#8b5cf6" size={26} />
+
+        {/* Main Application Container */}
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
+
+        {/* Global Notifications */}
         <Toaster
           position="bottom-right"
           theme="dark"
