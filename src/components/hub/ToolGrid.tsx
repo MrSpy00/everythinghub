@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
 import Fuse from "fuse.js";
-import { type Tool, type ToolCategory, tools, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/tools-registry";
+import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
 import { InteractiveShowcase } from "@/components/creative/InteractiveShowcase";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -41,6 +41,25 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     return [...new Set(tools.map((item) => item.category))];
   }, []);
 
+  const getCategoryLabel = (cat: ToolCategory | typeof ALL_CATEGORIES) => {
+    switch (cat) {
+      case "video":
+        return t.videoCategory;
+      case "image":
+        return t.imageCategory;
+      case "developer":
+        return t.developerCategory;
+      case "text":
+        return t.textCategory;
+      case "calculator":
+        return t.calcCategory;
+      case "design":
+        return t.designCategory;
+      default:
+        return t.all;
+    }
+  };
+
   const filteredTools = useMemo(() => {
     let result: Tool[] = search
       ? fuse.search(search).map((r: { item: Tool }) => r.item)
@@ -62,9 +81,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between border-b border-white/10 pb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                <Compass className="h-3.5 w-3.5" />
-              </span>
+              <Compass className="h-4 w-4 text-indigo-400" />
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
                 {t.toolHubHeader}
               </span>
@@ -182,7 +199,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                     ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
                     : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
                 }`}
-                data-cursor={CATEGORY_LABELS[cat]}
+                data-cursor={getCategoryLabel(cat)}
               >
                 {isActive && (
                   <motion.div
@@ -192,7 +209,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                   />
                 )}
                 <Icon className="relative z-10 h-3.5 w-3.5" />
-                <span className="relative z-10">{CATEGORY_LABELS[cat]}</span>
+                <span className="relative z-10">{getCategoryLabel(cat)}</span>
                 <span className="relative z-10 text-[10px] opacity-70">({catCount})</span>
               </button>
             );
@@ -210,8 +227,8 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
         {viewMode === "grid" && (
           <div>
             {filteredTools.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/50">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <div className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border border-white/10 bg-white/[0.02]">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-indigo-400 border border-white/10">
                   <Search className="h-7 w-7" />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-white">
@@ -242,10 +259,15 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
 
         {/* Compact List Mode */}
         {viewMode === "compact" && (
-          <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/90 backdrop-blur-xl overflow-hidden divide-y divide-[var(--hub-border)]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden divide-y divide-white/5">
             {filteredTools.map((tool) => {
               const Icon = tool.icon;
               const isLive = tool.status === "live";
+              const localized = t.toolTranslations?.[tool.slug] || {
+                title: tool.title,
+                description: tool.description,
+              };
+
               return (
                 <div
                   key={tool.slug}
@@ -253,31 +275,30 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent"
                       style={{
-                        background: `${tool.accentColor}18`,
-                        border: `1px solid ${tool.accentColor}30`,
+                        color: tool.accentColor,
                       }}
                     >
-                      <Icon className="h-5 w-5" style={{ color: tool.accentColor }} />
+                      <Icon className="h-5 w-5" strokeWidth={1.8} />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white truncate">
-                          {tool.title}
+                          {localized.title}
                         </span>
                         {isLive ? (
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md">
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
                             {t.activeCountLabel}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-[var(--hub-text-subtle)] bg-white/5 px-2 py-0.5 rounded-md">
+                          <span className="text-[10px] text-[var(--hub-text-subtle)] bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
                             {t.comingSoon}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-[var(--hub-text-muted)] truncate max-w-md mt-0.5">
-                        {tool.description}
+                        {localized.description}
                       </p>
                     </div>
                   </div>
@@ -293,7 +314,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                       </a>
                     ) : (
                       <span className="text-xs text-[var(--hub-text-subtle)] px-3 py-1.5">
-                        {t.developingBadge}
+                        {t.versionUpcoming}
                       </span>
                     )}
                   </div>

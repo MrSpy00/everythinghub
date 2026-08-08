@@ -16,7 +16,6 @@ import {
   Copy,
   ExternalLink,
   AlertCircle,
-  Sparkles,
   Award,
   Sliders,
   FileCode,
@@ -25,6 +24,7 @@ import {
   Trash2,
   TrendingUp,
   Calendar,
+  Layers,
 } from "lucide-react";
 import { parseYouTubeUrl, formatDuration, formatDurationAtSpeed, cn, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
@@ -58,17 +58,6 @@ interface StoredAnalysis {
   totalDurationShort: string;
   timestamp: number;
 }
-
-const SPEED_PRESETS = [
-  { speed: 1.0, label: "1.0× Standart" },
-  { speed: 1.25, label: "1.25× Hızlı" },
-  { speed: 1.5, label: "1.5× Akıcı" },
-  { speed: 1.75, label: "1.75× Seri" },
-  { speed: 2.0, label: "2.0× Çift Hız" },
-  { speed: 2.25, label: "2.25× Ultra" },
-  { speed: 2.5, label: "2.5× Ekstra" },
-  { speed: 3.0, label: "3.0× Maks" },
-];
 
 const DAILY_TIME_PRESETS = [
   { minutes: 15, label: "15 Dk" },
@@ -146,7 +135,7 @@ export function YTPlaylistClient() {
 
   // Daily Schedule Planner
   const [dailyMinutes, setDailyMinutes] = useState<number>(60);
-  const [scheduleSpeed, setScheduleSpeed] = useState<number>(1.5);
+  const [scheduleSpeed] = useState<number>(1.5);
 
   // Video Catalogue List State
   const [showAllVideos, setShowAllVideos] = useState(false);
@@ -476,13 +465,13 @@ export function YTPlaylistClient() {
         </Link>
       </div>
 
-      {/* Header Banner */}
+      {/* Header Banner - Liquid Glass Studio Emblem */}
       <div className="mb-8 relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 backdrop-blur-2xl shadow-xl shadow-indigo-500/10">
-              <PlaySquare className="h-7 w-7 text-indigo-400" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/12 bg-gradient-to-br from-white/[0.08] to-transparent text-indigo-300 backdrop-blur-2xl shadow-xl shadow-indigo-500/10">
+              <PlaySquare className="h-7 w-7 text-indigo-300" strokeWidth={1.8} />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -509,7 +498,7 @@ export function YTPlaylistClient() {
           <div className="rounded-[22px] bg-[#0c0e17]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                <PlaySquare className="h-3.5 w-3.5 text-indigo-400" />
                 <span>{t.playlistUrlLabel}</span>
               </label>
               <span className="text-[11px] text-[var(--hub-text-subtle)]">
@@ -529,17 +518,17 @@ export function YTPlaylistClient() {
               data-cursor="Yapıştır"
             />
 
-            {/* Calculation Mode Selector */}
+            {/* Calculation Mode Selector - Fully Responsive Flex/Grid */}
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--hub-text-muted)] block">
                 {t.calcModeLabel}
               </span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setCalcMode("full")}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                    "rounded-lg px-3 py-2 text-xs font-bold transition-all text-center",
                     calcMode === "full"
                       ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md shadow-indigo-500/20"
                       : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:text-white"
@@ -551,7 +540,7 @@ export function YTPlaylistClient() {
                   type="button"
                   onClick={() => setCalcMode("range")}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                    "rounded-lg px-3 py-2 text-xs font-bold transition-all text-center",
                     calcMode === "range"
                       ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md shadow-indigo-500/20"
                       : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:text-white"
@@ -563,7 +552,7 @@ export function YTPlaylistClient() {
                   type="button"
                   onClick={() => setCalcMode("remaining")}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                    "rounded-lg px-3 py-2 text-xs font-bold transition-all text-center",
                     calcMode === "remaining"
                       ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md shadow-indigo-500/20"
                       : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:text-white"
@@ -574,25 +563,27 @@ export function YTPlaylistClient() {
               </div>
 
               {calcMode === "remaining" && (
-                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-white/5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2 border-t border-white/5">
                   <span className="text-xs text-[var(--hub-text-muted)]">{t.watchedCountLabel}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={data?.totalVideos || 1000}
-                    value={watchedCount}
-                    onChange={(e) => setWatchedCount(parseInt(e.target.value, 10) || 0)}
-                    className="w-20 rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 text-center text-xs text-white focus:outline-none"
-                  />
-                  <label className="flex items-center gap-1.5 text-xs text-[var(--hub-text-muted)] cursor-pointer">
+                  <div className="flex items-center gap-2">
                     <input
-                      type="checkbox"
-                      checked={includeCurrentVideo}
-                      onChange={(e) => setIncludeCurrentVideo(e.target.checked)}
-                      className="rounded border-white/10 bg-black/40 accent-indigo-500"
+                      type="number"
+                      min={0}
+                      max={data?.totalVideos || 1000}
+                      value={watchedCount}
+                      onChange={(e) => setWatchedCount(parseInt(e.target.value, 10) || 0)}
+                      className="w-20 rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 text-center text-xs text-white focus:outline-none"
                     />
-                    <span>{t.includeCurrentVideo}</span>
-                  </label>
+                    <label className="flex items-center gap-1.5 text-xs text-[var(--hub-text-muted)] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeCurrentVideo}
+                        onChange={(e) => setIncludeCurrentVideo(e.target.checked)}
+                        className="rounded border-white/10 bg-black/40 accent-indigo-500"
+                      />
+                      <span>{t.includeCurrentVideo}</span>
+                    </label>
+                  </div>
                 </div>
               )}
             </div>
@@ -601,7 +592,7 @@ export function YTPlaylistClient() {
             <div className="space-y-2 pt-1 border-t border-white/5">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-indigo-300 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                  <Layers className="h-3.5 w-3.5 text-indigo-400" />
                   <span>{t.tryExample}</span>
                 </span>
                 <button
@@ -816,9 +807,9 @@ export function YTPlaylistClient() {
               </div>
 
               {/* Manual Input Controls */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 border-t border-white/5">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs text-[var(--hub-text-muted)] font-semibold">{t.manualRange}</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2 border-t border-white/5">
+                <span className="text-xs text-[var(--hub-text-muted)] font-semibold">{t.manualRange}</span>
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
                     min={1}
@@ -848,7 +839,7 @@ export function YTPlaylistClient() {
             </div>
 
             {/* Quick Metrics Grid */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
               <MetricBox
                 icon={<Video className="h-4 w-4 text-indigo-400" />}
                 title={t.selectedVideos}
@@ -879,7 +870,7 @@ export function YTPlaylistClient() {
             {/* Statistical Records */}
             {records && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl flex items-center gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 backdrop-blur-xl flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
                     <Award className="h-6 w-6" />
                   </div>
@@ -901,7 +892,7 @@ export function YTPlaylistClient() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl flex items-center gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 backdrop-blur-xl flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <Clock className="h-6 w-6" />
                   </div>
@@ -926,7 +917,7 @@ export function YTPlaylistClient() {
             )}
 
             {/* Daily Schedule Study Planner */}
-            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-5">
+            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-5 sm:p-6 backdrop-blur-xl space-y-5">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-indigo-400" />
@@ -1019,7 +1010,7 @@ export function YTPlaylistClient() {
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 placeholder={t.filterVideosPlaceholder}
-                className="rounded-xl border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs text-white placeholder:text-[var(--hub-text-subtle)] focus:border-indigo-500/50 focus:outline-none"
+                className="rounded-xl border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs text-white placeholder:text-[var(--hub-text-subtle)] focus:border-indigo-500/50 focus:outline-none w-full sm:w-auto"
               />
             </div>
 
@@ -1158,7 +1149,7 @@ function MetricBox({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-4 backdrop-blur-xl transition-all shadow-sm",
+        "rounded-2xl border p-3.5 sm:p-4 backdrop-blur-xl transition-all shadow-sm",
         accent
           ? "border-indigo-500/40 bg-indigo-500/10 shadow-indigo-500/10"
           : "border-white/10 bg-white/[0.03]"
@@ -1170,8 +1161,8 @@ function MetricBox({
         </div>
         <span className="text-[11px] font-bold text-[var(--hub-text-muted)] truncate">{title}</span>
       </div>
-      <div className="text-lg font-black text-white tracking-tight truncate">{value}</div>
-      {subtitle && <div className="text-[11px] text-[var(--hub-text-subtle)] truncate mt-0.5">{subtitle}</div>}
+      <div className="text-base sm:text-lg font-black text-white tracking-tight truncate">{value}</div>
+      {subtitle && <div className="text-[10px] sm:text-[11px] text-[var(--hub-text-subtle)] truncate mt-0.5">{subtitle}</div>}
     </div>
   );
 }
