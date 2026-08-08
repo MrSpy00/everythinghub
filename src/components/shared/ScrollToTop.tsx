@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -9,6 +9,8 @@ export function ScrollToTop() {
   const [visible, setVisible] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const { t } = useLanguage();
+  const id = useId().replace(/:/g, "");
+  const gradientId = `scrollGradient-${id}`;
 
   useEffect(() => {
     let ticking = false;
@@ -90,7 +92,7 @@ export function ScrollToTop() {
                 cy="22"
                 r="18"
                 fill="none"
-                stroke="url(#scrollGradient)"
+                stroke={`url(#${gradientId})`}
                 strokeWidth="2.5"
                 strokeDasharray={circumference}
                 strokeDashoffset={circumference - (scrollProgress / 100) * circumference}
@@ -98,7 +100,7 @@ export function ScrollToTop() {
                 className="transition-all duration-150 ease-out"
               />
               <defs>
-                <linearGradient id="scrollGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#818cf8" />
                   <stop offset="50%" stopColor="#a855f7" />
                   <stop offset="100%" stopColor="#ec4899" />

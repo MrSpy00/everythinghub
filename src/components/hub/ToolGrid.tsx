@@ -1,13 +1,28 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
 import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
-import { InteractiveShowcase } from "@/components/creative/InteractiveShowcase";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { rankTools } from "@/lib/user-analytics";
+
+const InteractiveShowcase = dynamic(
+  () =>
+    import("@/components/creative/InteractiveShowcase").then(
+      (m) => m.InteractiveShowcase
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="py-20 flex justify-center items-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    ),
+  }
+);
 
 const ALL_CATEGORIES = "all";
 

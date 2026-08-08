@@ -12,7 +12,6 @@ export interface UserCursorProps {
 export function UserCursor({
   name = "EverythingHub",
   color = "#818cf8",
-  textColor = "#ffffff",
   size = 28,
 }: UserCursorProps) {
   const dotRef = useRef<HTMLDivElement>(null);
@@ -22,7 +21,7 @@ export function UserCursor({
 
   useEffect(() => {
     // Disable custom cursor on touch/coarse devices
-    if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+    if (typeof window === "undefined" || window.matchMedia("(pointer: coarse)").matches) {
       return;
     }
 
@@ -35,7 +34,8 @@ export function UserCursor({
     let isHovering = false;
     let isClickable = false;
     let isPressed = false;
-    let animId: number;
+    let animId: number | null = null;
+    let isRunning = false;
 
     const updateLabelText = (target: HTMLElement | null) => {
       if (!labelTextRef.current) return;
@@ -79,34 +79,59 @@ export function UserCursor({
       labelTextRef.current.textContent = name;
     };
 
-    // 120-240Hz Fluid Lerp Loop for soft, luxurious cursor physics
+    // On-demand fluid physics loop - sleeps automatically when pointer is resting
     const renderLoop = () => {
-      if (isHovering) {
-        // Smooth magnetic spring interpolation for ring aura
-        const ringLerp = 0.22;
-        ringX += (mouseX - ringX) * ringLerp;
-        ringY += (mouseY - ringY) * ringLerp;
-
-        // Smooth floating lerp for text badge — positioned safely at offset (x + 18, y + 18)
-        const labelLerp = 0.16;
-        labelX += (mouseX - labelX) * labelLerp;
-        labelY += (mouseY - labelY) * labelLerp;
-
-        if (ringRef.current) {
-          const scale = isPressed ? 0.75 : isClickable ? 1.35 : 1;
-          ringRef.current.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) scale(${scale})`;
-          ringRef.current.style.opacity = isClickable ? "0.9" : "0.5";
-        }
-
-        if (labelRef.current) {
-          const lx = labelX + 16;
-          const ly = labelY + 16;
-          labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0)`;
-          labelRef.current.style.opacity = isClickable ? "1" : "0.75";
-        }
+      if (!isHovering) {
+        isRunning = false;
+        animId = null;
+        return;
       }
 
-      animId = requestAnimationFrame(renderLoop);
+      const ringLerp = 0.22;
+      const dRingX = (mouseX - ringX) * ringLerp;
+      const dRingY = (mouseY - ringY) * ringLerp;
+      ringX += dRingX;
+      ringY += dRingY;
+
+      const labelLerp = 0.16;
+      const dLabelX = (mouseX - labelX) * labelLerp;
+      const dLabelY = (mouseY - labelY) * labelLerp;
+      labelX += dLabelX;
+      labelY += dLabelY;
+
+      if (ringRef.current) {
+        const scale = isPressed ? 0.75 : isClickable ? 1.35 : 1;
+        ringRef.current.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) scale(${scale})`;
+        ringRef.current.style.opacity = isClickable ? "0.9" : "0.5";
+      }
+
+      if (labelRef.current) {
+        const lx = labelX + 16;
+        const ly = labelY + 16;
+        labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0)`;
+        labelRef.current.style.opacity = isClickable ? "1" : "0.75";
+      }
+
+      // Check if settled (near zero movement) to save CPU/GPU cycles
+      const hasMovement =
+        Math.abs(dRingX) > 0.04 ||
+        Math.abs(dRingY) > 0.04 ||
+        Math.abs(dLabelX) > 0.04 ||
+        Math.abs(dLabelY) > 0.04;
+
+      if (hasMovement) {
+        animId = requestAnimationFrame(renderLoop);
+      } else {
+        isRunning = false;
+        animId = null;
+      }
+    };
+
+    const startLoopIfNeeded = () => {
+      if (!isRunning && isHovering && document.visibilityState === "visible") {
+        isRunning = true;
+        animId = requestAnimationFrame(renderLoop);
+      }
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -128,16 +153,23 @@ export function UserCursor({
       }
 
       updateLabelText(e.target as HTMLElement);
+      startLoopIfNeeded();
     };
 
     const onMouseDown = () => {
       isPressed = true;
-      if (dotRef.current) dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.7)`;
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.7)`;
+      }
+      startLoopIfNeeded();
     };
 
     const onMouseUp = () => {
       isPressed = false;
-      if (dotRef.current) dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
+      }
+      startLoopIfNeeded();
     };
 
     const onMouseLeave = () => {
@@ -147,20 +179,26 @@ export function UserCursor({
       if (labelRef.current) labelRef.current.style.opacity = "0";
     };
 
-    const startTimer = setTimeout(() => {
-      window.addEventListener("mousemove", onMouseMove, { passive: true });
-      window.addEventListener("mousedown", onMouseDown, { passive: true });
-      window.addEventListener("mouseup", onMouseUp, { passive: true });
-      document.addEventListener("mouseleave", onMouseLeave, { passive: true });
-      animId = requestAnimationFrame(renderLoop);
-    }, 100);
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible" && animId) {
+        cancelAnimationFrame(animId);
+        isRunning = false;
+        animId = null;
+      }
+    };
+
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    window.addEventListener("mousedown", onMouseDown, { passive: true });
+    window.addEventListener("mouseup", onMouseUp, { passive: true });
+    document.addEventListener("mouseleave", onMouseLeave, { passive: true });
+    document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
 
     return () => {
-      clearTimeout(startTimer);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       document.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (animId) cancelAnimationFrame(animId);
     };
   }, [name]);

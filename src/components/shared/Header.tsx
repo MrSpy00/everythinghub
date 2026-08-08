@@ -4,11 +4,19 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ExternalLink, PlaySquare, Coffee, Search } from "lucide-react";
+import dynamic from "next/dynamic";
 import { StudioLogo } from "@/components/shared/StudioLogo";
 import { LanguageToggle } from "@/components/shared/LanguageToggle";
-import { CommandPalette } from "@/components/shared/CommandPalette";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
+
+const CommandPalette = dynamic(
+  () =>
+    import("@/components/shared/CommandPalette").then(
+      (mod) => mod.CommandPalette
+    ),
+  { ssr: false }
+);
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
   return (

@@ -264,7 +264,7 @@ export default function SpotifyPlaylistClient() {
           onClick={() => handleLoadDemo("global-top-50")}
           className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
-          Today's Top Hits (Global)
+          Today&apos;s Top Hits (Global)
         </button>
         <button
           onClick={() => handleLoadDemo("lofi-beats")}

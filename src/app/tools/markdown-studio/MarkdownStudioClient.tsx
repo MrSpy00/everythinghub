@@ -102,7 +102,7 @@ ${parsedHtml}
 
   // Client-side lightweight markdown parser
   const parseMarkdownToHTML = (md: string) => {
-    let html = md
+    const html = md
       .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-white mt-4 mb-2">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-indigo-400 mt-6 mb-3 border-b border-white/10 pb-1">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-extrabold text-white mt-2 mb-4">$1</h1>')

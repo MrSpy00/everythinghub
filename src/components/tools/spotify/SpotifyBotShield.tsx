@@ -137,7 +137,7 @@ export function SpotifyBotShield({
             <span>{isTurkish ? "Sanatçı & Pitch Değerlendirme Raporu" : "Artist & Pitching Security Verdict"}</span>
           </div>
           <p className="text-sm text-white/80 leading-relaxed bg-white/[0.02] p-4 rounded-xl border border-white/5">
-            "{pitchingVerdict}"
+            &quot;{pitchingVerdict}&quot;
           </p>
         </div>
       </div>

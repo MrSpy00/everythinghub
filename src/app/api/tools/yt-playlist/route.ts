@@ -335,7 +335,7 @@ async function fetchViaInnerTube(cleanId: string): Promise<PlaylistData | null> 
   const videoMap = new Map<string, VideoInfo>();
   let continuationToken: string | null = null;
   let playlistTitle = "";
-  let channelName = "";
+  const channelName = "";
   let page = 0;
   const maxPages = 8;
 

@@ -249,6 +249,7 @@ export function DottedBackground({
         alpha: true,
         premultipliedAlpha: false,
         webgl: 2,
+        powerPreference: "low-power",
       });
     } catch {
       return;
@@ -369,7 +370,7 @@ export function DottedBackground({
       observer.observe(container);
     }
 
-    const frameInterval = 66; // Smooth 15fps throttled ambient calculation saving CPU
+    const frameInterval = 75; // Smooth 13-14fps throttled ambient calculation saving CPU & GPU
     const update = (time: number) => {
       rafIdRef.current = requestAnimationFrame(update);
       if (!isVisibleRef.current) return;
@@ -385,13 +386,28 @@ export function DottedBackground({
       }
     };
 
-    // Defer initialization to after main thread is idle
-    const startTimer = setTimeout(() => {
-      rafIdRef.current = requestAnimationFrame(update);
-    }, 400);
+    // Defer initialization until browser idle time after initial paints
+    let idleHandle: number | null = null;
+    let startTimer: NodeJS.Timeout | null = null;
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleHandle = (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => number }).requestIdleCallback(
+        () => {
+          rafIdRef.current = requestAnimationFrame(update);
+        },
+        { timeout: 1800 }
+      );
+    } else {
+      startTimer = setTimeout(() => {
+        rafIdRef.current = requestAnimationFrame(update);
+      }, 1200);
+    }
 
     return () => {
-      clearTimeout(startTimer);
+      if (idleHandle && typeof window !== "undefined" && "cancelIdleCallback" in window) {
+        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleHandle);
+      }
+      if (startTimer) clearTimeout(startTimer);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       window.removeEventListener("resize", doResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);

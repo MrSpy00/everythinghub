@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 
 export function StudioLogo({
   className = "h-8 w-8",
@@ -6,6 +6,11 @@ export function StudioLogo({
   className?: string;
   showBg?: boolean;
 }) {
+  const id = useId().replace(/:/g, "");
+  const anthraciteId = `anthraciteGrad-${id}`;
+  const purpleNeonId = `purpleNeonGrad-${id}`;
+  const purpleGlowId = `purpleGlow-${id}`;
+
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       <svg
@@ -16,33 +21,33 @@ export function StudioLogo({
       >
         <defs>
           {/* Anthracite Metallic Gradient */}
-          <linearGradient id="anthraciteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={anthraciteId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#334155" />
             <stop offset="50%" stopColor="#1e293b" />
             <stop offset="100%" stopColor="#0f172a" />
           </linearGradient>
 
           {/* Vibrant Neon Purple Gradient */}
-          <linearGradient id="purpleNeonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={purpleNeonId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#c084fc" />
             <stop offset="50%" stopColor="#a855f7" />
             <stop offset="100%" stopColor="#7c3aed" />
           </linearGradient>
 
           {/* Deep Violet Glow Filter */}
-          <radialGradient id="purpleGlow" cx="50%" cy="50%" r="50%">
+          <radialGradient id={purpleGlowId} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#a855f7" stopOpacity="0.35" />
             <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
           </radialGradient>
         </defs>
 
         {/* Ambient Purple Background Glow */}
-        <circle cx="32" cy="32" r="28" fill="url(#purpleGlow)" />
+        <circle cx="32" cy="32" r="28" fill={`url(#${purpleGlowId})`} />
 
         {/* Anthracite Outer Hexagonal Shield */}
         <polygon
           points="32,6 54,18 54,46 32,58 10,46 10,18"
-          fill="url(#anthraciteGrad)"
+          fill={`url(#${anthraciteId})`}
           stroke="#475569"
           strokeWidth="1.5"
           strokeOpacity="0.6"
@@ -52,7 +57,7 @@ export function StudioLogo({
         <polygon
           points="32,11 49,21 49,43 32,53 15,43 15,21"
           fill="none"
-          stroke="url(#purpleNeonGrad)"
+          stroke={`url(#${purpleNeonId})`}
           strokeWidth="2"
           strokeLinejoin="round"
         />
@@ -66,7 +71,7 @@ export function StudioLogo({
         />
         <path
           d="M20 20L44 44M44 20L20 44"
-          stroke="url(#purpleNeonGrad)"
+          stroke={`url(#${purpleNeonId})`}
           strokeWidth="1.2"
           strokeLinecap="round"
           strokeOpacity="0.8"
@@ -76,14 +81,14 @@ export function StudioLogo({
         <polygon
           points="32,18 44,32 32,46 20,32"
           fill="#090d16"
-          stroke="url(#purpleNeonGrad)"
+          stroke={`url(#${purpleNeonId})`}
           strokeWidth="2"
         />
 
         {/* Inner Glowing Core Hex */}
         <polygon
           points="32,24 38,32 32,40 26,32"
-          fill="url(#purpleNeonGrad)"
+          fill={`url(#${purpleNeonId})`}
         />
 
         {/* Center Black Pupil */}

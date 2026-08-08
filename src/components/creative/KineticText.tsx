@@ -134,8 +134,10 @@ export function KineticText({ intervalMs = 2800 }: { intervalMs?: number }) {
           style={{
             background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 70%)`,
             filter: "blur(40px)",
+            transform: "translateZ(0)",
+            willChange: "opacity",
           }}
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full pointer-events-none"
         />
 
         {/* Layer B: Centered soft specular highlight */}
@@ -148,8 +150,10 @@ export function KineticText({ intervalMs = 2800 }: { intervalMs?: number }) {
           style={{
             background: `radial-gradient(circle at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 50%)`,
             filter: "blur(20px)",
+            transform: "translateZ(0)",
+            willChange: "opacity",
           }}
-          className="absolute w-3/4 h-full"
+          className="absolute w-3/4 h-full pointer-events-none"
         />
       </div>
 

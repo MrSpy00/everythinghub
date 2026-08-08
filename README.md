@@ -3,10 +3,10 @@
 <div align="center">
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-everythinghub.com.tr-8b5cf6?style=for-the-badge&logo=vercel&logoColor=white)](https://www.everythinghub.com.tr/)
-![Next.js 16](https://img.shields.io/badge/Next.js-16.3.0-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
-![React 19](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![License MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.3.0-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](./LICENSE)
 
 <p align="center">
   <strong>Modern, ultra hızlı, login gerektirmeyen, sıfır-auth ve gizlilik odaklı hepsi-bir-arada dijital araçlar stüdyosu.</strong><br>
@@ -34,14 +34,14 @@
 
 ## Proje Hakkında ve Vizyon
 
-**EverythingHub**, modern web teknolojileri (Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion ve Outfit stüdyo tipografisi) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar stüdyosudur.
+**EverythingHub**, modern web standartları (Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion ve Outfit tipografisi) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar stüdyosudur.
 
-Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) mofizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)** ve dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ile donatılmıştır.
+Platform, sıradan hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) mofizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)** ve dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ile donatılmıştır.
 
-### Temel Değerler ve İlkeler
+### Temel Değerler ve Mühendislik İlkeleri
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login / API Key Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
-3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru ve optimize WebGL fragment işleme sayesinde sıfır gecikmeyle çalışır.
+3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru, `requestIdleCallback` tabanlı WebGL yaşam döngüsü, on-demand imleç fiziği ve optimize paket içe aktarmaları ile hem masaüstünde hem mobilde 95-100 PageSpeed/Lighthouse performansı.
 4. **38 Aktif Modüler Araç:** Ses & Müzik, Video, Görsel, Geliştirici, Metin, Hesaplama ve Tasarım kategorilerinde genişletilebilir araç altyapısı.
 5. **Kapsamlı Çok Dilli Altyapı:** Türkçe ve İngilizce dilleri arasında anında ve kesintisiz geçiş.
 6. **Çoklu Ekran & Kusursuz Responsive Uyum:** 320px mobil ekranlardan dikey/pivot monitörlere, tabletlerden 4K ekranlara kadar hatasız esnek yerleşim.
@@ -104,25 +104,116 @@ Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU h
 
 ---
 
+## Geliştirici Kurulumu & Çalıştırma
+
+```bash
+# Bağımlılıkları yükleyin
+npm install
+
+# Geliştirme sunucusunu Turbopack ile başlatın
+npm run dev
+
+# Prodüksiyon derlemesi alın (51 rota SSG/SSR)
+npm run build
+
+# Prodüksiyon sunucusunu başlatın
+npm start
+
+# Kod standartları ve lint kontrolü
+npm run lint
+```
+
+---
+
 # English Documentation
 
 ## Live Application
 **[https://www.everythinghub.com.tr/](https://www.everythinghub.com.tr/)**
 
 ## About & Vision
-**EverythingHub** is a zero-login, zero-auth, privacy-first, 100% free digital studio built with Next.js 16.3 (Turbopack), React 19, Tailwind CSS v4, OGL WebGL, and Framer Motion. All computations run client-side via Web Crypto, Web Audio, HTML5 Canvas, or through zero-auth public APIs without storing user data.
+
+**EverythingHub** is a privacy-first, zero-login, zero-auth, open-source digital utility studio built with modern web technologies: Next.js 16.3 (Turbopack), React 19, Tailwind CSS v4, OGL WebGL, and Framer Motion.
+
+Instead of generic dashboard templates, EverythingHub delivers a **creative studio aesthetic** featuring GPU-accelerated WebGL chromatic dotted waves, fluid 120Hz magnetic follower cursor (`UserCursor`), liquid glassmorphism, soft ambient Gaussian diffusion, `Ctrl+K` Command Palette, and intelligent circular scroll-to-top tracking.
+
+### Core Engineering Principles
+1. **Zero Data Retention:** All actions execute client-side (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) or in ephemeral memory. No cookies, databases, or tracking telemetry.
+2. **Zero Login / Zero API Keys:** No credit card, authentication, or personal email required.
+3. **Sub-second Performance:** Built with Next.js 16 Turbopack, idle-scheduled WebGL, on-demand physics loops, and optimized package tree-shaking for 95-100 PageSpeed scores across mobile and desktop.
+4. **38 Active Production Tools:** Covering Video, Audio & Music, Image, Developer & Network, Text, Math, and Vector Design.
+5. **Full Bilingual Internationalization:** Seamless real-time switching between Turkish and English.
+6. **Responsive Layout Architecture:** Flawlessly adapted from 320px mobile viewports to vertical pivot monitors and 4K screens.
 
 ---
 
-## 🛠️ Tech Stack & Architecture
-- **Framework:** Next.js 16.3.0 (App Router, Turbopack, Standalone SSR/SSG)
+## Complete Tools Catalog (38 Production Tools)
+
+### Developer & Network Studios
+1. **Zero-Auth API Playground (`/tools/api-playground`):** Test 150+ free public APIs live, dispatch custom HTTP GET/POST requests, and inspect headers, latency, and payloads.
+2. **Client-Side JWT Debugger (`/tools/jwt-debugger`):** Decode and inspect JWT headers, payloads, and signatures 100% locally with live expiry countdowns.
+3. **Cryptographic Hash & UUID Lab (`/tools/crypto-hash-studio`):** Compute SHA-256, SHA-512, MD5, HMAC, and UUID v4/v7/NanoID via the Web Crypto API.
+4. **SQL to TypeScript, Zod & Prisma (`/tools/sql-to-types`):** Convert SQL CREATE TABLE queries into TypeScript interfaces, Zod schemas, Prisma models, Go structs, and Python Pydantic models.
+5. **cURL to Multi-Language Code Generator (`/tools/curl-to-code`):** Convert raw cURL commands to JavaScript Fetch, Axios, Python Requests, Go, and PHP.
+6. **Smart Mock Data Generator (`/tools/mock-data-generator`):** Generate realistic mock data in JSON and CSV formats with Turkish and international localization.
+7. **IP & Network Latency Analyzer (`/tools/ip-network-info`):** Live analysis of public IP, ISP, geolocation, and CDN ping metrics across 4 independent sources.
+8. **DNS Records & DoH Explorer (`/tools/dns-lookup-tool`):** Query A, AAAA, MX, TXT, and CNAME records via Cloudflare & Google DNS-over-HTTPS.
+9. **JSON Formatter & Validator (`/tools/json-formatter`):** Beautify, minify, validate syntax, and inspect JSON with collapsible tree visualization.
+10. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** High-speed UTF-8 compliant Base64 encoding and decoding.
+11. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions against text with live match highlighting and regex flag support.
+12. **Cron Expression Studio (`/tools/cron-expression-studio`):** Visually construct and interpret Linux crontab schedules with plain human explanations.
+
+### Design & Vector Studios
+13. **QR Code Studio Pro (`/tools/qr-code-studio`):** Generate customized vector SVG and PNG QR codes for WiFi, vCard, URLs, and Crypto wallets.
+14. **Vector Barcode Generator (`/tools/barcode-generator`):** Print-ready vector SVG and HD PNG barcodes in EAN-13, UPC-A, Code 128, and Code 39 formats.
+15. **Website Favicon & Logo Extractor (`/tools/favicon-extractor`):** Download high-resolution favicons, Apple touch icons, and SVG logos from any domain.
+16. **Color Palette & Dominant HEX Picker (`/tools/color-picker`):** Extract dominant palettes from uploaded images in HEX, RGB, and HSL formats.
+17. **CSS & Tailwind Gradient Generator (`/tools/css-gradient-generator`):** Build multi-stop linear and radial gradients with instant CSS/Tailwind export.
+
+### Image Studios
+18. **EXIF Metadata Inspector & Purger (`/tools/exif-purger`):** Inspect camera metadata and GPS coordinates, and purge all private EXIF data before sharing.
+19. **Lossless Image Compressor (`/tools/image-compressor`):** Client-side image compression up to 90% size reduction with WebP optimization.
+20. **Image Format Converter (`/tools/image-converter`):** Convert between PNG, JPEG, WebP, and AVIF without server uploads.
+
+### Audio & Music Studios
+21. **Web Audio Oscilloscope & Spectrum Analyzer (`/tools/audio-spectrum-studio`):** Real-time audio waveform and FFT spectrum analysis using the Web Audio API.
+22. **Precision BPM Tapper & Metronome (`/tools/bpm-tapper`):** Tap-to-calculate BPM with jitter detection and a millisecond-precision audio metronome.
+23. **Spotify Playlist Analyzer (`/tools/spotify-playlist-analyzer`):** Sonic DNA radar, bot & fraud detection, genre distribution, BPM/Key wheel, and HD cover studio.
+24. **Spotify Profile & Artist Inspector (`/tools/spotify-profile-analyzer`):** Analyze curator and artist profiles, top tracks, discography, and HD avatars.
+
+### Video Studios
+25. **YouTube Playlist Duration Analyzer (`/tools/yt-playlist-length`):** Calculate total playlist runtime across 1x-2x playback speeds with HD thumbnail exports.
+26. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download maximum resolution (HD, 1080p, 4K) thumbnail images for any YouTube video.
+27. **YouTube Timestamp Link Generator (`/tools/yt-timestamp-generator`):** Generate second-precise start timestamps and clean video chapter descriptions.
+
+### Text & Culture Studios
+28. **Smart English Dictionary & Rhyme Engine (`/tools/smart-dictionary`):** Phonetic pronunciations, comprehensive definitions, rhymes, and synonyms.
+29. **Open Library & ISBN Book Finder (`/tools/book-isbn-finder`):** Search 20M+ books and authors with covers, publication years, and page counts.
+30. **Interactive Trivia & Quiz Arena (`/tools/trivia-quiz-arena`):** Thousands of questions across science, history, geography, and general knowledge.
+31. **Word & Character Counter (`/tools/word-counter`):** Instant word, character, sentence, paragraph counts, and reading time estimation.
+32. **Case Converter (`/tools/case-converter`):** Transform text between camelCase, snake_case, kebab-case, Title Case, and UPPERCASE.
+33. **Markdown Studio & Live Previewer (`/tools/markdown-studio`):** Live Markdown editor with rendered HTML preview, metrics, and HTML/MD export.
+
+### Calculation, Geography & Finance Studios
+34. **Live Weather & Air Quality Radar (`/tools/weather-air-quality`):** 7-day hourly forecasts, UV index, and PM2.5/PM10 Air Quality Index (AQI) via Open-Meteo.
+35. **World Countries & Geography Explorer (`/tools/world-countries-explorer`):** Explore and compare 250+ countries with flags, populations, capitals, and currencies.
+36. **Live Currency & Crypto Converter (`/tools/currency-exchange-converter`):** Real-time exchange rates for 150+ fiat currencies and major crypto assets.
+37. **Multi-Unit Converter (`/tools/unit-converter`):** Precision conversions for length, mass, temperature, digital storage, and speed.
+38. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Calculate percentage change, discounts, VAT/tax, and proportions.
+
+---
+
+## Technical Stack & Architecture
+
+- **Framework:** Next.js 16.3.0 (App Router, Turbopack, Standalone SSG/SSR)
 - **UI Engine:** React 19.2.8 & Tailwind CSS v4.0
-- **Vector Icons:** Lucide React SVG
+- **Vector Icons:** Lucide React SVG (Optimized tree-shaking)
 - **Graphics & Audio:** OGL WebGL Dotted Waves, Web Audio API AnalyserNode, Web Crypto API
-- **Internationalization:** Full dynamic Turkish (`tr`) & English (`en`) context
+- **Internationalization:** Dynamic Turkish (`tr`) & English (`en`) context
+- **Design Standard:** Zero emoji standard, Liquid Glassmorphism, Specular Highlights, Dual-conic Neon Borders
 
 ---
 
-## 📄 License & Attribution
+## License & Attribution
+
 Designed & Engineered by **aegisSoft** & **MrSpy00**.  
 Distributed under the **MIT License**.
