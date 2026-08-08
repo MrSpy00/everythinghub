@@ -265,14 +265,13 @@ export function DottedBackground({
     camera.position.set(0, 0, 3);
     cameraRef.current = camera;
 
-    const MAX_CANVAS_WIDTH = 960;
     const doResize = () => {
-      const rawWidth = container.clientWidth || window.innerWidth;
-      const rawHeight = container.clientHeight || window.innerHeight;
-      const aspect = rawWidth / Math.max(1, rawHeight);
+      const width = container.clientWidth || window.innerWidth;
+      const height = container.clientHeight || window.innerHeight;
+      const aspect = width / Math.max(1, height);
 
-      const width = Math.min(MAX_CANVAS_WIDTH, rawWidth);
-      const height = Math.round(width / aspect);
+      const dpr = Math.min(typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1, 1.0);
+      renderer.dpr = dpr;
 
       renderer.setSize(width, height);
       camera.perspective({ aspect });
@@ -281,6 +280,12 @@ export function DottedBackground({
       }
       if (perlinProgramRef.current) {
         perlinProgramRef.current.uniforms.uResolution.value = [
+          canvas.width,
+          canvas.height,
+        ];
+      }
+      if (dotProgramRef.current) {
+        dotProgramRef.current.uniforms.uResolution.value = [
           canvas.width,
           canvas.height,
         ];
