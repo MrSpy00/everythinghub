@@ -48,6 +48,20 @@ export function Header() {
     }
   };
 
+  const handleCategoriesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof window !== "undefined") {
+      if (window.location.pathname === "/") {
+        const toolsSection = document.getElementById("tools");
+        if (toolsSection) {
+          toolsSection.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        window.location.href = "/#tools";
+      }
+    }
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -63,15 +77,15 @@ export function Header() {
 
   return (
     <>
-      <header
-        className={cn(
-          "sticky top-0 z-50 w-full transition-all duration-300",
-          scrolled
-            ? "border-b border-white/10 bg-[#09090b]/85 backdrop-blur-2xl shadow-xl shadow-black/30"
-            : "bg-transparent"
-        )}
-      >
-        <div className="mx-auto flex h-16 max-w-7xl 2xl:max-w-8xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 w-full px-2 sm:px-4 lg:px-6 pt-2 pb-0 transition-all duration-500 pointer-events-none">
+        <div
+          className={cn(
+            "mx-auto flex h-16 max-w-7xl 2xl:max-w-8xl items-center justify-between px-4 sm:px-6 lg:px-8 pointer-events-auto transition-all duration-500 ease-out",
+            scrolled
+              ? "rounded-2xl border border-white/15 bg-[#09090b]/80 backdrop-blur-3xl shadow-2xl shadow-black/80 py-2 mt-1"
+              : "rounded-none border-b border-white/5 bg-transparent py-0 mt-0"
+          )}
+        >
           {/* Brand Logo */}
           <Link
             href="/"
@@ -90,22 +104,26 @@ export function Header() {
           <nav className="hidden items-center gap-1.5 md:flex">
             <Link
               href="/"
+              onClick={handleHomeClick}
               className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
             >
               {t.home}
             </Link>
             <Link
               href="/#tools"
+              onClick={handleCategoriesClick}
               className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
             >
               {t.tools}
             </Link>
-            <Link
-              href="/#categories"
-              className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+            <a
+              href="/#tools"
+              onClick={handleCategoriesClick}
+              className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white cursor-pointer"
+              data-cursor={t.categories}
             >
               {t.categories}
-            </Link>
+            </a>
             <button
               onClick={() => setCommandPaletteOpen(true)}
               className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-400 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-2 cursor-pointer"
