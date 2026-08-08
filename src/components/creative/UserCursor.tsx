@@ -72,14 +72,12 @@ export function UserCursor({
     let idleFrames = 0;
     let isLoopRunning = false;
 
-    // 120-240Hz RAF Loop exclusively for smooth fluid trailing of the name badge
     const renderLoop = () => {
       if (isHovering) {
         const dx = mouseX - labelX;
         const dy = mouseY - labelY;
         const dtilt = targetTilt - currentTilt;
 
-        // Fluid trailing lerp for label badge
         const labelLerp = 0.32;
         labelX += dx * labelLerp;
         labelY += dy * labelLerp;
@@ -101,7 +99,7 @@ export function UserCursor({
           idleFrames = 0;
         }
 
-        if (idleFrames > 25) {
+        if (idleFrames > 60) {
           isLoopRunning = false;
           return;
         }
@@ -110,154 +108,112 @@ export function UserCursor({
       animId = requestAnimationFrame(renderLoop);
     };
 
-    const startLoopIfNeeded = () => {
-      idleFrames = 0;
+    const startLoop = () => {
       if (!isLoopRunning) {
         isLoopRunning = true;
+        idleFrames = 0;
         animId = requestAnimationFrame(renderLoop);
       }
     };
 
-    const onPointerMove = (e: PointerEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      isHovering = true;
 
-      // 1. INSTANT 0ms LATENCY UPDATE FOR ARROW POINTER (1:1 with hardware mouse)
       if (cursorRef.current) {
-        const scale = isPressed ? 0.88 : 1;
-        cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(${scale})`;
-        cursorRef.current.style.opacity = "1";
+        cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+        if (!isHovering) {
+          cursorRef.current.style.opacity = "1";
+          isHovering = true;
+        }
       }
 
-      // 2. Velocity Tilt Calculation for Trailing Label
       const now = performance.now();
       const dt = Math.max(1, now - lastTime);
-      const vx = ((mouseX - lastX) / dt) * 1000;
-      lastX = mouseX;
+      const vx = (e.clientX - lastX) / dt;
+      targetTilt = Math.max(-28, Math.min(28, vx * 16));
       lastTime = now;
+      lastX = e.clientX;
 
-      const speed = Math.abs(vx);
-      const norm = Math.min(1, speed / 1400);
-      const sign = vx > 0 ? 1 : vx < 0 ? -1 : 0;
-      targetTilt = sign * norm * 18;
-
-      updateLabelText(e.target as HTMLElement | null);
-      startLoopIfNeeded();
+      updateLabelText(e.target as HTMLElement);
+      startLoop();
     };
 
-    const onPointerDown = () => {
+    const onMouseDown = () => {
       isPressed = true;
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.85)`;
-      }
+      if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.85)`;
+      startLoop();
     };
 
-    const onPointerUp = () => {
+    const onMouseUp = () => {
       isPressed = false;
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
-      }
+      if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
+      startLoop();
     };
 
     const onMouseLeave = () => {
       isHovering = false;
-      targetTilt = 0;
       if (cursorRef.current) cursorRef.current.style.opacity = "0";
       if (labelRef.current) labelRef.current.style.opacity = "0";
     };
 
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("pointerdown", onPointerDown, { passive: true });
-    window.addEventListener("pointerup", onPointerUp, { passive: true });
-    document.addEventListener("mouseleave", onMouseLeave, { passive: true });
+    // Defer listener attachment to prevent TBT during initial hydration
+    const deferTimer = setTimeout(() => {
+      window.addEventListener("mousemove", onMouseMove, { passive: true });
+      window.addEventListener("mousedown", onMouseDown, { passive: true });
+      window.addEventListener("mouseup", onMouseUp, { passive: true });
+      document.addEventListener("mouseleave", onMouseLeave, { passive: true });
+    }, 150);
 
     return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("pointerup", onPointerUp);
+      clearTimeout(deferTimer);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mouseup", onMouseUp);
       document.removeEventListener("mouseleave", onMouseLeave);
+      if (animId) cancelAnimationFrame(animId);
     };
   }, [name, size]);
 
   return (
-    <div
-      className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden"
-      aria-hidden="true"
-    >
-      {/* Hardware-Accelerated 0ms Latency Instant Arrow Tip */}
+    <>
+      {/* Follower Dot Cursor */}
       <div
         ref={cursorRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: size,
-          height: size,
-          opacity: 0,
-          transformOrigin: "0% 0%",
-          willChange: "transform, opacity",
-          filter: "drop-shadow(0 4px 12px rgba(139, 92, 246, 0.65))",
-          pointerEvents: "none",
-          transition: "opacity 120ms ease",
-        }}
+        className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-300 will-change-transform"
+        style={{ width: `${size}px`, height: `${size}px` }}
       >
-        <svg
-          width={size}
-          height={size}
-          viewBox="0 0 28 28"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M4 2 L24 14 L14 16 L11 25 Z"
-            fill={color}
-            stroke="rgba(255,255,255,0.9)"
-            strokeWidth={1.4}
-            strokeLinejoin="round"
-          />
-        </svg>
+        <div
+          className="h-full w-full rounded-full border border-white/40 shadow-xl backdrop-blur-sm"
+          style={{
+            backgroundColor: `${color}33`,
+            boxShadow: `0 0 16px ${color}66, inset 0 0 8px ${color}99`,
+          }}
+        />
       </div>
 
-      {/* Fluid Trailing Name Badge */}
+      {/* Floating Name Label Badge */}
       <div
         ref={labelRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          background: "linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(99, 102, 241, 0.95))",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          borderRadius: 999,
-          padding: `${size * 0.16}px ${size * 0.4}px`,
-          border: "1px solid rgba(255, 255, 255, 0.25)",
-          boxShadow: "0 8px 24px -4px rgba(139, 92, 246, 0.45), 0 2px 8px rgba(0,0,0,0.5)",
-          opacity: 0,
-          transformOrigin: "0% 50%",
-          willChange: "transform, opacity",
-          userSelect: "none",
-          pointerEvents: "none",
-          transition: "opacity 120ms ease",
-        }}
+        className="pointer-events-none fixed left-0 top-0 z-[9998] -translate-x-1/2 -translate-y-1/2 opacity-0 will-change-transform"
       >
-        <span
-          ref={labelTextRef}
+        <div
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-2xl backdrop-blur-2xl"
           style={{
+            backgroundColor: "rgba(13, 14, 18, 0.88)",
             color: textColor,
-            fontSize: Math.max(9, size * 0.44),
-            lineHeight: 1.1,
-            fontWeight: 800,
-            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-            whiteSpace: "nowrap",
-            letterSpacing: "0.03em",
-            textShadow: "0 1px 2px rgba(0,0,0,0.4)",
+            boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 12px ${color}40`,
           }}
         >
-          {name}
-        </span>
+          <span
+            className="h-1.5 w-1.5 rounded-full animate-pulse"
+            style={{ backgroundColor: color }}
+          />
+          <span ref={labelTextRef} className="font-mono">
+            {name}
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

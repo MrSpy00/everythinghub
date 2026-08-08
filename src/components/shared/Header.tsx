@@ -94,10 +94,11 @@ export function Header() {
               onClick={() => setCommandPaletteOpen(true)}
               className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-400 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-2"
               data-cursor="Ara"
+              aria-label={t.quickAccess}
             >
               <Search className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Hızlı Ara</span>
-              <kbd className="rounded bg-white/10 px-1.5 py-0.2 text-[9px] font-bold text-zinc-400 border border-white/10">
+              <span>{t.quickAccess}</span>
+              <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-zinc-400 border border-white/10">
                 Ctrl K
               </kbd>
             </button>

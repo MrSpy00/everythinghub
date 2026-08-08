@@ -3,17 +3,10 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
-import Fuse from "fuse.js";
 import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
 import { InteractiveShowcase } from "@/components/creative/InteractiveShowcase";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-
-const fuse = new Fuse(tools, {
-  keys: ["title", "description", "tags", "category"],
-  threshold: 0.4,
-  includeScore: true,
-});
 
 const ALL_CATEGORIES = "all";
 
@@ -62,10 +55,20 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     }
   };
 
+  // Blazing-fast zero-overhead token search matcher
   const filteredTools = useMemo(() => {
-    let result: Tool[] = search
-      ? fuse.search(search).map((r: { item: Tool }) => r.item)
-      : tools;
+    let result = tools;
+    const q = search.trim().toLowerCase();
+
+    if (q) {
+      result = tools.filter((tool) => {
+        const titleMatch = tool.title.toLowerCase().includes(q);
+        const descMatch = tool.description.toLowerCase().includes(q);
+        const slugMatch = tool.slug.toLowerCase().includes(q);
+        const tagMatch = tool.tags?.some((t) => t.toLowerCase().includes(q)) ?? false;
+        return titleMatch || descMatch || slugMatch || tagMatch;
+      });
+    }
 
     if (activeCategory !== ALL_CATEGORIES) {
       result = result.filter((item) => item.category === activeCategory);
@@ -118,48 +121,45 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                   aria-label={t.clear}
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
+            <div className="flex rounded-xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl shrink-0 self-end sm:self-auto">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "grid"
-                    ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md"
+                    ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
                 title={t.viewGrid}
-                data-cursor={t.viewGrid}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t.viewGrid}</span>
               </button>
               <button
                 onClick={() => setViewMode("showcase")}
-                className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "showcase"
-                    ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md"
+                    ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
                 title={t.viewShowcase}
-                data-cursor={t.viewShowcase}
               >
-                <Flame className="h-3.5 w-3.5" />
+                <Flame className="h-3.5 w-3.5 text-amber-400" />
                 <span className="hidden sm:inline">{t.viewShowcase}</span>
               </button>
               <button
                 onClick={() => setViewMode("compact")}
-                className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "compact"
-                    ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md"
+                    ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
                 title={t.viewCompact}
-                data-cursor={t.viewCompact}
               >
                 <Rows3 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t.viewCompact}</span>
@@ -168,161 +168,74 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
           </div>
         </div>
 
-        {/* Category filters */}
-        <div className="mb-8 flex flex-wrap gap-2" id="categories">
+        {/* Category Pills */}
+        <div className="mb-10 flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveCategory(ALL_CATEGORIES)}
-            className={`relative rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+            className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
               activeCategory === ALL_CATEGORIES
-                ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
-                : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
+                ? "bg-white text-zinc-950 shadow-lg shadow-white/10"
+                : "border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
             }`}
-            data-cursor="Kategori"
           >
-            {activeCategory === ALL_CATEGORIES && (
-              <motion.div
-                layoutId="activeCategoryTab"
-                className="absolute inset-0 rounded-xl bg-indigo-500/20 border border-indigo-500/40"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
-            <span className="relative z-10">{t.all} ({tools.length})</span>
+            {t.all} ({tools.length})
           </button>
           {categories.map((cat) => {
+            const count = tools.filter((t) => t.category === cat).length;
             const Icon = CATEGORY_ICONS[cat];
-            const catCount = tools.filter((item) => item.category === cat).length;
-            const isActive = activeCategory === cat;
             return (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                  isActive
-                    ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
-                    : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  activeCategory === cat
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/50"
+                    : "border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
                 }`}
-                data-cursor={getCategoryLabel(cat)}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeCategoryTab"
-                    className="absolute inset-0 rounded-xl bg-indigo-500/20 border border-indigo-500/40"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                  />
-                )}
-                <Icon className="relative z-10 h-3.5 w-3.5" />
-                <span className="relative z-10">{getCategoryLabel(cat)}</span>
-                <span className="relative z-10 text-[10px] text-zinc-300 font-semibold">({catCount})</span>
+                <Icon className="h-3.5 w-3.5" />
+                <span>{getCategoryLabel(cat)}</span>
+                <span className="text-[10px] opacity-60">({count})</span>
               </button>
             );
           })}
         </div>
 
-        {/* Interactive Showcase View Mode */}
-        {viewMode === "showcase" && (
-          <div className="mb-10">
-            <InteractiveShowcase />
+        {/* View Mode Rendering */}
+        {viewMode === "showcase" ? (
+          <InteractiveShowcase />
+        ) : (
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            }
+          >
+            {filteredTools.map((tool) => (
+              <ToolCard key={tool.slug} tool={tool} />
+            ))}
           </div>
         )}
 
-        {/* Grid View Mode */}
-        {viewMode === "grid" && (
-          <div>
-            {filteredTools.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border border-white/10 bg-white/[0.02]">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-indigo-400 border border-white/10">
-                  <Search className="h-7 w-7" />
-                </div>
-                <h3 className="mb-2 text-lg font-bold text-white">
-                  {t.noToolsFoundTitle}
-                </h3>
-                <p className="text-sm text-[var(--hub-text-muted)] max-w-sm">
-                  &quot;{search}&quot; {t.noToolsFoundDesc}
-                </p>
-                <button
-                  onClick={() => {
-                    handleSearchChange("");
-                    setActiveCategory(ALL_CATEGORIES);
-                  }}
-                  className="mt-6 rounded-xl bg-indigo-500/15 border border-indigo-500/30 px-5 py-2.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/25 transition-all"
-                >
-                  {t.resetFilters}
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTools.map((tool) => (
-                  <ToolCard key={tool.slug} tool={tool} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Compact List Mode */}
-        {viewMode === "compact" && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden divide-y divide-white/5">
-            {filteredTools.map((tool) => {
-              const Icon = tool.icon;
-              const isLive = tool.status === "live";
-              const localized = t.toolTranslations?.[tool.slug] || {
-                title: tool.title,
-                description: tool.description,
-              };
-
-              return (
-                <div
-                  key={tool.slug}
-                  className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent"
-                      style={{
-                        color: tool.accentColor,
-                      }}
-                    >
-                      <Icon className="h-5 w-5" strokeWidth={1.8} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white truncate">
-                          {localized.title}
-                        </span>
-                        {isLive ? (
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                            {t.activeCountLabel}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-[var(--hub-text-subtle)] bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
-                            {t.comingSoon}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[var(--hub-text-muted)] truncate max-w-md mt-0.5">
-                        {localized.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    {isLive ? (
-                      <a
-                        href={`/tools/${tool.slug}`}
-                        className="rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 px-4 py-2 text-xs font-bold text-indigo-300 border border-indigo-500/30 transition-all inline-block"
-                        data-cursor="Aç"
-                      >
-                        {t.runTool} →
-                      </a>
-                    ) : (
-                      <span className="text-xs text-[var(--hub-text-subtle)] px-3 py-1.5">
-                        {t.versionUpcoming}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {filteredTools.length === 0 && (
+          <div className="py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+              <Search className="h-8 w-8 text-zinc-500" />
+            </div>
+            <h3 className="text-lg font-bold text-white">{t.noToolsFoundTitle}</h3>
+            <p className="mt-1 text-sm text-[var(--hub-text-muted)]">
+              &quot;{search}&quot; {t.noToolsFoundDesc}
+            </p>
+            <button
+              onClick={() => {
+                handleSearchChange("");
+                setActiveCategory(ALL_CATEGORIES);
+              }}
+              className="mt-6 rounded-xl border border-white/10 bg-white/[0.05] px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/10"
+            >
+              {t.resetFilters}
+            </button>
           </div>
         )}
       </div>

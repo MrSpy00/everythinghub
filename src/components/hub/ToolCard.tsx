@@ -10,7 +10,7 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const Icon = tool.icon;
   const isLive = tool.status === "live";
 
@@ -25,6 +25,8 @@ export function ToolCard({ tool }: ToolCardProps) {
     switch (tool.category) {
       case "video":
         return t.videoCategory;
+      case "audio":
+        return t.audioCategory;
       case "image":
         return t.imageCategory;
       case "developer":
@@ -40,6 +42,25 @@ export function ToolCard({ tool }: ToolCardProps) {
     }
   })();
 
+  const getCategoryBadgeClass = () => {
+    switch (tool.category) {
+      case "developer":
+        return "border-indigo-400/30 bg-indigo-500/15 text-indigo-300";
+      case "audio":
+        return "border-emerald-400/30 bg-emerald-500/15 text-emerald-300";
+      case "video":
+        return "border-rose-400/30 bg-rose-500/15 text-rose-300";
+      case "image":
+        return "border-violet-400/30 bg-violet-500/15 text-violet-300";
+      case "text":
+        return "border-purple-400/30 bg-purple-500/15 text-purple-300";
+      case "calculator":
+        return "border-sky-400/30 bg-sky-500/15 text-sky-300";
+      default:
+        return "border-amber-400/30 bg-amber-500/15 text-amber-300";
+    }
+  };
+
   const cardInner = (
     <div
       className={`group relative flex h-full flex-col p-5 sm:p-6 rounded-2xl border transition-all duration-300 ${
@@ -51,7 +72,7 @@ export function ToolCard({ tool }: ToolCardProps) {
     >
       {/* Top row */}
       <div className="mb-4 sm:mb-5 flex items-start justify-between">
-        {/* Sleek Floating Organic Liquid Glass Vector Icon - No Clunky AI Box */}
+        {/* Vector Icon Container */}
         <div
           className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border border-white/12 bg-gradient-to-br from-white/[0.08] to-transparent backdrop-blur-2xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-400/60 group-hover:shadow-indigo-500/20"
           style={{
@@ -75,7 +96,7 @@ export function ToolCard({ tool }: ToolCardProps) {
               {t.readyBadge}
             </span>
           ) : (
-            <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-[var(--hub-text-subtle)]">
+            <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-zinc-400">
               <Lock className="h-2.5 w-2.5" />
               {t.developingBadge}
             </span>
@@ -94,17 +115,14 @@ export function ToolCard({ tool }: ToolCardProps) {
       </div>
 
       {/* Description */}
-      <p className="mb-5 flex-1 text-xs sm:text-sm leading-relaxed text-[var(--hub-text-muted)]">
+      <p className="mb-5 flex-1 text-xs sm:text-sm leading-relaxed text-zinc-400">
         {localized.description}
       </p>
 
-      {/* Category and action footer */}
+      {/* Category and action footer with AAA high contrast */}
       <div className="flex items-center justify-between border-t border-white/5 pt-3.5 mt-auto">
         <span
-          className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-semibold"
-          style={{
-            color: tool.accentColor,
-          }}
+          className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold ${getCategoryBadgeClass()}`}
         >
           {categoryName}
         </span>
@@ -115,7 +133,7 @@ export function ToolCard({ tool }: ToolCardProps) {
             <ArrowRight className="h-3.5 w-3.5" />
           </div>
         ) : (
-          <span className="text-[11px] font-medium text-[var(--hub-text-subtle)]">
+          <span className="text-[11px] font-medium text-zinc-400">
             {t.versionUpcoming}
           </span>
         )}
@@ -125,7 +143,7 @@ export function ToolCard({ tool }: ToolCardProps) {
 
   if (isLive) {
     return (
-      <Link href={`/tools/${tool.slug}`} className="block h-full focus:outline-none">
+      <Link href={`/tools/${tool.slug}`} className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-2xl">
         {cardInner}
       </Link>
     );

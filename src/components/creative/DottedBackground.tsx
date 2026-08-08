@@ -231,6 +231,14 @@ export function DottedBackground({
   const isVisibleRef = useRef(true);
 
   useEffect(() => {
+    // Skip heavy WebGL on reduced-motion preference
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -292,7 +300,7 @@ export function DottedBackground({
       }
     };
 
-    window.addEventListener("resize", doResize);
+    window.addEventListener("resize", doResize, { passive: true });
     doResize();
 
     const perlinProgram = new Program(gl, {
@@ -346,7 +354,7 @@ export function DottedBackground({
     const onVisibilityChange = () => {
       isVisibleRef.current = document.visibilityState === "visible";
     };
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
 
     let observer: IntersectionObserver | null = null;
     if (typeof IntersectionObserver !== "undefined") {
@@ -361,7 +369,7 @@ export function DottedBackground({
       observer.observe(container);
     }
 
-    const frameInterval = 50;
+    const frameInterval = 66; // Smooth 15fps throttled ambient calculation saving CPU
     const update = (time: number) => {
       rafIdRef.current = requestAnimationFrame(update);
       if (!isVisibleRef.current) return;
@@ -377,9 +385,10 @@ export function DottedBackground({
       }
     };
 
+    // Defer initialization to after main thread is idle
     const startTimer = setTimeout(() => {
       rafIdRef.current = requestAnimationFrame(update);
-    }, 150);
+    }, 400);
 
     return () => {
       clearTimeout(startTimer);
