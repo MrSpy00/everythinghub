@@ -83,9 +83,6 @@ export function Footer() {
               className="text-xs font-bold uppercase tracking-wider text-white mb-4 flex items-center gap-2"
             >
               <span>{t.quickAccess}</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                {isTurkish ? "Dinamik" : "Dynamic"}
-              </span>
             </h4>
             <ul className="space-y-3 text-xs text-[var(--hub-text-muted)]">
               {quickTools.map((tool) => {

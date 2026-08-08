@@ -2,6 +2,20 @@ import { copyToClipboard } from "./utils";
 
 export type SpotifyInputType = "playlist" | "user" | "artist" | "album" | "track" | null;
 
+export function unescapeHtml(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#x2F;/g, "/")
+    .replace(/<[^>]*>/g, "") // Strip HTML tags like <p>, <i>, <a>
+    .trim();
+}
+
 export interface SpotifyParsedUrl {
   type: SpotifyInputType;
   id: string | null;

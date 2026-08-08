@@ -338,6 +338,7 @@ export default function SpotifyPlaylistClient() {
                   onClick={handleCopyPlaylistLink}
                   className="p-1.5 rounded-xl border border-white/10 bg-white/[0.05] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-emerald-500/40 transition-all"
                   title={isTurkish ? "Çalma Listesi Bağlantısını Kopyala" : "Copy Playlist Link"}
+                  data-cursor={isTurkish ? "Kopyala" : "Copy"}
                 >
                   {copiedPlaylistLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>

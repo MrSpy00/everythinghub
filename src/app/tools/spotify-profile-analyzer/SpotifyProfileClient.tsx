@@ -282,6 +282,7 @@ export default function SpotifyProfileClient() {
                     onClick={handleCopyProfileLink}
                     className="p-1.5 rounded-xl border border-white/10 bg-white/[0.05] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-cyan-500/40 transition-all"
                     title={isTurkish ? "Profil Bağlantısını Kopyala" : "Copy Profile Link"}
+                    data-cursor={isTurkish ? "Kopyala" : "Copy"}
                   >
                     {copiedProfileLink ? <Check className="w-4 h-4 text-cyan-400" /> : <Copy className="w-4 h-4" />}
                   </button>
@@ -307,6 +308,7 @@ export default function SpotifyProfileClient() {
                   onClick={handleDownloadAvatar}
                   disabled={downloadingAvatar}
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 active:scale-95 transition-all shadow-xl"
+                  data-cursor={isTurkish ? "İndir" : "Download"}
                 >
                   <Download className="w-4 h-4" />
                   <span>{isTurkish ? "HD Avatar İndir" : "Download HD Avatar"}</span>
@@ -352,7 +354,7 @@ export default function SpotifyProfileClient() {
             </div>
             <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
               <span className="text-xs text-white/50">{isTurkish ? "Halka Açık Listeler" : "Public Playlists"}</span>
-              <p className="text-3xl font-black font-mono text-violet-400">{profileData.publicPlaylists.length}</p>
+              <p className="text-3xl font-black font-mono text-violet-400">{(profileData.publicPlaylists || []).length}</p>
             </div>
           </div>
 
@@ -372,9 +374,9 @@ export default function SpotifyProfileClient() {
               </div>
             </div>
 
-            {profileData.publicPlaylists.length > 0 ? (
+            {(profileData.publicPlaylists || []).length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {profileData.publicPlaylists.map((pl) => (
+                {(profileData.publicPlaylists || []).map((pl) => (
                   <div
                     key={pl.id}
                     className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] transition-all flex items-center justify-between gap-4"

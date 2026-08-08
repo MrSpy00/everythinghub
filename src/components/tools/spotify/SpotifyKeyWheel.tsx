@@ -16,7 +16,8 @@ interface SpotifyKeyWheelProps {
 }
 
 export function SpotifyKeyWheel({ keyDistribution, isTurkish = true }: SpotifyKeyWheelProps) {
-  const topKey = keyDistribution[0] || { keyName: "A Minör", camelot: "8A", percentage: 25 };
+  const kList = keyDistribution || [];
+  const topKey = kList[0] || { keyName: "A Minör", camelot: "8A", count: 1, percentage: 25 };
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-6">
@@ -44,7 +45,7 @@ export function SpotifyKeyWheel({ keyDistribution, isTurkish = true }: SpotifyKe
 
       {/* Key Grid List */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-        {keyDistribution.map((k, idx) => (
+        {kList.map((k, idx) => (
           <div
             key={idx}
             className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-white/20 transition-all flex items-center justify-between"

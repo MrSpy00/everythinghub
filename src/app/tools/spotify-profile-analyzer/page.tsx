@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SpotifyProfileClient from "./SpotifyProfileClient";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "Spotify Profil & Sanatçı Analizör — Curator & Discography Studio",
@@ -36,5 +37,12 @@ export const metadata: Metadata = {
 };
 
 export default function SpotifyProfileAnalyzerPage() {
-  return <SpotifyProfileClient />;
+  return (
+    <ErrorBoundary
+      fallbackTitle="Spotify Profil Analizör Yüklenemedi"
+      fallbackMessage="Profil analizi yüklenirken bir hata oluştu. Lütfen tekrar deneyin."
+    >
+      <SpotifyProfileClient />
+    </ErrorBoundary>
+  );
 }

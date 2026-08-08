@@ -42,9 +42,27 @@ export function UserCursor({
       const customCursor = target?.closest("[data-cursor]")?.getAttribute("data-cursor");
       if (customCursor) {
         labelTextRef.current.textContent = customCursor;
-      } else if (target?.closest("a, button, [role='button']")) {
+        return;
+      }
+
+      const clickable = target?.closest("a, button, [role='button']");
+      if (clickable) {
+        const titleAttr = clickable.getAttribute("title") || clickable.getAttribute("aria-label");
+        if (titleAttr) {
+          if (titleAttr.toLowerCase().includes("kopyala") || titleAttr.toLowerCase().includes("copy")) {
+            labelTextRef.current.textContent = "Kopyala";
+            return;
+          }
+          if (titleAttr.toLowerCase().includes("indir") || titleAttr.toLowerCase().includes("download")) {
+            labelTextRef.current.textContent = "İndir";
+            return;
+          }
+        }
         labelTextRef.current.textContent = "Aç";
-      } else if (target?.closest("input, textarea")) {
+        return;
+      }
+
+      if (target?.closest("input, textarea")) {
         labelTextRef.current.textContent = "Yaz";
       } else {
         labelTextRef.current.textContent = name;

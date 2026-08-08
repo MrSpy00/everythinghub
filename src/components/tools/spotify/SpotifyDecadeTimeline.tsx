@@ -16,7 +16,8 @@ interface SpotifyDecadeTimelineProps {
 }
 
 export function SpotifyDecadeTimeline({ decadeDistribution, isTurkish = true }: SpotifyDecadeTimelineProps) {
-  const maxPct = Math.max(...decadeDistribution.map((d) => d.percentage), 1);
+  const dList = decadeDistribution || [];
+  const maxPct = Math.max(...dList.map((d) => d.percentage || 0), 1);
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-6">
@@ -39,7 +40,7 @@ export function SpotifyDecadeTimeline({ decadeDistribution, isTurkish = true }: 
 
       {/* Decade Bars Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-        {decadeDistribution.map((d, i) => {
+        {dList.map((d, i) => {
           const heightRatio = Math.max(0.15, d.percentage / maxPct);
 
           return (

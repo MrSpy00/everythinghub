@@ -15,12 +15,18 @@ interface SpotifyBotShieldProps {
 }
 
 export function SpotifyBotShield({
-  score,
-  riskLevel,
+  score = 80,
+  riskLevel = "safe",
   botFlags,
-  pitchingVerdict,
+  pitchingVerdict = "",
   isTurkish = true,
 }: SpotifyBotShieldProps) {
+  const flags = botFlags || {
+    artistStuffing: false,
+    shortDurationAnomaly: false,
+    bimodalPopularityAnomaly: false,
+    duplicateTracksCount: 0,
+  };
   const getScoreColor = () => {
     if (score >= 80) return { stroke: "rgba(16,185,129,0.85)", bg: "bg-emerald-500/10", border: "border-emerald-500/25", text: "text-emerald-300" };
     if (score >= 50) return { stroke: "rgba(245,158,11,0.85)", bg: "bg-amber-500/10", border: "border-amber-500/25", text: "text-amber-300" };
@@ -147,12 +153,12 @@ export function SpotifyBotShield({
           <div
             className={cn(
               "p-3.5 rounded-2xl border flex items-start gap-3 transition-all",
-              botFlags.artistStuffing
+              flags.artistStuffing
                 ? "bg-rose-500/10 border-rose-500/30 text-rose-200"
                 : "bg-emerald-500/5 border-emerald-500/20 text-emerald-200"
             )}
           >
-            {botFlags.artistStuffing ? (
+            {flags.artistStuffing ? (
               <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             ) : (
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -162,7 +168,7 @@ export function SpotifyBotShield({
                 {isTurkish ? "Sanatçı Yoğunlaşma Katsayısı" : "Artist Concentration Ratio"}
               </span>
               <p className="text-white/70">
-                {botFlags.artistStuffingDetails ||
+                {flags.artistStuffingDetails ||
                   (isTurkish
                     ? "Sanatçılar dengeli dağılmış, tek bir ismin liste üzerine baskısı yok."
                     : "Balanced artist distribution; no single artist dominates the list.")}
@@ -174,12 +180,12 @@ export function SpotifyBotShield({
           <div
             className={cn(
               "p-3.5 rounded-2xl border flex items-start gap-3 transition-all",
-              botFlags.shortDurationAnomaly
+              flags.shortDurationAnomaly
                 ? "bg-rose-500/10 border-rose-500/30 text-rose-200"
                 : "bg-emerald-500/5 border-emerald-500/20 text-emerald-200"
             )}
           >
-            {botFlags.shortDurationAnomaly ? (
+            {flags.shortDurationAnomaly ? (
               <AlertOctagon className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             ) : (
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -189,7 +195,7 @@ export function SpotifyBotShield({
                 {isTurkish ? "Şarkı Süresi Anomalisi (< 90sn)" : "Short Song Duration Anomaly (< 90s)"}
               </span>
               <p className="text-white/70">
-                {botFlags.shortDurationDetails ||
+                {flags.shortDurationDetails ||
                   (isTurkish
                     ? "Şarkı süreleri doğal müzik standartlarına uygundur."
                     : "Song durations align with natural music standards.")}
@@ -201,12 +207,12 @@ export function SpotifyBotShield({
           <div
             className={cn(
               "p-3.5 rounded-2xl border flex items-start gap-3 transition-all",
-              botFlags.bimodalPopularityAnomaly
+              flags.bimodalPopularityAnomaly
                 ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
                 : "bg-emerald-500/5 border-emerald-500/20 text-emerald-200"
             )}
           >
-            {botFlags.bimodalPopularityAnomaly ? (
+            {flags.bimodalPopularityAnomaly ? (
               <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             ) : (
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -216,7 +222,7 @@ export function SpotifyBotShield({
                 {isTurkish ? "Popülerlik Ayrışması (Cloaking)" : "Popularity Discrepancy (Cloaking)"}
               </span>
               <p className="text-white/70">
-                {botFlags.bimodalDetails ||
+                {flags.bimodalDetails ||
                   (isTurkish
                     ? "Popülerlik dağılımı tutarlı, sahte kamufle şarkı tespiti yok."
                     : "Popularity distribution is consistent; no cloaked zero-pop tracks found.")}
@@ -228,12 +234,12 @@ export function SpotifyBotShield({
           <div
             className={cn(
               "p-3.5 rounded-2xl border flex items-start gap-3 transition-all",
-              botFlags.duplicateTracksCount > 0
+              (flags.duplicateTracksCount || 0) > 0
                 ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
                 : "bg-emerald-500/5 border-emerald-500/20 text-emerald-200"
             )}
           >
-            {botFlags.duplicateTracksCount > 0 ? (
+            {(flags.duplicateTracksCount || 0) > 0 ? (
               <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             ) : (
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -243,10 +249,10 @@ export function SpotifyBotShield({
                 {isTurkish ? "Kopya & Mükerrer Parçalar" : "Duplicate Tracks Density"}
               </span>
               <p className="text-white/70">
-                {botFlags.duplicateTracksCount > 0
+                {(flags.duplicateTracksCount || 0) > 0
                   ? isTurkish
-                    ? `${botFlags.duplicateTracksCount} adet mükerrer parça bulundu.`
-                    : `${botFlags.duplicateTracksCount} duplicate tracks detected.`
+                    ? `${flags.duplicateTracksCount} adet mükerrer parça bulundu.`
+                    : `${flags.duplicateTracksCount} duplicate tracks detected.`
                   : isTurkish
                   ? "Tüm parçalar benzersiz ve kopyasızdır."
                   : "All tracks are unique with zero duplicates."}

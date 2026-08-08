@@ -62,24 +62,26 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
   };
 
   const filteredTracks = useMemo(() => {
-    return tracks
+    const tList = tracks || [];
+    return tList
       .filter((t) => {
+        if (!t) return false;
         if (search) {
           const q = search.toLowerCase();
-          const matchTitle = t.name.toLowerCase().includes(q);
-          const matchArtist = t.artists.some((a) => a.name.toLowerCase().includes(q));
-          const matchAlbum = t.albumName.toLowerCase().includes(q);
+          const matchTitle = (t.name || "").toLowerCase().includes(q);
+          const matchArtist = (t.artists || []).some((a) => (a.name || "").toLowerCase().includes(q));
+          const matchAlbum = (t.albumName || "").toLowerCase().includes(q);
           if (!matchTitle && !matchArtist && !matchAlbum) return false;
         }
         if (filterExplicit && !t.explicit) return false;
-        if (filterInstrumental && t.audioFeatures.instrumentalness < 0.5) return false;
+        if (filterInstrumental && (t.audioFeatures?.instrumentalness ?? 0) < 0.5) return false;
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === "bpm") return b.audioFeatures.tempo - a.audioFeatures.tempo;
-        if (sortBy === "energy") return b.audioFeatures.energy - a.audioFeatures.energy;
-        if (sortBy === "popularity") return b.popularity - a.popularity;
-        if (sortBy === "duration") return b.durationMs - a.durationMs;
+        if (sortBy === "bpm") return (b.audioFeatures?.tempo ?? 120) - (a.audioFeatures?.tempo ?? 120);
+        if (sortBy === "energy") return (b.audioFeatures?.energy ?? 0.5) - (a.audioFeatures?.energy ?? 0.5);
+        if (sortBy === "popularity") return (b.popularity ?? 0) - (a.popularity ?? 0);
+        if (sortBy === "duration") return (b.durationMs ?? 0) - (a.durationMs ?? 0);
         return 0;
       });
   }, [tracks, search, sortBy, filterExplicit, filterInstrumental]);
@@ -165,16 +167,19 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
           </thead>
           <tbody className="divide-y divide-white/5">
             {filteredTracks.map((t, idx) => {
-              const { camelot } = formatKeyAndCamelot(t.audioFeatures.key, t.audioFeatures.mode);
-              const durSec = Math.round(t.durationMs / 1000);
+              const keyVal = t.audioFeatures?.key ?? 0;
+              const modeVal = t.audioFeatures?.mode ?? 1;
+              const { camelot } = formatKeyAndCamelot(keyVal, modeVal);
+              const durSec = Math.round((t.durationMs || 180000) / 1000);
               const m = Math.floor(durSec / 60);
               const s = String(durSec % 60).padStart(2, "0");
               const isPlaying = playingTrackId === t.id;
               const isCopied = copiedTrackId === t.id;
               const spotifyTrackUrl = `https://open.spotify.com/track/${t.id}`;
+              const artistsList = t.artists || [{ name: "Unknown Artist" }];
 
               return (
-                <tr key={t.id} className="hover:bg-white/[0.03] transition-colors group">
+                <tr key={t.id || idx} className="hover:bg-white/[0.03] transition-colors group">
                   <td className="py-3 pl-3 font-mono text-white/40">{idx + 1}</td>
 
                   {/* Title & Artwork with Preview Player */}
@@ -182,8 +187,8 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 shrink-0 group/cover cursor-pointer" onClick={() => togglePlayPreview(t.id, t.previewUrl)}>
                         <img
-                          src={t.albumCover}
-                          alt={t.name}
+                          src={t.albumCover || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800"}
+                          alt={t.name || "Track"}
                           className="w-10 h-10 rounded-xl object-cover border border-white/10 shadow-sm"
                         />
                         {t.previewUrl && (
@@ -212,7 +217,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                               isPlaying ? "text-emerald-400" : "text-white group-hover:text-emerald-300"
                             )}
                           >
-                            <span>{t.name}</span>
+                            <span>{t.name || "Untitled Track"}</span>
                             <ExternalLink className="w-3 h-3 opacity-50 hover:opacity-100 shrink-0" />
                           </a>
 
@@ -225,16 +230,16 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
 
                         {/* Artists with clickable Spotify search links */}
                         <p className="text-white/60">
-                          {t.artists.map((a, aIdx) => (
-                            <React.Fragment key={a.name}>
+                          {artistsList.map((a, aIdx) => (
+                            <React.Fragment key={a.name || aIdx}>
                               {aIdx > 0 && ", "}
                               <a
-                                href={`https://open.spotify.com/search/${encodeURIComponent(a.name)}`}
+                                href={`https://open.spotify.com/search/${encodeURIComponent(a.name || "")}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-white hover:underline transition-colors"
                               >
-                                {a.name}
+                                {a.name || "Artist"}
                               </a>
                             </React.Fragment>
                           ))}
@@ -244,10 +249,10 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                   </td>
 
                   {/* Album */}
-                  <td className="py-3 pr-4 text-white/60 truncate max-w-[140px]">{t.albumName}</td>
+                  <td className="py-3 pr-4 text-white/60 truncate max-w-[140px]">{t.albumName || "Album"}</td>
 
                   {/* BPM */}
-                  <td className="py-3 pr-4 font-mono font-bold text-emerald-400/90">{t.audioFeatures.tempo}</td>
+                  <td className="py-3 pr-4 font-mono font-bold text-emerald-400/90">{t.audioFeatures?.tempo ?? 120}</td>
 
                   {/* Key */}
                   <td className="py-3 pr-4 font-mono">
@@ -257,10 +262,10 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                   </td>
 
                   {/* Energy */}
-                  <td className="py-3 pr-4 font-mono text-amber-300">%{Math.round(t.audioFeatures.energy * 100)}</td>
+                  <td className="py-3 pr-4 font-mono text-amber-300">%{Math.round((t.audioFeatures?.energy ?? 0.5) * 100)}</td>
 
                   {/* Popularity */}
-                  <td className="py-3 pr-4 font-mono text-cyan-300">{t.popularity}</td>
+                  <td className="py-3 pr-4 font-mono text-cyan-300">{t.popularity ?? 45}</td>
 
                   {/* Action Buttons: Copy Link & Duration */}
                   <td className="py-3 pr-3 text-right">
@@ -272,6 +277,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                         onClick={() => handleCopyTrackLink(t.id, t.name)}
                         className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-emerald-500/40 transition-all"
                         title={isTurkish ? "Şarkı Linkini Kopyala" : "Copy Track Link"}
+                        data-cursor={isTurkish ? "Kopyala" : "Copy"}
                       >
                         {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>

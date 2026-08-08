@@ -26,14 +26,27 @@ interface SpotifySonicRadarProps {
 export function SpotifySonicRadar({ summary, isTurkish = true }: SpotifySonicRadarProps) {
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
 
+  const s = summary || {
+    avgEnergy: 0.5,
+    avgDanceability: 0.5,
+    avgValence: 0.5,
+    avgAcousticness: 0.5,
+    avgInstrumentalness: 0.5,
+    avgLiveness: 0.5,
+    avgSpeechiness: 0.5,
+    avgTempo: 120,
+    medianTempo: 120,
+    avgLoudness: -6,
+  };
+
   const axes = [
-    { key: "energy", labelTr: "Enerji", labelEn: "Energy", value: summary.avgEnergy, icon: Flame, color: "#f59e0b" },
-    { key: "danceability", labelTr: "Dans Edilebilirlik", labelEn: "Danceability", value: summary.avgDanceability, icon: Zap, color: "#10b981" },
-    { key: "valence", labelTr: "Pozitiflik / Mood", labelEn: "Valence (Mood)", value: summary.avgValence, icon: Smile, color: "#ec4899" },
-    { key: "acousticness", labelTr: "Akustiklik", labelEn: "Acousticness", value: summary.avgAcousticness, icon: Music2, color: "#8b5cf6" },
-    { key: "instrumentalness", labelTr: "Enstrümantallik", labelEn: "Instrumentalness", value: Volume2, valueNum: summary.avgInstrumentalness, color: "#06b6d4" },
-    { key: "liveness", labelTr: "Canlılık", labelEn: "Liveness", value: summary.avgLiveness, icon: Activity, color: "#3b82f6" },
-    { key: "speechiness", labelTr: "Konuşma Oranı", labelEn: "Speechiness", value: summary.avgSpeechiness, icon: Mic, color: "#f43f5e" },
+    { key: "energy", labelTr: "Enerji", labelEn: "Energy", value: s.avgEnergy ?? 0.5, icon: Flame, color: "#f59e0b" },
+    { key: "danceability", labelTr: "Dans Edilebilirlik", labelEn: "Danceability", value: s.avgDanceability ?? 0.5, icon: Zap, color: "#10b981" },
+    { key: "valence", labelTr: "Pozitiflik / Mood", labelEn: "Valence (Mood)", value: s.avgValence ?? 0.5, icon: Smile, color: "#ec4899" },
+    { key: "acousticness", labelTr: "Akustiklik", labelEn: "Acousticness", value: s.avgAcousticness ?? 0.5, icon: Music2, color: "#8b5cf6" },
+    { key: "instrumentalness", labelTr: "Enstrümantallik", labelEn: "Instrumentalness", value: Volume2, valueNum: s.avgInstrumentalness ?? 0.5, color: "#06b6d4" },
+    { key: "liveness", labelTr: "Canlılık", labelEn: "Liveness", value: s.avgLiveness ?? 0.5, icon: Activity, color: "#3b82f6" },
+    { key: "speechiness", labelTr: "Konuşma Oranı", labelEn: "Speechiness", value: s.avgSpeechiness ?? 0.5, icon: Mic, color: "#f43f5e" },
   ];
 
   const size = 300;

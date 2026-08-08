@@ -12,6 +12,15 @@ interface SpotifyGenreGalaxyProps {
 }
 
 export function SpotifyGenreGalaxy({ genres, mood, isTurkish = true }: SpotifyGenreGalaxyProps) {
+  const gList = genres || [];
+  const m = mood || {
+    tag: "chill",
+    labelTr: "Sakin & Dengeli",
+    labelEn: "Chill & Balanced",
+    descriptionTr: "Dengeli ve dinlendirici müzikal atmosfer.",
+    descriptionEn: "Chill and relaxing acoustic atmosphere.",
+  };
+
   const genreColors = [
     "#10b981",
     "#06b6d4",
@@ -49,11 +58,11 @@ export function SpotifyGenreGalaxy({ genres, mood, isTurkish = true }: SpotifyGe
             <span>{isTurkish ? "Baskın Atmosfer Tag'i" : "Dominant Mood Vibe Tag"}</span>
           </div>
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white border border-white/20">
-            {isTurkish ? mood.labelTr : mood.labelEn}
+            {isTurkish ? m.labelTr : m.labelEn}
           </span>
         </div>
         <p className="text-sm text-white/80 leading-relaxed">
-          {isTurkish ? mood.descriptionTr : mood.descriptionEn}
+          {isTurkish ? m.descriptionTr : m.descriptionEn}
         </p>
       </div>
 
@@ -64,12 +73,12 @@ export function SpotifyGenreGalaxy({ genres, mood, isTurkish = true }: SpotifyGe
             <Layers className="w-4 h-4 text-cyan-400" />
             {isTurkish ? "Tür Dağılım Çubuğu" : "Genre Share Spectrum"}
           </span>
-          <span>{genres.length} {isTurkish ? "Alt Tür Kümesi" : "Sub-genres"}</span>
+          <span>{gList.length} {isTurkish ? "Alt Tür Kümesi" : "Sub-genres"}</span>
         </div>
 
         {/* Multi-segment Spectrum Bar */}
         <div className="w-full h-4 rounded-full bg-white/10 overflow-hidden flex shadow-inner">
-          {genres.map((g, idx) => (
+          {gList.map((g, idx) => (
             <motion.div
               key={g.genre}
               initial={{ width: 0 }}
@@ -84,7 +93,7 @@ export function SpotifyGenreGalaxy({ genres, mood, isTurkish = true }: SpotifyGe
 
         {/* Interactive Genre Chips Grid */}
         <div className="flex flex-wrap gap-2.5 pt-2">
-          {genres.map((g, idx) => {
+          {gList.map((g, idx) => {
             const color = genreColors[idx % genreColors.length];
             return (
               <div

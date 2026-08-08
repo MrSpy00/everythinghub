@@ -15,11 +15,11 @@
 
 <p align="center">
   <a href="#turkce-dokumantasyon">
-    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="24" height="16" alt="TR" /> <strong>Türkçe Dokümantasyon</strong>
+    <strong>Türkçe Dokümantasyon</strong>
   </a>
   &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
   <a href="#english-documentation">
-    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="24" height="16" alt="GB" /> <strong>English Documentation</strong>
+    <strong>English Documentation</strong>
   </a>
 </p>
 
@@ -27,7 +27,7 @@
 
 </div>
 
-# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="28" height="18" alt="TR" /> Türkçe Dokümantasyon
+# Türkçe Dokümantasyon
 
 ## Canlı Uygulama
 **[https://www.everythinghub.com.tr/](https://www.everythinghub.com.tr/)**
@@ -36,19 +36,19 @@
 
 **EverythingHub**, modern web teknolojileri (Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion ve Outfit stüdyo tipografisi) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar platformudur.
 
-Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) mofizm, yumuşak Gauss difüzyonlu ortam ışımaları ve dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ile donatılmıştır.
+Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) mofizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)** ve dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ile donatılmıştır.
 
 ### Temel Değerler ve İlkeler
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
 3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru ve optimize WebGL fragment işleme sayesinde sıfır gecikmeyle çalışır.
-4. **16 Aktif Modüler Araç:** Ses & Müzik, Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
+4. **22 Aktif Modüler Araç:** Ses & Müzik, Video, Görsel, Geliştirici, Metin, Hesaplama ve Tasarım kategorilerinde genişletilebilir araç altyapısı.
 5. **Kapsamlı Çok Dilli Altyapı:** Türkçe ve İngilizce dilleri arasında anında ve kesintisiz geçiş.
 6. **Çoklu Ekran & Kusursuz Responsive Uyum:** 320px mobil ekranlardan dikey/pivot monitörlere, tabletlerden 4K ve TV ekranlarına kadar hatasız esnek yerleşim.
 
 ---
 
-## Canlı Araç Kataloğu (16 Aktif Araç)
+## Canlı Araç Kataloğu (22 Aktif Araç)
 
 ### Ses & Müzik Kategorisi
 1. **Spotify Playlist Analizör (`/tools/spotify-playlist-analyzer`):** Chosic, Artist.tools ve SubmitHub seviyesinde derin bot & sahte akış tespiti, 0-100 Kalite Skoru kadranı, 8 eksenli Sonic DNA radarı, tür galaksisi & mood sınıflandırıcı, Camelot & Müzikal Key çarkı, her şarkının bağımsız albüm kapağı (oEmbed), gerçek takipçi/save sayıları, kopya şarkı tespiti, direkt Spotify bağlantıları ve Lucide SVG kopyalama butonları, 640x640 HD kapak stüdyosu (doğrudan blob indirme, yeni sekmede açma, link kopyalama) ve CSV/JSON/DJ Setlist dışa aktarma.
@@ -64,19 +64,25 @@ Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU h
 7. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG, WebP ve AVIF formatları arasında anında dönüştürme.
 8. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX/RGB değerlerini kopyalama.
 9. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli, açılı linear ve radial CSS degrade kodları üretme.
+10. **Site Favicon & Logo İndirici (`/tools/favicon-extractor`):** Herhangi bir web sitesinin HD favicon, Apple touch icon ve SVG logosunu anında indirin.
 
 ### Geliştirici Araçları Kategorisi
-10. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
-11. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
-12. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme, bayrak (flag) yönetimi ve eşleşmeleri anlık listeleme.
+11. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
+12. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
+13. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme, bayrak (flag) yönetimi ve eşleşmeleri anlık listeleme.
+14. **IP & Ağ Latency Analizörü (`/tools/ip-network-info`):** IP adresinizi, coğrafi konumunuzu, ISP sağlayıcınızı ve CDN ping sürelerinizi canlı analiz edin.
+15. **DNS Kayıtları & DoH Sorgulayıcı (`/tools/dns-lookup-tool`):** A, AAAA, MX, TXT ve CNAME DNS kayıtlarını Cloudflare DoH altyapısıyla anında sorgulayın.
+16. **Cron İfadesi Üreteci & Açıklayıcı (`/tools/cron-expression-studio`):** Linux crontab zamanlamalarını görsel olarak üretin ve Türkçe insani açıklamasını görün.
 
 ### Metin & İçerik Kategorisi
-13. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter (boşluklu/boşluksuz), cümle, paragraf ve tahmini okuma/konuşma süresi analizi.
-14. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, BÜYÜK/KÜÇÜK harf dönüşümü.
+17. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter (boşluklu/boşluksuz), cümle, paragraf ve tahmini okuma/konuşma süresi analizi.
+18. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, BÜYÜK/KÜÇÜK harf dönüşümü.
+19. **Markdown Studio & Canlı Önizleme (`/tools/markdown-studio`):** Markdown dokümanlarınızı canlı önizleyin, metrikleri görün, HTML veya .md olarak indirin.
 
 ### Hesaplama & Birim Kategorisi
-15. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama (Byte, KB, MB, GB, TB) birimleri arasında hassas dönüştürme.
-16. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve KDV tutarlarını anında hesaplama.
+20. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama (Byte, KB, MB, GB, TB) birimleri arasında hassas dönüştürme.
+21. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve KDV tutarlarını anında hesaplama.
+22. **Canlı Döviz & Kripto Dönüştürücü (`/tools/currency-exchange-converter`):** 150+ itibari para birimi ve kripto varlık arasında canlı dönüşüm hesaplamaları yapın.
 
 ---
 
@@ -113,7 +119,8 @@ Proje yönetimi ve yerel geliştirme için akıllı konsol:
 | **Tipografi** | Outfit & Geist | Geometrik stüdyo font ailesi |
 | **WebGL Grafikleri** | OGL 1.0.11 | Perlin noise tabanlı kromatik nokta dalgası animasyonu |
 | **Animasyon & Fizik** | Framer Motion 13 | Yay fizikli imleç takipçisi, neon ışıma ve pürüzsüz kaydırma |
-| **Arama Motoru** | Fuse.js 7.5.0 | Anında ve toleranslı bulanık arama |
+| **Arama Engine** | Fuse.js 7.5.0 & Command Palette | `Ctrl+K` destekli hızlı ve toleranslı bulanık arama |
+| **Hata Yönetimi** | React ErrorBoundary | İstemci tarafı sayfa çökmelerine karşı korumalı kurtarma kartları |
 | **Bildirimler** | Sonner 2.0.7 | Modern tost bildirimleri |
 
 ---
@@ -150,7 +157,7 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 <br><br>
 
-# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="28" height="18" alt="GB" /> English Documentation
+# English Documentation
 
 ## Live Application
 **[https://www.everythinghub.com.tr/](https://www.everythinghub.com.tr/)**
@@ -159,19 +166,19 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 **EverythingHub** is a modern, high-performance, privacy-first all-in-one digital utility studio built with Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion, and Outfit typography.
 
-Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted waves, a spring-physics follower cursor (`UserCursor`), liquid glassmorphism, soft Gaussian ambient diffusion, and an intelligent circular progress scroll-to-top motor (`ScrollToTop`).
+Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted waves, a spring-physics follower cursor (`UserCursor`), liquid glassmorphism, soft Gaussian ambient diffusion, a `Ctrl+K` accessible **Command Palette**, and an intelligent circular progress scroll-to-top motor (`ScrollToTop`).
 
 ### Core Philosophy
 1. **Zero Data Retention:** Everything runs strictly client-side or in-memory. No databases, no user tracking, no session cookies.
 2. **Zero Login / Authentication:** Free forever, no registration, no API keys, no payment required.
 3. **Instantaneous Performance:** Powered by Turbopack compilation and lightweight WebGL rendering.
-4. **16 Active Modular Tools:** Expandable tool architecture across Audio & Music, Video, Image, Developer, Text, and Calculation categories.
+4. **22 Active Modular Tools:** Expandable tool architecture across Audio & Music, Video, Image, Developer, Text, Calculator, and Design categories.
 5. **Comprehensive Localization:** Seamless bilingual experience in Turkish and English.
 6. **Multi-Screen & Ultra-Responsive:** Optimized for 320px mobile screens, vertical/portrait monitors, tablets, laptops, and 4K displays.
 
 ---
 
-## Live Tool Catalog (16 Active Tools)
+## Live Tool Catalog (22 Active Tools)
 
 ### Audio & Music Category
 1. **Spotify Playlist Analyzer (`/tools/spotify-playlist-analyzer`):** Deep bot & artificial stream detection, 0-100 Quality Score gauge, 8-axis Sonic DNA radar, genre galaxy & mood classifier, Camelot & Musical Key wheel, individual track album artwork (oEmbed), real follower/save count extraction, duplicate track scanner, direct Spotify track/curator links with Lucide SVG copy buttons, 640x640 HD cover artwork studio (direct blob download, open in new tab, copy link), and CSV/JSON/DJ Setlist export.
@@ -187,19 +194,25 @@ Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted 
 7. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, WebP, and AVIF formats.
 8. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX/RGB codes.
 9. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Multi-color linear and radial CSS gradient generator and code exporter.
+10. **Favicon & Logo Extractor (`/tools/favicon-extractor`):** Extract and download HD favicons, Apple touch icons, and SVG logos from any website.
 
 ### Developer Tools Category
-10. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
-11. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
-12. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts with real-time match listing.
+11. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
+12. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
+13. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts with real-time match listing.
+14. **IP & Network Latency Analyzer (`/tools/ip-network-info`):** Live IP address geolocation, ISP lookup, and CDN ping latency benchmarks.
+15. **DNS Records & DoH Lookup (`/tools/dns-lookup-tool`):** Query A, AAAA, MX, TXT, and CNAME records via Cloudflare DNS-over-HTTPS.
+16. **Cron Expression Studio (`/tools/cron-expression-studio`):** Visually build Linux crontab schedules with human-readable explanations.
 
 ### Text & Content Category
-13. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading/speaking time analysis.
-14. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, uppercase, and lowercase.
+17. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading/speaking time analysis.
+18. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, uppercase, and lowercase.
+19. **Markdown Studio & Live Preview (`/tools/markdown-studio`):** Real-time side-by-side Markdown editor with live preview and HTML/MD export.
 
 ### Calculation & Unit Category
-15. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage (Byte, KB, MB, GB, TB) units.
-16. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Instant calculation of percentage rates, discounted prices, and amounts.
+20. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage (Byte, KB, MB, GB, TB) units.
+21. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Instant calculation of percentage rates, discounted prices, and amounts.
+22. **Live Currency & Crypto Converter (`/tools/currency-exchange-converter`):** Live currency conversions across 150+ fiat currencies and major cryptocurrencies.
 
 ---
 
@@ -213,7 +226,8 @@ Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted 
 | **Typography** | Outfit & Geist | High-grade studio geometric typography |
 | **Graphics** | OGL 1.0.11 | Minimal WebGL library for Perlin noise chromatic dots |
 | **Physics** | Framer Motion 13 | Smooth cursor trailing, velocity tilt, and kinetic layout |
-| **Search Engine** | Fuse.js 7.5.0 | In-memory fuzzy search with scoring |
+| **Search Engine** | Fuse.js 7.5.0 & Command Palette | `Ctrl+K` enabled fuzzy search modal |
+| **Error Handling** | React ErrorBoundary | Guarded fallback cards against client-side rendering crashes |
 | **Notifications** | Sonner 2.0.7 | Accessible, animated toast notifications |
 
 ---

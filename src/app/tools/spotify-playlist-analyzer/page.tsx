@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SpotifyPlaylistClient from "./SpotifyPlaylistClient";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "Spotify Playlist Analizör — Sonic DNA & Bot Control Studio",
@@ -38,5 +39,12 @@ export const metadata: Metadata = {
 };
 
 export default function SpotifyPlaylistAnalyzerPage() {
-  return <SpotifyPlaylistClient />;
+  return (
+    <ErrorBoundary
+      fallbackTitle="Spotify Playlist Analizör Yüklenemedi"
+      fallbackMessage="Çalma listesi analizi yüklenirken bir hata oluştu. Lütfen tekrar deneyin."
+    >
+      <SpotifyPlaylistClient />
+    </ErrorBoundary>
+  );
 }
