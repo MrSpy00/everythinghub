@@ -55,7 +55,7 @@ export function SpotifyDecadeTimeline({ decadeDistribution, isTurkish = true }: 
                   initial={{ height: 0 }}
                   animate={{ height: `${heightRatio * 100}%` }}
                   transition={{ duration: 0.8, delay: i * 0.1 }}
-                  className="w-full bg-gradient-to-t from-pink-600 to-rose-400 rounded-xl shadow-[0_0_10px_rgba(236,72,153,0.4)]"
+                  className="w-full bg-pink-500/80 rounded-xl shadow-[0_0_12px_rgba(236,72,153,0.4)] border border-pink-400/30"
                 />
               </div>
 

@@ -42,7 +42,7 @@ export function SpotifyGenreGalaxy({ genres, mood, isTurkish = true }: SpotifyGe
       </div>
 
       {/* Mood Vibe Highlight Card */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-indigo-500/10 to-purple-500/10 border border-white/10 backdrop-blur-xl space-y-2">
+      <div className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 backdrop-blur-xl space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
             <Sparkles className="w-4 h-4" />

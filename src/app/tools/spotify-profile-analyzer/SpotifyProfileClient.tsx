@@ -160,16 +160,22 @@ export default function SpotifyProfileClient() {
         </div>
       </NeonBorder>
 
-      {/* Preset Demo Profile */}
-      <div className="flex items-center justify-center gap-2 max-w-4xl mx-auto">
+      {/* Preset Demo Profiles */}
+      <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
         <span className="text-xs font-bold text-white/40 uppercase tracking-wider mr-2">
-          {isTurkish ? "Hazır Demo Sanatçı:" : "Preset Demo Profile:"}
+          {isTurkish ? "Hazır Demo Sanatçılar:" : "Preset Demo Profiles:"}
         </span>
         <button
           onClick={() => handleLoadDemo("daft-punk")}
           className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
         >
           Daft Punk (Artist Studio)
+        </button>
+        <button
+          onClick={() => handleLoadDemo("the-weeknd")}
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+        >
+          The Weeknd (Artist Studio)
         </button>
       </div>
 

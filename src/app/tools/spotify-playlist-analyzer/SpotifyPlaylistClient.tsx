@@ -234,6 +234,18 @@ export default function SpotifyPlaylistClient() {
         >
           Anadolu Rock & Türkçe Klasikler
         </button>
+        <button
+          onClick={() => handleLoadDemo("deep-house")}
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+        >
+          Deep House & Ibiza Sunset
+        </button>
+        <button
+          onClick={() => handleLoadDemo("acoustic-indie")}
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+        >
+          Acoustic Indie & Warm Folk
+        </button>
       </div>
 
       {/* Main Analysis Workspace */}
