@@ -16,6 +16,7 @@ import {
   animate,
   type SpringOptions,
 } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export type ClassNames = {
   root?: string;
@@ -96,6 +97,17 @@ export function UserCursor(userProps: UserCursorProps) {
     style,
   } = props;
 
+  // Language context resolution
+  let isTurkish = true;
+  try {
+    const langContext = useLanguage();
+    if (langContext && langContext.lang === "en") {
+      isTurkish = false;
+    }
+  } catch {
+    // Outside language provider fallback
+  }
+
   // Touch device detection (zero cost on mobile)
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   useEffect(() => {
@@ -128,13 +140,13 @@ export function UserCursor(userProps: UserCursorProps) {
   const [dynamicLabel, setDynamicLabel] = useState<string>(name);
   const [isClickable, setIsClickable] = useState(false);
 
-  // High-performance spring configurations (Snappy arrow, organic trailing pill)
+  // High-performance spring configurations (Instant snappy arrow, organic fluid trailing pill)
   const arrowSpringCfg = useMemo<SpringOptions>(
-    () => ({ stiffness: 480, damping: 36, mass: 0.5 }),
+    () => ({ stiffness: 500, damping: 35, mass: 0.45 }),
     []
   );
   const labelSpringCfg = useMemo<SpringOptions>(
-    () => ({ stiffness: 240, damping: 28, mass: 0.65 }),
+    () => ({ stiffness: 260, damping: 28, mass: 0.6 }),
     []
   );
 
@@ -189,14 +201,14 @@ export function UserCursor(userProps: UserCursorProps) {
   // Velocity-driven dynamic pill tilt
   const labelTiltTarget = useMotionValue(0);
   const labelRotation = useSpring(labelTiltTarget, {
-    stiffness: 220,
-    damping: 24,
-    mass: 0.6,
+    stiffness: 240,
+    damping: 22,
+    mass: 0.5,
   });
 
   const lastSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
-  // Context-aware element inspection
+  // Context-aware element inspection with bilingual precision
   const inspectElement = (target: HTMLElement | null) => {
     if (!target) return;
 
@@ -219,51 +231,51 @@ export function UserCursor(userProps: UserCursorProps) {
       const lower = titleAttr.toLowerCase();
 
       if (lower.includes("kopyala") || lower.includes("copy")) {
-        setDynamicLabel("Kopyala");
+        setDynamicLabel(isTurkish ? "Kopyala" : "Copy");
         return;
       }
       if (lower.includes("indir") || lower.includes("download")) {
-        setDynamicLabel("İndir");
+        setDynamicLabel(isTurkish ? "İndir" : "Download");
         return;
       }
       if (lower.includes("ara") || lower.includes("search")) {
-        setDynamicLabel("Ara");
+        setDynamicLabel(isTurkish ? "Ara" : "Search");
         return;
       }
-      if (lower.includes("sıfırla") || lower.includes("reset") || lower.includes("temizle")) {
-        setDynamicLabel("Temizle");
+      if (lower.includes("sıfırla") || lower.includes("reset") || lower.includes("temizle") || lower.includes("clear")) {
+        setDynamicLabel(isTurkish ? "Temizle" : "Clear");
         return;
       }
       if (lower.includes("paylaş") || lower.includes("share")) {
-        setDynamicLabel("Paylaş");
+        setDynamicLabel(isTurkish ? "Paylaş" : "Share");
         return;
       }
       if (lower.includes("yukarı") || lower.includes("top")) {
-        setDynamicLabel("Yukarı");
+        setDynamicLabel(isTurkish ? "Yukarı" : "Top");
         return;
       }
       if (clickable.tagName.toLowerCase() === "a") {
         const href = clickable.getAttribute("href") || "";
         if (href.startsWith("http") || href.startsWith("//")) {
-          setDynamicLabel("Dış Bağlantı");
+          setDynamicLabel(isTurkish ? "Dış Bağlantı" : "External Link");
           return;
         }
       }
-      setDynamicLabel("Aç");
+      setDynamicLabel(isTurkish ? "Aç" : "Open");
       return;
     }
 
     // 3. Inputs & Textareas
     if (target.closest("input, textarea, [contenteditable='true']")) {
       setIsClickable(true);
-      setDynamicLabel("Yaz");
+      setDynamicLabel(isTurkish ? "Yaz" : "Type");
       return;
     }
 
     // 4. Code Blocks
     if (target.closest("pre, code")) {
       setIsClickable(true);
-      setDynamicLabel("Kod");
+      setDynamicLabel(isTurkish ? "Kod" : "Code");
       return;
     }
 

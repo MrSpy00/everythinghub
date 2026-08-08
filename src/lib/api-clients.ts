@@ -317,12 +317,13 @@ export async function fetchDictionaryWord(word: string): Promise<DictionaryEntry
 }
 
 /**
- * Datamuse Words API (Synonyms, Rhymes, Triggers)
+ * Datamuse Words API (Synonyms, Antonyms, Rhymes, Triggers)
  */
-export async function fetchDatamuseWords(word: string, mode: "rhyme" | "synonym" | "related" = "synonym"): Promise<DatamuseWord[]> {
+export async function fetchDatamuseWords(word: string, mode: "rhyme" | "synonym" | "antonym" | "related" = "synonym"): Promise<DatamuseWord[]> {
   if (!word.trim()) return [];
   let param = `rel_syn=${encodeURIComponent(word)}`;
   if (mode === "rhyme") param = `rel_rhy=${encodeURIComponent(word)}`;
+  if (mode === "antonym") param = `rel_ant=${encodeURIComponent(word)}`;
   if (mode === "related") param = `rel_trg=${encodeURIComponent(word)}`;
 
   const res = await fetch(`https://api.datamuse.com/words?${param}&max=25&md=d`);
