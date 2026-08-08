@@ -147,12 +147,12 @@ export function ToolCard({ tool }: ToolCardProps) {
       <Link
         href={`/tools/${tool.slug}`}
         onClick={() => trackToolUsage(tool.slug)}
-        className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-2xl"
+        className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-2xl [content-visibility:auto] [contain-intrinsic-size:1px_185px]"
       >
         {cardInner}
       </Link>
     );
   }
 
-  return <div className="h-full cursor-default">{cardInner}</div>;
+  return <div className="h-full cursor-default [content-visibility:auto] [contain-intrinsic-size:1px_185px]">{cardInner}</div>;
 }

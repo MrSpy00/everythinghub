@@ -122,40 +122,15 @@ export function KineticText({ intervalMs = 2800 }: { intervalMs?: number }) {
 
   return (
     <div className="relative my-3 sm:my-4 w-full max-w-3xl mx-auto h-12 sm:h-14 md:h-16 flex items-center justify-center select-none px-2">
-      {/* 1. Organic, Unbounded, Ultra-Soft Gaussian Ambient Diffusion - No Sharp Edges */}
-      <div className="absolute -inset-x-8 -inset-y-4 flex items-center justify-center pointer-events-none">
-        {/* Layer A: Broad diffused atmospheric glow */}
-        <motion.div
-          key={`broad-${current.text}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          style={{
-            background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 70%)`,
-            filter: "blur(40px)",
-            transform: "translateZ(0)",
-            willChange: "opacity",
-          }}
-          className="absolute inset-0 w-full h-full pointer-events-none"
-        />
-
-        {/* Layer B: Centered soft specular highlight */}
-        <motion.div
-          key={`core-${current.text}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.45 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          style={{
-            background: `radial-gradient(circle at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 50%)`,
-            filter: "blur(20px)",
-            transform: "translateZ(0)",
-            willChange: "opacity",
-          }}
-          className="absolute w-3/4 h-full pointer-events-none"
-        />
-      </div>
+      {/* 1. Organic Gaussian Ambient Diffusion - GPU Hardware Accelerated */}
+      <div
+        className="absolute -inset-x-8 -inset-y-4 flex items-center justify-center pointer-events-none transition-all duration-700"
+        style={{
+          background: `radial-gradient(ellipse 65% 55% at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 70%)`,
+          filter: "blur(32px)",
+          willChange: "background",
+        }}
+      />
 
       {/* 2. Liquid Glass Capsule - Clean, Bold, Minimal & Large Typography */}
       <div className="relative z-10 w-full flex items-center justify-center">

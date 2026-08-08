@@ -1,17 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
-import {
-  Renderer,
-  Camera,
-  Mesh,
-  Plane,
-  Program,
-  RenderTarget as OglRenderTarget,
-} from "ogl";
-
-const INTRINSIC_WIDTH = 600;
-const INTRINSIC_HEIGHT = 600;
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const perlinVertexShader = `#version 300 es
 in vec2 uv;
@@ -150,278 +139,240 @@ void main() {
     dotCol = mix(uPalette[seg], uPalette[seg + 1], f);
     dotOpacity = mix(uPaletteAlpha[seg], uPaletteAlpha[seg + 1], f);
   }
-  fragColor = vec4(dotCol, mark * dotOpacity);
+
+  fragColor = vec4(dotCol * dotOpacity, mark * dotOpacity);
 }`;
 
-type Rgba = { r: number; g: number; b: number; a: number };
-
-function parseColorToRgba(input: string): Rgba {
-  if (!input) return { r: 0, g: 0, b: 0, a: 1 };
-  const str = input.trim();
-  const hex = str.replace(/^#/, "");
-  if (hex.length === 6) {
-    return {
-      r: parseInt(hex.slice(0, 2), 16) / 255,
-      g: parseInt(hex.slice(2, 4), 16) / 255,
-      b: parseInt(hex.slice(4, 6), 16) / 255,
-      a: 1,
-    };
+function parseCssColor(css: string): [number, number, number, number] {
+  const c = css.trim().toLowerCase();
+  if (c.startsWith("#")) {
+    let hex = c.slice(1);
+    if (hex.length === 3 || hex.length === 4) {
+      hex = hex.split("").map((x) => x + x).join("");
+    }
+    const r = parseInt(hex.slice(0, 2), 16) / 255;
+    const g = parseInt(hex.slice(2, 4), 16) / 255;
+    const b = parseInt(hex.slice(4, 6), 16) / 255;
+    const a = hex.length >= 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1.0;
+    return [r, g, b, a];
   }
-  return { r: 0.6, g: 0.4, b: 0.9, a: 0.35 };
+  if (c.startsWith("rgba") || c.startsWith("rgb")) {
+    const parts = c.replace(/rgba?\(|\)/g, "").split(",").map((s) => parseFloat(s.trim()));
+    return [
+      parts[0] / 255,
+      parts[1] / 255,
+      parts[2] / 255,
+      parts.length > 3 ? parts[3] : 1.0,
+    ];
+  }
+  return [0.5, 0.5, 0.5, 1.0];
 }
 
-function buildPaletteUniforms(colorList: string[]) {
-  const rgb: [number, number, number][] = [];
-  const alpha: number[] = [];
-  for (let i = 0; i < 10; i++) {
-    const src = colorList[i];
-    if (src != null) {
-      const c = parseColorToRgba(src);
-      rgb.push([c.r, c.g, c.b]);
-      alpha.push(c.a);
+function buildPaletteUniforms(colors: string[]) {
+  const maxColors = 10;
+  const rgbFlat: number[] = [];
+  const alphaArr: number[] = [];
+  const count = Math.min(colors.length, maxColors);
+
+  for (let i = 0; i < maxColors; i++) {
+    if (i < count) {
+      const [r, g, b, a] = parseCssColor(colors[i]);
+      rgbFlat.push(r, g, b);
+      alphaArr.push(a);
     } else {
-      rgb.push([0, 0, 0]);
-      alpha.push(0);
+      rgbFlat.push(0, 0, 0);
+      alphaArr.push(0);
     }
   }
-  return { rgb, alpha };
+  return { rgb: rgbFlat, alpha: alphaArr };
 }
 
-interface DottedBackgroundProps {
+export interface DottedBackgroundProps {
   frequency?: number;
   speed?: number;
-  bgColor?: string;
-  colors?: string[];
   cellSize?: number;
   gamma?: number;
   paletteBias?: number;
-  style?: CSSProperties;
+  colors?: string[];
+  bgColor?: string;
   className?: string;
+  style?: CSSProperties;
 }
 
-const DEFAULT_PALETTE = [
-  "#6366f1", // Indigo
-  "#8b5cf6", // Violet
-  "#a855f7", // Purple
-  "#ec4899", // Rose
-];
-
 export function DottedBackground({
-  frequency = 2.4,
-  speed = 2.5,
-  bgColor = "transparent",
-  colors = DEFAULT_PALETTE,
-  cellSize = 36,
-  gamma = 5,
-  paletteBias = -2.5,
-  style,
+  frequency = 0.35,
+  speed = 0.15,
+  cellSize = 26,
+  gamma = 1.1,
+  paletteBias = 0.1,
+  colors = [
+    "rgba(139, 92, 246, 0.35)",
+    "rgba(99, 102, 241, 0.30)",
+    "rgba(16, 185, 129, 0.25)",
+    "rgba(245, 158, 11, 0.20)",
+  ],
+  bgColor = "#09090b",
   className,
+  style,
 }: DottedBackgroundProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const perlinProgramRef = useRef<Program | null>(null);
-  const dotProgramRef = useRef<Program | null>(null);
-  const rendererRef = useRef<Renderer | null>(null);
-  const cameraRef = useRef<Camera | null>(null);
-  const perlinMeshRef = useRef<Mesh | null>(null);
-  const dotMeshRef = useRef<Mesh | null>(null);
-  const renderTargetRef = useRef<OglRenderTarget | null>(null);
-  const glRef = useRef<Renderer["gl"] | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isVisibleRef = useRef<boolean>(true);
   const rafIdRef = useRef<number | null>(null);
-  const lastTimeRef = useRef(0);
-  const isVisibleRef = useRef(true);
+  const lastTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    // Skip heavy WebGL on reduced-motion preference
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || typeof window === "undefined") return;
 
-    let renderer: Renderer;
-    try {
-      renderer = new Renderer({
-        dpr: 1.0,
-        alpha: true,
-        premultipliedAlpha: false,
-        webgl: 2,
-        powerPreference: "low-power",
-      });
-    } catch {
-      return;
-    }
+    // Check if touch / mobile device to prevent high CPU WebGL loops on mobile
+    const isMobile = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if (isMobile) return;
 
-    const glContext = renderer.gl as unknown as {
-      canvas: HTMLCanvasElement;
-    } & WebGL2RenderingContext;
-    const gl = renderer.gl;
-    const canvas = glContext?.canvas;
-    if (!gl || !canvas) return;
+    let cleanup = () => {};
 
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.objectFit = "cover";
+    // Defer dynamic OGL WebGL import & setup until idle to guarantee 0 blocking time
+    const initWebGL = async () => {
+      try {
+        const { Renderer, Camera, Mesh, Plane, Program, RenderTarget: OglRenderTarget } = await import("ogl");
 
-    container.appendChild(canvas);
-    rendererRef.current = renderer;
-    glRef.current = gl;
+        const renderer = new Renderer({
+          dpr: Math.min(window.devicePixelRatio || 1, 1.25),
+          alpha: true,
+          premultipliedAlpha: false,
+          powerPreference: "low-power",
+        });
 
-    const camera = new Camera(gl, { near: 0.1, far: 100 });
-    camera.position.set(0, 0, 3);
-    cameraRef.current = camera;
+        const gl = renderer.gl;
+        const canvas = gl.canvas;
+        canvas.style.display = "block";
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.position = "absolute";
+        canvas.style.inset = "0";
+        canvas.style.pointerEvents = "none";
+        container.appendChild(canvas);
 
-    const doResize = () => {
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
-      const aspect = width / Math.max(1, height);
+        const camera = new Camera(gl);
 
-      const dpr = Math.min(typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1, 1.0);
-      renderer.dpr = dpr;
+        const doResize = () => {
+          if (!container) return;
+          const rect = container.getBoundingClientRect();
+          const w = Math.max(10, rect.width);
+          const h = Math.max(10, rect.height);
+          renderer.setSize(w, h);
+        };
 
-      renderer.setSize(width, height);
-      camera.perspective({ aspect });
-      if (renderTargetRef.current?.setSize) {
-        renderTargetRef.current.setSize(canvas.width, canvas.height);
-      }
-      if (perlinProgramRef.current) {
-        perlinProgramRef.current.uniforms.uResolution.value = [
-          canvas.width,
-          canvas.height,
-        ];
-      }
-      if (dotProgramRef.current) {
-        dotProgramRef.current.uniforms.uResolution.value = [
-          canvas.width,
-          canvas.height,
-        ];
-      }
-    };
+        window.addEventListener("resize", doResize, { passive: true });
+        doResize();
 
-    window.addEventListener("resize", doResize, { passive: true });
-    doResize();
+        const perlinProgram = new Program(gl, {
+          vertex: perlinVertexShader,
+          fragment: perlinFragmentShader,
+          uniforms: {
+            uTime: { value: 0 },
+            uFrequency: { value: frequency * 0.35 },
+            uSpeed: { value: speed * 0.04 },
+            uValue: { value: 1 },
+            uResolution: { value: [canvas.width, canvas.height] },
+          },
+        });
 
-    const perlinProgram = new Program(gl, {
-      vertex: perlinVertexShader,
-      fragment: perlinFragmentShader,
-      uniforms: {
-        uTime: { value: 0 },
-        uFrequency: { value: frequency * 0.35 },
-        uSpeed: { value: speed * 0.04 },
-        uValue: { value: 1 },
-        uResolution: { value: [canvas.width, canvas.height] },
-      },
-    });
-    perlinProgramRef.current = perlinProgram;
+        const perlinMesh = new Mesh(gl, {
+          geometry: new Plane(gl, { width: 2, height: 2 }),
+          program: perlinProgram,
+        });
 
-    const perlinMesh = new Mesh(gl, {
-      geometry: new Plane(gl, { width: 2, height: 2 }),
-      program: perlinProgram,
-    });
-    perlinMeshRef.current = perlinMesh;
+        const renderTarget = new OglRenderTarget(gl);
+        const palette = buildPaletteUniforms(colors);
 
-    const renderTarget = new OglRenderTarget(gl);
-    renderTargetRef.current = renderTarget;
+        const dotProgram = new Program(gl, {
+          vertex: dotVertexShader,
+          fragment: dotFragmentShader,
+          uniforms: {
+            uResolution: { value: [canvas.width, canvas.height] },
+            uTexture: { value: renderTarget.texture },
+            uPaletteCount: { value: Math.min(10, colors.length) },
+            uPalette: { value: palette.rgb },
+            uPaletteAlpha: { value: palette.alpha },
+            uCellSize: { value: cellSize * 0.75 },
+            uGamma: { value: gamma },
+            uPaletteBias: { value: paletteBias * 0.05 },
+          },
+        });
 
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-    const effectiveCellSize = isMobile ? Math.max(18, cellSize * 0.55) : cellSize * 0.7;
+        const dotMesh = new Mesh(gl, {
+          geometry: new Plane(gl, { width: 2, height: 2 }),
+          program: dotProgram,
+        });
 
-    const palette = buildPaletteUniforms(colors);
-    const dotProgram = new Program(gl, {
-      vertex: dotVertexShader,
-      fragment: dotFragmentShader,
-      uniforms: {
-        uResolution: { value: [canvas.width, canvas.height] },
-        uTexture: { value: renderTarget.texture },
-        uPaletteCount: { value: Math.min(10, colors.length) },
-        uPalette: { value: palette.rgb },
-        uPaletteAlpha: { value: palette.alpha },
-        uCellSize: { value: effectiveCellSize },
-        uGamma: { value: gamma },
-        uPaletteBias: { value: paletteBias * 0.05 },
-      },
-    });
-    dotProgramRef.current = dotProgram;
+        const onVisibilityChange = () => {
+          isVisibleRef.current = document.visibilityState === "visible";
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
 
-    const dotMesh = new Mesh(gl, {
-      geometry: new Plane(gl, { width: 2, height: 2 }),
-      program: dotProgram,
-    });
-    dotMeshRef.current = dotMesh;
+        let observer: IntersectionObserver | null = null;
+        if (typeof IntersectionObserver !== "undefined") {
+          observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                isVisibleRef.current = entry.isIntersecting && document.visibilityState === "visible";
+              });
+            },
+            { threshold: 0 }
+          );
+          observer.observe(container);
+        }
 
-    const onVisibilityChange = () => {
-      isVisibleRef.current = document.visibilityState === "visible";
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
-
-    let observer: IntersectionObserver | null = null;
-    if (typeof IntersectionObserver !== "undefined") {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            isVisibleRef.current = entry.isIntersecting && document.visibilityState === "visible";
-          });
-        },
-        { threshold: 0 }
-      );
-      observer.observe(container);
-    }
-
-    const frameInterval = 75; // Smooth 13-14fps throttled ambient calculation saving CPU & GPU
-    const update = (time: number) => {
-      rafIdRef.current = requestAnimationFrame(update);
-      if (!isVisibleRef.current) return;
-
-      const last = lastTimeRef.current;
-      if (time - last >= frameInterval) {
-        lastTimeRef.current = time;
-        perlinProgram.uniforms.uTime.value = time * 0.001;
-        renderer.render({ scene: perlinMesh, camera, target: renderTarget });
-        dotProgram.uniforms.uResolution.value = [canvas.width, canvas.height];
-        perlinProgram.uniforms.uResolution.value = [canvas.width, canvas.height];
-        renderer.render({ scene: dotMesh, camera });
-      }
-    };
-
-    // Defer initialization until browser idle time after initial paints
-    let idleHandle: number | null = null;
-    let startTimer: NodeJS.Timeout | null = null;
-
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleHandle = (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => number }).requestIdleCallback(
-        () => {
+        const frameInterval = 80; // Smooth 12.5fps throttled ambient calculation saving CPU & GPU
+        const update = (time: number) => {
           rafIdRef.current = requestAnimationFrame(update);
-        },
-        { timeout: 1800 }
-      );
-    } else {
-      startTimer = setTimeout(() => {
+          if (!isVisibleRef.current) return;
+
+          const last = lastTimeRef.current;
+          if (time - last >= frameInterval) {
+            lastTimeRef.current = time;
+            perlinProgram.uniforms.uTime.value = time * 0.001;
+            renderer.render({ scene: perlinMesh, camera, target: renderTarget });
+            dotProgram.uniforms.uResolution.value = [canvas.width, canvas.height];
+            perlinProgram.uniforms.uResolution.value = [canvas.width, canvas.height];
+            renderer.render({ scene: dotMesh, camera });
+          }
+        };
+
         rafIdRef.current = requestAnimationFrame(update);
-      }, 1200);
+
+        cleanup = () => {
+          if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+          window.removeEventListener("resize", doResize);
+          document.removeEventListener("visibilitychange", onVisibilityChange);
+          if (observer) observer.disconnect();
+          if (canvas && canvas.parentElement === container) {
+            container.removeChild(canvas);
+          }
+        };
+      } catch {}
+    };
+
+    let idleId: number | null = null;
+    let timer: NodeJS.Timeout | null = null;
+
+    if ("requestIdleCallback" in window) {
+      idleId = (window as any).requestIdleCallback(() => initWebGL(), { timeout: 3000 });
+    } else {
+      timer = setTimeout(initWebGL, 2000);
     }
 
     return () => {
-      if (idleHandle && typeof window !== "undefined" && "cancelIdleCallback" in window) {
-        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleHandle);
-      }
-      if (startTimer) clearTimeout(startTimer);
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-      window.removeEventListener("resize", doResize);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      if (observer) observer.disconnect();
-      if (canvas && canvas.parentElement === container) {
-        container.removeChild(canvas);
-      }
+      if (idleId && "cancelIdleCallback" in window) (window as any).cancelIdleCallback(idleId);
+      if (timer) clearTimeout(timer);
+      cleanup();
     };
   }, [frequency, speed, cellSize, gamma, paletteBias, colors]);
 
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-45 transition-opacity duration-1000 ${
+      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-40 transition-opacity duration-1000 ${
         className || ""
       }`}
       style={{
@@ -429,12 +380,12 @@ export function DottedBackground({
         ...style,
       }}
     >
+      {/* Mobile Ambient Glow - 0ms CPU Cost with GPU Compositing */}
       <div
+        className="absolute inset-0 pointer-events-none opacity-25"
         style={{
-          width: `${INTRINSIC_WIDTH}px`,
-          height: `${INTRINSIC_HEIGHT}px`,
-          visibility: "hidden",
-          position: "absolute",
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139,92,246,0.35), transparent 70%), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(99,102,241,0.25), transparent 60%)",
         }}
       />
     </div>

@@ -70,7 +70,7 @@ const COMPONENT_DEFAULTS = {
   pressScale: 0.88,
 };
 
-export function UserCursor(userProps: UserCursorProps) {
+function DesktopUserCursor(userProps: UserCursorProps) {
   const props = { ...COMPONENT_DEFAULTS, ...userProps };
   const {
     name,
@@ -83,7 +83,6 @@ export function UserCursor(userProps: UserCursorProps) {
     showLabel,
     fullScreen,
     hideNativeCursor,
-    hideOnTouch,
     zIndex,
     offsetX,
     offsetY,
@@ -104,33 +103,7 @@ export function UserCursor(userProps: UserCursorProps) {
     if (langContext && langContext.lang === "en") {
       isTurkish = false;
     }
-  } catch {
-    // Outside language provider fallback
-  }
-
-  // Touch device detection (zero cost on mobile)
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-  useEffect(() => {
-    if (!hideOnTouch) {
-      setIsTouchDevice(false);
-      return;
-    }
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mql = window.matchMedia("(pointer: coarse)");
-    const sync = () => setIsTouchDevice(!!mql.matches);
-    sync();
-
-    if (mql.addEventListener) {
-      mql.addEventListener("change", sync);
-      return () => mql.removeEventListener("change", sync);
-    }
-    const legacy = mql as MediaQueryList & {
-      addListener?: (l: (e: MediaQueryListEvent) => void) => void;
-      removeListener?: (l: (e: MediaQueryListEvent) => void) => void;
-    };
-    legacy.addListener?.(sync);
-    return () => legacy.removeListener?.(sync);
-  }, [hideOnTouch]);
+  } catch {}
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [hovering, setHovering] = useState(false);
@@ -260,68 +233,86 @@ export function UserCursor(userProps: UserCursorProps) {
           setDynamicLabel(isTurkish ? "Dış Bağlantı" : "External Link");
           return;
         }
+        setDynamicLabel(isTurkish ? "Aç" : "Open");
+        return;
       }
-      setDynamicLabel(isTurkish ? "Aç" : "Open");
+      setDynamicLabel(isTurkish ? "Seç" : "Select");
       return;
     }
 
-    // 3. Inputs & Textareas
-    if (target.closest("input, textarea, [contenteditable='true']")) {
-      setIsClickable(true);
+    // 3. Text Inputs and Code Areas
+    const textInput = target.closest("input[type='text'], input[type='email'], input[type='url'], input[type='number'], textarea");
+    if (textInput) {
       setDynamicLabel(isTurkish ? "Yaz" : "Type");
+      setIsClickable(true);
       return;
     }
 
     // 4. Code Blocks
-    if (target.closest("pre, code")) {
-      setIsClickable(true);
+    const codeBlock = target.closest("pre, code, .font-mono");
+    if (codeBlock) {
       setDynamicLabel(isTurkish ? "Kod" : "Code");
+      setIsClickable(false);
       return;
     }
 
-    // 5. Default state
-    setIsClickable(false);
+    // Default Neutral Brand State
     setDynamicLabel(name);
+    setIsClickable(false);
   };
 
+  // Attach Pointer Event Listeners
   useEffect(() => {
-    if (isTouchDevice || typeof window === "undefined") return;
-
     const container = containerRef.current;
     if (!fullScreen && !container) return;
 
-    const getLocal = (clientX: number, clientY: number) => {
-      if (fullScreen) return { x: clientX, y: clientY };
-      const rect = container!.getBoundingClientRect();
-      return { x: clientX - rect.left, y: clientY - rect.top };
-    };
+    let rafScheduled = false;
+    let pendingEvent: MouseEvent | null = null;
 
-    const onMove = (e: MouseEvent) => {
-      const { x, y } = getLocal(e.clientX, e.clientY);
+    const processPointerMove = () => {
+      rafScheduled = false;
+      if (!pendingEvent) return;
 
-      const now =
-        typeof performance !== "undefined" ? performance.now() : Date.now();
+      const e = pendingEvent;
+      let px = 0;
+      let py = 0;
+
+      if (fullScreen) {
+        px = e.clientX;
+        py = e.clientY;
+      } else {
+        const rect = container!.getBoundingClientRect();
+        px = e.clientX - rect.left;
+        py = e.clientY - rect.top;
+      }
+
+      const targetX = px + resolvedOffset.x;
+      const targetY = py + resolvedOffset.y;
+
+      mouseX.set(targetX);
+      mouseY.set(targetY);
+
+      // Organic Velocity Tilt Math
+      const now = performance.now();
       const last = lastSampleRef.current;
-      let vx = 0;
-      let vy = 0;
       if (last) {
         const dt = Math.max(1, now - last.t);
-        vx = ((x - last.x) / dt) * 1000;
-        vy = ((y - last.y) / dt) * 1000;
+        const vx = ((targetX - last.x) / dt) * 1000;
+        const tilt = Math.max(-labelTiltStrength, Math.min(labelTiltStrength, (vx / 45) * 0.85));
+        labelTiltTarget.set(tilt);
       }
-      lastSampleRef.current = { x, y, t: now };
-
-      mouseX.set(x + resolvedOffset.x);
-      mouseY.set(y + resolvedOffset.y);
-
-      // Label rock & tilt: sign by horizontal velocity, clamped magnitude
-      const speed = Math.hypot(vx, vy);
-      const norm = Math.min(1, speed / 1400);
-      const sign = vx === 0 ? 0 : vx > 0 ? 1 : -1;
-      labelTiltTarget.set(sign * norm * labelTiltStrength);
+      lastSampleRef.current = { x: targetX, y: targetY, t: now };
 
       if (!hovering) setHovering(true);
       inspectElement(e.target as HTMLElement);
+    };
+
+    const onMove = (e: MouseEvent) => {
+      pendingEvent = e;
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(processPointerMove);
+      }
     };
 
     const onDown = () => setPressed(true);
@@ -364,7 +355,6 @@ export function UserCursor(userProps: UserCursorProps) {
       setPressed(false);
     };
   }, [
-    isTouchDevice,
     fullScreen,
     labelTiltStrength,
     resolvedOffset.x,
@@ -374,9 +364,10 @@ export function UserCursor(userProps: UserCursorProps) {
     labelTiltTarget,
     hovering,
     name,
+    isTurkish,
   ]);
 
-  const visible = !isTouchDevice && hovering;
+  const visible = hovering;
 
   const labelTranslateX = useTransform(
     labelX,
@@ -445,8 +436,6 @@ export function UserCursor(userProps: UserCursorProps) {
     );
   }, [label, dynamicLabel, textColor, size, classNames?.labelText]);
 
-  if (isTouchDevice) return null;
-
   const layerStyle: CSSProperties = fullScreen
     ? {
         position: "fixed",
@@ -461,85 +450,101 @@ export function UserCursor(userProps: UserCursorProps) {
         zIndex,
       };
 
-  const cursorLayer = (
-    <div style={layerStyle}>
-      {/* Trailing Label Pill */}
-      {showLabel && (
-        <motion.div
-          className={classNames?.label}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            x: labelTranslateX,
-            y: labelTranslateY,
-            rotate: labelRotation,
-            scale: scaleMV,
-            background: isClickable ? "#4f46e5" : color,
-            borderRadius: 999,
-            padding: `${Math.max(4, size * 0.16)}px ${Math.max(8, size * 0.36)}px`,
-            boxShadow:
-              "0 4px 20px rgba(0,0,0,0.35), 0 0 12px rgba(139,92,246,0.35), inset 0 1px 0 rgba(255,255,255,0.25)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            opacity: visible ? 1 : 0,
-            transformOrigin: "0% 50%",
-            transition: "opacity 140ms ease, background 200ms ease",
-            willChange: "transform, opacity",
-            userSelect: "none",
-            pointerEvents: "none",
-          }}
-        >
-          {labelContent}
-        </motion.div>
+  return (
+    <>
+      {hideNativeCursor && (
+        <style>{`
+          html, body, a, button, input, select, textarea, [role="button"] {
+            cursor: none !important;
+          }
+        `}</style>
       )}
 
-      {/* Primary Arrow Pointer */}
-      <motion.div
-        className={classNames?.cursor}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          x: arrowX,
-          y: arrowY,
-          scale: scaleMV,
-          width: size,
-          height: size,
-          opacity: visible ? 1 : 0,
-          transformOrigin: "0% 0%",
-          transition: "opacity 140ms ease",
-          willChange: "transform, opacity",
-          pointerEvents: "none",
-        }}
+      <div
+        ref={containerRef}
+        className={classNames?.root}
+        style={{ ...layerStyle, ...style }}
       >
-        <div
+        {/* Layer 1: Arrow Glyph Follower */}
+        <motion.div
           className={classNames?.arrow}
-          style={{ width: size, height: size }}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            x: arrowX,
+            y: arrowY,
+            scale: scaleMV,
+            opacity: visible ? 1 : 0,
+            pointerEvents: "none",
+            willChange: "transform, opacity",
+            originX: 0.15,
+            originY: 0.15,
+          }}
+          transition={{ opacity: { duration: 0.15 } }}
         >
           {arrowContent}
-        </div>
-      </motion.div>
-    </div>
-  );
+        </motion.div>
 
-  if (fullScreen) {
-    return cursorLayer;
-  }
-
-  return (
-    <div
-      ref={containerRef}
-      className={classNames?.root}
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        cursor: hideNativeCursor ? "none" : undefined,
-        ...style,
-      }}
-    >
-      {cursorLayer}
-    </div>
+        {/* Layer 2: Trailing Context Pill */}
+        {showLabel && (
+          <motion.div
+            className={classNames?.label}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              x: labelTranslateX,
+              y: labelTranslateY,
+              rotate: labelRotation,
+              scale: scaleMV,
+              opacity: visible ? 1 : 0,
+              pointerEvents: "none",
+              willChange: "transform, opacity",
+              originX: 0,
+              originY: 0,
+            }}
+            transition={{ opacity: { duration: 0.2 } }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: `${Math.max(4, size * 0.16)}px ${Math.max(10, size * 0.42)}px`,
+                borderRadius: 9999,
+                background: isClickable ? "rgba(99, 102, 241, 0.95)" : "rgba(139, 92, 246, 0.92)",
+                boxShadow:
+                  "0 4px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(139, 92, 246, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35)",
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                transition: "background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+              }}
+            >
+              {labelContent}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </>
   );
 }
 
-export default UserCursor;
+export function UserCursor(props: UserCursorProps) {
+  const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== "undefined" && window.matchMedia) {
+      const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
+      const isTouch = "ontouchstart" in window || window.matchMedia("(pointer: coarse)").matches;
+      setIsDesktop(hasFinePointer && !isTouch);
+    }
+  }, []);
+
+  if (!mounted || !isDesktop) return null;
+
+  return <DesktopUserCursor {...props} />;
+}
