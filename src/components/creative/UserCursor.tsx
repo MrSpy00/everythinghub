@@ -1,246 +1,533 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  animate,
+  type SpringOptions,
+} from "framer-motion";
+
+export type ClassNames = {
+  root?: string;
+  cursor?: string;
+  arrow?: string;
+  label?: string;
+  labelText?: string;
+};
 
 export interface UserCursorProps {
   name?: string;
+  arrow?: ReactNode | ((color: string) => ReactNode);
+  label?: ReactNode;
   color?: string;
   textColor?: string;
   size?: number;
+  labelTiltStrength?: number;
+  showLabel?: boolean;
+  fullScreen?: boolean;
+  hideNativeCursor?: boolean;
+  hideOnTouch?: boolean;
+  zIndex?: number;
+  offsetX?: number;
+  offsetY?: number;
+  labelOffsetUseDefault?: boolean;
+  labelOffsetX?: number;
+  labelOffsetY?: number;
+  pressScale?: number;
+  offset?: { x?: number; y?: number };
+  labelOffset?: { x?: number; y?: number };
+  classNames?: ClassNames;
+  style?: CSSProperties;
 }
 
-export function UserCursor({
-  name = "EverythingHub",
-  color = "#818cf8",
-  size = 28,
-}: UserCursorProps) {
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLDivElement>(null);
-  const labelTextRef = useRef<HTMLSpanElement>(null);
+const COMPONENT_DEFAULTS = {
+  name: "EverythingHub",
+  color: "#8b5cf6",
+  textColor: "#ffffff",
+  size: 28,
+  labelTiltStrength: 24,
+  showLabel: true,
+  fullScreen: true,
+  hideNativeCursor: true,
+  hideOnTouch: true,
+  zIndex: 9999,
+  offsetX: 0,
+  offsetY: 0,
+  labelOffsetUseDefault: true,
+  labelOffsetX: 22,
+  labelOffsetY: 14,
+  pressScale: 0.88,
+};
 
+export function UserCursor(userProps: UserCursorProps) {
+  const props = { ...COMPONENT_DEFAULTS, ...userProps };
+  const {
+    name,
+    arrow,
+    label,
+    color,
+    textColor,
+    size,
+    labelTiltStrength,
+    showLabel,
+    fullScreen,
+    hideNativeCursor,
+    hideOnTouch,
+    zIndex,
+    offsetX,
+    offsetY,
+    labelOffsetX,
+    labelOffsetY,
+    labelOffsetUseDefault,
+    pressScale,
+    classNames,
+    offset: offsetOverride,
+    labelOffset: labelOffsetOverride,
+    style,
+  } = props;
+
+  // Touch device detection (zero cost on mobile)
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   useEffect(() => {
-    // Disable custom cursor on touch/coarse devices
-    if (typeof window === "undefined" || window.matchMedia("(pointer: coarse)").matches) {
+    if (!hideOnTouch) {
+      setIsTouchDevice(false);
+      return;
+    }
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mql = window.matchMedia("(pointer: coarse)");
+    const sync = () => setIsTouchDevice(!!mql.matches);
+    sync();
+
+    if (mql.addEventListener) {
+      mql.addEventListener("change", sync);
+      return () => mql.removeEventListener("change", sync);
+    }
+    const legacy = mql as MediaQueryList & {
+      addListener?: (l: (e: MediaQueryListEvent) => void) => void;
+      removeListener?: (l: (e: MediaQueryListEvent) => void) => void;
+    };
+    legacy.addListener?.(sync);
+    return () => legacy.removeListener?.(sync);
+  }, [hideOnTouch]);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [hovering, setHovering] = useState(false);
+  const [pressed, setPressed] = useState(false);
+
+  // Dynamic context-aware state
+  const [dynamicLabel, setDynamicLabel] = useState<string>(name);
+  const [isClickable, setIsClickable] = useState(false);
+
+  // High-performance spring configurations (Snappy arrow, organic trailing pill)
+  const arrowSpringCfg = useMemo<SpringOptions>(
+    () => ({ stiffness: 480, damping: 36, mass: 0.5 }),
+    []
+  );
+  const labelSpringCfg = useMemo<SpringOptions>(
+    () => ({ stiffness: 240, damping: 28, mass: 0.65 }),
+    []
+  );
+
+  const resolvedOffset = useMemo(
+    () => ({
+      x: offsetOverride?.x ?? offsetX,
+      y: offsetOverride?.y ?? offsetY,
+    }),
+    [offsetOverride?.x, offsetOverride?.y, offsetX, offsetY]
+  );
+
+  const resolvedLabelOffset = useMemo(() => {
+    if (labelOffsetOverride) {
+      return {
+        x: labelOffsetOverride.x ?? size * 0.75,
+        y: labelOffsetOverride.y ?? size * 0.45 + 2,
+      };
+    }
+    if (labelOffsetUseDefault) {
+      return { x: size * 0.75, y: size * 0.45 + 2 };
+    }
+    return { x: labelOffsetX, y: labelOffsetY };
+  }, [
+    labelOffsetOverride,
+    labelOffsetUseDefault,
+    labelOffsetX,
+    labelOffsetY,
+    size,
+  ]);
+
+  // Motion values
+  const mouseX = useMotionValue(-9999);
+  const mouseY = useMotionValue(-9999);
+
+  const arrowX = useSpring(mouseX, arrowSpringCfg);
+  const arrowY = useSpring(mouseY, arrowSpringCfg);
+  const labelX = useSpring(mouseX, labelSpringCfg);
+  const labelY = useSpring(mouseY, labelSpringCfg);
+
+  // Press bounce animation
+  const scaleMV = useMotionValue(1);
+  useEffect(() => {
+    const controls = animate(scaleMV, pressed ? pressScale : 1, {
+      type: "spring",
+      stiffness: 550,
+      damping: 28,
+      mass: 0.4,
+    });
+    return () => controls.stop();
+  }, [pressed, pressScale, scaleMV]);
+
+  // Velocity-driven dynamic pill tilt
+  const labelTiltTarget = useMotionValue(0);
+  const labelRotation = useSpring(labelTiltTarget, {
+    stiffness: 220,
+    damping: 24,
+    mass: 0.6,
+  });
+
+  const lastSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
+
+  // Context-aware element inspection
+  const inspectElement = (target: HTMLElement | null) => {
+    if (!target) return;
+
+    // 1. Explicit data-cursor tag
+    const customCursor = target.closest("[data-cursor]")?.getAttribute("data-cursor");
+    if (customCursor) {
+      setDynamicLabel(customCursor);
+      setIsClickable(true);
       return;
     }
 
-    let mouseX = -200;
-    let mouseY = -200;
-    let ringX = -200;
-    let ringY = -200;
-    let labelX = -200;
-    let labelY = -200;
-    let isHovering = false;
-    let isClickable = false;
-    let isPressed = false;
-    let animId: number | null = null;
-    let isRunning = false;
+    // 2. Buttons, Links and Action triggers
+    const clickable = target.closest("a, button, [role='button'], input[type='submit']");
+    if (clickable) {
+      setIsClickable(true);
+      const titleAttr =
+        clickable.getAttribute("title") ||
+        clickable.getAttribute("aria-label") ||
+        "";
+      const lower = titleAttr.toLowerCase();
 
-    const updateLabelText = (target: HTMLElement | null) => {
-      if (!labelTextRef.current) return;
-      const customCursor = target?.closest("[data-cursor]")?.getAttribute("data-cursor");
-      if (customCursor) {
-        labelTextRef.current.textContent = customCursor;
-        isClickable = true;
+      if (lower.includes("kopyala") || lower.includes("copy")) {
+        setDynamicLabel("Kopyala");
         return;
       }
-
-      const clickable = target?.closest("a, button, [role='button']");
-      if (clickable) {
-        isClickable = true;
-        const titleAttr = clickable.getAttribute("title") || clickable.getAttribute("aria-label");
-        if (titleAttr) {
-          const lower = titleAttr.toLowerCase();
-          if (lower.includes("kopyala") || lower.includes("copy")) {
-            labelTextRef.current.textContent = "Kopyala";
-            return;
-          }
-          if (lower.includes("indir") || lower.includes("download")) {
-            labelTextRef.current.textContent = "İndir";
-            return;
-          }
-          if (lower.includes("ara") || lower.includes("search")) {
-            labelTextRef.current.textContent = "Ara";
-            return;
-          }
-        }
-        labelTextRef.current.textContent = "Aç";
+      if (lower.includes("indir") || lower.includes("download")) {
+        setDynamicLabel("İndir");
         return;
       }
-
-      if (target?.closest("input, textarea")) {
-        isClickable = true;
-        labelTextRef.current.textContent = "Yaz";
+      if (lower.includes("ara") || lower.includes("search")) {
+        setDynamicLabel("Ara");
         return;
       }
-
-      isClickable = false;
-      labelTextRef.current.textContent = name;
-    };
-
-    // On-demand fluid physics loop - sleeps automatically when pointer is resting
-    const renderLoop = () => {
-      if (!isHovering) {
-        isRunning = false;
-        animId = null;
+      if (lower.includes("sıfırla") || lower.includes("reset") || lower.includes("temizle")) {
+        setDynamicLabel("Temizle");
         return;
       }
-
-      const ringLerp = 0.22;
-      const dRingX = (mouseX - ringX) * ringLerp;
-      const dRingY = (mouseY - ringY) * ringLerp;
-      ringX += dRingX;
-      ringY += dRingY;
-
-      const labelLerp = 0.16;
-      const dLabelX = (mouseX - labelX) * labelLerp;
-      const dLabelY = (mouseY - labelY) * labelLerp;
-      labelX += dLabelX;
-      labelY += dLabelY;
-
-      if (ringRef.current) {
-        const scale = isPressed ? 0.75 : isClickable ? 1.35 : 1;
-        ringRef.current.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) scale(${scale})`;
-        ringRef.current.style.opacity = isClickable ? "0.9" : "0.5";
+      if (lower.includes("paylaş") || lower.includes("share")) {
+        setDynamicLabel("Paylaş");
+        return;
       }
-
-      if (labelRef.current) {
-        const lx = labelX + 16;
-        const ly = labelY + 16;
-        labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0)`;
-        labelRef.current.style.opacity = isClickable ? "1" : "0.75";
+      if (lower.includes("yukarı") || lower.includes("top")) {
+        setDynamicLabel("Yukarı");
+        return;
       }
-
-      // Check if settled (near zero movement) to save CPU/GPU cycles
-      const hasMovement =
-        Math.abs(dRingX) > 0.04 ||
-        Math.abs(dRingY) > 0.04 ||
-        Math.abs(dLabelX) > 0.04 ||
-        Math.abs(dLabelY) > 0.04;
-
-      if (hasMovement) {
-        animId = requestAnimationFrame(renderLoop);
-      } else {
-        isRunning = false;
-        animId = null;
-      }
-    };
-
-    const startLoopIfNeeded = () => {
-      if (!isRunning && isHovering && document.visibilityState === "visible") {
-        isRunning = true;
-        animId = requestAnimationFrame(renderLoop);
-      }
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
-        if (!isHovering) {
-          dotRef.current.style.opacity = "1";
-          if (ringRef.current) ringRef.current.style.opacity = "0.5";
-          if (labelRef.current) labelRef.current.style.opacity = "0.75";
-          isHovering = true;
-          ringX = mouseX;
-          ringY = mouseY;
-          labelX = mouseX;
-          labelY = mouseY;
+      if (clickable.tagName.toLowerCase() === "a") {
+        const href = clickable.getAttribute("href") || "";
+        if (href.startsWith("http") || href.startsWith("//")) {
+          setDynamicLabel("Dış Bağlantı");
+          return;
         }
       }
+      setDynamicLabel("Aç");
+      return;
+    }
 
-      updateLabelText(e.target as HTMLElement);
-      startLoopIfNeeded();
+    // 3. Inputs & Textareas
+    if (target.closest("input, textarea, [contenteditable='true']")) {
+      setIsClickable(true);
+      setDynamicLabel("Yaz");
+      return;
+    }
+
+    // 4. Code Blocks
+    if (target.closest("pre, code")) {
+      setIsClickable(true);
+      setDynamicLabel("Kod");
+      return;
+    }
+
+    // 5. Default state
+    setIsClickable(false);
+    setDynamicLabel(name);
+  };
+
+  useEffect(() => {
+    if (isTouchDevice || typeof window === "undefined") return;
+
+    const container = containerRef.current;
+    if (!fullScreen && !container) return;
+
+    const getLocal = (clientX: number, clientY: number) => {
+      if (fullScreen) return { x: clientX, y: clientY };
+      const rect = container!.getBoundingClientRect();
+      return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
-    const onMouseDown = () => {
-      isPressed = true;
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.7)`;
+    const onMove = (e: MouseEvent) => {
+      const { x, y } = getLocal(e.clientX, e.clientY);
+
+      const now =
+        typeof performance !== "undefined" ? performance.now() : Date.now();
+      const last = lastSampleRef.current;
+      let vx = 0;
+      let vy = 0;
+      if (last) {
+        const dt = Math.max(1, now - last.t);
+        vx = ((x - last.x) / dt) * 1000;
+        vy = ((y - last.y) / dt) * 1000;
       }
-      startLoopIfNeeded();
+      lastSampleRef.current = { x, y, t: now };
+
+      mouseX.set(x + resolvedOffset.x);
+      mouseY.set(y + resolvedOffset.y);
+
+      // Label rock & tilt: sign by horizontal velocity, clamped magnitude
+      const speed = Math.hypot(vx, vy);
+      const norm = Math.min(1, speed / 1400);
+      const sign = vx === 0 ? 0 : vx > 0 ? 1 : -1;
+      labelTiltTarget.set(sign * norm * labelTiltStrength);
+
+      if (!hovering) setHovering(true);
+      inspectElement(e.target as HTMLElement);
     };
 
-    const onMouseUp = () => {
-      isPressed = false;
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
-      }
-      startLoopIfNeeded();
+    const onDown = () => setPressed(true);
+    const onUp = () => setPressed(false);
+    const onEnter = () => setHovering(true);
+    const onLeave = () => {
+      setHovering(false);
+      lastSampleRef.current = null;
+      labelTiltTarget.set(0);
     };
 
-    const onMouseLeave = () => {
-      isHovering = false;
-      if (dotRef.current) dotRef.current.style.opacity = "0";
-      if (ringRef.current) ringRef.current.style.opacity = "0";
-      if (labelRef.current) labelRef.current.style.opacity = "0";
-    };
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState !== "visible" && animId) {
-        cancelAnimationFrame(animId);
-        isRunning = false;
-        animId = null;
-      }
-    };
-
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
-    window.addEventListener("mousedown", onMouseDown, { passive: true });
-    window.addEventListener("mouseup", onMouseUp, { passive: true });
-    document.addEventListener("mouseleave", onMouseLeave, { passive: true });
-    document.addEventListener("visibilitychange", onVisibilityChange, { passive: true });
+    if (fullScreen) {
+      window.addEventListener("mousemove", onMove, { passive: true });
+      window.addEventListener("mousedown", onDown, { passive: true });
+      window.addEventListener("mouseup", onUp, { passive: true });
+      document.addEventListener("mouseleave", onLeave, { passive: true });
+    } else {
+      const el = container!;
+      el.addEventListener("mousemove", onMove as EventListener, { passive: true });
+      el.addEventListener("mousedown", onDown, { passive: true });
+      el.addEventListener("mouseup", onUp, { passive: true });
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
+    }
 
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", onMouseUp);
-      document.removeEventListener("mouseleave", onMouseLeave);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      if (animId) cancelAnimationFrame(animId);
+      if (fullScreen) {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mousedown", onDown);
+        window.removeEventListener("mouseup", onUp);
+        document.removeEventListener("mouseleave", onLeave);
+      } else {
+        const el = container!;
+        el.removeEventListener("mousemove", onMove as EventListener);
+        el.removeEventListener("mousedown", onDown);
+        el.removeEventListener("mouseup", onUp);
+        el.removeEventListener("mouseenter", onEnter);
+        el.removeEventListener("mouseleave", onLeave);
+      }
+      setPressed(false);
     };
-  }, [name]);
+  }, [
+    isTouchDevice,
+    fullScreen,
+    labelTiltStrength,
+    resolvedOffset.x,
+    resolvedOffset.y,
+    mouseX,
+    mouseY,
+    labelTiltTarget,
+    hovering,
+    name,
+  ]);
+
+  const visible = !isTouchDevice && hovering;
+
+  const labelTranslateX = useTransform(
+    labelX,
+    (v) => v + resolvedLabelOffset.x
+  );
+  const labelTranslateY = useTransform(
+    labelY,
+    (v) => v + resolvedLabelOffset.y
+  );
+
+  // Vector Arrow Glyph (Originkit Studio Arrow)
+  const arrowContent: ReactNode = useMemo(() => {
+    if (typeof arrow === "function") {
+      try {
+        return (arrow as (c: string) => ReactNode)(color);
+      } catch {
+        return null;
+      }
+    }
+    if (arrow !== undefined && arrow !== null) return arrow as ReactNode;
+
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 28 28"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          display: "block",
+          overflow: "visible",
+          filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.45))",
+        }}
+      >
+        <path
+          d="M5 3 L23 14 L14 16 L11 24 Z"
+          fill={color}
+          stroke="rgba(255,255,255,0.45)"
+          strokeWidth={0.8}
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }, [arrow, color, size]);
+
+  // Dynamic Label Content
+  const labelContent: ReactNode = useMemo(() => {
+    if (label !== undefined && label !== null) return label;
+
+    return (
+      <div
+        className={classNames?.labelText}
+        style={{
+          color: textColor,
+          fontSize: Math.max(9, size * 0.42),
+          lineHeight: 1.15,
+          fontWeight: 700,
+          fontFamily:
+            'var(--font-outfit), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          whiteSpace: "nowrap",
+          letterSpacing: "0.02em",
+        }}
+      >
+        {dynamicLabel}
+      </div>
+    );
+  }, [label, dynamicLabel, textColor, size, classNames?.labelText]);
+
+  if (isTouchDevice) return null;
+
+  const layerStyle: CSSProperties = fullScreen
+    ? {
+        position: "fixed",
+        inset: 0,
+        pointerEvents: "none",
+        zIndex,
+      }
+    : {
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        zIndex,
+      };
+
+  const cursorLayer = (
+    <div style={layerStyle}>
+      {/* Trailing Label Pill */}
+      {showLabel && (
+        <motion.div
+          className={classNames?.label}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            x: labelTranslateX,
+            y: labelTranslateY,
+            rotate: labelRotation,
+            scale: scaleMV,
+            background: isClickable ? "#4f46e5" : color,
+            borderRadius: 999,
+            padding: `${Math.max(4, size * 0.16)}px ${Math.max(8, size * 0.36)}px`,
+            boxShadow:
+              "0 4px 20px rgba(0,0,0,0.35), 0 0 12px rgba(139,92,246,0.35), inset 0 1px 0 rgba(255,255,255,0.25)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            opacity: visible ? 1 : 0,
+            transformOrigin: "0% 50%",
+            transition: "opacity 140ms ease, background 200ms ease",
+            willChange: "transform, opacity",
+            userSelect: "none",
+            pointerEvents: "none",
+          }}
+        >
+          {labelContent}
+        </motion.div>
+      )}
+
+      {/* Primary Arrow Pointer */}
+      <motion.div
+        className={classNames?.cursor}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          x: arrowX,
+          y: arrowY,
+          scale: scaleMV,
+          width: size,
+          height: size,
+          opacity: visible ? 1 : 0,
+          transformOrigin: "0% 0%",
+          transition: "opacity 140ms ease",
+          willChange: "transform, opacity",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          className={classNames?.arrow}
+          style={{ width: size, height: size }}
+        >
+          {arrowContent}
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  if (fullScreen) {
+    return cursorLayer;
+  }
 
   return (
-    <>
-      {/* Precision Center Micro-Dot */}
-      <div
-        ref={dotRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 will-change-transform"
-      >
-        <div
-          className="h-2 w-2 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.9)]"
-          style={{ backgroundColor: color }}
-        />
-      </div>
-
-      {/* Fluid Glass Aura Ring */}
-      <div
-        ref={ringRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9998] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-300 will-change-transform"
-      >
-        <div
-          className="h-7 w-7 rounded-full border border-indigo-400/40 bg-indigo-500/10 backdrop-blur-xs shadow-[0_0_16px_rgba(99,102,241,0.25)] transition-transform duration-200"
-        />
-      </div>
-
-      {/* Floating Soft Label Badge (Never Overlaps Pointer) */}
-      <div
-        ref={labelRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9997] opacity-0 transition-opacity duration-300 will-change-transform"
-      >
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-[#090a10]/90 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-xl backdrop-blur-xl">
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: color }}
-          />
-          <span ref={labelTextRef} className="leading-none select-none">
-            {name}
-          </span>
-        </div>
-      </div>
-    </>
+    <div
+      ref={containerRef}
+      className={classNames?.root}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        cursor: hideNativeCursor ? "none" : undefined,
+        ...style,
+      }}
+    >
+      {cursorLayer}
+    </div>
   );
 }
+
+export default UserCursor;
