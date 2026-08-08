@@ -1,0 +1,22 @@
+{
+  "name": "EverythingHub — Dijital Araçlar Stüdyosu",
+  "short_name": "EverythingHub",
+  "description": "Ultra hızlı, ücretsiz, üyeliksiz ve %100 gizli dijital araçlar stüdyosu.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -2,10 +2,36 @@ import type { Metadata } from "next";
 import { ColorPickerClient } from "./ColorPickerClient";
 
 export const metadata: Metadata = {
-  title: "Renk Paleti & Resimden Renk Çıkarıcı",
+  title: "Renk Paleti & Resimden Renk Çıkarıcı — Color Palette Extractor",
   description:
-    "Yüklediğiniz görsellerden ana renk paletini çıkarın, HEX ve RGB değerlerini kopyalayın.",
-  keywords: ["renk paleti", "color picker", "resimden renk alma", "hex", "rgb", "dominant colors"],
+    "Yüklediğiniz fotoğraflardan ve görsellerden öne çıkan dominant renk paletini çıkarın. HEX, RGB ve HSL renk kodlarını anında kopyalayın.",
+  keywords: [
+    "renk paleti çıkarıcı",
+    "resimden renk alma",
+    "color palette extractor",
+    "hex rgb hsl renk kodu alma",
+    "everythinghub",
+    "aegisSoft",
+    "MrSpy00",
+    "everythinghub.com.tr",
+    "everythinghub.info",
+  ],
+  alternates: {
+    canonical: "https://www.everythinghub.com.tr/tools/color-picker",
+  },
+  openGraph: {
+    title: "Renk Paleti & Resimden Renk Çıkarıcı — EverythingHub",
+    description: "Görsellerden öne çıkan dominant renk paletini çıkarın ve renk kodlarını kopyalayın.",
+    url: "https://www.everythinghub.com.tr/tools/color-picker",
+    siteName: "EverythingHub",
+    locale: "tr_TR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Renk Paleti & Resimden Renk Çıkarıcı — EverythingHub",
+    description: "Görsellerden öne çıkan dominant renk paletini çıkarın ve renk kodlarını kopyalayın.",
+  },
 };
 
 export default function ColorPickerPage() {

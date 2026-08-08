@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-everythinghub.vercel.app-8b5cf6?style=for-the-badge&logo=vercel&logoColor=white)](https://everythinghub.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-everythinghub.com.tr-8b5cf6?style=for-the-badge&logo=vercel&logoColor=white)](https://www.everythinghub.com.tr/)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16.3.0-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
@@ -30,7 +30,7 @@
 # <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="28" height="18" alt="TR" /> Türkçe Dokümantasyon
 
 ## Canlı Uygulama
-**[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
+**[https://www.everythinghub.com.tr/](https://www.everythinghub.com.tr/)**
 
 ## Proje Hakkında ve Vizyon
 
@@ -153,7 +153,7 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 # <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="28" height="18" alt="GB" /> English Documentation
 
 ## Live Application
-**[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
+**[https://www.everythinghub.com.tr/](https://www.everythinghub.com.tr/)**
 
 ## About and Vision
 

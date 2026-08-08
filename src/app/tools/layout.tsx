@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s — everythinghub",
-    default: "Araçlar — everythinghub",
+    template: "%s — EverythingHub",
+    default: "Dijital Araçlar Stüdyosu — EverythingHub",
   },
 };
 

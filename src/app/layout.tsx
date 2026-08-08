@@ -27,31 +27,87 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://everythinghub.vercel.app"),
+  metadataBase: new URL("https://www.everythinghub.com.tr"),
   title: {
     default: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
     template: "%s — EverythingHub",
   },
   description:
-    "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
+    "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır. Spotify analizör, YouTube playlist hesaplama, görsel sıkıştırma, JSON formatlama ve geliştirici araçları stüdyosu.",
   keywords: [
+    // Primary Domain & Brands
     "EverythingHub",
+    "everythinghub",
+    "everythinghub.com.tr",
+    "www.everythinghub.com.tr",
+    "everythinghub.info",
+    "www.everythinghub.info",
+    "aegisSoft",
+    "aegissoft",
+    "MrSpy00",
+    "mrspy00",
+    "aegissoft.com.tr",
+    // Studio & General Category Keywords
     "dijital araçlar stüdyosu",
+    "ücretsiz online araçlar",
+    "online developer tools",
+    "digital utility studio",
+    "zero data retention tools",
+    "browser based web tools",
+    // Tool Specific Keywords (Turkish)
     "youtube playlist analyzer",
     "youtube playlist süresi hesaplama",
-    "online developer tools",
+    "youtube playlist uzunluğu",
+    "youtube thumbnail indirici",
+    "youtube zaman damgası üretici",
+    "spotify playlist analizör",
+    "spotify bot tespiti",
+    "spotify profil analiz",
     "görsel sıkıştırma",
+    "webp dönüştürücü",
     "görsel format dönüştürücü",
-    "json formatter",
-    "aegissoft",
+    "json formatlayıcı",
+    "base64 kodlayıcı",
+    "regex test aracı",
+    "kelime sayacı",
+    "metin kasa dönüştürücü",
+    "birim dönüştürücü",
+    "yüzde hesaplama",
+    "css degrade üretici",
+    "renk paleti çıkarıcı",
+    // Tool Specific Keywords (English)
+    "youtube playlist duration calculator",
+    "spotify bot detector",
+    "spotify playlist analyzer online",
+    "image compressor online",
+    "json validator formatter",
+    "base64 encoder decoder",
+    "interactive regex tester",
+    "word character counter",
+    "case converter online",
+    "unit converter tool",
+    "percentage calculator online",
   ],
-  authors: [{ name: "aegisSoft", url: "https://www.aegissoft.com.tr/" }],
-  creator: "MrSpy00",
+  authors: [
+    { name: "aegisSoft", url: "https://www.aegissoft.com.tr/" },
+    { name: "MrSpy00", url: "https://github.com/MrSpy00" },
+  ],
+  creator: "MrSpy00 (aegisSoft)",
+  publisher: "aegisSoft",
+  alternates: {
+    canonical: "https://www.everythinghub.com.tr",
+    languages: {
+      "tr-TR": "https://www.everythinghub.com.tr",
+      "en-US": "https://www.everythinghub.com.tr",
+    },
+  },
+  manifest: "/manifest.json",
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    url: "https://everythinghub.vercel.app",
-    siteName: "EverythingHub",
+    alternateLocale: ["en_US"],
+    url: "https://www.everythinghub.com.tr",
+    siteName: "EverythingHub — Dijital Araçlar Stüdyosu",
     title: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
     description:
       "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
@@ -60,7 +116,7 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "EverythingHub Dijital Araçlar Stüdyosu",
+        alt: "EverythingHub Dijital Araçlar Stüdyosu — aegisSoft",
       },
     ],
   },
@@ -69,11 +125,21 @@ export const metadata: Metadata = {
     title: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
     description:
       "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
+    creator: "@MrSpy00",
     images: ["/opengraph-image"],
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   icons: {
     icon: [
@@ -85,6 +151,70 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLdSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.everythinghub.com.tr/#website",
+      "url": "https://www.everythinghub.com.tr",
+      "name": "EverythingHub",
+      "alternateName": [
+        "Everything Hub",
+        "EverythingHub Studio",
+        "everythinghub.com.tr",
+        "www.everythinghub.com.tr",
+        "everythinghub.info",
+        "www.everythinghub.info"
+      ],
+      "description": "Ultra hızlı, ücretsiz, üyeliksiz ve %100 gizli dijital araçlar stüdyosu.",
+      "inLanguage": ["tr-TR", "en-US"],
+      "sameAs": [
+        "https://everythinghub.com.tr",
+        "https://www.everythinghub.info",
+        "https://everythinghub.info",
+        "https://github.com/MrSpy00/everythinghub",
+        "https://www.aegissoft.com.tr/"
+      ]
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.everythinghub.com.tr/#organization",
+      "name": "aegisSoft",
+      "url": "https://www.aegissoft.com.tr/",
+      "logo": "https://www.everythinghub.com.tr/icon.svg",
+      "founder": {
+        "@type": "Person",
+        "name": "MrSpy00",
+        "url": "https://github.com/MrSpy00"
+      },
+      "sameAs": [
+        "https://github.com/MrSpy00",
+        "https://www.aegissoft.com.tr/"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://www.everythinghub.com.tr/#webapp",
+      "name": "EverythingHub Dijital Araçlar Stüdyosu",
+      "url": "https://www.everythinghub.com.tr",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "author": {
+        "@type": "Organization",
+        "name": "aegisSoft",
+        "url": "https://www.aegissoft.com.tr/"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  ]
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -92,6 +222,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" suppressHydrationWarning className="dark">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+        />
+      </head>
       <body
         suppressHydrationWarning
         className={`${outfit.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#09090b] text-[#fafafa] min-h-screen selection:bg-indigo-500/30 selection:text-white font-sans`}

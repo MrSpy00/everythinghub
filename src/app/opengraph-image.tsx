@@ -191,7 +191,7 @@ export default async function Image() {
                 fontWeight: 700,
               }}
             >
-              everythinghub.vercel.app
+              www.everythinghub.com.tr
             </div>
           </div>
         </div>
