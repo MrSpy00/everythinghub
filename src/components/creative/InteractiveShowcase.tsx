@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, useMotionValue } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Lock } from "lucide-react";
@@ -10,16 +10,37 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 export function InteractiveShowcase() {
   const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragLimit, setDragLimit] = useState(-3000);
 
-  const displayTools = useMemo(() => {
-    return [...tools, ...tools, ...tools];
+  useEffect(() => {
+    const updateLimit = () => {
+      if (carouselRef.current && containerRef.current) {
+        const scrollW = carouselRef.current.scrollWidth;
+        const clientW = containerRef.current.clientWidth;
+        setDragLimit(-Math.max(0, scrollW - clientW + 32));
+      }
+    };
+
+    updateLimit();
+    window.addEventListener("resize", updateLimit);
+    return () => window.removeEventListener("resize", updateLimit);
   }, []);
+
+  // Mouse wheel listener to convert vertical mouse scroll into horizontal carousel movement
+  const handleWheel = (e: React.WheelEvent) => {
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    const currentX = x.get();
+    const newX = Math.max(dragLimit, Math.min(0, currentX - delta * 0.85));
+    x.set(newX);
+  };
 
   return (
     <div
       ref={containerRef}
+      onWheel={handleWheel}
       className="relative w-full overflow-hidden py-6 select-none cursor-grab active:cursor-grabbing"
       data-cursor="Kaydır"
     >
@@ -27,16 +48,17 @@ export function InteractiveShowcase() {
       <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#09090b] to-transparent z-10 pointer-events-none" />
 
       <motion.div
+        ref={carouselRef}
         drag="x"
-        dragConstraints={{ left: -1200, right: 0 }}
-        dragElastic={0.1}
+        dragConstraints={{ left: dragLimit, right: 0 }}
+        dragElastic={0.08}
         dragMomentum={true}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={() => setIsDragging(false)}
         style={{ x }}
         className="flex gap-5 px-4"
       >
-        {displayTools.map((tool, idx) => {
+        {tools.map((tool, idx) => {
           const Icon = tool.icon;
           const isLive = tool.status === "live";
           const localized = t.toolTranslations?.[tool.slug] || {
@@ -116,11 +138,11 @@ export function InteractiveShowcase() {
               {isLive ? (
                 <Link
                   href={`/tools/${tool.slug}`}
-                  className="flex items-center justify-between w-full rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 px-3.5 py-2 text-xs font-semibold text-indigo-300 transition-all border border-indigo-500/30"
+                  className="flex items-center justify-between w-full rounded-xl bg-white/[0.05] hover:bg-indigo-500/20 px-3.5 py-2 text-xs font-bold text-indigo-300 hover:text-white transition-all border border-indigo-500/30 hover:border-indigo-400/80 shadow-md"
                   onClick={(e) => {
                     if (isDragging) e.preventDefault();
                   }}
-                  data-cursor="Başlat"
+                  data-cursor={localized.title}
                 >
                   <span>{t.runTool}</span>
                   <ArrowRight className="h-3.5 w-3.5" />

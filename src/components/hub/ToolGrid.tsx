@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   Search,
   X,
@@ -16,6 +17,7 @@ import {
   Check,
   ChevronDown,
   SortAsc,
+  ArrowRight,
 } from "lucide-react";
 import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
@@ -193,7 +195,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
               </span>
             </div>
             
-            <p className="mt-1.5 text-xs sm:text-sm text-[var(--hub-text-muted)]">
+            <p className="mt-1.5 text-xs sm:text-sm text-[var(--hub-text-muted)] max-w-2xl text-balance leading-relaxed">
               {t.searchFilterDesc}
             </p>
           </div>
@@ -360,14 +362,58 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
         {/* View Mode Rendering */}
         {viewMode === "showcase" ? (
           <InteractiveShowcase />
+        ) : viewMode === "compact" ? (
+          <div className="flex flex-col gap-3 w-full">
+            {filteredTools.map((tool) => {
+              const Icon = tool.icon;
+              const localized = t.toolTranslations?.[tool.slug] || {
+                title: tool.title,
+                description: tool.description,
+              };
+              return (
+                <Link
+                  key={tool.slug}
+                  href={`/tools/${tool.slug}`}
+                  className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-2xl transition-all duration-300 hover:border-indigo-500/50 hover:bg-white/[0.07] hover:shadow-xl shadow-black/40"
+                  data-cursor={localized.title}
+                >
+                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                    <div
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent shadow-md transition-transform group-hover:scale-105"
+                      style={{ color: tool.accentColor }}
+                    >
+                      <Icon className="h-5.5 w-5.5" strokeWidth={1.8} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors truncate">
+                          {localized.title}
+                        </h4>
+                        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0">
+                          {tool.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[var(--hub-text-muted)] truncate max-w-2xl">
+                        {localized.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                    <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-lg">
+                      {t.readyBadge}
+                    </span>
+                    <div className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-xs font-bold text-white group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20 group-hover:text-indigo-200 transition-all">
+                      <span>{t.runTool}</span>
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            }
-          >
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredTools.map((tool) => (
               <ToolCard key={tool.slug} tool={tool} />
             ))}
