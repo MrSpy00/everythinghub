@@ -36,7 +36,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
     if (typeof window !== "undefined") {
       const toolsElem = document.getElementById("tools");
       if (toolsElem) {
-        const headerOffset = 76; // Sticky header + comfortable breathing room
+        const headerOffset = 76; // Sticky header + breathing room
         const elementPosition = toolsElem.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
         window.scrollTo({
@@ -48,25 +48,25 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative flex min-h-[calc(100vh-4.5rem)] flex-col items-center justify-center px-4 py-6 sm:py-8 lg:py-12 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full overflow-hidden">
-      {/* Top Studio Badge */}
+    <section className="relative flex flex-col items-center justify-center px-4 py-8 sm:py-14 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full overflow-hidden">
+      {/* Top Studio Badge - Clean, Non-repeating & Elegant */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-indigo-300 backdrop-blur-2xl shadow-xl shadow-indigo-950/20"
+        className="mb-4 sm:mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-indigo-300 backdrop-blur-2xl shadow-xl shadow-indigo-950/20"
       >
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
         <span className="tracking-wide">
-          Studio v1.0 · {liveCount} {t.activeCountLabel} · {t.studioTagline}
+          Studio v1.0 · {liveCount} {t.activeCountLabel} {t.tools} · {t.freeForeverTitle}
         </span>
       </motion.div>
 
       {/* Main Studio Title */}
-      <div className="mb-3 max-w-4xl 2xl:max-w-5xl w-full flex flex-col items-center">
+      <div className="mb-2 max-w-4xl 2xl:max-w-5xl w-full flex flex-col items-center">
         <h1
           suppressHydrationWarning
           className="text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl leading-tight"
@@ -79,12 +79,12 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
       </div>
 
       {/* Subtitle */}
-      <p className="mb-8 max-w-2xl 2xl:max-w-3xl text-xs sm:text-sm lg:text-base leading-relaxed text-[var(--hub-text-muted)] px-3">
+      <p className="mb-6 sm:mb-8 max-w-2xl 2xl:max-w-3xl text-xs sm:text-sm lg:text-base leading-relaxed text-[var(--hub-text-muted)] px-3">
         {t.heroSubtitle}
       </p>
 
       {/* Hero Quick Search Bar - Sleek Liquid Glass Studio Container */}
-      <div className="mb-8 w-full max-w-xl 2xl:max-w-2xl px-2">
+      <div className="mb-6 sm:mb-8 w-full max-w-xl 2xl:max-w-2xl px-2">
         <NeonBorder color="#8b5cf6" rounded={22} glow={40}>
           <div className="relative flex items-center rounded-[20px] border border-white/10 bg-[#0e1017]/90 p-1.5 sm:p-2 backdrop-blur-3xl shadow-2xl transition-all hover:border-indigo-500/40 focus-within:border-indigo-500/60">
             <Search className="ml-3 h-4 w-4 text-indigo-400/80 shrink-0" />
@@ -125,7 +125,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
       </div>
 
       {/* Hero Action Buttons */}
-      <div className="mb-10 flex flex-wrap items-center justify-center gap-3.5">
+      <div className="mb-8 sm:mb-10 flex flex-wrap items-center justify-center gap-3.5">
         <Link
           href="/tools/yt-playlist-length"
           className="group flex items-center gap-2.5 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3.5 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-xl shadow-purple-950/20 transition-all hover:scale-105 hover:bg-white/[0.1] hover:border-indigo-400/80"
@@ -191,11 +191,11 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
               key={i}
               whileHover={{ y: -4, scale: 1.02 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className={`flex flex-col items-center justify-center p-4 rounded-2xl border border-white/8 bg-white/[0.025] backdrop-blur-2xl transition-all duration-300 hover:bg-white/[0.06] hover:shadow-2xl ${item.borderColor} ${item.bgGlow}`}
+              className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border border-white/8 bg-white/[0.025] backdrop-blur-2xl transition-all duration-300 hover:bg-white/[0.06] hover:shadow-2xl ${item.borderColor} ${item.bgGlow}`}
             >
-              <ItemIcon className={`h-5 w-5 mb-2 ${item.color}`} />
+              <ItemIcon className={`h-4.5 w-4.5 sm:h-5 sm:w-5 mb-1.5 sm:mb-2 ${item.color}`} />
               <span className="text-xs sm:text-sm font-bold text-white leading-snug">{item.title}</span>
-              <span className="text-[11px] text-[var(--hub-text-subtle)] mt-0.5">{item.desc}</span>
+              <span className="text-[10px] sm:text-[11px] text-[var(--hub-text-subtle)] mt-0.5">{item.desc}</span>
             </motion.div>
           );
         })}

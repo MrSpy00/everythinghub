@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ExternalLink, PlaySquare, Coffee } from "lucide-react";
 import { StudioLogo } from "@/components/shared/StudioLogo";
 import { LanguageToggle } from "@/components/shared/LanguageToggle";
@@ -41,18 +42,18 @@ export function Header() {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled
-          ? "border-b border-[var(--hub-border)] bg-[var(--hub-bg)]/85 backdrop-blur-2xl shadow-xl shadow-black/20"
+          ? "border-b border-white/10 bg-[#09090b]/85 backdrop-blur-2xl shadow-xl shadow-black/30"
           : "bg-transparent"
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl 2xl:max-w-8xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
         <Link
           href="/"
           className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
           data-cursor="Home"
         >
-          <StudioLogo className="h-8 w-8 group-hover:scale-105" />
+          <StudioLogo className="h-8 w-8 group-hover:scale-105 transition-transform" />
           <span className="text-lg font-black tracking-tight text-white">
             everything
             <span className="gradient-text">hub</span>
@@ -93,7 +94,7 @@ export function Header() {
         </nav>
 
         {/* Right side CTA & Language Toggle */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <LanguageToggle />
 
           <a
@@ -111,7 +112,7 @@ export function Header() {
             href="https://github.com/MrSpy00/everythinghub"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-xl transition-all hover:border-indigo-500/50 hover:bg-indigo-500/10 shadow-sm"
+            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white backdrop-blur-xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] shadow-sm"
             data-cursor="GitHub"
           >
             <GitHubLogo className="h-4 w-4 text-indigo-400" />
@@ -119,71 +120,97 @@ export function Header() {
             <ExternalLink className="h-3 w-3 opacity-60" />
           </a>
 
-          {/* Mobile menu toggle */}
+          {/* Mobile menu toggle with smooth spring animation */}
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] transition-colors hover:text-white md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] transition-all hover:text-white hover:bg-white/[0.08] md:hidden active:scale-90"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Menü"
           >
-            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={menuOpen ? "open" : "closed"}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {menuOpen ? <X className="h-4 w-4 text-white" /> : <Menu className="h-4 w-4" />}
+              </motion.div>
+            </AnimatePresence>
           </button>
         </div>
       </div>
 
-      {/* Mobile dropdown */}
-      {menuOpen && (
-        <div className="border-b border-[var(--hub-border)] bg-[var(--hub-bg)]/95 backdrop-blur-2xl md:hidden">
-          <nav className="flex flex-col gap-1 p-4">
-            <Link
-              href="/"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+      {/* Mobile animated dropdown drawer */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-b border-white/10 bg-[#09090b]/95 backdrop-blur-3xl md:hidden shadow-2xl"
+          >
+            <motion.nav
+              initial={{ y: -10 }}
+              animate={{ y: 0 }}
+              exit={{ y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-1.5 p-4"
             >
-              {t.home}
-            </Link>
-            <Link
-              href="/#tools"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
-            >
-              {t.tools}
-            </Link>
-            <Link
-              href="/#categories"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
-            >
-              {t.categories}
-            </Link>
-            <Link
-              href="/tools/yt-playlist-length"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-indigo-300 bg-indigo-500/10 flex items-center gap-2"
-            >
-              <PlaySquare className="h-4 w-4 text-indigo-400" />
-              <span>{t.ytPlaylistTitle}</span>
-            </Link>
-            <a
-              href="https://buymeacoffee.com/aegissoft"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 p-2.5 text-sm font-bold text-amber-300"
-            >
-              <Coffee className="h-4 w-4" />
-              <span>{t.buyCoffee}</span>
-            </a>
-            <a
-              href="https://github.com/MrSpy00/everythinghub"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 p-2.5 text-sm font-bold text-indigo-300"
-            >
-              <GitHubLogo className="h-4 w-4" />
-              <span>{t.githubRepo}</span>
-            </a>
-          </nav>
-        </div>
-      )}
+              <Link
+                href="/"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+              >
+                {t.home}
+              </Link>
+              <Link
+                href="/#tools"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+              >
+                {t.tools}
+              </Link>
+              <Link
+                href="/#categories"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+              >
+                {t.categories}
+              </Link>
+              <Link
+                href="/tools/yt-playlist-length"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 flex items-center gap-2"
+              >
+                <PlaySquare className="h-4 w-4 text-indigo-400" />
+                <span>{t.ytPlaylistTitle}</span>
+              </Link>
+              <div className="pt-2 flex flex-col gap-2 border-t border-white/5 mt-1">
+                <a
+                  href="https://buymeacoffee.com/aegissoft"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 p-2.5 text-sm font-bold text-amber-300 hover:bg-amber-500/25 transition-all"
+                >
+                  <Coffee className="h-4 w-4" />
+                  <span>{t.buyCoffee}</span>
+                </a>
+                <a
+                  href="https://github.com/MrSpy00/everythinghub"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 p-2.5 text-sm font-bold text-white hover:bg-white/[0.08] transition-all"
+                >
+                  <GitHubLogo className="h-4 w-4 text-indigo-400" />
+                  <span>{t.githubRepo}</span>
+                </a>
+              </div>
+            </motion.nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
