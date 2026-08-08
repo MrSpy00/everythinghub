@@ -34,7 +34,7 @@ export default function SpotifyProfileClient() {
 
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profileData, setProfileData] = useState<SpotifyProfileAnalysis | null>(DEMO_PROFILES["daft-punk"]);
+  const [profileData, setProfileData] = useState<SpotifyProfileAnalysis | null>(null);
   const [copiedProfileLink, setCopiedProfileLink] = useState(false);
   const [downloadingAvatar, setDownloadingAvatar] = useState(false);
 
@@ -478,6 +478,64 @@ export default function SpotifyProfileClient() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Initial Empty State Hero Studio (when no profile is analyzed yet) */}
+      {!profileData && !loading && (
+        <div className="space-y-12 pt-6">
+          {/* Welcome Intro Banner */}
+          <div className="p-8 sm:p-10 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl text-center space-y-4 shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-4 h-4" />
+              <span>{isTurkish ? "Spotify Profil & Sanatçı Stüdyosuna Hoş Geldiniz" : "Welcome to Spotify Profile Studio"}</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white max-w-2xl mx-auto leading-tight">
+              {isTurkish
+                ? "Bir Spotify Profil veya Sanatçı URL'si Yapıştırarak Küratör ve Sanatçı Metriklerini Çözümleyin"
+                : "Inspect Spotify Profile Reach, Public Playlists & Artist Catalog"}
+            </h2>
+            <p className="text-xs sm:text-sm text-white/60 max-w-xl mx-auto leading-relaxed">
+              {isTurkish
+                ? "Yukarıdaki arama kutusuna herhangi bir Spotify kullanıcı profili veya sanatçı bağlantısı yapıştırın veya hazır örnek demolara tıklayarak aracı hemen deneyin."
+                : "Paste any Spotify user or artist URL above, or click one of the instant demo presets."}
+            </p>
+          </div>
+
+          {/* Feature Highlights Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 w-fit">
+                <Users className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Erişim Metrikleri" : "Reach Analytics"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "Direkt takipçiler, tahmini toplam erişim ve doğruluk analizleri." : "Direct followers, estimated reach impact, and verified status."}</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-300 w-fit">
+                <ListMusic className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Halka Açık Listeler" : "Public Playlists"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "Küratörün oluşturduğu veya yönettiği tüm herkese açık çalma listeleri." : "Inspect all public playlists curated or managed by this profile."}</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-300 w-fit">
+                <Award className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Sanatçı Katalog Analizi" : "Artist Catalog Inspection"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "En popüler şarkılar, stüdyo albümleri ve popülerlik yüzdeleri." : "Top popular tracks, studio albums and catalog popularity scores."}</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-300 w-fit">
+                <Download className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "HD Avatar İndirici" : "HD Avatar Downloader"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "Profil veya sanatçı avatar görselini yüksek çözünürlüklü olarak indirin." : "Download high-resolution profile and artist avatar artwork."}</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

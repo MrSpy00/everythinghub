@@ -53,7 +53,7 @@ export default function SpotifyPlaylistClient() {
 
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [analysisData, setAnalysisData] = useState<SpotifyPlaylistAnalysis | null>(DEMO_PLAYLISTS["global-top-50"]);
+  const [analysisData, setAnalysisData] = useState<SpotifyPlaylistAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "bot" | "sonic" | "genres" | "key" | "tracks" | "cover" | "export">("overview");
 
   const [copiedCsv, setCopiedCsv] = useState(false);
@@ -338,7 +338,15 @@ export default function SpotifyPlaylistClient() {
                 </button>
               </div>
 
-              <p className="text-xs sm:text-sm text-white/60 line-clamp-2">{analysisData.description}</p>
+              {analysisData.description && analysisData.description.trim() !== "" ? (
+                <p className="text-xs sm:text-sm text-white/80 bg-white/[0.02] border border-white/5 rounded-xl p-3 leading-relaxed max-w-3xl">
+                  {analysisData.description}
+                </p>
+              ) : (
+                <p className="text-xs text-white/40 italic">
+                  {isTurkish ? "ℹ️ Bu çalma listesi için özel bir açıklama girilmemiş." : "ℹ️ No custom description provided for this playlist."}
+                </p>
+              )}
 
               <p className="text-xs text-white/50 flex items-center justify-center md:justify-start gap-1.5">
                 <span>{isTurkish ? "Küratör:" : "Curator:"}</span>
@@ -575,6 +583,64 @@ export default function SpotifyPlaylistClient() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Initial Empty State Hero Studio (when no playlist is analyzed yet) */}
+      {!analysisData && !loading && (
+        <div className="space-y-12 pt-6">
+          {/* Welcome Intro Banner */}
+          <div className="p-8 sm:p-10 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl text-center space-y-4 shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-4 h-4" />
+              <span>{isTurkish ? "Spotify Analiz & DJ Stüdyosuna Hoş Geldiniz" : "Welcome to Spotify Sonic Studio"}</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white max-w-2xl mx-auto leading-tight">
+              {isTurkish
+                ? "Bir Çalma Listesi URL'si Yapıştırın ve Tüm Müzik Metriklerini Saniyeler İçinde Çözümleyin"
+                : "Paste a Spotify Playlist Link to Inspect Bot Risks & Audio Metrics"}
+            </h2>
+            <p className="text-xs sm:text-sm text-white/60 max-w-xl mx-auto leading-relaxed">
+              {isTurkish
+                ? "Yukarıdaki arama kutusuna herhangi bir Spotify çalma listesi bağlantısı yapıştırın veya hızlı deneme için yukarıdaki hazır demolardan birine tıklayın."
+                : "Enter any Spotify playlist link above or click one of the instant demo presets to inspect sonic features."}
+            </p>
+          </div>
+
+          {/* Feature Highlights Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-300 w-fit">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Bot & Payola Tespiti" : "Bot & Payola Shield"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "Sanatçı yığılması, kısa şarkı farmcılığı ve anormal popülerlik filtreleme." : "Detect stream farming, short track stuffing and popularity anomalies."}</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 w-fit">
+                <Activity className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Sonic Ses Analizi" : "Sonic Audio Features"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "BPM, Enerji, Dans Edilebilirlik, Valence ve Canlılık radar grafiği." : "Radar breakdown of BPM, Energy, Danceability, Valence and Liveness."}</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-300 w-fit">
+                <Radio className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Key & Camelot Çarkı" : "Key & Camelot Wheel"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "DJ miks uyumluluğu için armonik ton dağılımı ve Camelot kodları." : "Harmonic key breakdown and Camelot codes for seamless DJ mixing."}</p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-300 w-fit">
+                <Download className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm">{isTurkish ? "Kapsamlı Dışa Aktarma" : "Comprehensive Export"}</h3>
+              <p className="text-xs text-white/50">{isTurkish ? "Excel uyumlu CSV, ham JSON ve DJ Setlist Markdown formatında indirin veya kopyalayın." : "Export complete report to Excel CSV, JSON and DJ Setlist MD."}</p>
+            </div>
           </div>
         </div>
       )}
