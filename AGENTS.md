@@ -26,3 +26,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 3. Privacy-First & Zero Data Retention
 - All computations, conversions, and tool actions run strictly client-side or in-memory.
 - No user tracking, no session cookies, no third-party telemetry leaks.
+
+## 4. No Cheap "AI Clone" Linear Gradients on Buttons (Strict Standard)
+- **NEVER** use cheap, cliché AI-generated bright linear gradients on buttons or pills (e.g. `bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500` or `from-pink-500 to-rose-600`).
+- **ALWAYS** style buttons using **Liquid Glassmorphism**, **Subtle Specular Highlights**, **Frosted Charcoal Layers**, and **Neon Border Accents** (`bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 backdrop-blur-xl hover:border-indigo-400 hover:bg-indigo-500/20` or `bg-white/[0.05] border border-white/10 text-white backdrop-blur-2xl hover:bg-white/[0.1]`).

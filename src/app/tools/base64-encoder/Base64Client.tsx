@@ -50,8 +50,8 @@ export function Base64Client() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30">
-            <Binary className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-2xl shadow-xl shadow-cyan-500/10">
+            <Binary className="h-7 w-7 text-cyan-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">Base64 Kodlayıcı & Çözücü</h1>

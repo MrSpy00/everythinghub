@@ -106,8 +106,8 @@ export function ImageCompressorClient() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-purple-500/30">
-            <ImageIcon className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-500/30 bg-violet-500/10 backdrop-blur-2xl shadow-xl shadow-violet-500/10">
+            <ImageIcon className="h-7 w-7 text-violet-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">
@@ -189,7 +189,7 @@ export function ImageCompressorClient() {
                   <a
                     href={compressedPreview}
                     download={`compressed-${file.name.split(".")[0]}.${format.split("/")[1]}`}
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-500/25 hover:scale-105 transition-all"
+                    className="flex items-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/20 px-5 py-2.5 text-xs font-bold text-white backdrop-blur-2xl shadow-xl shadow-violet-500/10 hover:bg-violet-500/30 hover:border-violet-400 hover:scale-105 transition-all"
                   >
                     <Download className="h-4 w-4" />
                     <span>Sıkıştırılmışı İndir</span>

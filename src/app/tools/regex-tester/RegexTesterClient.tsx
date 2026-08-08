@@ -39,8 +39,8 @@ export function RegexTesterClient() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
-            <Regex className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10 backdrop-blur-2xl shadow-xl shadow-blue-500/10">
+            <Regex className="h-7 w-7 text-blue-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">İnteraktif Regex Tester</h1>

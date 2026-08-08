@@ -397,8 +397,8 @@ export function YTPlaylistClient() {
         <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-lg shadow-indigo-500/30">
-              <PlaySquare className="h-7 w-7 text-white" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 backdrop-blur-2xl shadow-xl shadow-indigo-500/10">
+              <PlaySquare className="h-7 w-7 text-indigo-400" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -536,7 +536,7 @@ export function YTPlaylistClient() {
                 type="button"
                 onClick={handleAnalyze}
                 disabled={loading || !url.trim()}
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-500/20 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-2xl shadow-xl shadow-indigo-500/10 transition-all hover:scale-[1.02] hover:bg-indigo-500/30 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
                 data-cursor="Analiz"
               >
                 {loading ? (
@@ -686,7 +686,7 @@ export function YTPlaylistClient() {
                   <button
                     type="button"
                     onClick={() => applyRange(rangeStart, rangeEnd)}
-                    className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-1.5 text-xs font-bold text-white shadow-md shadow-indigo-500/20 hover:scale-105 transition-all"
+                    className="rounded-xl border border-indigo-500/40 bg-indigo-500/20 px-4 py-1.5 text-xs font-bold text-white backdrop-blur-xl hover:bg-indigo-500/30 hover:border-indigo-400 hover:scale-105 transition-all"
                   >
                     Uygula
                   </button>

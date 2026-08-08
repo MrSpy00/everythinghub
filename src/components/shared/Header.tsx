@@ -78,7 +78,7 @@ export function Header() {
           </Link>
           <Link
             href="/tools/yt-playlist-length"
-            className="rounded-xl px-3.5 py-1.5 text-xs font-bold text-indigo-300 bg-gradient-to-r from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 hover:border-indigo-400 hover:bg-indigo-500/25 transition-all flex items-center gap-2 shadow-sm"
+            className="rounded-xl px-3.5 py-1.5 text-xs font-bold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 backdrop-blur-xl hover:border-indigo-400/80 hover:bg-indigo-500/20 hover:text-white transition-all flex items-center gap-2 shadow-sm"
             data-cursor="Canlı"
           >
             <PlaySquare className="h-3.5 w-3.5 text-indigo-400" />

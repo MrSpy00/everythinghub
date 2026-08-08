@@ -37,7 +37,7 @@ export function ToolCard({ tool }: ToolCardProps) {
         {/* Badges */}
         <div className="flex items-center gap-1.5">
           {tool.newBadge && isLive && (
-            <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+            <span className="flex items-center gap-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-sm">
               <Sparkles className="h-2.5 w-2.5" />
               Yeni
             </span>

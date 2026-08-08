@@ -135,7 +135,7 @@ export function Footer() {
               href="https://www.aegissoft.com.tr/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-600/20 to-pink-500/20 border border-indigo-500/40 px-4 py-2.5 text-xs font-bold text-indigo-200 shadow-xl backdrop-blur-xl transition-all hover:scale-105 hover:border-indigo-400 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs font-bold text-indigo-300 backdrop-blur-2xl transition-all hover:scale-105 hover:border-indigo-400 hover:bg-indigo-500/20 hover:text-white shadow-xl shadow-indigo-500/5"
               data-cursor="aegisSoft"
             >
               <Sparkles className="h-3.5 w-3.5 text-indigo-400" />

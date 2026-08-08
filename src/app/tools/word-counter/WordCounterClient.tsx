@@ -33,8 +33,8 @@ export function WordCounterClient() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
-            <Type className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/30 bg-indigo-500/10 backdrop-blur-2xl shadow-xl shadow-indigo-500/10">
+            <Type className="h-7 w-7 text-indigo-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">Kelime ve Metin Sayacı</h1>

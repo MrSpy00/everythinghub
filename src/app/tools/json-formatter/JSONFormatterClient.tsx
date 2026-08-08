@@ -57,8 +57,8 @@ export function JSONFormatterClient() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30">
-            <Code2 className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-2xl shadow-xl shadow-emerald-500/10">
+            <Code2 className="h-7 w-7 text-emerald-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">JSON Formatlayıcı & Validator</h1>
@@ -89,7 +89,7 @@ export function JSONFormatterClient() {
             {formatted && (
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:scale-105 transition-all"
+                className="flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/20 px-4 py-2 text-xs font-bold text-white backdrop-blur-xl hover:bg-emerald-500/30 hover:border-emerald-400 hover:scale-105 transition-all shadow-lg shadow-emerald-500/10"
               >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copied ? "Kopyalandı" : "Sonucu Kopyala"}</span>

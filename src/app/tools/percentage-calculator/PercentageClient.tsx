@@ -31,8 +31,8 @@ export function PercentageClient() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg shadow-yellow-500/30">
-            <Percent className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-2xl shadow-xl shadow-amber-500/10">
+            <Percent className="h-7 w-7 text-amber-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">Yüzde & İndirim Hesaplayıcı</h1>

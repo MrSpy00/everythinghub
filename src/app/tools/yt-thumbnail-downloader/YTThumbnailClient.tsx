@@ -70,8 +70,8 @@ export function YTThumbnailClient() {
 
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg shadow-rose-500/30">
-            <ImageIcon className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/30 bg-rose-500/10 backdrop-blur-2xl shadow-xl shadow-rose-500/10">
+            <ImageIcon className="h-7 w-7 text-rose-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">
@@ -102,7 +102,7 @@ export function YTThumbnailClient() {
               />
               <button
                 onClick={handleExtract}
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-[1.02] transition-all shrink-0"
+                className="flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-2xl shadow-xl shadow-rose-500/10 hover:bg-rose-500/30 hover:border-rose-400 hover:scale-[1.02] transition-all shrink-0"
               >
                 <Search className="h-4 w-4" />
                 <span>Görselleri Getir</span>

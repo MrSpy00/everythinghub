@@ -53,7 +53,7 @@ export function StudioLogo({
 
   return (
     <div
-      className={`relative flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-1.5 shadow-lg shadow-indigo-500/25 transition-transform ${className}`}
+      className={`relative flex items-center justify-center rounded-xl border border-indigo-500/40 bg-indigo-500/15 p-1.5 backdrop-blur-xl shadow-lg shadow-indigo-500/15 transition-transform ${className}`}
     >
       {iconContent}
     </div>
