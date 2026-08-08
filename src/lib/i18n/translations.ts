@@ -47,6 +47,7 @@ export interface TranslationDictionary {
   filterPlaceholder: string;
   all: string;
   videoCategory: string;
+  audioCategory: string;
   imageCategory: string;
   developerCategory: string;
   textCategory: string;
@@ -282,6 +283,50 @@ export interface TranslationDictionary {
   percentageValue: string;
   resultLabel: string;
 
+  // Spotify Playlist Analyzer & Profile Analyzer
+  spotifyPlaylistTitle: string;
+  spotifyPlaylistSub: string;
+  spotifyProfileTitle: string;
+  spotifyProfileSub: string;
+  spotifyUrlPlaceholder: string;
+  spotifyProfilePlaceholder: string;
+  sonicRadarTitle: string;
+  botShieldTitle: string;
+  genreGalaxyTitle: string;
+  keyWheelTitle: string;
+  decadeTimelineTitle: string;
+  coverStudioTitle: string;
+  trackExplorerTitle: string;
+  duplicateFinderTitle: string;
+  exportStudioTitle: string;
+  qualityScoreLabel: string;
+  safeVerdict: string;
+  moderateVerdict: string;
+  highRiskVerdict: string;
+  stuffingFlagLabel: string;
+  durationAnomalyLabel: string;
+  bimodalAnomalyLabel: string;
+  energyLabel: string;
+  danceabilityLabel: string;
+  valenceLabel: string;
+  acousticnessLabel: string;
+  instrumentalnessLabel: string;
+  livenessLabel: string;
+  speechinessLabel: string;
+  bpmLabel: string;
+  loudnessLabel: string;
+  dominantMoodLabel: string;
+  chillMood: string;
+  workoutMood: string;
+  melancholicMood: string;
+  focusMood: string;
+  partyMood: string;
+  artistDiversityLabel: string;
+  curatorReachLabel: string;
+  publicPlaylistsLabel: string;
+  topTracksLabel: string;
+  discographyLabel: string;
+
   // Dynamic Tool Translations Map
   toolTranslations: Record<string, ToolTranslation>;
 }
@@ -329,6 +374,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     filterPlaceholder: "Araç filtrele...",
     all: "Tümü",
     videoCategory: "Video & YouTube",
+    audioCategory: "Ses & Müzik",
     imageCategory: "Görsel & Tasarım",
     developerCategory: "Geliştirici Araçları",
     textCategory: "Metin & İçerik",
@@ -564,8 +610,60 @@ export const translations: Record<Language, TranslationDictionary> = {
     percentageValue: "Yüzde Oranı (%)",
     resultLabel: "Hesaplanan Sonuç",
 
+    // Spotify Playlist Analyzer & Profile Analyzer (TR)
+    spotifyPlaylistTitle: "Spotify Playlist Analizör & Sonic Stüdyosu",
+    spotifyPlaylistSub: "Chosic, Artist.tools ve SubmitHub seviyesinde derin bot tespiti, sonic DNA radarı, tür galaksisi ve HD kapak stüdyosu.",
+    spotifyProfileTitle: "Spotify Profil & Sanatçı Analizörü",
+    spotifyProfileSub: "Küratör ve sanatçı profillerinin takipçi etki gücünü, diskografisini, en popüler şarkılarını ve yüksek çözünürlüklü avatarlarını inceleyin.",
+    spotifyUrlPlaceholder: "Spotify Çalma Listesi URL'si veya URI yapıştırın (örn: https://open.spotify.com/playlist/...)",
+    spotifyProfilePlaceholder: "Spotify Kullanıcı veya Sanatçı URL'si yapıştırın (örn: https://open.spotify.com/artist/...)",
+    sonicRadarTitle: "Sonic DNA Radarı (Audio Features)",
+    botShieldTitle: "Bot & Sahte Akış Güvenlik Kalkanı",
+    genreGalaxyTitle: "Tür Galaksisi & Vibe Analizi",
+    keyWheelTitle: "Camelot & Müzikal Anahtar Çarkı",
+    decadeTimelineTitle: "Zaman Tüneli & Çıkış Yılları",
+    coverStudioTitle: "Yüksek Çözünürlüklü Kapak Stüdyosu",
+    trackExplorerTitle: "Parça Listesi & Akıllı Filtreler",
+    duplicateFinderTitle: "Kopya Şarkı Tespiti & Temizleyici",
+    exportStudioTitle: "Dışa Aktarma & DJ Araçları",
+    qualityScoreLabel: "Kalite Skoru",
+    safeVerdict: "Güvenli & Organik Liste",
+    moderateVerdict: "Dikkat - Orta Risk Seviyesi",
+    highRiskVerdict: "Yüksek Risk - Şüpheli Bot/Payola Akışı",
+    stuffingFlagLabel: "Sanatçı Yığma Anomalisi",
+    durationAnomalyLabel: "Kısa Şarkı Stream Avcılığı",
+    bimodalAnomalyLabel: "Aşırı Popülerlik Ayrışması",
+    energyLabel: "Enerji",
+    danceabilityLabel: "Dans Edilebilirlik",
+    valenceLabel: "Pozitiflik / Mood",
+    acousticnessLabel: "Akustiklik",
+    instrumentalnessLabel: "Enstrümantallik",
+    livenessLabel: "Canlılık",
+    speechinessLabel: "Konuşma Oranı",
+    bpmLabel: "Tempo (BPM)",
+    loudnessLabel: "Ses Şiddeti (dB)",
+    dominantMoodLabel: "Baskın Mood Vibe",
+    chillMood: "Sakin & Dinlendirici",
+    workoutMood: "Yüksek Enerjili & Spor",
+    melancholicMood: "Melankolik & Duygusal",
+    focusMood: "Derin Odaklanma & Çalışma",
+    partyMood: "Parti & Dans",
+    artistDiversityLabel: "Sanatçı Çeşitlilik İndeksi",
+    curatorReachLabel: "Küratör Takipçi Erişimi",
+    publicPlaylistsLabel: "Halka Açık Çalma Listeleri",
+    topTracksLabel: "En Popüler Şarkılar",
+    discographyLabel: "Diskografi Dökümü",
+
     // Tool Card Dynamic Translations (TR)
     toolTranslations: {
+      "spotify-playlist-analyzer": {
+        title: "Spotify Playlist Analizör",
+        description: "Chosic & Artist.tools seviyesinde Sonic DNA radarı, bot tespiti, türler ve HD kapak stüdyosu.",
+      },
+      "spotify-profile-analyzer": {
+        title: "Spotify Profil & Sanatçı Analizör",
+        description: "Küratör ve sanatçı profillerini inceleyin, takipçi gücünü, diskografiyi ve HD avatarları çıkarın.",
+      },
       "yt-playlist-length": {
         title: "YouTube Çalma Listesi Analizörü",
         description: "Playlist süresini hesapla, hız simülasyonunu gör, kapak görselleri ve CSV dışa aktar.",
@@ -666,6 +764,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     filterPlaceholder: "Filter tools...",
     all: "All",
     videoCategory: "Video & YouTube",
+    audioCategory: "Audio & Music",
     imageCategory: "Image & Design",
     developerCategory: "Developer Tools",
     textCategory: "Text & Content",
@@ -901,8 +1000,60 @@ export const translations: Record<Language, TranslationDictionary> = {
     percentageValue: "Percentage Rate (%)",
     resultLabel: "Calculated Result",
 
+    // Spotify Playlist Analyzer & Profile Analyzer (EN)
+    spotifyPlaylistTitle: "Spotify Playlist Analyzer & Sonic Studio",
+    spotifyPlaylistSub: "Deep bot detection, sonic DNA radar, genre galaxy, and HD cover studio matching Chosic, Artist.tools, and SubmitHub.",
+    spotifyProfileTitle: "Spotify Profile & Artist Analyzer",
+    spotifyProfileSub: "Inspect curator and artist profiles, analyze follower reach, discography breakdowns, top tracks, and download HD avatars.",
+    spotifyUrlPlaceholder: "Paste Spotify Playlist URL or URI (e.g., https://open.spotify.com/playlist/...)",
+    spotifyProfilePlaceholder: "Paste Spotify User or Artist URL (e.g., https://open.spotify.com/artist/...)",
+    sonicRadarTitle: "Sonic DNA Radar (Audio Features)",
+    botShieldTitle: "Bot & Artificial Stream Shield",
+    genreGalaxyTitle: "Genre Galaxy & Mood Vibe",
+    keyWheelTitle: "Camelot & Musical Key Wheel",
+    decadeTimelineTitle: "Decade Timeline & Release Distribution",
+    coverStudioTitle: "High-Resolution Artwork Studio",
+    trackExplorerTitle: "Tracklist & Intelligent Filters",
+    duplicateFinderTitle: "Duplicate Track Scanner & Cleaner",
+    exportStudioTitle: "Export Studio & DJ Tools",
+    qualityScoreLabel: "Quality Score",
+    safeVerdict: "Safe & Organic Playlist",
+    moderateVerdict: "Caution - Moderate Risk Detected",
+    highRiskVerdict: "High Risk - Suspicious Bot / Payola Activity",
+    stuffingFlagLabel: "Artist Stacking Anomaly",
+    durationAnomalyLabel: "Short Song Stream Farming Anomaly",
+    bimodalAnomalyLabel: "Extreme Popularity Discrepancy",
+    energyLabel: "Energy",
+    danceabilityLabel: "Danceability",
+    valenceLabel: "Valence (Mood)",
+    acousticnessLabel: "Acousticness",
+    instrumentalnessLabel: "Instrumentalness",
+    livenessLabel: "Liveness",
+    speechinessLabel: "Speechiness",
+    bpmLabel: "Tempo (BPM)",
+    loudnessLabel: "Loudness (dB)",
+    dominantMoodLabel: "Dominant Mood Vibe",
+    chillMood: "Chill & Relaxing",
+    workoutMood: "High Energy & Workout",
+    melancholicMood: "Melancholic & Emotional",
+    focusMood: "Deep Focus & Study",
+    partyMood: "Party & Dance",
+    artistDiversityLabel: "Artist Diversity Index",
+    curatorReachLabel: "Curator Follower Reach",
+    publicPlaylistsLabel: "Public Playlists",
+    topTracksLabel: "Top Tracks",
+    discographyLabel: "Discography Breakdown",
+
     // Tool Card Dynamic Translations (EN)
     toolTranslations: {
+      "spotify-playlist-analyzer": {
+        title: "Spotify Playlist Analyzer",
+        description: "Sonic DNA radar, bot detection, genre breakdown, BPM/Key wheel and HD cover studio like Chosic & Artist.tools.",
+      },
+      "spotify-profile-analyzer": {
+        title: "Spotify Profile & Artist Analyzer",
+        description: "Inspect curator and artist profiles, analyze follower reach, discography, top tracks, and extract HD avatars.",
+      },
       "yt-playlist-length": {
         title: "YouTube Playlist Length & Video Analyzer",
         description: "Calculate playlist total duration, playback speeds, extract HD thumbnails and export CSV.",

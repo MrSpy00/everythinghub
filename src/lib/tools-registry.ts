@@ -14,11 +14,16 @@ import {
   CaseSensitive,
   Scale,
   Percent,
+  Music,
+  ListMusic,
+  UserCheck,
+  Disc3,
   type LucideIcon,
 } from "lucide-react";
 
 export type ToolCategory =
   | "video"
+  | "audio"
   | "image"
   | "text"
   | "developer"
@@ -43,6 +48,7 @@ export interface Tool {
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   video: "Video",
+  audio: "Ses & Müzik",
   image: "Görsel",
   text: "Metin",
   developer: "Geliştirici",
@@ -52,6 +58,7 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
 
 export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
   video: PlaySquare,
+  audio: Music,
   image: ImageIcon,
   text: Type,
   developer: Code2,
@@ -60,6 +67,54 @@ export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
 };
 
 export const tools: Tool[] = [
+  {
+    slug: "spotify-playlist-analyzer",
+    title: "Spotify Playlist Analizör",
+    description:
+      "Chosic & Artist.tools seviyesinde Sonic DNA radarı, bot & fraud tespiti, tür dağılımı, BPM/Key çarkı ve HD kapak stüdyosu",
+    icon: ListMusic,
+    category: "audio",
+    accentColor: "#10b981",
+    accentClass: "from-emerald-500 to-emerald-600",
+    status: "live",
+    tags: [
+      "spotify",
+      "playlist",
+      "analiz",
+      "audio-features",
+      "bpm",
+      "bot-kontrol",
+      "chosic",
+      "artist-tools",
+      "submithub",
+      "kapak",
+    ],
+    featured: true,
+    newBadge: true,
+  },
+  {
+    slug: "spotify-profile-analyzer",
+    title: "Spotify Profil & Sanatçı Analizör",
+    description:
+      "Küratör ve sanatçı profillerini inceleyin, takipçi gücünü, diskografiyi, en popüler şarkıları ve HD avatarları çıkarın",
+    icon: UserCheck,
+    category: "audio",
+    accentColor: "#06b6d4",
+    accentClass: "from-cyan-500 to-cyan-600",
+    status: "live",
+    tags: [
+      "spotify",
+      "profil",
+      "sanatçı",
+      "küratör",
+      "takipçi",
+      "diskografi",
+      "analiz",
+      "avatar",
+    ],
+    featured: true,
+    newBadge: true,
+  },
   {
     slug: "yt-playlist-length",
     title: "YouTube Playlist Analyzer",

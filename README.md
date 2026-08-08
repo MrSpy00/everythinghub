@@ -42,37 +42,41 @@ Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU h
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
 3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru sayesinde sıfır gecikmeyle çalışır.
-4. **14 Aktif Modüler Araç:** Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
+4. **16 Aktif Modüler Araç:** Ses & Müzik, Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
 5. **Kapsamlı Çok Dilli Altyapı:** Türkçe ve İngilizce dilleri arasında anında ve kesintisiz geçiş.
 6. **Çoklu Ekran & Kusursuz Responsive Uyum:** 320px mobil ekranlardan dikey/pivot monitörlere, tabletlerden 4K ve TV ekranlarına kadar hatasız esnek yerleşim.
 
 ---
 
-## Canlı Araç Kataloğu (14 Aktif Araç)
+## Canlı Araç Kataloğu (16 Aktif Araç)
+
+### Ses & Müzik Kategorisi (YENİ)
+1. **Spotify Playlist Analizör (`/tools/spotify-playlist-analyzer`):** Chosic, Artist.tools ve SubmitHub seviyesinde derin bot & sahte akış tespiti, 0-100 Kalite Skoru kadranı, 8 eksenli Sonic DNA radarı, tür galaksisi & mood sınıflandırıcı, Camelot & Müzikal Key çarkı, kopya şarkı tespiti, 640x640 HD kapak stüdyosu ve CSV/JSON/DJ Setlist dışa aktarma.
+2. **Spotify Profil & Sanatçı Analizör (`/tools/spotify-profile-analyzer`):** Küratör ve sanatçı profillerini inceleme, takipçi erişim gücü analizi, halka açık listeler, diskografi dökümü, en popüler şarkılar ve HD avatar indirici.
 
 ### Video & YouTube Kategorisi
-1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` destekli playlist süre hesaplama, farklı oynatma hızları (1.0x-3.0x) simülasyonu, %100 doğrulanmış gerçek çalma listesi şablonları, rastgele konu keşfetme (shuffler), tarayıcı cihaz geçmişi ve CSV/JSON dışa aktarma.
-2. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD (1080p), HD (720p) ve MQ video kapak resimlerini ücretsiz indirme ve bağlantı kopyalama.
-3. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Videoları tam istenen dakika ve saniyede başlatan zaman damgalı bağlantılar üretme.
+3. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` destekli playlist süre hesaplama, farklı oynatma hızları (1.0x-3.0x) simülasyonu, %100 doğrulanmış gerçek çalma listesi şablonları, rastgele konu keşfetme (shuffler), tarayıcı cihaz geçmişi ve CSV/JSON dışa aktarma.
+4. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD (1080p), HD (720p) ve MQ video kapak resimlerini ücretsiz indirme ve bağlantı kopyalama.
+5. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Videoları tam istenen dakika ve saniyede başlatan zaman damgalı bağlantılar üretme.
 
 ### Görsel & Tasarım Kategorisi
-4. **Görsel Sıkıştırıcı (`/tools/image-compressor`):** Cihazınızda sıfır veri transferi ile %90'a varan oranda kayıpsız görsel sıkıştırma ve WebP optimizasyonu.
-5. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG ve WebP formatları arasında anında dönüştürme.
-6. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX/RGB değerlerini kopyalama.
-7. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli, açılı linear ve radial CSS degrade kodları üretme.
+6. **Görsel Sıkıştırıcı (`/tools/image-compressor`):** Cihazınızda sıfır veri transferi ile %90'a varan oranda kayıpsız görsel sıkıştırma ve WebP optimizasyonu.
+7. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG ve WebP formatları arasında anında dönüştürme.
+8. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX/RGB değerlerini kopyalama.
+9. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli, açılı linear ve radial CSS degrade kodları üretme.
 
 ### Geliştirici Araçları Kategorisi
-8. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
-9. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
-10. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme, bayrak (flag) yönetimi ve eşleşmeleri anlık listeleme.
+10. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
+11. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
+12. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme, bayrak (flag) yönetimi ve eşleşmeleri anlık listeleme.
 
 ### Metin & İçerik Kategorisi
-11. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter (boşluklu/boşluksuz), cümle, paragraf ve tahmini okuma/konuşma süresi analizi.
-12. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, BÜYÜK/KÜÇÜK harf dönüşümü.
+13. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter (boşluklu/boşluksuz), cümle, paragraf ve tahmini okuma/konuşma süresi analizi.
+14. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, BÜYÜK/KÜÇÜK harf dönüşümü.
 
 ### Hesaplama & Birim Kategorisi
-13. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama (Byte, KB, MB, GB, TB) birimleri arasında hassas dönüştürme.
-14. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve KDV tutarlarını anında hesaplama.
+15. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama (Byte, KB, MB, GB, TB) birimleri arasında hassas dönüştürme.
+16. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve KDV tutarlarını anında hesaplama.
 
 ---
 
@@ -161,37 +165,41 @@ Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted 
 1. **Zero Data Retention:** Everything runs strictly client-side or in-memory. No databases, no user tracking, no session cookies.
 2. **Zero Login / Authentication:** Free forever, no registration, no API keys, no payment required.
 3. **Instantaneous Performance:** Powered by Turbopack compilation and lightweight WebGL rendering.
-4. **14 Active Modular Tools:** Expandable tool architecture across Video, Image, Developer, Text, and Calculation categories.
+4. **16 Active Modular Tools:** Expandable tool architecture across Audio & Music, Video, Image, Developer, Text, and Calculation categories.
 5. **Comprehensive Localization:** Seamless bilingual experience in Turkish and English.
 6. **Multi-Screen & Ultra-Responsive:** Optimized for 320px mobile screens, vertical/portrait monitors, tablets, laptops, and 4K displays.
 
 ---
 
-## Live Tool Catalog (14 Active Tools)
+## Live Tool Catalog (16 Active Tools)
+
+### Audio & Music Category (NEW)
+1. **Spotify Playlist Analyzer (`/tools/spotify-playlist-analyzer`):** Deep bot & artificial stream detection, 0-100 Quality Score gauge, 8-axis Sonic DNA radar, genre galaxy & mood classifier, Camelot & Musical Key wheel, duplicate track scanner, 640x640 HD cover artwork studio, and CSV/JSON/DJ Setlist export matching Chosic, Artist.tools, SubmitHub, and Trackify.
+2. **Spotify Profile & Artist Analyzer (`/tools/spotify-profile-analyzer`):** Inspect curator & artist profiles, follower reach impact analysis, public playlists, discography breakdown, top popular tracks, and HD avatar downloader.
 
 ### Video & YouTube Category
-1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` supported duration analysis, playback speed (1.0x-3.0x) simulation, 100% verified real playlist presets, topic shuffler, local device history, and CSV/JSON export.
-2. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD (1080p), HD (720p), and MQ cover images with direct blob download.
-3. **YouTube Timestamp Generator (`/tools/yt-timestamp-generator`):** Generate custom start time links and description timestamps.
+3. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` supported duration analysis, playback speed (1.0x-3.0x) simulation, 100% verified real playlist presets, topic shuffler, local device history, and CSV/JSON export.
+4. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD (1080p), HD (720p), and MQ cover images with direct blob download.
+5. **YouTube Timestamp Generator (`/tools/yt-timestamp-generator`):** Generate custom start time links and description timestamps.
 
 ### Image & Design Category
-4. **Image Compressor (`/tools/image-compressor`):** Up to 90% client-side image compression and WebP optimization.
-5. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, and WebP formats.
-6. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX/RGB codes.
-7. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Multi-color linear and radial CSS gradient generator and code exporter.
+6. **Image Compressor (`/tools/image-compressor`):** Up to 90% client-side image compression and WebP optimization.
+7. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, and WebP formats.
+8. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX/RGB codes.
+9. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Multi-color linear and radial CSS gradient generator and code exporter.
 
 ### Developer Tools Category
-8. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
-9. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
-10. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts with real-time match listing.
+10. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
+11. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
+12. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts with real-time match listing.
 
 ### Text & Content Category
-11. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading/speaking time analysis.
-12. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, uppercase, and lowercase.
+13. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading/speaking time analysis.
+14. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, uppercase, and lowercase.
 
 ### Calculation & Unit Category
-13. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage (Byte, KB, MB, GB, TB) units.
-14. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Instant calculation of percentage rates, discounted prices, and amounts.
+15. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage (Byte, KB, MB, GB, TB) units.
+16. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Instant calculation of percentage rates, discounted prices, and amounts.
 
 ---
 
