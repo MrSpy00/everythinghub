@@ -45,6 +45,8 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     switch (cat) {
       case "video":
         return t.videoCategory;
+      case "audio":
+        return t.audioCategory;
       case "image":
         return t.imageCategory;
       case "developer":

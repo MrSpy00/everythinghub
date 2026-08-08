@@ -150,8 +150,8 @@ export function parseSpotifyUrl(input: string): SpotifyParsedUrl {
     };
   }
 
-  // Spotify URL format: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=...
-  const urlMatch = trimmed.match(/open\.spotify\.com\/(playlist|user|artist|album|track)\/([a-zA-Z0-9]+)/i);
+  // Spotify URL format: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=... or /intl-tr/playlist/... or /embed/playlist/...
+  const urlMatch = trimmed.match(/open\.spotify\.com\/(?:embed\/|(?:intl-[a-z]{2,4}\/))?(playlist|user|artist|album|track)\/([a-zA-Z0-9]+)/i);
   if (urlMatch) {
     return {
       type: urlMatch[1].toLowerCase() as SpotifyInputType,
