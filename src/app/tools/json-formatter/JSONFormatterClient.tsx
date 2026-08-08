@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Code2, Copy, Check, AlertCircle, FileText, Minimize2, Sparkles } from "lucide-react";
+import { ArrowLeft, Code2, Copy, Check, AlertCircle, FileText, Minimize2 } from "lucide-react";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -109,7 +109,7 @@ export function JSONFormatterClient() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label className="text-xs font-bold text-[var(--hub-text-muted)] mb-2 block flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> {t.rawJsonInput}
+                <Code2 className="h-3.5 w-3.5 text-emerald-400" /> {t.rawJsonInput}
               </label>
               <textarea
                 value={input}

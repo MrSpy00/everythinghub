@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Lock, Flame, CheckCircle2 } from "lucide-react";
-import { type Tool, CATEGORY_LABELS } from "@/lib/tools-registry";
+import { type Tool } from "@/lib/tools-registry";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ToolCardProps {
@@ -10,9 +10,35 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const Icon = tool.icon;
   const isLive = tool.status === "live";
+
+  // Dynamic localized tool title and description
+  const localized = t.toolTranslations?.[tool.slug] || {
+    title: tool.title,
+    description: tool.description,
+  };
+
+  // Category translation
+  const categoryName = (() => {
+    switch (tool.category) {
+      case "video":
+        return t.videoCategory;
+      case "image":
+        return t.imageCategory;
+      case "developer":
+        return t.developerCategory;
+      case "text":
+        return t.textCategory;
+      case "calculator":
+        return t.calcCategory;
+      case "design":
+        return t.designCategory;
+      default:
+        return tool.category;
+    }
+  })();
 
   const cardInner = (
     <div
@@ -25,9 +51,9 @@ export function ToolCard({ tool }: ToolCardProps) {
     >
       {/* Top row */}
       <div className="mb-4 sm:mb-5 flex items-start justify-between">
-        {/* Sleek Floating Liquid Glass Icon Badge */}
+        {/* Sleek Floating Organic Liquid Glass Vector Icon - No Clunky AI Box */}
         <div
-          className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-400/50 group-hover:shadow-indigo-500/20"
+          className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border border-white/12 bg-gradient-to-br from-white/[0.08] to-transparent backdrop-blur-2xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-400/60 group-hover:shadow-indigo-500/20"
           style={{
             color: tool.accentColor,
           }}
@@ -63,13 +89,13 @@ export function ToolCard({ tool }: ToolCardProps) {
           suppressHydrationWarning
           className="text-base sm:text-lg font-bold text-white leading-snug flex items-center gap-2 group-hover:text-indigo-300 transition-colors"
         >
-          <span>{tool.title}</span>
+          <span>{localized.title}</span>
         </h3>
       </div>
 
       {/* Description */}
       <p className="mb-5 flex-1 text-xs sm:text-sm leading-relaxed text-[var(--hub-text-muted)]">
-        {tool.description}
+        {localized.description}
       </p>
 
       {/* Category and action footer */}
@@ -80,7 +106,7 @@ export function ToolCard({ tool }: ToolCardProps) {
             color: tool.accentColor,
           }}
         >
-          {CATEGORY_LABELS[tool.category]}
+          {categoryName}
         </span>
 
         {isLive ? (

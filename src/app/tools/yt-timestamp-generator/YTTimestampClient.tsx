@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Clock, Copy, Check, ExternalLink, Sparkles } from "lucide-react";
+import { ArrowLeft, Clock, Copy, Check, ExternalLink } from "lucide-react";
 import { parseYouTubeUrl, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -67,7 +67,7 @@ export function YTTimestampClient() {
         <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-6">
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-pink-300 flex items-center gap-1.5 mb-2">
-              <Sparkles className="h-3.5 w-3.5 text-pink-400" />
+              <Clock className="h-3.5 w-3.5 text-pink-400" />
               <span>{t.ytThumbUrlLabel}</span>
             </label>
             <input

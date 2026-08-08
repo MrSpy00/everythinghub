@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Regex, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Regex, CheckCircle2, AlertCircle } from "lucide-react";
 import { NeonBorder } from "@/components/creative/NeonBorder";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -58,7 +58,7 @@ export function RegexTesterClient() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <div className="sm:col-span-3">
               <label className="text-xs font-bold text-blue-300 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-blue-400" /> {t.regexPattern}
+                <Regex className="h-3.5 w-3.5 text-blue-400" /> {t.regexPattern}
               </label>
               <div className="relative flex items-center">
                 <span className="absolute left-3 text-xs font-mono text-blue-400">/</span>

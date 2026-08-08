@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, Palette, Upload, Copy, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Palette, Upload, Copy, Check } from "lucide-react";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -117,7 +117,7 @@ export function ColorPickerClient() {
               {colors.length > 0 && (
                 <div>
                   <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-400" /> {t.dominantColors}
+                    <Palette className="h-3.5 w-3.5 text-amber-400" /> {t.dominantColors}
                   </span>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {colors.map((hex) => (

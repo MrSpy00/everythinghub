@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Copy, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, Check, Layers, Sliders } from "lucide-react";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -51,7 +51,7 @@ export function GradientClient() {
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-pink-500/30 bg-pink-500/10 backdrop-blur-2xl shadow-xl shadow-pink-500/10">
-            <Sparkles className="h-7 w-7 text-pink-400" />
+            <Layers className="h-7 w-7 text-pink-400" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">{t.gradientTitle}</h1>
@@ -150,7 +150,7 @@ export function GradientClient() {
           {/* Presets */}
           <div>
             <span className="text-xs font-bold text-pink-300 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-pink-400" /> {t.quickTimePresets}
+              <Sliders className="h-3.5 w-3.5 text-pink-400" /> {t.quickTimePresets}
             </span>
             <div className="flex flex-wrap gap-2">
               {PRESETS.map((p) => (

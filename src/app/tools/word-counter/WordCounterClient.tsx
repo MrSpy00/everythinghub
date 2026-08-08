@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Type, Clock, AlignLeft, Sparkles, MessageSquare } from "lucide-react";
+import { ArrowLeft, Type, Clock, AlignLeft, MessageSquare } from "lucide-react";
 import { NeonBorder } from "@/components/creative/NeonBorder";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -58,7 +58,7 @@ export function WordCounterClient() {
 
           <div>
             <label className="text-xs font-bold text-indigo-300 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-400" /> {t.rawTextInput}
+              <AlignLeft className="h-3.5 w-3.5 text-indigo-400" /> {t.rawTextInput}
             </label>
             <textarea
               value={text}
