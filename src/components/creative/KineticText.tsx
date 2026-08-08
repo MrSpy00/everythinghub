@@ -1,131 +1,266 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Sparkles } from "lucide-react";
 
-export interface KineticTextItem {
+export interface KineticItem {
   text: string;
-  style: "gradient" | "stroke" | "emerald" | "cyan" | "pink" | "amber" | "violet";
+  tag: string;
   glowColor: string;
+  textColor: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeText: string;
 }
 
-export const DEFAULT_KINETIC_ITEMS: KineticTextItem[] = [
+const ITEMS_TR: KineticItem[] = [
   {
     text: "YOUTUBE PLAYLIST ANALYZER",
-    style: "stroke",
-    glowColor: "rgba(168,85,247,0.5)",
+    tag: "CANLI ANALİZ",
+    glowColor: "rgba(168, 85, 247, 0.45)",
+    textColor: "from-purple-300 via-indigo-200 to-pink-300",
+    badgeBg: "bg-purple-500/15",
+    badgeBorder: "border-purple-500/30",
+    badgeText: "text-purple-300",
   },
   {
-    text: "GÖRSEL SIKIŞTIRICI",
-    style: "emerald",
-    glowColor: "rgba(16,185,129,0.5)",
+    text: "GÖRSEL SIKIŞTIRICI & WEBP",
+    tag: "%90 KÜÇÜLTME",
+    glowColor: "rgba(16, 185, 129, 0.45)",
+    textColor: "from-emerald-300 via-teal-200 to-cyan-300",
+    badgeBg: "bg-emerald-500/15",
+    badgeBorder: "border-emerald-500/30",
+    badgeText: "text-emerald-300",
   },
   {
     text: "JSON FORMATTER & VALIDATOR",
-    style: "cyan",
-    glowColor: "rgba(6,182,212,0.5)",
+    tag: "AĞAÇ GÖRÜNÜMÜ",
+    glowColor: "rgba(6, 182, 212, 0.45)",
+    textColor: "from-cyan-300 via-sky-200 to-indigo-300",
+    badgeBg: "bg-cyan-500/15",
+    badgeBorder: "border-cyan-500/30",
+    badgeText: "text-cyan-300",
   },
   {
-    text: "RENK PALETİ ÇIKARICI",
-    style: "pink",
-    glowColor: "rgba(244,63,94,0.5)",
+    text: "RENK PALETİ & DOMINANT HEX",
+    tag: "TASARIM STÜDYOSU",
+    glowColor: "rgba(245, 158, 11, 0.45)",
+    textColor: "from-amber-300 via-yellow-200 to-orange-300",
+    badgeBg: "bg-amber-500/15",
+    badgeBorder: "border-amber-500/30",
+    badgeText: "text-amber-300",
   },
   {
-    text: "BASE64 KODLAYICI",
-    style: "amber",
-    glowColor: "rgba(245,158,11,0.5)",
+    text: "BASE64 KODLAYICI & ÇÖZÜCÜ",
+    tag: "UTF-8 DESTEKLİ",
+    glowColor: "rgba(59, 130, 246, 0.45)",
+    textColor: "from-blue-300 via-indigo-200 to-violet-300",
+    badgeBg: "bg-blue-500/15",
+    badgeBorder: "border-blue-500/30",
+    badgeText: "text-blue-300",
   },
   {
     text: "İNTERAKTİF REGEX TESTER",
-    style: "violet",
-    glowColor: "rgba(168,85,247,0.5)",
+    tag: "CANLI EŞLEŞME",
+    glowColor: "rgba(236, 72, 153, 0.45)",
+    textColor: "from-pink-300 via-rose-200 to-purple-300",
+    badgeBg: "bg-pink-500/15",
+    badgeBorder: "border-pink-500/30",
+    badgeText: "text-pink-300",
   },
   {
     text: "ÇOKLU BİRİM DÖNÜŞTÜRÜCÜ",
-    style: "emerald",
-    glowColor: "rgba(16,185,129,0.5)",
+    tag: "HASSAS HESAPLAMA",
+    glowColor: "rgba(20, 184, 166, 0.45)",
+    textColor: "from-teal-300 via-emerald-200 to-cyan-300",
+    badgeBg: "bg-teal-500/15",
+    badgeBorder: "border-teal-500/30",
+    badgeText: "text-teal-300",
   },
   {
-    text: "METİN KASA DÖNÜŞTÜRÜCÜ",
-    style: "gradient",
-    glowColor: "rgba(168,85,247,0.5)",
+    text: "CSS & TAILWIND GRADIENT",
+    tag: "MODERN RENK GEÇİŞİ",
+    glowColor: "rgba(139, 92, 246, 0.45)",
+    textColor: "from-violet-300 via-purple-200 to-pink-300",
+    badgeBg: "bg-violet-500/15",
+    badgeBorder: "border-violet-500/30",
+    badgeText: "text-violet-300",
   },
   {
     text: "YÜZDE & İNDİRİM HESAPLAYICI",
-    style: "cyan",
-    glowColor: "rgba(6,182,212,0.5)",
+    tag: "ANLIK KDV HESABI",
+    glowColor: "rgba(234, 179, 8, 0.45)",
+    textColor: "from-yellow-300 via-amber-200 to-rose-300",
+    badgeBg: "bg-yellow-500/15",
+    badgeBorder: "border-yellow-500/30",
+    badgeText: "text-yellow-300",
   },
 ];
 
-export function KineticText({
-  items = DEFAULT_KINETIC_ITEMS,
-  intervalMs = 2800,
-}: {
-  items?: KineticTextItem[];
-  intervalMs?: number;
-}) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const ITEMS_EN: KineticItem[] = [
+  {
+    text: "YOUTUBE PLAYLIST ANALYZER",
+    tag: "LIVE ANALYTICS",
+    glowColor: "rgba(168, 85, 247, 0.45)",
+    textColor: "from-purple-300 via-indigo-200 to-pink-300",
+    badgeBg: "bg-purple-500/15",
+    badgeBorder: "border-purple-500/30",
+    badgeText: "text-purple-300",
+  },
+  {
+    text: "IMAGE COMPRESSOR & WEBP",
+    tag: "90% COMPRESSION",
+    glowColor: "rgba(16, 185, 129, 0.45)",
+    textColor: "from-emerald-300 via-teal-200 to-cyan-300",
+    badgeBg: "bg-emerald-500/15",
+    badgeBorder: "border-emerald-500/30",
+    badgeText: "text-emerald-300",
+  },
+  {
+    text: "JSON FORMATTER & VALIDATOR",
+    tag: "TREE EXPLORER",
+    glowColor: "rgba(6, 182, 212, 0.45)",
+    textColor: "from-cyan-300 via-sky-200 to-indigo-300",
+    badgeBg: "bg-cyan-500/15",
+    badgeBorder: "border-cyan-500/30",
+    badgeText: "text-cyan-300",
+  },
+  {
+    text: "COLOR PALETTE & DOMINANT HEX",
+    tag: "CREATIVE STUDIO",
+    glowColor: "rgba(245, 158, 11, 0.45)",
+    textColor: "from-amber-300 via-yellow-200 to-orange-300",
+    badgeBg: "bg-amber-500/15",
+    badgeBorder: "border-amber-500/30",
+    badgeText: "text-amber-300",
+  },
+  {
+    text: "BASE64 ENCODER & DECODER",
+    tag: "UTF-8 ENGINE",
+    glowColor: "rgba(59, 130, 246, 0.45)",
+    textColor: "from-blue-300 via-indigo-200 to-violet-300",
+    badgeBg: "bg-blue-500/15",
+    badgeBorder: "border-blue-500/30",
+    badgeText: "text-blue-300",
+  },
+  {
+    text: "INTERACTIVE REGEX TESTER",
+    tag: "REAL-TIME MATCH",
+    glowColor: "rgba(236, 72, 153, 0.45)",
+    textColor: "from-pink-300 via-rose-200 to-purple-300",
+    badgeBg: "bg-pink-500/15",
+    badgeBorder: "border-pink-500/30",
+    badgeText: "text-pink-300",
+  },
+  {
+    text: "MULTI-UNIT CONVERTER",
+    tag: "HIGH PRECISION",
+    glowColor: "rgba(20, 184, 166, 0.45)",
+    textColor: "from-teal-300 via-emerald-200 to-cyan-300",
+    badgeBg: "bg-teal-500/15",
+    badgeBorder: "border-teal-500/30",
+    badgeText: "text-teal-300",
+  },
+  {
+    text: "CSS & TAILWIND GRADIENTS",
+    tag: "MODERN REFRACTION",
+    glowColor: "rgba(139, 92, 246, 0.45)",
+    textColor: "from-violet-300 via-purple-200 to-pink-300",
+    badgeBg: "bg-violet-500/15",
+    badgeBorder: "border-violet-500/30",
+    badgeText: "text-violet-300",
+  },
+  {
+    text: "PERCENTAGE & DISCOUNT CALC",
+    tag: "TAX & VAT ENGINE",
+    glowColor: "rgba(234, 179, 8, 0.45)",
+    textColor: "from-yellow-300 via-amber-200 to-rose-300",
+    badgeBg: "bg-yellow-500/15",
+    badgeBorder: "border-yellow-500/30",
+    badgeText: "text-yellow-300",
+  },
+];
+
+export function KineticText({ intervalMs = 3000 }: { intervalMs?: number }) {
+  const { lang } = useLanguage();
+  const items = useMemo(() => (lang === "en" ? ITEMS_EN : ITEMS_TR), [lang]);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % items.length);
+      setIndex((prev) => (prev + 1) % items.length);
     }, intervalMs);
     return () => clearInterval(timer);
   }, [items.length, intervalMs]);
 
-  const currentItem = items[currentIndex];
+  const current = items[index % items.length];
 
   return (
-    <div className="relative my-4 flex flex-col items-center justify-center w-full min-h-[50px] sm:min-h-[64px] lg:min-h-[72px]">
-      {/* Ambient Radial Backlight Blur */}
-      <motion.div
-        animate={{
-          background: `radial-gradient(ellipse at center, ${currentItem.glowColor} 0%, transparent 70%)`,
-        }}
-        transition={{ duration: 0.6 }}
-        className="absolute inset-0 blur-2xl opacity-50 pointer-events-none"
-      />
+    <div className="relative my-3 w-full max-w-3xl mx-auto h-12 sm:h-14 md:h-16 flex items-center justify-center select-none overflow-hidden px-2">
+      {/* 1. Multi-Layer Ultra-Soft Gaussian Ambient Glow - No Sharp Edges */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+        {/* Layer A: Broad ultra-diffused atmospheric glow */}
+        <motion.div
+          key={`broad-${current.text}`}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 0.55, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          style={{
+            background: `radial-gradient(ellipse 65% 50% at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 75%)`,
+            filter: "blur(32px)",
+          }}
+          className="absolute inset-0 w-full h-full"
+        />
 
-      {/* Floating Kinetic Text Container (No Outer Boxes, Dots, or Frames) */}
-      <div className="relative z-10 flex items-center justify-center overflow-hidden w-full px-2">
+        {/* Layer B: Centered soft specular highlight */}
+        <motion.div
+          key={`core-${current.text}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          style={{
+            background: `radial-gradient(circle at 50% 50%, ${current.glowColor} 0%, rgba(0, 0, 0, 0) 50%)`,
+            filter: "blur(18px)",
+          }}
+          className="absolute w-3/4 h-full"
+        />
+      </div>
+
+      {/* 2. Liquid Glass Capsule Container - Zero Layout Shift & Single-Line Fit */}
+      <div className="relative z-10 w-full flex items-center justify-center">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentItem.text}
-            initial={{ y: 22, opacity: 0, scale: 0.94, filter: "blur(6px)" }}
-            animate={{ y: 0, opacity: 1, scale: 1, filter: "blur(0px)" }}
-            exit={{ y: -22, opacity: 0, scale: 0.94, filter: "blur(6px)" }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center justify-center flex-wrap gap-[0.04em]"
+            key={current.text}
+            initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center justify-center gap-2 sm:gap-3 rounded-full border border-white/10 bg-white/[0.04] px-3 sm:px-5 py-1.5 sm:py-2 backdrop-blur-2xl shadow-xl shadow-black/30 max-w-full"
           >
-            {currentItem.text.split("").map((char, charIdx) => (
-              <motion.span
-                key={charIdx}
-                initial={{ y: 8, opacity: 0, rotateX: 90 }}
-                animate={{ y: 0, opacity: 1, rotateX: 0 }}
-                transition={{
-                  duration: 0.22,
-                  delay: charIdx * 0.012,
-                  ease: "easeOut",
-                }}
-                className={`inline-block font-black text-xl sm:text-3xl lg:text-4xl xl:text-5xl tracking-[0.14em] leading-none ${
-                  currentItem.style === "stroke"
-                    ? "text-transparent [-webkit-text-stroke:1.5px_rgba(192,132,252,0.95)] drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]"
-                    : currentItem.style === "emerald"
-                    ? "text-emerald-300 drop-shadow-[0_0_18px_rgba(16,185,129,0.7)]"
-                    : currentItem.style === "cyan"
-                    ? "text-cyan-300 drop-shadow-[0_0_18px_rgba(6,182,212,0.7)]"
-                    : currentItem.style === "pink"
-                    ? "text-pink-300 drop-shadow-[0_0_18px_rgba(244,63,94,0.7)]"
-                    : currentItem.style === "amber"
-                    ? "text-amber-300 drop-shadow-[0_0_18px_rgba(245,158,11,0.7)]"
-                    : currentItem.style === "violet"
-                    ? "text-purple-300 drop-shadow-[0_0_18px_rgba(168,85,247,0.7)]"
-                    : "bg-gradient-to-r from-purple-300 via-indigo-200 to-pink-300 bg-clip-text text-transparent drop-shadow-[0_0_22px_rgba(168,85,247,0.5)]"
-                }`}
-              >
-                {char === " " ? "\u00A0" : char}
-              </motion.span>
-            ))}
+            {/* Tag Pill with Pulse Indicator */}
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 sm:px-2.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider border backdrop-blur-md shrink-0 ${current.badgeBg} ${current.badgeBorder} ${current.badgeText}`}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-current" />
+              </span>
+              <span className="hidden xs:inline">{current.tag}</span>
+            </span>
+
+            {/* Kinetic Studio Title - Strict Single Line with Fluid Typography */}
+            <span
+              className={`bg-gradient-to-r ${current.textColor} bg-clip-text text-transparent font-black tracking-wide sm:tracking-wider whitespace-nowrap text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl shrink-0 leading-none drop-shadow-sm`}
+            >
+              {current.text}
+            </span>
+
+            {/* Subtle Right Sparkle Accent */}
+            <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white/50 shrink-0 hidden sm:block" />
           </motion.div>
         </AnimatePresence>
       </div>

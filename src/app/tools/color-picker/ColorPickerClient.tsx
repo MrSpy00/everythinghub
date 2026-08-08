@@ -6,8 +6,10 @@ import { ArrowLeft, Palette, Upload, Copy, Check, Sparkles } from "lucide-react"
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function ColorPickerClient() {
+  const { t } = useLanguage();
   const [colors, setColors] = useState<string[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function ColorPickerClient() {
         .slice(0, 8);
 
       setColors(sorted);
-      toast.success("Dominant renk paleti çıkarıldı!");
+      toast.success(t.hexCopied);
     };
   };
 
@@ -57,7 +59,7 @@ export function ColorPickerClient() {
     const ok = await copyToClipboard(hex);
     if (ok) {
       setCopiedColor(hex);
-      toast.success(`${hex} panoya kopyalandı!`);
+      toast.success(`${hex} ${t.copied}`);
       setTimeout(() => setCopiedColor(null), 2000);
     }
   };
@@ -70,7 +72,7 @@ export function ColorPickerClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -80,9 +82,9 @@ export function ColorPickerClient() {
             <Palette className="h-7 w-7 text-amber-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white sm:text-3xl">Renk Paleti & Çıkarıcı</h1>
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{t.colorPickerTitle}</h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Görsellerden uyumlu dominant renk paletleri üretin ve HEX kodlarını kopyalayın.
+              {t.colorPickerSub}
             </p>
           </div>
         </div>
@@ -95,8 +97,8 @@ export function ColorPickerClient() {
             className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-amber-500/40 bg-amber-500/5 p-8 text-center cursor-pointer hover:border-amber-500 hover:bg-amber-500/10 transition-all"
           >
             <Upload className="h-10 w-10 text-amber-400 mb-3" />
-            <p className="text-sm font-bold text-white mb-1">Görsel Yükle</p>
-            <p className="text-xs text-[var(--hub-text-muted)]">Renk analizi için görsel seçin</p>
+            <p className="text-sm font-bold text-white mb-1">{t.dropImageForPalette}</p>
+            <p className="text-xs text-[var(--hub-text-muted)]">{t.dropImage}</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -115,7 +117,7 @@ export function ColorPickerClient() {
               {colors.length > 0 && (
                 <div>
                   <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Öne Çıkan Dominant Renk Paleti
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400" /> {t.dominantColors}
                   </span>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {colors.map((hex) => (

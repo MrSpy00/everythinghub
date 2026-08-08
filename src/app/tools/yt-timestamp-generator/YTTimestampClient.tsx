@@ -6,8 +6,10 @@ import { ArrowLeft, Clock, Copy, Check, ExternalLink, Sparkles } from "lucide-re
 import { parseYouTubeUrl, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function YTTimestampClient() {
+  const { t } = useLanguage();
   const [url, setUrl] = useState("");
   const [minutes, setMinutes] = useState("1");
   const [seconds, setSeconds] = useState("30");
@@ -28,7 +30,7 @@ export function YTTimestampClient() {
     const ok = await copyToClipboard(generatedUrl);
     if (ok) {
       setCopied(true);
-      toast.success("Bağlantı kopyalandı!");
+      toast.success(t.copied);
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -41,7 +43,7 @@ export function YTTimestampClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white hover:border-indigo-500/50 transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -52,10 +54,10 @@ export function YTTimestampClient() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">
-              YouTube Zaman Damgası Üretici
+              {t.ytTimestampTitle}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Videonun tam istenilen dakikasında baslatılacak zaman damgalı YouTube bağlantıları oluşturun.
+              {t.ytTimestampSub}
             </p>
           </div>
         </div>
@@ -66,7 +68,7 @@ export function YTTimestampClient() {
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-pink-300 flex items-center gap-1.5 mb-2">
               <Sparkles className="h-3.5 w-3.5 text-pink-400" />
-              <span>YouTube Video Bağlantısı</span>
+              <span>{t.ytThumbUrlLabel}</span>
             </label>
             <input
               type="text"
@@ -79,7 +81,9 @@ export function YTTimestampClient() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">Dakika (m)</label>
+              <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">
+                {t.minutesLabel} (m)
+              </label>
               <input
                 type="number"
                 min="0"
@@ -89,7 +93,9 @@ export function YTTimestampClient() {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">Saniye (s)</label>
+              <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">
+                {t.secondsLabel} (s)
+              </label>
               <input
                 type="number"
                 min="0"
@@ -103,7 +109,9 @@ export function YTTimestampClient() {
 
           {generatedUrl && (
             <div className="rounded-xl border border-pink-500/30 bg-pink-500/10 p-4 space-y-3">
-              <span className="text-xs font-bold text-pink-300 uppercase tracking-wider block">Oluşturulan Zaman Damgalı Bağlantı</span>
+              <span className="text-xs font-bold text-pink-300 uppercase tracking-wider block">
+                {t.generatedTimestampUrl}
+              </span>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -116,14 +124,14 @@ export function YTTimestampClient() {
                   className="flex items-center gap-1.5 rounded-lg bg-pink-500 px-4 py-2 text-xs font-bold text-white hover:bg-pink-600 transition-all shrink-0"
                 >
                   {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copied ? "Kopyalandı" : "Kopyala"}</span>
+                  <span>{copied ? t.copied : t.copy}</span>
                 </button>
                 <a
                   href={generatedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2 text-white hover:bg-white/10 transition-all"
-                  title="Yeni Sekmede Aç"
+                  title={t.openNewTab}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>

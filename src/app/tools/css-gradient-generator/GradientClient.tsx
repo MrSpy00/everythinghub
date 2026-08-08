@@ -6,16 +6,18 @@ import { ArrowLeft, Copy, Check, Sparkles } from "lucide-react";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const PRESETS = [
   { name: "Royal Indigo", color1: "#6366f1", color2: "#8b5cf6", color3: "#ec4899" },
   { name: "Cyberpunk Pink", color1: "#ff007f", color2: "#7928ca", color3: "#00dfd8" },
-  { name: "Emerald Emerald", color1: "#10b981", color2: "#059669", color3: "#047857" },
+  { name: "Emerald Forest", color1: "#10b981", color2: "#059669", color3: "#047857" },
   { name: "Sunset Gold", color1: "#f59e0b", color2: "#ef4444", color3: "#ec4899" },
   { name: "Oceanic Blue", color1: "#06b6d4", color2: "#3b82f6", color3: "#6366f1" },
 ];
 
 export function GradientClient() {
+  const { t } = useLanguage();
   const [color1, setColor1] = useState("#6366f1");
   const [color2, setColor2] = useState("#8b5cf6");
   const [color3, setColor3] = useState("#ec4899");
@@ -29,7 +31,7 @@ export function GradientClient() {
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopied(id);
-      toast.success("Kopyalandı!");
+      toast.success(t.copied);
       setTimeout(() => setCopied(null), 2000);
     }
   };
@@ -42,7 +44,7 @@ export function GradientClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -52,9 +54,9 @@ export function GradientClient() {
             <Sparkles className="h-7 w-7 text-pink-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white sm:text-3xl">CSS Gradient Üretici</h1>
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{t.gradientTitle}</h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Çok katmanlı modern renk geçişleri oluşturun ve CSS kodlarını kopyalayın.
+              {t.gradientSub}
             </p>
           </div>
         </div>
@@ -75,7 +77,7 @@ export function GradientClient() {
           {/* Color Pickers */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="text-xs font-bold text-white mb-2 block">Renk 1</label>
+              <label className="text-xs font-bold text-white mb-2 block">{t.colorStops} 1</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -93,7 +95,7 @@ export function GradientClient() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-white mb-2 block">Renk 2</label>
+              <label className="text-xs font-bold text-white mb-2 block">{t.colorStops} 2</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -111,7 +113,7 @@ export function GradientClient() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-white mb-2 block">Renk 3</label>
+              <label className="text-xs font-bold text-white mb-2 block">{t.colorStops} 3</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -132,7 +134,7 @@ export function GradientClient() {
           {/* Angle Slider */}
           <div>
             <label className="text-xs font-bold text-white mb-2 block flex items-center justify-between">
-              <span>Açı Derecesi</span>
+              <span>{t.gradientDirection}</span>
               <span className="font-mono text-pink-300">{angle}°</span>
             </label>
             <input
@@ -148,7 +150,7 @@ export function GradientClient() {
           {/* Presets */}
           <div>
             <span className="text-xs font-bold text-pink-300 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-pink-400" /> Öne Çıkan Hazır Şablonlar
+              <Sparkles className="h-3.5 w-3.5 text-pink-400" /> {t.quickTimePresets}
             </span>
             <div className="flex flex-wrap gap-2">
               {PRESETS.map((p) => (
@@ -174,13 +176,13 @@ export function GradientClient() {
           {/* Code Output */}
           <div className="rounded-xl border border-[var(--hub-border)] bg-black/60 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-pink-300 uppercase">CSS Kodu</span>
+              <span className="text-xs font-bold text-pink-300 uppercase">{t.copyCss}</span>
               <button
                 onClick={() => handleCopy(cssCode, "css")}
                 className="flex items-center gap-1 text-xs font-bold text-pink-400 hover:text-pink-300"
               >
                 {copied === "css" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copied === "css" ? "Kopyalandı" : "Kopyala"}</span>
+                <span>{copied === "css" ? t.copied : t.copy}</span>
               </button>
             </div>
             <code className="block font-mono text-xs text-white">{cssCode}</code>

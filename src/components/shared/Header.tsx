@@ -112,7 +112,7 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 px-3.5 py-2 text-xs font-bold text-white backdrop-blur-xl transition-all hover:border-indigo-500/50 hover:bg-indigo-500/10 shadow-sm"
-            data-cursor="Yıldızla"
+            data-cursor="GitHub"
           >
             <GitHubLogo className="h-4 w-4 text-indigo-400" />
             <span>{t.githubRepo}</span>
@@ -139,21 +139,21 @@ export function Header() {
               onClick={() => setMenuOpen(false)}
               className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
             >
-              Ana Sayfa
+              {t.home}
             </Link>
             <Link
               href="/#tools"
               onClick={() => setMenuOpen(false)}
               className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
             >
-              Araçlar
+              {t.tools}
             </Link>
             <Link
               href="/#categories"
               onClick={() => setMenuOpen(false)}
               className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
             >
-              Kategoriler
+              {t.categories}
             </Link>
             <Link
               href="/tools/yt-playlist-length"
@@ -161,7 +161,7 @@ export function Header() {
               className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-indigo-300 bg-indigo-500/10 flex items-center gap-2"
             >
               <PlaySquare className="h-4 w-4 text-indigo-400" />
-              <span>YouTube Playlist Analyzer</span>
+              <span>{t.ytPlaylistTitle}</span>
             </Link>
             <a
               href="https://buymeacoffee.com/aegissoft"
@@ -170,7 +170,7 @@ export function Header() {
               className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 p-2.5 text-sm font-bold text-amber-300"
             >
               <Coffee className="h-4 w-4" />
-              <span>Kahve Ismarla (Buy Me a Coffee)</span>
+              <span>{t.buyCoffee}</span>
             </a>
             <a
               href="https://github.com/MrSpy00/everythinghub"
@@ -179,7 +179,7 @@ export function Header() {
               className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 p-2.5 text-sm font-bold text-indigo-300"
             >
               <GitHubLogo className="h-4 w-4" />
-              <span>GitHub Deposunu Aç</span>
+              <span>{t.githubRepo}</span>
             </a>
           </nav>
         </div>

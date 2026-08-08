@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Download, Search, ExternalLink, Image as ImageIcon, Copy, Check } from "lucide-react";
@@ -39,7 +39,7 @@ export function YTThumbnailClient() {
     }
 
     if (!extractedId) {
-      toast.error("Geçerli bir YouTube video bağlantısı veya ID giriniz.");
+      toast.error(t.ytThumbUrlPlaceholder);
       return;
     }
 
@@ -49,13 +49,13 @@ export function YTThumbnailClient() {
     const rawCandidates = [
       {
         id: "maxres",
-        label: "Maximum HD (4K/1080p)",
+        label: t.maxRes,
         url: `https://img.youtube.com/vi/${extractedId}/maxresdefault.jpg`,
         badge: "4K / HD",
       },
       {
         id: "sddefault",
-        label: "Standard HD (720p)",
+        label: t.highRes,
         url: `https://img.youtube.com/vi/${extractedId}/sddefault.jpg`,
         badge: "720p",
       },
@@ -67,13 +67,12 @@ export function YTThumbnailClient() {
       },
       {
         id: "mqdefault",
-        label: "Medium Quality (360p)",
+        label: t.mediumRes,
         url: `https://img.youtube.com/vi/${extractedId}/mqdefault.jpg`,
         badge: "MQ",
       },
     ];
 
-    // Load real dimensions for each thumbnail candidate
     const resolvedItems: ThumbnailItem[] = await Promise.all(
       rawCandidates.map((cand) => {
         return new Promise<ThumbnailItem>((resolve) => {
@@ -97,16 +96,15 @@ export function YTThumbnailClient() {
       })
     );
 
-    // Filter out missing thumbnails (e.g. 120x90 fallback default errors)
     const validItems = resolvedItems.filter((item) => item.width > 120);
     setThumbnails(validItems.length > 0 ? validItems : resolvedItems);
     setLoading(false);
-    toast.success("Kapak görselleri gerçek boyutlarıyla yüklendi!");
+    toast.success(t.downloadSuccessToast);
   };
 
   const handleDownloadDirect = async (imgUrl: string, qualityId: string) => {
     const toastId = "down-" + qualityId;
-    toast.loading("Resim indiriliyor...", { id: toastId });
+    toast.loading(t.analyzing, { id: toastId });
 
     try {
       const response = await fetch(imgUrl);
@@ -119,11 +117,10 @@ export function YTThumbnailClient() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
-      toast.success("Görsel başarıyla indirildi!", { id: toastId });
-    } catch (err) {
-      // Fallback
+      toast.success(t.downloadSuccessToast, { id: toastId });
+    } catch {
       window.open(imgUrl, "_blank");
-      toast.success("Görsel sekmede açıldı!", { id: toastId });
+      toast.success(t.imageOpenedToast, { id: toastId });
     }
   };
 
@@ -215,8 +212,8 @@ export function YTThumbnailClient() {
                   <h3 className="text-sm font-bold text-white">{item.label}</h3>
                   <span className="text-xs font-semibold text-rose-300/80">
                     {item.width && item.height
-                      ? `${item.width} x ${item.height} px (Gerçek Çözünürlük)`
-                      : "Varsayılan Çözünürlük"}
+                      ? `${item.width} x ${item.height} px (${t.realResolution})`
+                      : t.defaultResolution}
                   </span>
                 </div>
               </div>
@@ -238,10 +235,10 @@ export function YTThumbnailClient() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3 py-2.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white hover:border-white/20 transition-all"
-                  title="Yeni Sekmede Aç"
+                  title={t.openNewTab}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Sekmede Aç</span>
+                  <span className="hidden sm:inline">{t.openNewTab}</span>
                 </a>
 
                 {/* Copy Link */}
@@ -250,11 +247,11 @@ export function YTThumbnailClient() {
                   onClick={async () => {
                     await copyToClipboard(item.url);
                     setCopiedUrl(item.id);
-                    toast.success("Bağlantı kopyalandı!");
+                    toast.success(t.copied);
                     setTimeout(() => setCopiedUrl(null), 2000);
                   }}
                   className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-[var(--hub-text-muted)] hover:text-white transition-all"
-                  title="URL Kopyala"
+                  title={t.copyLink}
                 >
                   {copiedUrl === item.id ? (
                     <Check className="h-4 w-4 text-emerald-400" />

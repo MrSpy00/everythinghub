@@ -5,8 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, Image as ImageIcon, Download, Upload, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function ImageCompressorClient() {
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [compressedPreview, setCompressedPreview] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function ImageCompressorClient() {
     if (!selected) return;
 
     if (!selected.type.startsWith("image/")) {
-      toast.error("Lütfen geçerli bir görsel dosyası seçin (PNG, JPG, WebP vb.)");
+      toast.error("Invalid image format. Please select PNG, JPG, or WebP.");
       return;
     }
 
@@ -56,7 +58,7 @@ export function ImageCompressorClient() {
             const compUrl = URL.createObjectURL(blob);
             setCompressedPreview(compUrl);
             setCompressing(false);
-            toast.success("Görsel başarıyla sıkıştırıldı!");
+            toast.success(t.downloadSuccessToast || "Image compressed successfully!");
           },
           fmt,
           q
@@ -100,7 +102,7 @@ export function ImageCompressorClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white hover:border-indigo-500/50 transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -111,10 +113,10 @@ export function ImageCompressorClient() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">
-              Görsel Sıkıştırıcı
+              {t.imgCompressTitle}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Görselleri kalite kaybı yaşamadan %90&apos;a varan oranlarda sıkıştırın. Tüm işlem %100 tarafsız ve gizli olarak cihazınızda gerçekleşir.
+              {t.imgCompressSub}
             </p>
           </div>
         </div>
@@ -128,8 +130,8 @@ export function ImageCompressorClient() {
             className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-purple-500/40 bg-purple-500/5 p-8 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-500/10 transition-all"
           >
             <Upload className="h-10 w-10 text-purple-400 mb-3" />
-            <p className="text-sm font-bold text-white mb-1">Görsel Seç veya Sürükle Bırak</p>
-            <p className="text-xs text-[var(--hub-text-muted)]">PNG, JPG, WebP veya AVIF (Maks. 50 MB)</p>
+            <p className="text-sm font-bold text-white mb-1">{t.dropImage}</p>
+            <p className="text-xs text-[var(--hub-text-muted)]">PNG, JPG, WebP, AVIF</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -145,7 +147,7 @@ export function ImageCompressorClient() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-bold text-white mb-2 block">
-                    Kalite Oranı: %{Math.round(quality * 100)}
+                    {t.qualityLabel}: %{Math.round(quality * 100)}
                   </label>
                   <input
                     type="range"
@@ -158,13 +160,13 @@ export function ImageCompressorClient() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-white mb-2 block">Çıktı Formatı</label>
+                  <label className="text-xs font-bold text-white mb-2 block">{t.targetFormat}</label>
                   <select
                     value={format}
                     onChange={(e) => handleFormatChange(e.target.value)}
                     className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3 py-2 text-xs font-bold text-white focus:outline-none"
                   >
-                    <option value="image/webp">WebP (Önerilen - En Küçük)</option>
+                    <option value="image/webp">WebP (Optimal)</option>
                     <option value="image/jpeg">JPEG</option>
                     <option value="image/png">PNG</option>
                   </select>
@@ -174,16 +176,16 @@ export function ImageCompressorClient() {
               {/* Compression Stats */}
               <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-purple-500/30 bg-purple-500/10 p-4">
                 <div>
-                  <span className="text-[10px] text-purple-300 font-bold uppercase block">Orijinal Boyut</span>
+                  <span className="text-[10px] text-purple-300 font-bold uppercase block">{t.originalSize}</span>
                   <span className="text-sm font-black text-white">{formatBytes(originalSize)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-purple-300 font-bold uppercase block">Sıkıştırılmış Boyut</span>
+                  <span className="text-[10px] text-purple-300 font-bold uppercase block">{t.compressedSize}</span>
                   <span className="text-sm font-black text-emerald-400">{formatBytes(compressedSize)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-purple-300 font-bold uppercase block">Tasarruf Oranı</span>
-                  <span className="text-sm font-black text-purple-300">%{savingsPct} Kazanım</span>
+                  <span className="text-[10px] text-purple-300 font-bold uppercase block">{t.sizeReduction}</span>
+                  <span className="text-sm font-black text-purple-300">%{savingsPct}</span>
                 </div>
                 {compressedPreview && (
                   <a
@@ -192,7 +194,7 @@ export function ImageCompressorClient() {
                     className="flex items-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/20 px-5 py-2.5 text-xs font-bold text-white backdrop-blur-2xl shadow-xl shadow-violet-500/10 hover:bg-violet-500/30 hover:border-violet-400 hover:scale-105 transition-all"
                   >
                     <Download className="h-4 w-4" />
-                    <span>Sıkıştırılmışı İndir</span>
+                    <span>{t.downloadCompressed}</span>
                   </a>
                 )}
               </div>
@@ -200,22 +202,22 @@ export function ImageCompressorClient() {
               {/* Side by side previews */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <span className="text-xs font-bold text-white mb-2 block">Orijinal Görsel</span>
+                  <span className="text-xs font-bold text-white mb-2 block">{t.originalSize}</span>
                   <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-[var(--hub-border)] bg-black/40">
-                    <img src={preview || ""} alt="Orijinal" className="h-full w-full object-contain" />
+                    <img src={preview || ""} alt="Original" className="h-full w-full object-contain" />
                   </div>
                 </div>
                 <div>
                   <span className="text-xs font-bold text-emerald-400 mb-2 block flex items-center gap-1">
-                    <CheckCircle className="h-3.5 w-3.5" /> Sıkıştırılmış Görsel
+                    <CheckCircle className="h-3.5 w-3.5" /> {t.compressedSize}
                   </span>
                   <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-purple-500/40 bg-black/40">
                     {compressing ? (
                       <div className="flex h-full items-center justify-center text-purple-300 text-xs font-bold gap-2">
-                        <RefreshCw className="h-4 w-4 animate-spin" /> İşleniyor...
+                        <RefreshCw className="h-4 w-4 animate-spin" /> {t.converting}
                       </div>
                     ) : (
-                      <img src={compressedPreview || ""} alt="Sıkıştırılmış" className="h-full w-full object-contain" />
+                      <img src={compressedPreview || ""} alt="Compressed" className="h-full w-full object-contain" />
                     )}
                   </div>
                 </div>

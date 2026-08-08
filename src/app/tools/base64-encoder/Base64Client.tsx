@@ -6,9 +6,11 @@ import { ArrowLeft, Binary, Copy, Check, Lock, Unlock } from "lucide-react";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function Base64Client() {
-  const [input, setInput] = useState("everythinghub — Dijital Araçlar");
+  const { t } = useLanguage();
+  const [input, setInput] = useState("everythinghub — Digital Studio");
   const [mode, setMode] = useState<"encode" | "decode">("encode");
   const [copied, setCopied] = useState(false);
 
@@ -23,7 +25,7 @@ export function Base64Client() {
     }
   } catch {
     error = true;
-    output = "Geçersiz Base64 dizgisi!";
+    output = t.invalidBase64Error;
   }
 
   const handleCopy = async () => {
@@ -31,7 +33,7 @@ export function Base64Client() {
     const ok = await copyToClipboard(output);
     if (ok) {
       setCopied(true);
-      toast.success("Panoya kopyalandı!");
+      toast.success(t.copied);
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -44,7 +46,7 @@ export function Base64Client() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -54,9 +56,9 @@ export function Base64Client() {
             <Binary className="h-7 w-7 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white sm:text-3xl">Base64 Kodlayıcı & Çözücü</h1>
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{t.base64Title}</h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Metinlerinizi UTF-8 desteğiyle Base64 formatına dönüştürün veya çözün.
+              {t.base64Sub}
             </p>
           </div>
         </div>
@@ -73,7 +75,7 @@ export function Base64Client() {
                   : "border border-[var(--hub-border)] bg-[var(--hub-bg)] text-[var(--hub-text-muted)]"
               }`}
             >
-              <Lock className="h-3.5 w-3.5" /> Kodla (Encode)
+              <Lock className="h-3.5 w-3.5" /> {t.encode}
             </button>
             <button
               onClick={() => setMode("decode")}
@@ -83,14 +85,14 @@ export function Base64Client() {
                   : "border border-[var(--hub-border)] bg-[var(--hub-bg)] text-[var(--hub-text-muted)]"
               }`}
             >
-              <Unlock className="h-3.5 w-3.5" /> Çöz (Decode)
+              <Unlock className="h-3.5 w-3.5" /> {t.decode}
             </button>
           </div>
 
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-[var(--hub-text-muted)] mb-2 block">
-                {mode === "encode" ? "Düz Metin Girdisi" : "Base64 Girdisi"}
+                {mode === "encode" ? t.rawTextInput : t.base64Input}
               </label>
               <textarea
                 value={input}
@@ -103,7 +105,7 @@ export function Base64Client() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold text-cyan-300">
-                  {mode === "encode" ? "Base64 Çıktısı" : "Düz Metin Çıktısı"}
+                  {mode === "encode" ? t.base64Output : t.plainTextOutput}
                 </label>
                 {!error && output && (
                   <button
@@ -111,7 +113,7 @@ export function Base64Client() {
                     className="flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300"
                   >
                     {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                    <span>{copied ? "Kopyalandı" : "Kopyala"}</span>
+                    <span>{copied ? t.copied : t.copy}</span>
                   </button>
                 )}
               </div>

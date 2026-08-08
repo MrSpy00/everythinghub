@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Percent, Calculator } from "lucide-react";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function PercentageClient() {
+  const { t } = useLanguage();
   const [val1, setVal1] = useState<number>(20);
   const [val2, setVal2] = useState<number>(500);
 
@@ -25,7 +27,7 @@ export function PercentageClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -35,9 +37,9 @@ export function PercentageClient() {
             <Percent className="h-7 w-7 text-amber-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white sm:text-3xl">Yüzde & İndirim Hesaplayıcı</h1>
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{t.percentageTitle}</h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Yüzde oranları, indirimli fiyat ve KDV tutarlarını anında hesaplayın.
+              {t.percentageSub}
             </p>
           </div>
         </div>
@@ -48,11 +50,13 @@ export function PercentageClient() {
         <NeonBorder color="#eab308" rounded={24} glow={60}>
           <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
             <h3 className="text-sm font-bold text-yellow-300 flex items-center gap-2">
-              <Calculator className="h-4 w-4" /> Yüzde Hesaplama (X% of Y)
+              <Calculator className="h-4 w-4" /> {t.calcPercentageOf}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 items-center">
               <div>
-                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">Yüzde Oranı (%)</label>
+                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">
+                  {t.percentageValue}
+                </label>
                 <input
                   type="number"
                   value={val1}
@@ -61,7 +65,9 @@ export function PercentageClient() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">Tutar / Sayı</label>
+                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">
+                  {t.baseValue}
+                </label>
                 <input
                   type="number"
                   value={val2}
@@ -70,9 +76,9 @@ export function PercentageClient() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-emerald-400 mb-1 block">Sonuç</label>
+                <label className="text-xs font-bold text-emerald-400 mb-1 block">{t.resultLabel}</label>
                 <div className="rounded-xl border border-yellow-500/30 bg-black/70 p-3 font-mono text-base font-black text-yellow-300">
-                  {percentResult.toLocaleString("tr-TR")}
+                  {percentResult.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -83,11 +89,13 @@ export function PercentageClient() {
         <NeonBorder color="#f59e0b" rounded={24} glow={60}>
           <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
             <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
-              <Percent className="h-4 w-4" /> İndirimli Fiyat Hesaplayıcı
+              <Percent className="h-4 w-4" /> {t.calcDiscountVat}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 items-center">
               <div>
-                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">Orijinal Fiyat (TL)</label>
+                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">
+                  {t.baseValue}
+                </label>
                 <input
                   type="number"
                   value={origPrice}
@@ -96,7 +104,9 @@ export function PercentageClient() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">İndirim Oranı (%)</label>
+                <label className="text-xs font-semibold text-[var(--hub-text-muted)] mb-1 block">
+                  {t.percentageValue}
+                </label>
                 <input
                   type="number"
                   value={discountRate}
@@ -105,10 +115,12 @@ export function PercentageClient() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-emerald-400 mb-1 block">İndirimli Fiyat</label>
+                <label className="text-xs font-bold text-emerald-400 mb-1 block">{t.resultLabel}</label>
                 <div className="rounded-xl border border-emerald-500/30 bg-black/70 p-3 font-mono text-base font-black text-emerald-300">
-                  {finalPrice.toLocaleString("tr-TR")} TL
-                  <span className="text-[10px] text-amber-300 block font-normal mt-0.5">(-{discountAmount.toLocaleString("tr-TR")} TL İndirim)</span>
+                  {finalPrice.toLocaleString()}
+                  <span className="text-[10px] text-amber-300 block font-normal mt-0.5">
+                    (-{discountAmount.toLocaleString()})
+                  </span>
                 </div>
               </div>
             </div>

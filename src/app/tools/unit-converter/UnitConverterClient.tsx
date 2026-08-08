@@ -4,50 +4,52 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Scale, ArrowRightLeft } from "lucide-react";
 import { NeonBorder } from "@/components/creative/NeonBorder";
-
-const UNITS: Record<string, { name: string; units: Record<string, number> }> = {
-  length: {
-    name: "Uzunluk",
-    units: {
-      Metre: 1,
-      Kilometre: 0.001,
-      Santimetre: 100,
-      Milimetre: 1000,
-      Mil: 0.000621371,
-      Inç: 39.3701,
-      Feet: 3.28084,
-    },
-  },
-  mass: {
-    name: "Kütle",
-    units: {
-      Kilogram: 1,
-      Gram: 1000,
-      Miligram: 1000000,
-      Pound: 2.20462,
-      Ons: 35.274,
-      Ton: 0.001,
-    },
-  },
-  data: {
-    name: "Veri Depolama",
-    units: {
-      Byte: 1,
-      Kilobyte: 1 / 1024,
-      Megabyte: 1 / (1024 * 1024),
-      Gigabyte: 1 / (1024 * 1024 * 1024),
-      Terabyte: 1 / (1024 * 1024 * 1024 * 1024),
-    },
-  },
-};
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function UnitConverterClient() {
+  const { t } = useLanguage();
   const [category, setCategory] = useState<string>("length");
   const [value, setValue] = useState<number>(10);
-  const [fromUnit, setFromUnit] = useState<string>("Metre");
-  const [toUnit, setToUnit] = useState<string>("Kilometre");
+  const [fromUnit, setFromUnit] = useState<string>("Meter");
+  const [toUnit, setToUnit] = useState<string>("Kilometer");
 
-  const currentCategory = UNITS[category];
+  const UNITS: Record<string, { name: string; units: Record<string, number> }> = {
+    length: {
+      name: t.categoryLength,
+      units: {
+        Meter: 1,
+        Kilometer: 0.001,
+        Centimeter: 100,
+        Millimeter: 1000,
+        Mile: 0.000621371,
+        Inch: 39.3701,
+        Foot: 3.28084,
+      },
+    },
+    mass: {
+      name: t.categoryMass,
+      units: {
+        Kilogram: 1,
+        Gram: 1000,
+        Milligram: 1000000,
+        Pound: 2.20462,
+        Ounce: 35.274,
+        Tonne: 0.001,
+      },
+    },
+    data: {
+      name: t.categoryData,
+      units: {
+        Byte: 1,
+        Kilobyte: 1 / 1024,
+        Megabyte: 1 / (1024 * 1024),
+        Gigabyte: 1 / (1024 * 1024 * 1024),
+        Terabyte: 1 / (1024 * 1024 * 1024 * 1024),
+      },
+    },
+  };
+
+  const currentCategory = UNITS[category] || UNITS.length;
   const fromFactor = currentCategory.units[fromUnit] || 1;
   const toFactor = currentCategory.units[toUnit] || 1;
 
@@ -61,7 +63,7 @@ export function UnitConverterClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -71,9 +73,9 @@ export function UnitConverterClient() {
             <Scale className="h-7 w-7 text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white sm:text-3xl">Çoklu Birim Dönüştürücü</h1>
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{t.unitConverterTitle}</h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              Uzunluk, kütle ve veri depolama birimlerini kesintisiz ve hassas dönüştürün.
+              {t.unitConverterSub}
             </p>
           </div>
         </div>
@@ -105,7 +107,7 @@ export function UnitConverterClient() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-5 items-center">
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-teal-300 mb-2 block">Girdi Değeri</label>
+              <label className="text-xs font-bold text-teal-300 mb-2 block">{t.fromUnit}</label>
               <input
                 type="number"
                 value={value}
@@ -130,11 +132,11 @@ export function UnitConverterClient() {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-emerald-400 mb-2 block">Dönüştürülen Sonuç</label>
+              <label className="text-xs font-bold text-emerald-400 mb-2 block">{t.unitResult}</label>
               <input
                 type="text"
                 readOnly
-                value={result.toLocaleString("tr-TR", { maximumFractionDigits: 6 })}
+                value={result.toLocaleString(undefined, { maximumFractionDigits: 6 })}
                 className="w-full rounded-xl border border-teal-500/30 bg-black/70 p-3 font-mono text-sm font-bold text-teal-300 focus:outline-none mb-2"
               />
               <select

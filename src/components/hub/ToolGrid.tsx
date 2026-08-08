@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
 import Fuse from "fuse.js";
 import { type Tool, type ToolCategory, tools, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/tools-registry";
@@ -38,7 +38,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
   };
 
   const categories = useMemo(() => {
-    return [...new Set(tools.map((t) => t.category))];
+    return [...new Set(tools.map((item) => item.category))];
   }, []);
 
   const filteredTools = useMemo(() => {
@@ -47,22 +47,22 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
       : tools;
 
     if (activeCategory !== ALL_CATEGORIES) {
-      result = result.filter((t) => t.category === activeCategory);
+      result = result.filter((item) => item.category === activeCategory);
     }
 
     return result;
   }, [search, activeCategory]);
 
-  const liveCount = tools.filter((t) => t.status === "live").length;
+  const liveCount = tools.filter((item) => item.status === "live").length;
 
   return (
-    <section id="tools" className="py-16 relative">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="tools" className="py-16 sm:py-20 relative scroll-mt-24 sm:scroll-mt-28">
+      <div className="mx-auto max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between border-b border-[var(--hub-border)] pb-6">
+        <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between border-b border-white/10 pb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
                 <Compass className="h-3.5 w-3.5" />
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
@@ -71,7 +71,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
             </div>
             <h2 suppressHydrationWarning className="text-2xl font-black text-white sm:text-3xl">
               {t.allToolsTitle}
-              <span className="ml-3 rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/30">
+              <span className="ml-3 rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
                 {liveCount} {t.activeCountLabel} · {tools.length} Total
               </span>
             </h2>
@@ -84,20 +84,20 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search Input */}
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--hub-text-subtle)]" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
                 placeholder={t.filterPlaceholder}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-[var(--hub-text-subtle)] backdrop-blur-xl transition-all focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none"
                 data-cursor="Filtrele"
               />
               {search && (
                 <button
                   onClick={() => handleSearchChange("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--hub-text-subtle)] hover:text-white"
-                  aria-label="Temizle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  aria-label={t.clear}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -105,16 +105,16 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] p-1">
+            <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "grid"
-                    ? "bg-indigo-500 text-white shadow-md"
+                    ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
                 title={t.viewGrid}
-                data-cursor="Izgara"
+                data-cursor={t.viewGrid}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t.viewGrid}</span>
@@ -123,11 +123,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 onClick={() => setViewMode("showcase")}
                 className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "showcase"
-                    ? "bg-indigo-500 text-white shadow-md"
+                    ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
                 title={t.viewShowcase}
-                data-cursor="Vitrin"
+                data-cursor={t.viewShowcase}
               >
                 <Flame className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t.viewShowcase}</span>
@@ -136,11 +136,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 onClick={() => setViewMode("compact")}
                 className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   viewMode === "compact"
-                    ? "bg-indigo-500 text-white shadow-md"
+                    ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
                 title={t.viewCompact}
-                data-cursor="Liste"
+                data-cursor={t.viewCompact}
               >
                 <Rows3 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t.viewCompact}</span>
@@ -156,7 +156,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
             className={`relative rounded-xl px-4 py-2 text-xs font-bold transition-all ${
               activeCategory === ALL_CATEGORIES
                 ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
-                : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
+                : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
             }`}
             data-cursor="Kategori"
           >
@@ -171,7 +171,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
           </button>
           {categories.map((cat) => {
             const Icon = CATEGORY_ICONS[cat];
-            const catCount = tools.filter((t) => t.category === cat).length;
+            const catCount = tools.filter((item) => item.category === cat).length;
             const isActive = activeCategory === cat;
             return (
               <button
@@ -180,7 +180,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                   isActive
                     ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
-                    : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
+                    : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
                 }`}
                 data-cursor={CATEGORY_LABELS[cat]}
               >
@@ -215,10 +215,10 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                   <Search className="h-7 w-7" />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-white">
-                  Eşleşen araç bulunamadı
+                  {t.noToolsFoundTitle}
                 </h3>
                 <p className="text-sm text-[var(--hub-text-muted)] max-w-sm">
-                  &quot;{search}&quot; terimi için hiçbir araç bulunamadı. Lütfen farklı bir arama yapın veya filtreleri temizleyin.
+                  &quot;{search}&quot; {t.noToolsFoundDesc}
                 </p>
                 <button
                   onClick={() => {
@@ -227,7 +227,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                   }}
                   className="mt-6 rounded-xl bg-indigo-500/15 border border-indigo-500/30 px-5 py-2.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/25 transition-all"
                 >
-                  Filtreleri Sıfırla
+                  {t.resetFilters}
                 </button>
               </div>
             ) : (
@@ -268,11 +268,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                         </span>
                         {isLive ? (
                           <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md">
-                            Aktif
+                            {t.activeCountLabel}
                           </span>
                         ) : (
                           <span className="text-[10px] text-[var(--hub-text-subtle)] bg-white/5 px-2 py-0.5 rounded-md">
-                            Yakında
+                            {t.comingSoon}
                           </span>
                         )}
                       </div>
@@ -289,11 +289,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                         className="rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 px-4 py-2 text-xs font-bold text-indigo-300 border border-indigo-500/30 transition-all inline-block"
                         data-cursor="Aç"
                       >
-                        Çalıştır →
+                        {t.runTool} →
                       </a>
                     ) : (
                       <span className="text-xs text-[var(--hub-text-subtle)] px-3 py-1.5">
-                        Geliştiriliyor
+                        {t.developingBadge}
                       </span>
                     )}
                   </div>

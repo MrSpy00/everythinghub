@@ -15,11 +15,11 @@
 
 <p align="center">
   <a href="#turkce-dokumantasyon">
-    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="24" height="16" alt="Türkiye" inline /> <strong>Türkçe Dokümantasyon</strong>
+    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="24" height="16" alt="TR" /> <strong>Türkçe Dokümantasyon</strong>
   </a>
   &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
   <a href="#english-documentation">
-    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="24" height="16" alt="United Kingdom" inline /> <strong>English Documentation</strong>
+    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="24" height="16" alt="GB" /> <strong>English Documentation</strong>
   </a>
 </p>
 
@@ -27,54 +27,56 @@
 
 </div>
 
-# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="32" height="22" alt="TR" /> Türkçe Dokümantasyon
+# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="28" height="18" alt="TR" /> Türkçe Dokümantasyon
 
-## 🚀 Canlı Uygulama
-🔗 **[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
+## Canlı Uygulama
+**[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
 
-## 💡 Proje Hakkında ve Vizyon
+## Proje Hakkında ve Vizyon
 
-**EverythingHub**, modern web teknolojileri (Next.js 16 Turbopack, React 19, Tailwind CSS v4, OGL WebGL ve Framer Motion) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar platformudur.
+**EverythingHub**, modern web teknolojileri (Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion ve Outfit stüdyo tipografisi) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar platformudur.
 
-Platform, standart şablonlar yerine **Originkit kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (Spring UserCursor), Liquid Glass mofizm ve neon ışıma efektleri ile donatılmıştır.
+Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) mofizm, yumuşak Gauss difüzyonlu ortam ışımaları ve dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ile donatılmıştır.
 
-### 🌟 Temel Değerler ve İlkeler
-1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleştirilir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
+### Temel Değerler ve İlkeler
+1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
-3. **Işık Hızında Performans:** Next.js 16 Turbopack motoru ve OGL WebGL donanım hızlandırması sayesinde sıfır gecikmeyle çalışır.
-4. **14+ Aktif Modüler Araç:** Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
+3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru sayesinde sıfır gecikmeyle çalışır.
+4. **14 Aktif Modüler Araç:** Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
+5. **Kapsamlı Çok Dilli Altyapı:** Türkçe ve İngilizce dilleri arasında anında ve kesintisiz geçiş.
+6. **Çoklu Ekran & Kusursuz Responsive Uyum:** 320px mobil ekranlardan dikey/pivot monitörlere, tabletlerden 4K ve TV ekranlarına kadar hatasız esnek yerleşim.
 
 ---
 
-## 🛠️ Canlı Araç Kataloğu (14 Aktif Araç)
+## Canlı Araç Kataloğu (14 Aktif Araç)
 
-### 🎬 Video Kategorisi
-1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube 2025/2026 `lockupViewModel` destekli playlist süresi hesaplama, farklı oynatma hızları (1.0x-3.0x) simülasyonu, hazır şablon butonları, HD thumbnail ve CSV dışa aktarma.
-2. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD ve HD video kapak resimlerini ücretsiz indirme.
-3. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Özel başlama süreli zaman damgalı (timestamp) bağlantılar oluşturma.
+### Video & YouTube Kategorisi
+1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` destekli playlist süre hesaplama, farklı oynatma hızları (1.0x-3.0x) simülasyonu, %100 doğrulanmış gerçek çalma listesi şablonları, rastgele konu keşfetme (shuffler), tarayıcı cihaz geçmişi ve CSV/JSON dışa aktarma.
+2. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD (1080p), HD (720p) ve MQ video kapak resimlerini ücretsiz indirme ve bağlantı kopyalama.
+3. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Videoları tam istenen dakika ve saniyede başlatan zaman damgalı bağlantılar üretme.
 
-### 🖼️ Görsel Kategorisi
-4. **Görsel Sıkıştırıcı (`/tools/image-compressor`):** Cihazınızda sıfır veri transferi ile %90'a varan oranda görsel sıkıştırma.
+### Görsel & Tasarım Kategorisi
+4. **Görsel Sıkıştırıcı (`/tools/image-compressor`):** Cihazınızda sıfır veri transferi ile %90'a varan oranda kayıpsız görsel sıkıştırma ve WebP optimizasyonu.
 5. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG ve WebP formatları arasında anında dönüştürme.
-6. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX kopyalama.
+6. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX/RGB değerlerini kopyalama.
+7. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli, açılı linear ve radial CSS degrade kodları üretme.
 
-### ⚙️ Geliştirici Kategorisi
-7. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
-8. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
-9. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme ve eşleşmeleri listeleme.
-10. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli CSS linear-gradient üretme ve kopyalama.
+### Geliştirici Araçları Kategorisi
+8. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
+9. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
+10. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme, bayrak (flag) yönetimi ve eşleşmeleri anlık listeleme.
 
-### 📝 Metin Kategorisi
-11. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter, cümle, paragraf ve okuma süresi analizi.
-12. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, BÜYÜK/KÜÇÜK harf dönüşümü.
+### Metin & İçerik Kategorisi
+11. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter (boşluklu/boşluksuz), cümle, paragraf ve tahmini okuma/konuşma süresi analizi.
+12. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, BÜYÜK/KÜÇÜK harf dönüşümü.
 
-### 🔢 Hesaplama Kategorisi
-13. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama birimleri arasında hassas dönüştürme.
-14. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve tutar hesaplama.
+### Hesaplama & Birim Kategorisi
+13. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama (Byte, KB, MB, GB, TB) birimleri arasında hassas dönüştürme.
+14. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve KDV tutarlarını anında hesaplama.
 
 ---
 
-## 💻 Windows Akıllı Konsol (`server.bat`)
+## Windows Akıllı Konsol (`server.bat`)
 
 Proje yönetimi ve yerel geliştirme için akıllı konsol:
 
@@ -97,21 +99,22 @@ Proje yönetimi ve yerel geliştirme için akıllı konsol:
 
 ---
 
-## 🏗️ Mimari ve Teknoloji Yığını
+## Mimari ve Teknoloji Yığını
 
 | Katman | Teknoloji | Açıklama |
 | :--- | :--- | :--- |
 | **Framework** | Next.js 16.3.0 | Turbopack destekli modern App Router |
 | **Kütüphane** | React 19.2.8 | Eşzamanlı render ve optimize Server Components |
-| **Stil / CSS** | Tailwind CSS v4.0 | Modern değişken tabanlı renk ve düzen sistemi |
+| **Stil / CSS** | Tailwind CSS v4.0 | Modern CSS değişkenleri ve sıvı cam teması |
+| **Tipografi** | Outfit & Geist | Geometrik stüdyo font ailesi |
 | **WebGL Grafikleri** | OGL 1.0.11 | Perlin noise tabanlı kromatik nokta dalgası animasyonu |
-| **Animasyon** | Framer Motion 13 | Yay fizikli imleç takipçisi, neon ışıma ve sürükleme |
+| **Animasyon & Fizik** | Framer Motion 13 | Yay fizikli imleç takipçisi, neon ışıma ve pürüzsüz kaydırma |
 | **Arama Motoru** | Fuse.js 7.5.0 | Anında ve toleranslı bulanık arama |
 | **Bildirimler** | Sonner 2.0.7 | Modern tost bildirimleri |
 
 ---
 
-## ⚙️ Kurulum ve Yerel Geliştirme
+## Kurulum ve Yerel Geliştirme
 
 ```bash
 # 1. Depoyu klonlayın
@@ -132,7 +135,7 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 ---
 
-## 📜 Tasarım, Geliştirme ve Telif Hakkı
+## Tasarım, Geliştirme ve Telif Hakkı
 
 * **Proje Sahibi:** [@MrSpy00](https://github.com/MrSpy00)
 * **Kaynak Kod Deposu:** [everythinghub GitHub](https://github.com/MrSpy00/everythinghub)
@@ -143,83 +146,63 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 <br><br>
 
-# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="32" height="22" alt="GB" /> English Documentation
+# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="28" height="18" alt="GB" /> English Documentation
 
-## 🚀 Live Application
-🔗 **[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
+## Live Application
+**[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
 
-## 💡 About and Vision
+## About and Vision
 
-**EverythingHub** is a modern, high-performance, privacy-first all-in-one digital utility hub built with Next.js 16 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, and Framer Motion.
+**EverythingHub** is a modern, high-performance, privacy-first all-in-one digital utility studio built with Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion, and Outfit typography.
 
-Featuring a **creative studio aesthetic** inspired by Originkit — with GPU-accelerated chromatic dotted waves, a spring-physics follower cursor (`UserCursor`) with OS cursor disabled, sweeping violet/indigo neon borders, and Liquid Glass UI components.
+Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted waves, a spring-physics follower cursor (`UserCursor`), liquid glassmorphism, soft Gaussian ambient diffusion, and an intelligent circular progress scroll-to-top motor (`ScrollToTop`).
 
-### 🌟 Core Philosophy
-1. **Zero Data Retention:** Everything runs strictly client-side or in-memory. No databases, no user trackers, no personal data collection.
-2. **Zero Login / Authentication:** Free forever, no registration, no API keys, no credit cards required.
+### Core Philosophy
+1. **Zero Data Retention:** Everything runs strictly client-side or in-memory. No databases, no user tracking, no session cookies.
+2. **Zero Login / Authentication:** Free forever, no registration, no API keys, no payment required.
 3. **Instantaneous Performance:** Powered by Turbopack compilation and lightweight WebGL rendering.
-4. **14+ Active Modular Tools:** Expandable tool registry architecture across Video, Image, Developer, Text, and Calculation categories.
+4. **14 Active Modular Tools:** Expandable tool architecture across Video, Image, Developer, Text, and Calculation categories.
+5. **Comprehensive Localization:** Seamless bilingual experience in Turkish and English.
+6. **Multi-Screen & Ultra-Responsive:** Optimized for 320px mobile screens, vertical/portrait monitors, tablets, laptops, and 4K displays.
 
 ---
 
-## 🛠️ Live Tool Catalog (14 Active Tools)
+## Live Tool Catalog (14 Active Tools)
 
-### 🎬 Video Category
-1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube 2025/2026 `lockupViewModel` supported playlist duration calculator, playback speed (1.0x-3.0x) simulation, ready preset template buttons, HD thumbnails, and CSV export.
-2. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD, and HD video cover images for free.
+### Video & YouTube Category
+1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` supported duration analysis, playback speed (1.0x-3.0x) simulation, 100% verified real playlist presets, topic shuffler, local device history, and CSV/JSON export.
+2. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD (1080p), HD (720p), and MQ cover images with direct blob download.
 3. **YouTube Timestamp Generator (`/tools/yt-timestamp-generator`):** Generate custom start time links and description timestamps.
 
-### 🖼️ Image Category
-4. **Image Compressor (`/tools/image-compressor`):** Up to 90% image size reduction with zero data transfer, processed locally on your device.
+### Image & Design Category
+4. **Image Compressor (`/tools/image-compressor`):** Up to 90% client-side image compression and WebP optimization.
 5. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, and WebP formats.
-6. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX codes.
+6. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX/RGB codes.
+7. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Multi-color linear and radial CSS gradient generator and code exporter.
 
-### ⚙️ Developer Category
-7. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
-8. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
-9. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts and list matches.
-10. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Create multi-color linear CSS gradients and copy CSS snippet.
+### Developer Tools Category
+8. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
+9. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
+10. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts with real-time match listing.
 
-### 📝 Text Category
-11. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading time analysis.
-12. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, UPPERCASE, and lowercase.
+### Text & Content Category
+11. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading/speaking time analysis.
+12. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, CONSTANT_CASE, uppercase, and lowercase.
 
-### 🔢 Calculation Category
-13. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage units.
+### Calculation & Unit Category
+13. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage (Byte, KB, MB, GB, TB) units.
 14. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Instant calculation of percentage rates, discounted prices, and amounts.
 
 ---
 
-## 💻 Windows Smart Console (`server.bat`)
-
-A specialized Windows command-line utility for managing local dev servers, ports, and builds:
-
-```cmd
-===============================================================================
-   EVERYTHINGHUB - AKILLI GELISIM VE YONETIM MERKEZI
-===============================================================================
-   [1] Gelistirme Sunucusunu Baslat (npm run dev -- Turbopack)
-   [2] Production Derleme Al        (npm run build)
-   [3] Production Sunucusunu Baslat (npm run start)
-   [4] Kod Kalitesi ve ESLint       (npm run lint)
-   [5] Sistem Saglik Raporu         (Node.js, npm, Git, Next.js)
-   [6] Onbellegi Temizle            (.next, .turbo, cache)
-   [7] Bagimliliklari Sifirdan Kur  (Temiz npm install)
-   [8] Port 3000 Kontrol ve Temizle (Kullanan programi kapat)
-   [9] Git Durumu ve Senkronizasyon (git status)
-   [0] Cikis
-===============================================================================
-```
-
----
-
-## 🏗️ Architecture and Technology Stack
+## Architecture and Technology Stack
 
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Framework** | Next.js 16.3.0 | Turbopack App Router with Server & Client components |
 | **Runtime** | React 19.2.8 | Concurrent features and optimized hydration |
-| **Styling** | Tailwind CSS v4.0 | Modern utility classes & HSL/Hex theme tokens |
+| **Styling** | Tailwind CSS v4.0 | Modern utility classes & liquid glass design tokens |
+| **Typography** | Outfit & Geist | High-grade studio geometric typography |
 | **Graphics** | OGL 1.0.11 | Minimal WebGL library for Perlin noise chromatic dots |
 | **Physics** | Framer Motion 13 | Smooth cursor trailing, velocity tilt, and kinetic layout |
 | **Search Engine** | Fuse.js 7.5.0 | In-memory fuzzy search with scoring |
@@ -227,7 +210,7 @@ A specialized Windows command-line utility for managing local dev servers, ports
 
 ---
 
-## ⚙️ Setup and Local Development
+## Setup and Local Development
 
 ```bash
 # 1. Clone repository
@@ -248,12 +231,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📜 Credits, Attribution and Copyright
+## Credits, Attribution and Copyright
 
 * **Author and Maintainer:** [@MrSpy00](https://github.com/MrSpy00)
 * **Official Repository:** [everythinghub GitHub Repository](https://github.com/MrSpy00/everythinghub)
 * **Design and Development:** [aegisSoft](https://www.aegissoft.com.tr/)
-* **Copyright:** `aegisSoft Tüm hakları saklıdır.` / `All rights reserved.`
+* **Copyright:** `aegisSoft All rights reserved.`
 
 <div align="center">
   <br>

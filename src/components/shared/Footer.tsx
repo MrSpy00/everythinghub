@@ -7,7 +7,6 @@ import {
   Heart,
   ExternalLink,
   ShieldCheck,
-  Sparkles,
   PlaySquare,
   Image as ImageIcon,
   Code2,
@@ -37,39 +36,38 @@ export function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="relative border-t border-[var(--hub-border)] bg-[var(--hub-bg)]/80 backdrop-blur-2xl py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <footer className="relative border-t border-white/10 bg-[#09090b]/90 backdrop-blur-2xl py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8">
         {/* Top Grid */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 mb-10 pb-10 border-b border-[var(--hub-border)]/60">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 mb-10 pb-10 border-b border-white/10">
           {/* Brand Column */}
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
-              <StudioLogo className="h-9 w-9 group-hover:scale-105" />
+              <StudioLogo className="h-9 w-9 group-hover:scale-105 transition-transform" />
               <span className="text-xl font-black tracking-tight text-white">
                 everything<span className="gradient-text">hub</span>
               </span>
             </Link>
-            <p className="text-sm text-[var(--hub-text-muted)] max-w-sm leading-relaxed mb-4">
-              Ücretsiz, modern, hızlı ve login gerektirmeyen hepsi-bir-arada dijital araçlar stüdyosu.
-              Gizliliğinizi korur, verilerinizi asla sunucuda saklamaz.
+            <p className="text-xs sm:text-sm text-[var(--hub-text-muted)] max-w-sm leading-relaxed mb-5">
+              {t.heroSubtitle}
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <a
                 href="https://github.com/MrSpy00/everythinghub"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-white transition-all hover:border-indigo-500/50 hover:bg-indigo-500/10"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-white transition-all hover:border-indigo-500/50 hover:bg-white/[0.08]"
                 data-cursor="GitHub"
               >
                 <GitHubLogo className="h-3.5 w-3.5 text-indigo-400" />
-                <span>GitHub Deposu</span>
+                <span>{t.githubRepo}</span>
                 <ExternalLink className="h-3 w-3 opacity-60" />
               </a>
               <a
                 href="https://github.com/MrSpy00"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] transition-all hover:text-white hover:border-white/20"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-xs font-semibold text-[var(--hub-text-muted)] transition-all hover:text-white hover:border-white/20"
                 data-cursor="Geliştirici"
               >
                 <span>@MrSpy00</span>
@@ -81,45 +79,45 @@ export function Footer() {
           <div>
             <h4
               suppressHydrationWarning
-              className="text-xs font-bold uppercase tracking-wider text-white mb-3"
+              className="text-xs font-bold uppercase tracking-wider text-white mb-4"
             >
-              Kategoriler
+              {t.categories}
             </h4>
-            <ul className="space-y-2.5 text-xs text-[var(--hub-text-muted)]">
+            <ul className="space-y-3 text-xs text-[var(--hub-text-muted)]">
               <li>
                 <Link
                   href="/tools/yt-playlist-length"
                   className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
                 >
                   <PlaySquare className="h-3.5 w-3.5 text-red-400" />
-                  <span>YouTube Playlist Analyzer</span>
+                  <span>{t.ytPlaylistTitle}</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/#tools"
+                  href="/tools/image-compressor"
                   className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
                 >
                   <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
-                  <span>Görsel Sıkıştırıcı (Yakında)</span>
+                  <span>{t.imgCompressTitle}</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/#tools"
+                  href="/tools/json-formatter"
                   className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
                 >
                   <Code2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>JSON Formatlayıcı (Yakında)</span>
+                  <span>{t.jsonTitle}</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/#tools"
+                  href="/tools/color-picker"
                   className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
                 >
                   <Palette className="h-3.5 w-3.5 text-amber-400" />
-                  <span>Renk Paleti Üretici (Yakında)</span>
+                  <span>{t.colorPickerTitle}</span>
                 </Link>
               </li>
             </ul>
@@ -129,36 +127,40 @@ export function Footer() {
           <div>
             <h4
               suppressHydrationWarning
-              className="text-xs font-bold uppercase tracking-wider text-white mb-3"
+              className="text-xs font-bold uppercase tracking-wider text-white mb-4"
             >
-              Tasarım & Geliştirme
+              {t.designDevBy}
             </h4>
-            <p className="text-xs text-[var(--hub-text-muted)] mb-3 leading-relaxed">
-              Bu platform, yüksek performans ve estetik standartlarıyla geliştirilmiştir.
+            <p className="text-xs text-[var(--hub-text-muted)] mb-4 leading-relaxed">
+              {t.turbopackDesc} · {t.zeroDataDesc}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col gap-2.5">
               <a
                 href="https://www.aegissoft.com.tr/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs font-bold text-indigo-300 backdrop-blur-2xl transition-all hover:scale-105 hover:border-indigo-400 hover:bg-indigo-500/20 hover:text-white shadow-xl shadow-indigo-500/5"
+                className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-bold text-indigo-300 backdrop-blur-2xl transition-all duration-300 hover:scale-[1.02] hover:border-indigo-400/50 hover:bg-white/[0.08] hover:text-white shadow-lg"
                 data-cursor="aegisSoft"
               >
-                <Code2 className="h-3.5 w-3.5 text-indigo-400" />
-                <span>{t.designDevBy}</span>
-                <ExternalLink className="h-3 w-3 opacity-70" />
+                <div className="flex items-center gap-2.5">
+                  <Code2 className="h-4 w-4 text-indigo-400 transition-transform group-hover:scale-110" />
+                  <span>{t.designDevBy}</span>
+                </div>
+                <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
               </a>
 
               <a
                 href="https://buymeacoffee.com/aegissoft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-300 backdrop-blur-2xl transition-all hover:scale-105 hover:border-amber-400 hover:bg-amber-500/20 hover:text-white shadow-xl shadow-amber-500/5"
+                className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-bold text-amber-300 backdrop-blur-2xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-400/50 hover:bg-white/[0.08] hover:text-white shadow-lg"
                 data-cursor="Kahve"
               >
-                <Coffee className="h-3.5 w-3.5 text-amber-400" />
-                <span>{t.buyCoffee}</span>
-                <ExternalLink className="h-3 w-3 opacity-70" />
+                <div className="flex items-center gap-2.5">
+                  <Coffee className="h-4 w-4 text-amber-400 transition-transform group-hover:scale-110" />
+                  <span>{t.buyCoffee}</span>
+                </div>
+                <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
               </a>
             </div>
           </div>
@@ -171,7 +173,7 @@ export function Footer() {
             <span>© {currentYear} <strong>aegisSoft</strong>. {t.allRightsReserved}</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <a
               href="https://www.aegissoft.com.tr/"
               target="_blank"
@@ -187,11 +189,11 @@ export function Footer() {
               rel="noopener noreferrer"
               className="hover:text-white transition-colors"
             >
-              GitHub Deposu
+              {t.githubRepo}
             </a>
             <span>·</span>
             <span className="flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-pink-500" /> for everyone
+              Made with <Heart className="h-3 w-3 text-pink-500 fill-pink-500/20" /> for everyone
             </span>
           </div>
         </div>

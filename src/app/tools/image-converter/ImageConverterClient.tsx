@@ -5,8 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, FileCode2, Download, Upload, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function ImageConverterClient() {
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
   const [targetFormat, setTargetFormat] = useState<string>("image/webp");
@@ -37,7 +39,7 @@ export function ImageConverterClient() {
           if (!blob) return;
           const url = URL.createObjectURL(blob);
           setConvertedUrl(url);
-          toast.success("Dönüştürme tamamlandı!");
+          toast.success(t.convertedReady);
         }, fmt);
       };
     };
@@ -57,7 +59,7 @@ export function ImageConverterClient() {
           className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white transition-all"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -67,9 +69,9 @@ export function ImageConverterClient() {
             <FileCode2 className="h-7 w-7 text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white sm:text-3xl">Görsel Format Dönüştürücü</h1>
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{t.imgConvertTitle}</h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              PNG, JPG ve WebP görsellerini anında ücretsiz dönüştürün.
+              {t.imgConvertSub}
             </p>
           </div>
         </div>
@@ -82,8 +84,8 @@ export function ImageConverterClient() {
             className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-purple-500/40 bg-purple-500/5 p-8 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-500/10 transition-all"
           >
             <Upload className="h-10 w-10 text-purple-400 mb-3" />
-            <p className="text-sm font-bold text-white mb-1">Görsel Seç</p>
-            <p className="text-xs text-[var(--hub-text-muted)]">PNG, JPG, WebP vb.</p>
+            <p className="text-sm font-bold text-white mb-1">{t.dropImage}</p>
+            <p className="text-xs text-[var(--hub-text-muted)]">PNG, JPG, WebP, AVIF</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -101,7 +103,7 @@ export function ImageConverterClient() {
                   <span className="text-xs text-[var(--hub-text-subtle)] block">{(file.size / 1024).toFixed(1)} KB</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--hub-text-muted)]">Hedef Format:</span>
+                  <span className="text-xs text-[var(--hub-text-muted)]">{t.targetFormat}:</span>
                   <select
                     value={targetFormat}
                     onChange={(e) => {
@@ -120,14 +122,14 @@ export function ImageConverterClient() {
               {convertedUrl && (
                 <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                   <span className="text-xs font-bold text-emerald-300 flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" /> Görsel {extMap[targetFormat].toUpperCase()} formatına dönüştürüldü!
+                    <CheckCircle className="h-4 w-4" /> {t.convertedReady} ({extMap[targetFormat]?.toUpperCase()})
                   </span>
                   <a
                     href={convertedUrl}
                     download={`converted.${extMap[targetFormat]}`}
                     className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-600 transition-all"
                   >
-                    <Download className="h-4 w-4" /> İndir
+                    <Download className="h-4 w-4" /> {t.download}
                   </a>
                 </div>
               )}
