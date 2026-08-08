@@ -125,12 +125,6 @@ export function Footer() {
 
           {/* Studio & Attribution with sleek liquid glass styling */}
           <div>
-            <h4
-              suppressHydrationWarning
-              className="text-xs font-bold uppercase tracking-wider text-white mb-4"
-            >
-              {t.designDevBy}
-            </h4>
             <p className="text-xs text-[var(--hub-text-muted)] mb-4 leading-relaxed">
               {t.turbopackDesc} · {t.zeroDataDesc}
             </p>
