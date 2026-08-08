@@ -69,7 +69,7 @@ export function Header() {
           <Link
             href="/"
             className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
-            data-cursor="Home"
+            data-cursor={t.home}
           >
             <StudioLogo className="h-8 w-8 group-hover:scale-105 transition-transform" />
             <span className="text-lg font-black tracking-tight text-white">
@@ -100,8 +100,8 @@ export function Header() {
             </Link>
             <button
               onClick={() => setCommandPaletteOpen(true)}
-              className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-400 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-2"
-              data-cursor="Ara"
+              className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-400 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-2 cursor-pointer"
+              data-cursor={t.quickAccess}
               aria-label={t.quickAccess}
             >
               <Search className="h-3.5 w-3.5 text-indigo-400" />
@@ -121,7 +121,7 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-bold text-amber-300 backdrop-blur-xl transition-all hover:border-amber-400 hover:bg-amber-500/20 shadow-sm"
-            data-cursor="Destek"
+            data-cursor={t.buyCoffee}
           >
             <Coffee className="h-4 w-4 text-amber-400" />
             <span>{t.buyCoffee}</span>
@@ -132,7 +132,7 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white backdrop-blur-xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] shadow-sm"
-            data-cursor="GitHub"
+            data-cursor={t.githubRepo}
           >
             <GitHubLogo className="h-4 w-4 text-indigo-400" />
             <span>{t.githubRepo}</span>

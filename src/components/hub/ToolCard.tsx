@@ -1,19 +1,35 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Lock, Flame, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Lock, Flame, CheckCircle2, Star } from "lucide-react";
 import { type Tool } from "@/lib/tools-registry";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { trackToolUsage } from "@/lib/user-analytics";
+import { trackToolUsage, isFavorite, toggleFavorite } from "@/lib/user-analytics";
 
 interface ToolCardProps {
   tool: Tool;
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const Icon = tool.icon;
   const isLive = tool.status === "live";
+  const [starred, setStarred] = useState(false);
+
+  useEffect(() => {
+    setStarred(isFavorite(tool.slug));
+    const onAnalyticsUpdate = () => setStarred(isFavorite(tool.slug));
+    window.addEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
+    return () => window.removeEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
+  }, [tool.slug]);
+
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const updated = toggleFavorite(tool.slug);
+    setStarred(updated);
+  };
 
   // Dynamic localized tool title and description
   const localized = t.toolTranslations?.[tool.slug] || {
@@ -66,16 +82,31 @@ export function ToolCard({ tool }: ToolCardProps) {
     <div
       className={`group relative flex h-full flex-col p-5 sm:p-6 rounded-2xl border transition-all duration-300 ${
         isLive
-          ? "border-white/10 bg-white/[0.03] backdrop-blur-2xl hover:border-indigo-500/40 hover:bg-white/[0.06] hover:shadow-2xl hover:shadow-indigo-500/15 hover:-translate-y-1"
+          ? "border-white/10 bg-white/[0.03] backdrop-blur-2xl hover:border-indigo-500/50 hover:bg-white/[0.07] hover:shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-1"
           : "border-white/5 bg-white/[0.015] backdrop-blur-md opacity-70"
       }`}
       data-cursor={isLive ? t.runTool : t.comingSoon}
     >
+      {/* Favorite Star Button */}
+      <button
+        onClick={handleStarClick}
+        title={starred ? (lang === "en" ? "Remove from Favorites" : "Favorilerden Çıkar") : (lang === "en" ? "Add to Favorites" : "Favorilere Ekle")}
+        aria-label="Favori"
+        className={`absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all ${
+          starred
+            ? "border-amber-400/60 bg-amber-500/20 text-amber-400 shadow-md shadow-amber-500/20 scale-105"
+            : "border-white/10 bg-white/[0.04] text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-white hover:border-white/20 hover:bg-white/[0.08]"
+        }`}
+        data-cursor={starred ? (lang === "en" ? "Remove Fav" : "Favori Çıkar") : (lang === "en" ? "Add Fav" : "Favori Ekle")}
+      >
+        <Star className={`h-4 w-4 ${starred ? "fill-amber-400 text-amber-400" : ""}`} />
+      </button>
+
       {/* Top row */}
-      <div className="mb-4 sm:mb-5 flex items-start justify-between">
+      <div className="mb-4 sm:mb-5 flex items-start justify-between pr-8">
         {/* Vector Icon Container */}
         <div
-          className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border border-white/12 bg-gradient-to-br from-white/[0.08] to-transparent backdrop-blur-2xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-400/60 group-hover:shadow-indigo-500/20"
+          className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border border-white/12 bg-gradient-to-br from-white/[0.1] to-transparent backdrop-blur-2xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-400/60 group-hover:shadow-indigo-500/25"
           style={{
             color: tool.accentColor,
           }}
@@ -120,7 +151,7 @@ export function ToolCard({ tool }: ToolCardProps) {
         {localized.description}
       </p>
 
-      {/* Category and action footer with AAA high contrast */}
+      {/* Category and action footer */}
       <div className="flex items-center justify-between border-t border-white/5 pt-3.5 mt-auto">
         <span
           className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold ${getCategoryBadgeClass()}`}

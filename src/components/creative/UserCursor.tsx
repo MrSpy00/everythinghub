@@ -17,6 +17,7 @@ import {
   type SpringOptions,
 } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Sparkles, ArrowUpRight, MousePointerClick, Edit3, Code, Search, Copy, Download, RefreshCw, Check } from "lucide-react";
 
 export type ClassNames = {
   root?: string;
@@ -112,14 +113,15 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   // Dynamic context-aware state
   const [dynamicLabel, setDynamicLabel] = useState<string>(name);
   const [isClickable, setIsClickable] = useState(false);
+  const [cursorAccent, setCursorAccent] = useState<string>("#8b5cf6");
 
   // High-performance spring configurations (Instant snappy arrow, organic fluid trailing pill)
   const arrowSpringCfg = useMemo<SpringOptions>(
-    () => ({ stiffness: 500, damping: 35, mass: 0.45 }),
+    () => ({ stiffness: 520, damping: 32, mass: 0.4 }),
     []
   );
   const labelSpringCfg = useMemo<SpringOptions>(
-    () => ({ stiffness: 260, damping: 28, mass: 0.6 }),
+    () => ({ stiffness: 280, damping: 26, mass: 0.55 }),
     []
   );
 
@@ -164,9 +166,9 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   useEffect(() => {
     const controls = animate(scaleMV, pressed ? pressScale : 1, {
       type: "spring",
-      stiffness: 550,
-      damping: 28,
-      mass: 0.4,
+      stiffness: 600,
+      damping: 26,
+      mass: 0.35,
     });
     return () => controls.stop();
   }, [pressed, pressScale, scaleMV]);
@@ -181,7 +183,7 @@ function DesktopUserCursor(userProps: UserCursorProps) {
 
   const lastSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
-  // Context-aware element inspection with bilingual precision
+  // Intelligent Context-Aware Element Inspection
   const inspectElement = (target: HTMLElement | null) => {
     if (!target) return;
 
@@ -190,75 +192,133 @@ function DesktopUserCursor(userProps: UserCursorProps) {
     if (customCursor) {
       setDynamicLabel(customCursor);
       setIsClickable(true);
+      setCursorAccent("#6366f1");
       return;
     }
 
-    // 2. Buttons, Links and Action triggers
-    const clickable = target.closest("a, button, [role='button'], input[type='submit']");
-    if (clickable) {
+    // 2. Logo / Home Link Detection
+    const homeLink = target.closest("a[href='/'], Link[href='/'], .brand-logo, [data-home]");
+    if (homeLink) {
+      setDynamicLabel(isTurkish ? "Ana Sayfa" : "Home");
       setIsClickable(true);
-      const titleAttr =
-        clickable.getAttribute("title") ||
-        clickable.getAttribute("aria-label") ||
-        "";
-      const lower = titleAttr.toLowerCase();
+      setCursorAccent("#8b5cf6");
+      return;
+    }
 
-      if (lower.includes("kopyala") || lower.includes("copy")) {
-        setDynamicLabel(isTurkish ? "Kopyala" : "Copy");
+    // 3. Tool Cards & Tool Links
+    const toolLink = target.closest("a[href^='/tools/']");
+    if (toolLink) {
+      setDynamicLabel(isTurkish ? "Aracı Çalıştır" : "Launch Tool");
+      setIsClickable(true);
+      setCursorAccent("#10b981");
+      return;
+    }
+
+    // 4. General Links & External Triggers
+    const linkElem = target.closest("a");
+    if (linkElem) {
+      setIsClickable(true);
+      const href = linkElem.getAttribute("href") || "";
+      if (href.startsWith("http") || href.startsWith("//")) {
+        setDynamicLabel(isTurkish ? "Dış Bağlantı" : "External Link");
+        setCursorAccent("#f59e0b");
         return;
       }
-      if (lower.includes("indir") || lower.includes("download")) {
-        setDynamicLabel(isTurkish ? "İndir" : "Download");
+      setDynamicLabel(isTurkish ? "Aç" : "Open");
+      setCursorAccent("#6366f1");
+      return;
+    }
+
+    // 5. Interactive Buttons & Controls
+    const buttonElem = target.closest("button, [role='button'], input[type='submit']");
+    if (buttonElem) {
+      setIsClickable(true);
+      setCursorAccent("#6366f1");
+      const titleAttr = (
+        buttonElem.getAttribute("title") ||
+        buttonElem.getAttribute("aria-label") ||
+        buttonElem.textContent ||
+        ""
+      ).toLowerCase();
+
+      if (titleAttr.includes("kopyala") || titleAttr.includes("copy")) {
+        setDynamicLabel(isTurkish ? "Panoya Kopyala" : "Copy to Clipboard");
+        setCursorAccent("#10b981");
         return;
       }
-      if (lower.includes("ara") || lower.includes("search")) {
-        setDynamicLabel(isTurkish ? "Ara" : "Search");
+      if (titleAttr.includes("indir") || titleAttr.includes("download") || titleAttr.includes("svg") || titleAttr.includes("png")) {
+        setDynamicLabel(isTurkish ? "İndir / Kaydet" : "Download File");
+        setCursorAccent("#a855f7");
         return;
       }
-      if (lower.includes("sıfırla") || lower.includes("reset") || lower.includes("temizle") || lower.includes("clear")) {
+      if (titleAttr.includes("ara") || titleAttr.includes("search") || titleAttr.includes("filtre")) {
+        setDynamicLabel(isTurkish ? "Ara..." : "Search...");
+        setCursorAccent("#3b82f6");
+        return;
+      }
+      if (titleAttr.includes("sıfırla") || titleAttr.includes("reset") || titleAttr.includes("temizle") || titleAttr.includes("clear")) {
         setDynamicLabel(isTurkish ? "Temizle" : "Clear");
+        setCursorAccent("#ef4444");
         return;
       }
-      if (lower.includes("paylaş") || lower.includes("share")) {
+      if (titleAttr.includes("paylaş") || titleAttr.includes("share")) {
         setDynamicLabel(isTurkish ? "Paylaş" : "Share");
+        setCursorAccent("#ec4899");
         return;
       }
-      if (lower.includes("yukarı") || lower.includes("top")) {
-        setDynamicLabel(isTurkish ? "Yukarı" : "Top");
+      if (titleAttr.includes("yazdır") || titleAttr.includes("print")) {
+        setDynamicLabel(isTurkish ? "Yazdır" : "Print");
         return;
       }
-      if (clickable.tagName.toLowerCase() === "a") {
-        const href = clickable.getAttribute("href") || "";
-        if (href.startsWith("http") || href.startsWith("//")) {
-          setDynamicLabel(isTurkish ? "Dış Bağlantı" : "External Link");
-          return;
-        }
-        setDynamicLabel(isTurkish ? "Aç" : "Open");
+      if (titleAttr.includes("dil") || titleAttr.includes("lang")) {
+        setDynamicLabel(isTurkish ? "Dili Değiştir (EN)" : "Switch Lang (TR)");
+        setCursorAccent("#06b6d4");
         return;
       }
       setDynamicLabel(isTurkish ? "Seç" : "Select");
       return;
     }
 
-    // 3. Text Inputs and Code Areas
+    // 6. Text Inputs, Number Inputs & Textareas
     const textInput = target.closest("input[type='text'], input[type='email'], input[type='url'], input[type='number'], textarea");
     if (textInput) {
-      setDynamicLabel(isTurkish ? "Yaz" : "Type");
+      setDynamicLabel(isTurkish ? "Yaz..." : "Type...");
       setIsClickable(true);
+      setCursorAccent("#3b82f6");
       return;
     }
 
-    // 4. Code Blocks
+    // 7. Select Dropdowns
+    const selectElem = target.closest("select");
+    if (selectElem) {
+      setDynamicLabel(isTurkish ? "Listeyi Seç" : "Select Option");
+      setIsClickable(true);
+      setCursorAccent("#8b5cf6");
+      return;
+    }
+
+    // 8. Color Pickers
+    const colorInput = target.closest("input[type='color']");
+    if (colorInput) {
+      setDynamicLabel(isTurkish ? "Renk Seç" : "Choose Color");
+      setIsClickable(true);
+      setCursorAccent("#ec4899");
+      return;
+    }
+
+    // 9. Code Snippets & Pre tags
     const codeBlock = target.closest("pre, code, .font-mono");
     if (codeBlock) {
-      setDynamicLabel(isTurkish ? "Kod" : "Code");
+      setDynamicLabel(isTurkish ? "Kod Bloğu" : "Code Snippet");
       setIsClickable(false);
+      setCursorAccent("#a855f7");
       return;
     }
 
-    // Default Neutral Brand State
+    // Default Neutral Studio State
     setDynamicLabel(name);
     setIsClickable(false);
+    setCursorAccent("#8b5cf6");
   };
 
   // Attach Pointer Event Listeners
@@ -298,7 +358,7 @@ function DesktopUserCursor(userProps: UserCursorProps) {
       if (last) {
         const dt = Math.max(1, now - last.t);
         const vx = ((targetX - last.x) / dt) * 1000;
-        const tilt = Math.max(-labelTiltStrength, Math.min(labelTiltStrength, (vx / 45) * 0.85));
+        const tilt = Math.max(-labelTiltStrength, Math.min(labelTiltStrength, (vx / 40) * 0.85));
         labelTiltTarget.set(tilt);
       }
       lastSampleRef.current = { x: targetX, y: targetY, t: now };
@@ -382,7 +442,7 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   const arrowContent: ReactNode = useMemo(() => {
     if (typeof arrow === "function") {
       try {
-        return (arrow as (c: string) => ReactNode)(color);
+        return (arrow as (c: string) => ReactNode)(cursorAccent);
       } catch {
         return null;
       }
@@ -399,39 +459,42 @@ function DesktopUserCursor(userProps: UserCursorProps) {
         style={{
           display: "block",
           overflow: "visible",
-          filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.45))",
+          filter: "drop-shadow(0 3px 10px rgba(0,0,0,0.5))",
         }}
       >
         <path
           d="M5 3 L23 14 L14 16 L11 24 Z"
-          fill={color}
-          stroke="rgba(255,255,255,0.45)"
-          strokeWidth={0.8}
+          fill={cursorAccent}
+          stroke="rgba(255,255,255,0.6)"
+          strokeWidth={0.9}
           strokeLinejoin="round"
         />
       </svg>
     );
-  }, [arrow, color, size]);
+  }, [arrow, cursorAccent, size]);
 
-  // Dynamic Label Content
+  // Dynamic Label Content with Micro Icon Badge
   const labelContent: ReactNode = useMemo(() => {
     if (label !== undefined && label !== null) return label;
 
     return (
-      <div
-        className={classNames?.labelText}
-        style={{
-          color: textColor,
-          fontSize: Math.max(9, size * 0.42),
-          lineHeight: 1.15,
-          fontWeight: 700,
-          fontFamily:
-            'var(--font-outfit), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          whiteSpace: "nowrap",
-          letterSpacing: "0.02em",
-        }}
-      >
-        {dynamicLabel}
+      <div className="flex items-center gap-1.5">
+        <Sparkles className="h-3 w-3 text-white/90 animate-pulse" />
+        <span
+          className={classNames?.labelText}
+          style={{
+            color: textColor,
+            fontSize: Math.max(10, size * 0.43),
+            lineHeight: 1.15,
+            fontWeight: 800,
+            fontFamily:
+              'var(--font-outfit), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            whiteSpace: "nowrap",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {dynamicLabel}
+        </span>
       </div>
     );
   }, [label, dynamicLabel, textColor, size, classNames?.labelText]);
@@ -511,14 +574,14 @@ function DesktopUserCursor(userProps: UserCursorProps) {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: `${Math.max(4, size * 0.16)}px ${Math.max(10, size * 0.42)}px`,
+                padding: `${Math.max(4, size * 0.18)}px ${Math.max(11, size * 0.44)}px`,
                 borderRadius: 9999,
-                background: isClickable ? "rgba(99, 102, 241, 0.95)" : "rgba(139, 92, 246, 0.92)",
+                background: cursorAccent,
                 boxShadow:
-                  "0 4px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(139, 92, 246, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35)",
-                border: "1px solid rgba(255, 255, 255, 0.25)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
+                  "0 4px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(139, 92, 246, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
                 transition: "background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
               }}
             >

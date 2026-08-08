@@ -3,11 +3,11 @@
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
+import { Search, X, LayoutGrid, Rows3, Compass, Flame, ArrowUpDown, Star } from "lucide-react";
 import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { rankTools } from "@/lib/user-analytics";
+import { rankTools, type SortOption } from "@/lib/user-analytics";
 
 const InteractiveShowcase = dynamic(
   () =>
@@ -37,8 +37,9 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
   const [internalSearch, setInternalSearch] = useState(searchQuery);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | typeof ALL_CATEGORIES>(ALL_CATEGORIES);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [sortMode, setSortMode] = useState<SortOption>("recommended");
   const [analyticsVersion, setAnalyticsVersion] = useState(0);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const search = searchQuery !== undefined ? searchQuery : internalSearch;
 
@@ -80,7 +81,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
 
   // Dynamically ranked tools across All categories and Category subviews
   const filteredTools = useMemo(() => {
-    let base = rankTools(tools);
+    let base = rankTools(tools, sortMode);
     const q = search.trim().toLowerCase();
 
     if (q) {
@@ -98,7 +99,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     }
 
     return base;
-  }, [search, activeCategory, analyticsVersion]);
+  }, [search, activeCategory, sortMode, analyticsVersion]);
 
   const liveCount = tools.filter((item) => item.status === "live").length;
 
@@ -125,10 +126,10 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
             </p>
           </div>
 
-          {/* Controls: Search + View Switcher */}
+          {/* Controls: Search + Sort Switcher + View Switcher */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search Input */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-60">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
@@ -136,7 +137,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-[var(--hub-text-subtle)] backdrop-blur-xl transition-all focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none"
-                data-cursor="Filtrele"
+                data-cursor={lang === "en" ? "Search Tools" : "Araçlarda Ara"}
               />
               {search && (
                 <button
@@ -147,6 +148,35 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                   <X className="h-4 w-4" />
                 </button>
               )}
+            </div>
+
+            {/* Sort Mode Dropdown */}
+            <div className="relative shrink-0">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white backdrop-blur-xl transition-all hover:border-white/20">
+                <ArrowUpDown className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                <select
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value as SortOption)}
+                  className="bg-transparent text-xs font-bold text-white border-none outline-none focus:ring-0 cursor-pointer pr-1"
+                  data-cursor={lang === "en" ? "Sort Option" : "Sıralama Seçeneği"}
+                >
+                  <option value="recommended" className="bg-zinc-900 text-white">
+                    {lang === "en" ? "✨ Recommended (Smart)" : "✨ Önerilen (Akıllı)"}
+                  </option>
+                  <option value="favorites" className="bg-zinc-900 text-white">
+                    {lang === "en" ? "⭐ My Favorites" : "⭐ Favorilerim"}
+                  </option>
+                  <option value="popular" className="bg-zinc-900 text-white">
+                    {lang === "en" ? "🔥 Most Popular" : "🔥 En Popüler"}
+                  </option>
+                  <option value="newest" className="bg-zinc-900 text-white">
+                    {lang === "en" ? "🆕 Newly Released" : "🆕 Yeni Eklenenler"}
+                  </option>
+                  <option value="alphabetical" className="bg-zinc-900 text-white">
+                    {lang === "en" ? "🔤 Alphabetical (A-Z)" : "🔤 Alfabetik (A-Z)"}
+                  </option>
+                </select>
+              </div>
             </div>
 
             {/* View Mode Toggle */}

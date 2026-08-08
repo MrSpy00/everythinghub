@@ -206,10 +206,10 @@ export function DottedBackground({
   gamma = 1.1,
   paletteBias = 0.1,
   colors = [
-    "rgba(139, 92, 246, 0.35)",
-    "rgba(99, 102, 241, 0.30)",
-    "rgba(16, 185, 129, 0.25)",
-    "rgba(245, 158, 11, 0.20)",
+    "rgba(139, 92, 246, 0.40)",
+    "rgba(99, 102, 241, 0.35)",
+    "rgba(16, 185, 129, 0.30)",
+    "rgba(245, 158, 11, 0.25)",
   ],
   bgColor = "#09090b",
   className,
@@ -224,19 +224,17 @@ export function DottedBackground({
     const container = containerRef.current;
     if (!container || typeof window === "undefined") return;
 
-    // Check if touch / mobile device to prevent high CPU WebGL loops on mobile
-    const isMobile = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-    if (isMobile) return;
-
     let cleanup = () => {};
 
-    // Defer dynamic OGL WebGL import & setup until idle to guarantee 0 blocking time
     const initWebGL = async () => {
       try {
         const { Renderer, Camera, Mesh, Plane, Program, RenderTarget: OglRenderTarget } = await import("ogl");
 
+        const isMobile = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+        const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 1.25);
+
         const renderer = new Renderer({
-          dpr: Math.min(window.devicePixelRatio || 1, 1.25),
+          dpr,
           alpha: true,
           premultipliedAlpha: false,
           powerPreference: "low-power",
@@ -285,6 +283,8 @@ export function DottedBackground({
         const renderTarget = new OglRenderTarget(gl);
         const palette = buildPaletteUniforms(colors);
 
+        const effectiveCellSize = isMobile ? Math.max(18, cellSize * 0.55) : cellSize * 0.7;
+
         const dotProgram = new Program(gl, {
           vertex: dotVertexShader,
           fragment: dotFragmentShader,
@@ -294,7 +294,7 @@ export function DottedBackground({
             uPaletteCount: { value: Math.min(10, colors.length) },
             uPalette: { value: palette.rgb },
             uPaletteAlpha: { value: palette.alpha },
-            uCellSize: { value: cellSize * 0.75 },
+            uCellSize: { value: effectiveCellSize },
             uGamma: { value: gamma },
             uPaletteBias: { value: paletteBias * 0.05 },
           },
@@ -323,7 +323,8 @@ export function DottedBackground({
           observer.observe(container);
         }
 
-        const frameInterval = 80; // Smooth 12.5fps throttled ambient calculation saving CPU & GPU
+        // Smooth throttled RAF (60fps on desktop, 30fps on mobile)
+        const frameInterval = isMobile ? 33 : 16;
         const update = (time: number) => {
           rafIdRef.current = requestAnimationFrame(update);
           if (!isVisibleRef.current) return;
@@ -353,26 +354,26 @@ export function DottedBackground({
       } catch {}
     };
 
-    let idleId: number | null = null;
-    let timer: NodeJS.Timeout | null = null;
-
-    if ("requestIdleCallback" in window) {
-      idleId = (window as any).requestIdleCallback(() => initWebGL(), { timeout: 3000 });
+    // Instant smooth mount with idle scheduling for flawless 100% visible rendering
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const idleId = (window as any).requestIdleCallback(() => initWebGL(), { timeout: 1200 });
+      return () => {
+        if ("cancelIdleCallback" in window) (window as any).cancelIdleCallback(idleId);
+        cleanup();
+      };
     } else {
-      timer = setTimeout(initWebGL, 2000);
+      const timer = setTimeout(initWebGL, 300);
+      return () => {
+        clearTimeout(timer);
+        cleanup();
+      };
     }
-
-    return () => {
-      if (idleId && "cancelIdleCallback" in window) (window as any).cancelIdleCallback(idleId);
-      if (timer) clearTimeout(timer);
-      cleanup();
-    };
   }, [frequency, speed, cellSize, gamma, paletteBias, colors]);
 
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-40 transition-opacity duration-1000 ${
+      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-55 transition-opacity duration-1000 ${
         className || ""
       }`}
       style={{
@@ -380,9 +381,9 @@ export function DottedBackground({
         ...style,
       }}
     >
-      {/* Mobile Ambient Glow - 0ms CPU Cost with GPU Compositing */}
+      {/* High-Aesthetic Fallback Layer for Immediate Visual Richness */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-25"
+        className="absolute inset-0 pointer-events-none opacity-40"
         style={{
           background:
             "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139,92,246,0.35), transparent 70%), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(99,102,241,0.25), transparent 60%)",
