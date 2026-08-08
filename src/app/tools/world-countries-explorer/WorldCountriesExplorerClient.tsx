@@ -15,32 +15,38 @@ import {
   ArrowRightLeft,
   ExternalLink,
   Sparkles,
+  Compass,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAllCountries, type CountryData } from "@/lib/api-clients";
+import { BUNDLED_COUNTRIES } from "@/lib/countries-dataset";
 
 export function WorldCountriesExplorerClient() {
-  const [countries, setCountries] = useState<CountryData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [countries, setCountries] = useState<CountryData[]>(BUNDLED_COUNTRIES);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("all");
-  const [selectedCountry, setSelectedCountry] = useState<CountryData | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<CountryData>(BUNDLED_COUNTRIES[0]);
 
   // Comparison State
   const [compareMode, setCompareMode] = useState(false);
-  const [compareCountry, setCompareCountry] = useState<CountryData | null>(null);
+  const [compareCountry, setCompareCountry] = useState<CountryData>(BUNDLED_COUNTRIES[1]);
 
   useEffect(() => {
+    // Background fetch to enrich with all 250 countries
     fetchAllCountries()
       .then((data) => {
-        setCountries(data);
-        const turkey = data.find((c) => c.cca2 === "TR") || data[0];
-        setSelectedCountry(turkey);
-        const germany = data.find((c) => c.cca2 === "DE") || data[1];
-        setCompareCountry(germany);
+        if (data && data.length > 0) {
+          setCountries(data);
+          const currentTr = data.find((c) => c.cca2 === "TR") || data[0];
+          setSelectedCountry(currentTr);
+          const currentDe = data.find((c) => c.cca2 === "DE") || data[1];
+          setCompareCountry(currentDe);
+        }
       })
-      .catch(() => toast.error("Ülke verileri yüklenemedi."))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        // Handled gracefully with bundled fallback
+      });
   }, []);
 
   const regions = [
@@ -67,7 +73,7 @@ export function WorldCountriesExplorerClient() {
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-300 backdrop-blur-xl mb-3">
           <Globe className="h-3.5 w-3.5 text-indigo-400" />
-          <span>REST Countries Global Database</span>
+          <span>Global Geography & Country Database</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
           Dünya Ülkeleri & Coğrafya Karşılaştırma Stüdyosu
@@ -81,14 +87,14 @@ export function WorldCountriesExplorerClient() {
       <div className="mb-6 flex justify-center">
         <button
           onClick={() => setCompareMode(!compareMode)}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+          className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all shadow-lg ${
             compareMode
-              ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
-              : "bg-white/[0.04] text-zinc-400 border border-white/5 hover:text-white"
+              ? "bg-indigo-600 text-white border border-indigo-400 shadow-indigo-500/25"
+              : "bg-white/[0.04] text-zinc-300 border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white"
           }`}
         >
-          <ArrowRightLeft className="h-3.5 w-3.5" />
-          <span>{compareMode ? "Karşılaştırma Modu Açık" : "İki Ülkeyi Karşılaştır"}</span>
+          <ArrowRightLeft className="h-4 w-4 text-indigo-400" />
+          <span>{compareMode ? "Karşılaştırma Modu Açık" : "İki Ülkeyi Yan Yana Karşılaştır"}</span>
         </button>
       </div>
 
@@ -96,26 +102,26 @@ export function WorldCountriesExplorerClient() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left 4 Cols: Country Directory List */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-5 shadow-2xl flex flex-col h-[700px]">
+          <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-5 shadow-2xl flex flex-col h-[720px]">
             {/* Search Input */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-400" />
+              <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
               <input
                 type="text"
                 placeholder="Ülke veya başkent ara..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/40 py-2 pl-9 pr-3 text-xs text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-black/50 py-2.5 pl-9 pr-3 text-xs text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
             {/* Region Filter Buttons */}
-            <div className="flex gap-1 overflow-x-auto pb-2 mb-2 scrollbar-none">
+            <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none">
               {regions.map((reg) => (
                 <button
                   key={reg.id}
                   onClick={() => setRegionFilter(reg.id)}
-                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
                     regionFilter === reg.id
                       ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
                       : "bg-white/[0.04] text-zinc-400 border border-white/5 hover:text-white"
@@ -130,13 +136,22 @@ export function WorldCountriesExplorerClient() {
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin scrollbar-thumb-white/10">
               {filteredCountries.map((c) => {
                 const isSelected = selectedCountry?.cca2 === c.cca2;
+                const isCompared = compareCountry?.cca2 === c.cca2;
                 return (
                   <div
                     key={c.cca2}
-                    onClick={() => setSelectedCountry(c)}
+                    onClick={() => {
+                      if (compareMode) {
+                        setCompareCountry(c);
+                      } else {
+                        setSelectedCountry(c);
+                      }
+                    }}
                     className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300"
+                        ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-300 shadow-sm"
+                        : isCompared && compareMode
+                        ? "bg-purple-500/15 border-purple-500/40 text-purple-300 shadow-sm"
                         : "bg-white/[0.02] border-white/5 text-zinc-300 hover:border-white/20 hover:bg-white/[0.05]"
                     }`}
                   >
@@ -255,10 +270,10 @@ export function WorldCountriesExplorerClient() {
                       <span>Zaman Dilimleri</span>
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {selectedCountry.timezones.slice(0, 4).map((tz) => (
+                      {selectedCountry.timezones?.map((tz) => (
                         <span
                           key={tz}
-                          className="text-[11px] font-mono rounded-lg bg-white/[0.04] border border-white/5 px-2.5 py-1 text-zinc-400"
+                          className="text-xs font-mono rounded-lg bg-white/[0.04] border border-white/5 px-2 py-1 text-zinc-400"
                         >
                           {tz}
                         </span>
@@ -266,43 +281,100 @@ export function WorldCountriesExplorerClient() {
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          ) : (
-            /* Side by Side Comparison */
-            selectedCountry &&
-            compareCountry && (
-              <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 shadow-2xl space-y-6">
-                <h3 className="text-sm font-bold text-white text-center">Ülke Karşılaştırma Matrisi</h3>
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Country 1 */}
-                  <div className="space-y-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={selectedCountry.flags.svg}
-                      alt={selectedCountry.name.common}
-                      className="h-12 w-20 object-cover mx-auto rounded shadow"
-                    />
-                    <h4 className="text-base font-bold text-white">{selectedCountry.name.common}</h4>
-                    <div className="text-xs text-zinc-400">Nüfus: {selectedCountry.population.toLocaleString("tr-TR")}</div>
-                    <div className="text-xs text-zinc-400">Alan: {selectedCountry.area.toLocaleString("tr-TR")} km²</div>
-                  </div>
 
-                  {/* Country 2 */}
-                  <div className="space-y-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={compareCountry.flags.svg}
-                      alt={compareCountry.name.common}
-                      className="h-12 w-20 object-cover mx-auto rounded shadow"
-                    />
-                    <h4 className="text-base font-bold text-white">{compareCountry.name.common}</h4>
-                    <div className="text-xs text-zinc-400">Nüfus: {compareCountry.population.toLocaleString("tr-TR")}</div>
-                    <div className="text-xs text-zinc-400">Alan: {compareCountry.area.toLocaleString("tr-TR")} km²</div>
+                {/* Map Link */}
+                <div className="border-t border-white/10 pt-5 flex items-center justify-between">
+                  <div className="text-xs text-zinc-400 flex items-center gap-2">
+                    <Compass className="h-4 w-4 text-indigo-400" />
+                    <span>Kıta: {selectedCountry.continents?.join(", ") || selectedCountry.region}</span>
                   </div>
+                  {selectedCountry.maps?.googleMaps && (
+                    <a
+                      href={selectedCountry.maps.googleMaps}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
+                    >
+                      <span>Google Haritalar&apos;da Aç</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
                 </div>
               </div>
             )
+          ) : (
+            /* Side-by-Side Comparison */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Country A */}
+              {selectedCountry && (
+                <div className="rounded-2xl border border-indigo-500/30 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 shadow-2xl space-y-4">
+                  <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selectedCountry.flags.svg || selectedCountry.flags.png}
+                      alt={selectedCountry.name.common}
+                      className="h-10 w-16 object-cover rounded-lg border border-white/10"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{selectedCountry.name.common}</h3>
+                      <p className="text-xs text-indigo-300">{selectedCountry.capital?.[0] || "Başkent"}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                      <span className="text-zinc-400">Nüfus:</span>
+                      <span className="font-semibold text-white font-mono">{selectedCountry.population.toLocaleString("tr-TR")}</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                      <span className="text-zinc-400">Yüzölçümü:</span>
+                      <span className="font-semibold text-white font-mono">{selectedCountry.area.toLocaleString("tr-TR")} km²</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                      <span className="text-zinc-400">Yoğunluk:</span>
+                      <span className="font-semibold text-white font-mono">
+                        {Math.round(selectedCountry.population / Math.max(1, selectedCountry.area))} kişi/km²
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Country B */}
+              {compareCountry && (
+                <div className="rounded-2xl border border-purple-500/30 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 shadow-2xl space-y-4">
+                  <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={compareCountry.flags.svg || compareCountry.flags.png}
+                      alt={compareCountry.name.common}
+                      className="h-10 w-16 object-cover rounded-lg border border-white/10"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{compareCountry.name.common}</h3>
+                      <p className="text-xs text-purple-300">{compareCountry.capital?.[0] || "Başkent"}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                      <span className="text-zinc-400">Nüfus:</span>
+                      <span className="font-semibold text-white font-mono">{compareCountry.population.toLocaleString("tr-TR")}</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                      <span className="text-zinc-400">Yüzölçümü:</span>
+                      <span className="font-semibold text-white font-mono">{compareCountry.area.toLocaleString("tr-TR")} km²</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                      <span className="text-zinc-400">Yoğunluk:</span>
+                      <span className="font-semibold text-white font-mono">
+                        {Math.round(compareCountry.population / Math.max(1, compareCountry.area))} kişi/km²
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

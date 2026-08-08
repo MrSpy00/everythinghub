@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Lock, Flame, CheckCircle2 } from "lucide-react";
 import { type Tool } from "@/lib/tools-registry";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { trackToolUsage } from "@/lib/user-analytics";
 
 interface ToolCardProps {
   tool: Tool;
@@ -143,7 +144,11 @@ export function ToolCard({ tool }: ToolCardProps) {
 
   if (isLive) {
     return (
-      <Link href={`/tools/${tool.slug}`} className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-2xl">
+      <Link
+        href={`/tools/${tool.slug}`}
+        onClick={() => trackToolUsage(tool.slug)}
+        className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-2xl"
+      >
         {cardInner}
       </Link>
     );

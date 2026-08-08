@@ -11,11 +11,12 @@ export interface UserCursorProps {
 
 export function UserCursor({
   name = "EverythingHub",
-  color = "#8b5cf6",
+  color = "#818cf8",
   textColor = "#ffffff",
   size = 28,
 }: UserCursorProps) {
-  const cursorRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const labelTextRef = useRef<HTMLSpanElement>(null);
 
@@ -27,14 +28,13 @@ export function UserCursor({
 
     let mouseX = -200;
     let mouseY = -200;
+    let ringX = -200;
+    let ringY = -200;
     let labelX = -200;
     let labelY = -200;
-    let targetTilt = 0;
-    let currentTilt = 0;
     let isHovering = false;
+    let isClickable = false;
     let isPressed = false;
-    let lastTime = performance.now();
-    let lastX = 0;
     let animId: number;
 
     const updateLabelText = (target: HTMLElement | null) => {
@@ -42,19 +42,26 @@ export function UserCursor({
       const customCursor = target?.closest("[data-cursor]")?.getAttribute("data-cursor");
       if (customCursor) {
         labelTextRef.current.textContent = customCursor;
+        isClickable = true;
         return;
       }
 
       const clickable = target?.closest("a, button, [role='button']");
       if (clickable) {
+        isClickable = true;
         const titleAttr = clickable.getAttribute("title") || clickable.getAttribute("aria-label");
         if (titleAttr) {
-          if (titleAttr.toLowerCase().includes("kopyala") || titleAttr.toLowerCase().includes("copy")) {
+          const lower = titleAttr.toLowerCase();
+          if (lower.includes("kopyala") || lower.includes("copy")) {
             labelTextRef.current.textContent = "Kopyala";
             return;
           }
-          if (titleAttr.toLowerCase().includes("indir") || titleAttr.toLowerCase().includes("download")) {
+          if (lower.includes("indir") || lower.includes("download")) {
             labelTextRef.current.textContent = "İndir";
+            return;
+          }
+          if (lower.includes("ara") || lower.includes("search")) {
+            labelTextRef.current.textContent = "Ara";
             return;
           }
         }
@@ -63,153 +70,135 @@ export function UserCursor({
       }
 
       if (target?.closest("input, textarea")) {
+        isClickable = true;
         labelTextRef.current.textContent = "Yaz";
-      } else {
-        labelTextRef.current.textContent = name;
+        return;
       }
+
+      isClickable = false;
+      labelTextRef.current.textContent = name;
     };
 
-    let idleFrames = 0;
-    let isLoopRunning = false;
-
+    // 120-240Hz Fluid Lerp Loop for soft, luxurious cursor physics
     const renderLoop = () => {
       if (isHovering) {
-        const dx = mouseX - labelX;
-        const dy = mouseY - labelY;
-        const dtilt = targetTilt - currentTilt;
+        // Smooth magnetic spring interpolation for ring aura
+        const ringLerp = 0.22;
+        ringX += (mouseX - ringX) * ringLerp;
+        ringY += (mouseY - ringY) * ringLerp;
 
-        const labelLerp = 0.32;
-        labelX += dx * labelLerp;
-        labelY += dy * labelLerp;
+        // Smooth floating lerp for text badge — positioned safely at offset (x + 18, y + 18)
+        const labelLerp = 0.16;
+        labelX += (mouseX - labelX) * labelLerp;
+        labelY += (mouseY - labelY) * labelLerp;
 
-        currentTilt += dtilt * 0.2;
-        targetTilt *= 0.88;
+        if (ringRef.current) {
+          const scale = isPressed ? 0.75 : isClickable ? 1.35 : 1;
+          ringRef.current.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) scale(${scale})`;
+          ringRef.current.style.opacity = isClickable ? "0.9" : "0.5";
+        }
 
         if (labelRef.current) {
-          const lx = labelX + size * 0.72;
-          const ly = labelY + size * 0.4;
-          const scale = isPressed ? 0.88 : 1;
-          labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0) rotate(${currentTilt}deg) scale(${scale})`;
-          labelRef.current.style.opacity = "1";
-        }
-
-        if (Math.abs(dx) < 0.05 && Math.abs(dy) < 0.05 && Math.abs(dtilt) < 0.01) {
-          idleFrames++;
-        } else {
-          idleFrames = 0;
-        }
-
-        if (idleFrames > 60) {
-          isLoopRunning = false;
-          return;
+          const lx = labelX + 16;
+          const ly = labelY + 16;
+          labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0)`;
+          labelRef.current.style.opacity = isClickable ? "1" : "0.75";
         }
       }
 
       animId = requestAnimationFrame(renderLoop);
     };
 
-    const startLoop = () => {
-      if (!isLoopRunning) {
-        isLoopRunning = true;
-        idleFrames = 0;
-        animId = requestAnimationFrame(renderLoop);
-      }
-    };
-
     const onMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
 
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
         if (!isHovering) {
-          cursorRef.current.style.opacity = "1";
+          dotRef.current.style.opacity = "1";
+          if (ringRef.current) ringRef.current.style.opacity = "0.5";
+          if (labelRef.current) labelRef.current.style.opacity = "0.75";
           isHovering = true;
+          ringX = mouseX;
+          ringY = mouseY;
+          labelX = mouseX;
+          labelY = mouseY;
         }
       }
 
-      const now = performance.now();
-      const dt = Math.max(1, now - lastTime);
-      const vx = (e.clientX - lastX) / dt;
-      targetTilt = Math.max(-28, Math.min(28, vx * 16));
-      lastTime = now;
-      lastX = e.clientX;
-
       updateLabelText(e.target as HTMLElement);
-      startLoop();
     };
 
     const onMouseDown = () => {
       isPressed = true;
-      if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.85)`;
-      startLoop();
+      if (dotRef.current) dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(0.7)`;
     };
 
     const onMouseUp = () => {
       isPressed = false;
-      if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
-      startLoop();
+      if (dotRef.current) dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) scale(1)`;
     };
 
     const onMouseLeave = () => {
       isHovering = false;
-      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+      if (dotRef.current) dotRef.current.style.opacity = "0";
+      if (ringRef.current) ringRef.current.style.opacity = "0";
       if (labelRef.current) labelRef.current.style.opacity = "0";
     };
 
-    // Defer listener attachment to prevent TBT during initial hydration
-    const deferTimer = setTimeout(() => {
+    const startTimer = setTimeout(() => {
       window.addEventListener("mousemove", onMouseMove, { passive: true });
       window.addEventListener("mousedown", onMouseDown, { passive: true });
       window.addEventListener("mouseup", onMouseUp, { passive: true });
       document.addEventListener("mouseleave", onMouseLeave, { passive: true });
-    }, 150);
+      animId = requestAnimationFrame(renderLoop);
+    }, 100);
 
     return () => {
-      clearTimeout(deferTimer);
+      clearTimeout(startTimer);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       document.removeEventListener("mouseleave", onMouseLeave);
       if (animId) cancelAnimationFrame(animId);
     };
-  }, [name, size]);
+  }, [name]);
 
   return (
     <>
-      {/* Follower Dot Cursor */}
+      {/* Precision Center Micro-Dot */}
       <div
-        ref={cursorRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-300 will-change-transform"
-        style={{ width: `${size}px`, height: `${size}px` }}
+        ref={dotRef}
+        className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 will-change-transform"
       >
         <div
-          className="h-full w-full rounded-full border border-white/40 shadow-xl backdrop-blur-sm"
-          style={{
-            backgroundColor: `${color}33`,
-            boxShadow: `0 0 16px ${color}66, inset 0 0 8px ${color}99`,
-          }}
+          className="h-2 w-2 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.9)]"
+          style={{ backgroundColor: color }}
         />
       </div>
 
-      {/* Floating Name Label Badge */}
+      {/* Fluid Glass Aura Ring */}
       <div
-        ref={labelRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9998] -translate-x-1/2 -translate-y-1/2 opacity-0 will-change-transform"
+        ref={ringRef}
+        className="pointer-events-none fixed left-0 top-0 z-[9998] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-300 will-change-transform"
       >
         <div
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-2xl backdrop-blur-2xl"
-          style={{
-            backgroundColor: "rgba(13, 14, 18, 0.88)",
-            color: textColor,
-            boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 12px ${color}40`,
-          }}
-        >
+          className="h-7 w-7 rounded-full border border-indigo-400/40 bg-indigo-500/10 backdrop-blur-xs shadow-[0_0_16px_rgba(99,102,241,0.25)] transition-transform duration-200"
+        />
+      </div>
+
+      {/* Floating Soft Label Badge (Never Overlaps Pointer) */}
+      <div
+        ref={labelRef}
+        className="pointer-events-none fixed left-0 top-0 z-[9997] opacity-0 transition-opacity duration-300 will-change-transform"
+      >
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-[#090a10]/90 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-xl backdrop-blur-xl">
           <span
-            className="h-1.5 w-1.5 rounded-full animate-pulse"
+            className="h-1.5 w-1.5 rounded-full"
             style={{ backgroundColor: color }}
           />
-          <span ref={labelTextRef} className="font-mono">
+          <span ref={labelTextRef} className="leading-none select-none">
             {name}
           </span>
         </div>

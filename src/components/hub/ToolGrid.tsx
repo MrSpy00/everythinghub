@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
 import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
 import { InteractiveShowcase } from "@/components/creative/InteractiveShowcase";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { rankTools } from "@/lib/user-analytics";
 
 const ALL_CATEGORIES = "all";
 
@@ -21,6 +22,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
   const [internalSearch, setInternalSearch] = useState(searchQuery);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | typeof ALL_CATEGORIES>(ALL_CATEGORIES);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [analyticsVersion, setAnalyticsVersion] = useState(0);
   const { t } = useLanguage();
 
   const search = searchQuery !== undefined ? searchQuery : internalSearch;
@@ -29,6 +31,12 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     setInternalSearch(val);
     if (onSearch) onSearch(val);
   };
+
+  useEffect(() => {
+    const onAnalyticsUpdate = () => setAnalyticsVersion((v) => v + 1);
+    window.addEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
+    return () => window.removeEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
+  }, []);
 
   const categories = useMemo(() => {
     return [...new Set(tools.map((item) => item.category))];
@@ -55,13 +63,13 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     }
   };
 
-  // Blazing-fast zero-overhead token search matcher
+  // Dynamically ranked tools across All categories and Category subviews
   const filteredTools = useMemo(() => {
-    let result = tools;
+    let base = rankTools(tools);
     const q = search.trim().toLowerCase();
 
     if (q) {
-      result = tools.filter((tool) => {
+      base = base.filter((tool) => {
         const titleMatch = tool.title.toLowerCase().includes(q);
         const descMatch = tool.description.toLowerCase().includes(q);
         const slugMatch = tool.slug.toLowerCase().includes(q);
@@ -71,11 +79,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     }
 
     if (activeCategory !== ALL_CATEGORIES) {
-      result = result.filter((item) => item.category === activeCategory);
+      base = base.filter((item) => item.category === activeCategory);
     }
 
-    return result;
-  }, [search, activeCategory]);
+    return base;
+  }, [search, activeCategory, analyticsVersion]);
 
   const liveCount = tools.filter((item) => item.status === "live").length;
 
