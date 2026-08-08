@@ -48,7 +48,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative flex flex-col items-center justify-center px-4 py-8 sm:py-14 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4.5rem)] px-4 py-8 sm:py-12 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full">
       {/* Top Studio Badge - Clean, Non-repeating & Elegant */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}

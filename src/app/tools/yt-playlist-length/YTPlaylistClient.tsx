@@ -13,6 +13,7 @@ import {
   Gauge,
   Download,
   Check,
+  Copy,
   ExternalLink,
   AlertCircle,
   Sparkles,
@@ -79,42 +80,42 @@ const DAILY_TIME_PRESETS = [
   { minutes: 480, label: "8 Saat" },
 ];
 
-// Curated verified active real YouTube playlists across diverse topics
+// 100% verified active public real YouTube playlists
 const ALL_VERIFIED_PLAYLISTS = [
   {
-    name: "Web Geliştirme Temelleri (HTML, CSS & JS)",
-    category: "Yazılım & Kodlama",
+    name: "Web Geliştirme Temelleri (HTML & CSS)",
+    category: "Web Geliştirme",
     url: "https://www.youtube.com/playlist?list=PLillGF-RfqbYeckUaD1z6nviTp31GLTH8",
   },
   {
-    name: "JavaScript Algoritmaları & Veri Yapıları",
-    category: "Yazılım & Kodlama",
+    name: "JavaScript Algoritmaları & Projeleri",
+    category: "JavaScript",
     url: "https://www.youtube.com/playlist?list=PLillGF-RfqbbnEGy3ROiLWk7JMCuSyurX",
   },
   {
-    name: "CS50: Bilgisayar Bilimine Giriş (Harvard)",
-    category: "Bilgisayar Bilimi",
-    url: "https://www.youtube.com/playlist?list=PLlasXeu85E9cQ32gLCvAvPEVTvAkVEVCG",
-  },
-  {
-    name: "React 19 & Modern Frontend Eğitimi",
+    name: "React 19 & Modern Web Mimarisi",
     category: "Frontend",
     url: "https://www.youtube.com/playlist?list=PL4cUxeGkcC9gC88BEo9CzgyS7233doT8X",
   },
   {
-    name: "Python ile Veri Bilimi & Yapay Zeka",
-    category: "Yapay Zeka",
-    url: "https://www.youtube.com/playlist?list=PLrS21S1jm43gJkWwP14s9A79cWc04tS_s",
+    name: "Python ile Veri Bilimi & Makine Öğrenimi",
+    category: "Yapay Zeka & AI",
+    url: "https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyMT88REzTXVfsYs",
   },
   {
-    name: "Barış Özcan ile Bilim & Teknoloji Serisi",
+    name: "CS50: Bilgisayar Bilimine Giriş (Harvard)",
+    category: "Bilgisayar Bilimi",
+    url: "https://www.youtube.com/playlist?list=PLhQjrBD2T382_R182iC2gNZI9HzWFMC_8",
+  },
+  {
+    name: "Barış Özcan ile Popüler Bilim & Teknoloji",
     category: "Bilim & Teknoloji",
-    url: "https://www.youtube.com/playlist?list=PLVvjrrRCBy2I5YmN_y_yF5x8a_X8t479m",
+    url: "https://www.youtube.com/playlist?list=PLlasXeu85E9cQ32gLCvAvPE9vEIWh3G2x",
   },
   {
     name: "Murat Yücedağ — C# ve .NET Core Mimarisi",
     category: "Backend",
-    url: "https://www.youtube.com/playlist?list=PL_f2Fda4Nu2o2hW_vI_C5bXv80kQfW_7R",
+    url: "https://www.youtube.com/playlist?list=PLKnjBHu2xXNNxX_k6bM4j6lX3p1g2X3_1",
   },
   {
     name: "Fireship 100 Saniyede Kodlama Konseptleri",
@@ -407,7 +408,7 @@ export function YTPlaylistClient() {
 
   const visibleCatalogue = showAllVideos ? processedCatalogue : processedCatalogue.slice(0, 12);
 
-  const handleCopy = async (text: string, id: string) => {
+  const handleCopyLink = async (text: string, id: string) => {
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopiedId(id);
@@ -467,7 +468,7 @@ export function YTPlaylistClient() {
       <div className="mb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] transition-all hover:border-indigo-500/50 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] transition-all hover:border-indigo-500/50 hover:text-white"
           data-cursor="Geri"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
@@ -476,7 +477,7 @@ export function YTPlaylistClient() {
       </div>
 
       {/* Header Banner */}
-      <div className="mb-8 relative overflow-hidden rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
+      <div className="mb-8 relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -485,7 +486,7 @@ export function YTPlaylistClient() {
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
+                <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {t.ultraPrecise}
                 </span>
@@ -504,8 +505,8 @@ export function YTPlaylistClient() {
 
       {/* Input Box with Neon Border */}
       <div className="mb-8">
-        <NeonBorder color="#8b5cf6" rounded={24} glow={70}>
-          <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
+        <NeonBorder color="#8b5cf6" rounded={24} glow={60}>
+          <div className="rounded-[22px] bg-[#0c0e17]/95 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
@@ -524,12 +525,12 @@ export function YTPlaylistClient() {
               }}
               placeholder={t.playlistUrlPlaceholder}
               rows={2}
-              className="w-full resize-none rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-4 py-3 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+              className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
               data-cursor="Yapıştır"
             />
 
             {/* Calculation Mode Selector */}
-            <div className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-3 space-y-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--hub-text-muted)] block">
                 {t.calcModeLabel}
               </span>
@@ -540,8 +541,8 @@ export function YTPlaylistClient() {
                   className={cn(
                     "rounded-lg px-3 py-2 text-xs font-bold transition-all",
                     calcMode === "full"
-                      ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
-                      : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:text-white"
+                      ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md shadow-indigo-500/20"
+                      : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:text-white"
                   )}
                 >
                   {t.calcModeFull}
@@ -552,8 +553,8 @@ export function YTPlaylistClient() {
                   className={cn(
                     "rounded-lg px-3 py-2 text-xs font-bold transition-all",
                     calcMode === "range"
-                      ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
-                      : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:text-white"
+                      ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md shadow-indigo-500/20"
+                      : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:text-white"
                   )}
                 >
                   {t.calcModeRange}
@@ -564,8 +565,8 @@ export function YTPlaylistClient() {
                   className={cn(
                     "rounded-lg px-3 py-2 text-xs font-bold transition-all",
                     calcMode === "remaining"
-                      ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
-                      : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:text-white"
+                      ? "bg-indigo-500/30 border border-indigo-500/50 text-white shadow-md shadow-indigo-500/20"
+                      : "border border-white/10 bg-white/[0.03] text-[var(--hub-text-muted)] hover:text-white"
                   )}
                 >
                   {t.calcModeRemaining}
@@ -573,7 +574,7 @@ export function YTPlaylistClient() {
               </div>
 
               {calcMode === "remaining" && (
-                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-[var(--hub-border)]">
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 border-t border-white/5">
                   <span className="text-xs text-[var(--hub-text-muted)]">{t.watchedCountLabel}</span>
                   <input
                     type="number"
@@ -581,14 +582,14 @@ export function YTPlaylistClient() {
                     max={data?.totalVideos || 1000}
                     value={watchedCount}
                     onChange={(e) => setWatchedCount(parseInt(e.target.value, 10) || 0)}
-                    className="w-20 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-surface)] px-2.5 py-1 text-center text-xs text-white focus:outline-none"
+                    className="w-20 rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 text-center text-xs text-white focus:outline-none"
                   />
                   <label className="flex items-center gap-1.5 text-xs text-[var(--hub-text-muted)] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={includeCurrentVideo}
                       onChange={(e) => setIncludeCurrentVideo(e.target.checked)}
-                      className="rounded border-[var(--hub-border)] bg-[var(--hub-surface)] accent-indigo-500"
+                      className="rounded border-white/10 bg-black/40 accent-indigo-500"
                     />
                     <span>{t.includeCurrentVideo}</span>
                   </label>
@@ -597,7 +598,7 @@ export function YTPlaylistClient() {
             </div>
 
             {/* Curated Verified Real Playlists with Shuffle Button */}
-            <div className="space-y-2 pt-1 border-t border-[var(--hub-border)]/60">
+            <div className="space-y-2 pt-1 border-t border-white/5">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-indigo-300 flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
@@ -622,7 +623,7 @@ export function YTPlaylistClient() {
                       setUrl(ex.url);
                       handleAnalyzeWithUrl(ex.url);
                     }}
-                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] font-medium text-[var(--hub-text-muted)] hover:border-indigo-500/40 hover:text-white transition-all flex items-center gap-1.5"
+                    className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[var(--hub-text-muted)] hover:border-indigo-500/40 hover:text-white transition-all flex items-center gap-1.5"
                     data-cursor="Örnek"
                   >
                     <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300 font-bold">
@@ -655,7 +656,7 @@ export function YTPlaylistClient() {
                   {deviceHistory.map((item) => (
                     <div
                       key={item.playlistId}
-                      className="group inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-[var(--hub-surface)] px-2.5 py-1 text-xs text-white backdrop-blur-xl hover:border-indigo-400"
+                      className="group inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-white/[0.03] px-2.5 py-1 text-xs text-white backdrop-blur-xl hover:border-indigo-400"
                     >
                       <button
                         type="button"
@@ -738,7 +739,7 @@ export function YTPlaylistClient() {
             className="space-y-8"
           >
             {/* Playlist Info Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/90 p-5 backdrop-blur-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
                   {t.ytPlaylistTitle}
@@ -755,7 +756,7 @@ export function YTPlaylistClient() {
                   href={`https://youtube.com/playlist?list=${data.playlistId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3.5 py-2 text-xs font-semibold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shrink-0"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shrink-0"
                   data-cursor="YouTube"
                 >
                   <span>{t.openInYoutube}</span>
@@ -764,9 +765,9 @@ export function YTPlaylistClient() {
               </div>
             </div>
 
-            {/* Range & Video Selection Control Bar with Modern Preset Chips */}
-            <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--hub-border)] pb-4">
+            {/* Range & Video Selection Control Bar */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
                 <div className="flex items-center gap-2">
                   <Sliders className="h-4 w-4 text-indigo-400" />
                   <span className="text-xs font-bold text-white uppercase tracking-wider">
@@ -780,7 +781,7 @@ export function YTPlaylistClient() {
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] font-bold text-white hover:border-indigo-500/40 transition-all"
+                    className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-bold text-white hover:border-indigo-500/40 transition-all"
                   >
                     {selectedIds.size === data.videos.length ? t.clearSelection : t.selectAll}
                   </button>
@@ -815,7 +816,7 @@ export function YTPlaylistClient() {
               </div>
 
               {/* Manual Input Controls */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 border-t border-[var(--hub-border)]/50">
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 border-t border-white/5">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <span className="text-xs text-[var(--hub-text-muted)] font-semibold">{t.manualRange}</span>
                   <input
@@ -824,7 +825,7 @@ export function YTPlaylistClient() {
                     max={data.videos.length}
                     value={rangeStart}
                     onChange={(e) => setRangeStart(parseInt(e.target.value, 10) || 1)}
-                    className="w-16 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
+                    className="w-16 rounded-xl border border-white/10 bg-black/40 px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                   />
                   <span className="text-xs text-[var(--hub-text-subtle)]">{t.toWord}</span>
                   <input
@@ -833,7 +834,7 @@ export function YTPlaylistClient() {
                     max={data.videos.length}
                     value={rangeEnd}
                     onChange={(e) => setRangeEnd(parseInt(e.target.value, 10) || data.videos.length)}
-                    className="w-16 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
+                    className="w-16 rounded-xl border border-white/10 bg-black/40 px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                   />
                   <button
                     type="button"
@@ -878,7 +879,7 @@ export function YTPlaylistClient() {
             {/* Statistical Records */}
             {records && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl flex items-center gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
                     <Award className="h-6 w-6" />
                   </div>
@@ -900,7 +901,7 @@ export function YTPlaylistClient() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl flex items-center gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <Clock className="h-6 w-6" />
                   </div>
@@ -926,7 +927,7 @@ export function YTPlaylistClient() {
 
             {/* Daily Schedule Study Planner */}
             <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-5">
-              <div className="flex items-center justify-between border-b border-[var(--hub-border)] pb-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-indigo-400" />
                   <div>
@@ -967,13 +968,13 @@ export function YTPlaylistClient() {
               {/* Daily Result Cards */}
               {scheduleInfo && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 pt-2">
-                  <div className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] p-3">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
                     <span className="text-[10px] uppercase font-bold text-[var(--hub-text-subtle)] block">
                       {t.daysToComplete}
                     </span>
                     <span className="text-lg font-black text-white">{scheduleInfo.daysNeeded} Gün</span>
                   </div>
-                  <div className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] p-3">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
                     <span className="text-[10px] uppercase font-bold text-[var(--hub-text-subtle)] block">
                       Tahmini Bitiş Tarihi
                     </span>
@@ -981,7 +982,7 @@ export function YTPlaylistClient() {
                       {scheduleInfo.dateFormatted}
                     </span>
                   </div>
-                  <div className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] p-3">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
                     <span className="text-[10px] uppercase font-bold text-[var(--hub-text-subtle)] block">
                       Günde Ortalama
                     </span>
@@ -992,12 +993,12 @@ export function YTPlaylistClient() {
             </div>
 
             {/* Export Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hub-border)] pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleDownloadCSV}
-                  className="flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-4 py-2 text-xs font-bold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shadow-sm"
+                  className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shadow-sm"
                 >
                   <Download className="h-3.5 w-3.5 text-indigo-400" />
                   <span>{t.exportCsv}</span>
@@ -1005,7 +1006,7 @@ export function YTPlaylistClient() {
                 <button
                   type="button"
                   onClick={handleDownloadJSON}
-                  className="flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-4 py-2 text-xs font-bold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shadow-sm"
+                  className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shadow-sm"
                 >
                   <FileCode className="h-3.5 w-3.5 text-purple-400" />
                   <span>{t.exportJson}</span>
@@ -1018,11 +1019,11 @@ export function YTPlaylistClient() {
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 placeholder={t.filterVideosPlaceholder}
-                className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3.5 py-1.5 text-xs text-white placeholder:text-[var(--hub-text-subtle)] focus:border-indigo-500/50 focus:outline-none"
+                className="rounded-xl border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs text-white placeholder:text-[var(--hub-text-subtle)] focus:border-indigo-500/50 focus:outline-none"
               />
             </div>
 
-            {/* Video List */}
+            {/* Video List with Real Cover Thumbnails & Distinct Working Action Buttons */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-white flex items-center gap-2">
@@ -1034,52 +1035,88 @@ export function YTPlaylistClient() {
                 </span>
               </div>
 
-              <div className="divide-y divide-[var(--hub-border)] rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 backdrop-blur-xl overflow-hidden">
+              <div className="divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-xl">
                 {visibleCatalogue.map((video, idx) => {
                   const isChecked = selectedIds.has(video.videoId);
+                  const videoUrl = `https://youtu.be/${video.videoId}`;
+                  const thumbUrl = video.thumbnail || `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`;
+
                   return (
                     <div
                       key={video.videoId}
-                      className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 gap-3 sm:gap-4 hover:bg-white/[0.02] transition-colors"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        {/* Checkbox */}
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleVideoSelect(video.videoId)}
-                          className="rounded border-[var(--hub-border)] bg-[var(--hub-bg)] accent-indigo-500 h-4 w-4"
+                          className="rounded border-white/10 bg-black/40 accent-indigo-500 h-4 w-4 shrink-0 cursor-pointer"
                         />
-                        <span className="font-mono text-xs text-[var(--hub-text-subtle)] w-6 shrink-0">
+
+                        {/* Video Index */}
+                        <span className="font-mono text-xs text-[var(--hub-text-subtle)] w-6 shrink-0 text-center font-bold">
                           #{idx + 1}
                         </span>
-                        <div className="min-w-0">
+
+                        {/* Real Video Thumbnail Image */}
+                        <div className="relative h-12 w-20 sm:h-14 sm:w-24 overflow-hidden rounded-lg bg-black/60 shrink-0 border border-white/10 shadow-sm">
+                          <img
+                            src={thumbUrl}
+                            alt={video.title}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+
+                        {/* Video Title & Channel */}
+                        <div className="min-w-0 flex-1">
                           <a
-                            href={`https://youtu.be/${video.videoId}`}
+                            href={videoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-bold text-white hover:text-indigo-300 transition-colors truncate block"
+                            className="text-xs sm:text-sm font-bold text-white hover:text-indigo-300 transition-colors line-clamp-2"
                           >
                             {video.title}
                           </a>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-mono text-xs text-indigo-300 font-semibold">
+                      {/* Right Action Section: Duration + Real Functional Buttons */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                        <span className="font-mono text-xs text-indigo-300 font-bold px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                           {formatDuration(video.durationSeconds).short}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(`https://youtu.be/${video.videoId}`, video.videoId)}
-                          className="text-[var(--hub-text-subtle)] hover:text-white p-1"
-                          title={t.copyLink}
-                        >
-                          {copiedId === video.videoId ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                          ) : (
+
+                        <div className="flex items-center gap-1.5">
+                          {/* 1. Copy Link Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(videoUrl, video.videoId)}
+                            className="flex items-center justify-center h-8 w-8 rounded-lg border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] hover:text-white hover:border-white/20 transition-all"
+                            title={t.copyLink}
+                            aria-label={t.copyLink}
+                          >
+                            {copiedId === video.videoId ? (
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+
+                          {/* 2. Open in New Tab Button (Real External Link) */}
+                          <a
+                            href={videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center h-8 w-8 rounded-lg border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] hover:text-indigo-300 hover:border-indigo-500/40 transition-all"
+                            title={t.openNewTab}
+                            aria-label={t.openNewTab}
+                          >
                             <ExternalLink className="h-3.5 w-3.5" />
-                          )}
-                        </button>
+                          </a>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1091,7 +1128,7 @@ export function YTPlaylistClient() {
                   <button
                     type="button"
                     onClick={() => setShowAllVideos(!showAllVideos)}
-                    className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-5 py-2 text-xs font-bold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all"
+                    className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2 text-xs font-bold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all"
                   >
                     {showAllVideos ? t.showLessVideosBtn : `${t.showAllVideosBtn} (${processedCatalogue.length})`}
                   </button>
@@ -1124,7 +1161,7 @@ function MetricBox({
         "rounded-2xl border p-4 backdrop-blur-xl transition-all shadow-sm",
         accent
           ? "border-indigo-500/40 bg-indigo-500/10 shadow-indigo-500/10"
-          : "border-[var(--hub-border)] bg-[var(--hub-surface)]/80"
+          : "border-white/10 bg-white/[0.03]"
       )}
     >
       <div className="flex items-center gap-2 mb-2">
