@@ -658,6 +658,94 @@ export const translations: Record<Language, TranslationDictionary> = {
 
     // Tool Card Dynamic Translations (TR)
     toolTranslations: {
+      "api-playground": {
+        title: "Canlı API Test Konsolu & Açık API Kataloğu",
+        description: "150+ ücretsiz ve sıfır-auth açık API'yi canlı test edin, özel HTTP GET/POST istekleri gönderin.",
+      },
+      "qr-code-studio": {
+        title: "QR Kod Stüdyosu Pro",
+        description: "WiFi şifre paylaşımı, vCard, URL ve kripto cüzdanlar için özel renkli vektörel SVG ve PNG QR kodları üretin.",
+      },
+      "jwt-debugger": {
+        title: "İstemci Taraflı JWT Debugger & Token Çözücü",
+        description: "JWT başlık, payload ve imza verilerini %100 tarayıcı tarafında çözün ve süre geri sayımını izleyin.",
+      },
+      "crypto-hash-studio": {
+        title: "Kriptografik Hash, HMAC & UUID Laboratuvarı",
+        description: "SHA-256, SHA-512, MD5, HMAC ve UUID v4/v7 üretimini Web Crypto API ile anında gerçekleştirin.",
+      },
+      "barcode-generator": {
+        title: "Vektörel Barkod Üreteci",
+        description: "EAN-13, UPC-A, Code 128 ve Code 39 standartlarında vektörel SVG ve yüksek çözünürlüklü PNG barkodları üretin.",
+      },
+      "weather-air-quality": {
+        title: "Canlı Hava Durumu & Hava Kalitesi Radarı",
+        description: "Open-Meteo ile dünya genelinde 7 günlük saatlik hava durumu, UV indeksi ve PM2.5/PM10 hava kalitesini takip edin.",
+      },
+      "world-countries-explorer": {
+        title: "Dünya Ülkeleri & Coğrafya Stüdyosu",
+        description: "250+ dünya ülkesinin bayrakları, nüfusu, başkenti, dilleri ve para birimlerini keşfedin ve karşılaştırın.",
+      },
+      "audio-spectrum-studio": {
+        title: "Web Audio Osiloskop & Spektrum Analizörü",
+        description: "Mikrofon veya ses dalgalarını gerçek zamanlı osiloskop ve FFT frekans spektrumu olarak analiz edin.",
+      },
+      "bpm-tapper": {
+        title: "Hassas BPM Tapper & Akıllı Metronom",
+        description: "Klavyeden veya dokunarak anlık BPM hesaplayın ve Web Audio milisaniye zamanlayıcılı metronom ile ritim tutun.",
+      },
+      "exif-purger": {
+        title: "EXIF Metaveri İnceleyici & Gizlilik Temizleyici",
+        description: "Fotoğraflarınızdaki GPS konum koordinatlarını, kamera modelini inceleyin ve paylaşmadan önce temizleyin.",
+      },
+      "sql-to-types": {
+        title: "SQL'den TypeScript, Zod & Prisma Dönüştürücü",
+        description: "SQL CREATE TABLE tablolarını TypeScript interface, Zod şeması, Prisma modeli ve Go struct kodlarına dönüştürün.",
+      },
+      "curl-to-code": {
+        title: "cURL'den Çoklu Dil Kod Üreticisi",
+        description: "cURL komutlarını JavaScript fetch, Axios, Python requests, Go ve PHP kodlarına anında çevirin.",
+      },
+      "smart-dictionary": {
+        title: "İngilizce Akıllı Sözlük, Telaffuz & Kafiye Motoru",
+        description: "İngilizce kelimelerin fonetik telaffuz seslerini dinleyin, tanımları inceleyin ve kafiyeli kelimeleri keşfedin.",
+      },
+      "book-isbn-finder": {
+        title: "Açık Kitaplık & ISBN Arama Motoru",
+        description: "20M+ kitap, yazar ve ISBN numarası üzerinden kitap kapağı, yayıncı ve basım yılı bilgilerini arayın.",
+      },
+      "trivia-quiz-arena": {
+        title: "İnteraktif Bilgi Yarışması & Trivia Arena",
+        description: "Bilim, teknoloji, tarih ve genel kültür alanlarında binlerce soruyla bilginizi canlı test edin.",
+      },
+      "mock-data-generator": {
+        title: "Geliştiriciler İçin Akıllı Mock Veri Üreteci",
+        description: "Testler için Türkçe ve uluslararası sahte kimlikler, adresler, telefonlar ve JSON/CSV mock verileri üretin.",
+      },
+      "ip-network-info": {
+        title: "IP & Ağ Latency Analizörü",
+        description: "IP adresinizi, coğrafi konumunuzu, ISP sağlayıcınızı ve CDN ping sürelerinizi canlı analiz edin.",
+      },
+      "dns-lookup-tool": {
+        title: "DNS Kayıtları & DoH Sorgulayıcı",
+        description: "A, AAAA, MX, TXT ve CNAME DNS kayıtlarını Cloudflare & Google DoH altyapısıyla sorgulayın.",
+      },
+      "currency-exchange-converter": {
+        title: "Canlı Döviz & Kripto Dönüştürücü",
+        description: "150+ itibari para birimi ve kripto varlık arasında Avrupa Merkez Bankası verileriyle canlı dönüşüm yapın.",
+      },
+      "markdown-studio": {
+        title: "Markdown Studio & Canlı Önizleme",
+        description: "Markdown dokümanlarınızı canlı önizleyin, metrikleri görün, HTML veya .md olarak indirin.",
+      },
+      "cron-expression-studio": {
+        title: "Cron İfadesi Üreteci & Açıklayıcı",
+        description: "Linux crontab zamanlamalarını görsel olarak üretin ve Türkçe insani açıklamasını görün.",
+      },
+      "favicon-extractor": {
+        title: "Site Favicon & Logo İndirici",
+        description: "Herhangi bir web sitesinin HD favicon, Apple touch icon ve SVG logosunu anında indirin.",
+      },
       "spotify-playlist-analyzer": {
         title: "Spotify Playlist Analizör",
         description: "Chosic & Artist.tools seviyesinde Sonic DNA radarı, bot tespiti, türler ve HD kapak stüdyosu.",
@@ -1049,6 +1137,94 @@ export const translations: Record<Language, TranslationDictionary> = {
 
     // Tool Card Dynamic Translations (EN)
     toolTranslations: {
+      "api-playground": {
+        title: "Live API Test Console & Public API Hub",
+        description: "Test 150+ free and zero-auth public APIs live, send custom HTTP GET/POST requests and inspect payloads.",
+      },
+      "qr-code-studio": {
+        title: "Vector QR Code Studio Pro",
+        description: "Generate customized vector SVG and HD PNG QR codes for WiFi passwords, vCards, URLs, and crypto wallets.",
+      },
+      "jwt-debugger": {
+        title: "Client-Side JWT Debugger & Token Decoder",
+        description: "Decode JWT header, payload, and signatures 100% in-browser with live expiration countdown and claim parsing.",
+      },
+      "crypto-hash-studio": {
+        title: "Cryptographic Hash, HMAC & UUID Lab",
+        description: "Generate SHA-256, SHA-512, MD5, HMAC and UUID v4/v7 instantly using the browser's native Web Crypto API.",
+      },
+      "barcode-generator": {
+        title: "Vector Barcode Generator",
+        description: "Create print-ready vector SVG and high-resolution PNG barcodes in EAN-13, UPC-A, Code 128 and Code 39 formats.",
+      },
+      "weather-air-quality": {
+        title: "Live Weather & Air Quality Radar",
+        description: "Track 7-day hourly weather forecasts, UV index, and PM2.5/PM10 European Air Quality Index (AQI) globally with Open-Meteo.",
+      },
+      "world-countries-explorer": {
+        title: "World Countries & Geography Studio",
+        description: "Explore and compare flags, populations, capitals, languages, and currencies for 250+ countries via REST Countries.",
+      },
+      "audio-spectrum-studio": {
+        title: "Web Audio Oscilloscope & Spectrum Analyzer",
+        description: "Analyze microphone or synthesized audio in real-time with hardware-accelerated 60 FPS oscilloscope and FFT spectrum.",
+      },
+      "bpm-tapper": {
+        title: "Precision BPM Tapper & Smart Metronome",
+        description: "Tap to calculate live BPM with standard deviation consistency scores, and keep rhythm with a scheduled Web Audio metronome.",
+      },
+      "exif-purger": {
+        title: "EXIF Metadata Inspector & Privacy Purger",
+        description: "Inspect GPS coordinates, camera models, and exposure metadata from photos and purge them before sharing.",
+      },
+      "sql-to-types": {
+        title: "SQL to TypeScript, Zod & Prisma Converter",
+        description: "Convert SQL CREATE TABLE statements into TypeScript interfaces, Zod schemas, Prisma models, and Go structs.",
+      },
+      "curl-to-code": {
+        title: "cURL to Multi-Language Code Generator",
+        description: "Convert cURL commands into JavaScript fetch, Axios, Python requests, Go, and PHP code snippets.",
+      },
+      "smart-dictionary": {
+        title: "Smart Dictionary, Phonetics & Rhyme Studio",
+        description: "Listen to audio pronunciations, inspect definitions, and discover rhymes and synonyms via Free Dictionary and Datamuse.",
+      },
+      "book-isbn-finder": {
+        title: "Open Library & ISBN Search Engine",
+        description: "Search 20M+ books, authors, and ISBNs for HD cover artwork, publishers, page counts, and publication years.",
+      },
+      "trivia-quiz-arena": {
+        title: "Interactive Trivia Quiz & Knowledge Arena",
+        description: "Test your knowledge across 24 categories in science, technology, history, and pop culture with live scoring streaks.",
+      },
+      "mock-data-generator": {
+        title: "Smart Mock Data & Identity Generator",
+        description: "Generate fake identities, addresses, phone numbers, company profiles, and downloadable JSON/CSV mock datasets.",
+      },
+      "ip-network-info": {
+        title: "IP & Network Latency Analyzer",
+        description: "Analyze your IP address, geolocation, ISP, and CDN latency with 4-source redundant verification.",
+      },
+      "dns-lookup-tool": {
+        title: "DNS Records & Multi-Resolver DoH",
+        description: "Query A, AAAA, MX, TXT, and CNAME DNS records via Cloudflare & Google DoH with DNSSEC verification.",
+      },
+      "currency-exchange-converter": {
+        title: "Live Currency & Crypto Converter",
+        description: "Convert between 150+ fiat currencies and cryptocurrencies using live European Central Bank (ECB) and crypto rates.",
+      },
+      "markdown-studio": {
+        title: "Markdown Studio & Live Preview",
+        description: "Edit, live preview, inspect writing metrics, and export Markdown documents as HTML or .md files.",
+      },
+      "cron-expression-studio": {
+        title: "Cron Expression Generator & Explainer",
+        description: "Visually generate Linux crontab schedules and inspect human-readable breakdowns.",
+      },
+      "favicon-extractor": {
+        title: "Site Favicon & Logo Downloader",
+        description: "Download HD favicons, Apple touch icons, and SVG logos from any website with one click.",
+      },
       "spotify-playlist-analyzer": {
         title: "Spotify Playlist Analyzer",
         description: "Sonic DNA radar, bot detection, genre breakdown, BPM/Key wheel and HD cover studio like Chosic & Artist.tools.",

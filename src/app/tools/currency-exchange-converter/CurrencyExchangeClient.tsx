@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Coins,
   ArrowLeftRight,
@@ -10,6 +11,7 @@ import {
   Check,
   DollarSign,
   Globe,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,6 +32,7 @@ const POPULAR_CURRENCIES = [
   { code: "AED", name: "BAE Dirhemi", symbol: "AED" },
   { code: "BTC", name: "Bitcoin", symbol: "₿" },
   { code: "ETH", name: "Ethereum", symbol: "Ξ" },
+  { code: "SOL", name: "Solana", symbol: "SOL" },
 ];
 
 export function CurrencyExchangeClient() {
@@ -39,34 +42,60 @@ export function CurrencyExchangeClient() {
   const [rates, setRates] = useState<RatesMap>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [copied, setCopied] = useState<boolean>(false);
 
   const fetchRates = async () => {
     setLoading(true);
+    const loadedRates: RatesMap = { USD: 1 };
+
+    // 1. Try Frankfurter Official ECB API
     try {
-      // 1. Fetch Frankfurter FX rates base USD
       const res = await fetch("https://api.frankfurter.app/latest?from=USD");
-      const data = await res.json();
-      const loadedRates: RatesMap = { USD: 1, ...data.rates };
-
-      // 2. Fetch fallback/extra crypto rates if possible
-      try {
-        const cryptoRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd");
-        const cryptoData = await cryptoRes.json();
-        if (cryptoData.bitcoin?.usd) loadedRates.BTC = 1 / cryptoData.bitcoin.usd;
-        if (cryptoData.ethereum?.usd) loadedRates.ETH = 1 / cryptoData.ethereum.usd;
-      } catch (err) {
-        console.warn("Crypto rates fallback", err);
+      if (res.ok) {
+        const data = await res.json();
+        Object.assign(loadedRates, data.rates);
       }
-
-      setRates(loadedRates);
-      setLastUpdated(new Date().toLocaleTimeString("tr-TR"));
-      toast.success("Güncel kurlar yüklendi!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Döviz kurları alınırken hata oluştu.");
-    } finally {
-      setLoading(false);
+    } catch {
+      // 2. Fallback to Open Exchange Rates (ER-API)
+      try {
+        const fallbackRes = await fetch("https://open.er-api.com/v6/latest/USD");
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          Object.assign(loadedRates, fallbackData.rates);
+        }
+      } catch {}
     }
+
+    // 3. Fetch Live Crypto Rates (CoinCap / Binance)
+    try {
+      const cryptoRes = await fetch("https://api.coincap.io/v2/assets?limit=20");
+      if (cryptoRes.ok) {
+        const cryptoJson = await cryptoRes.json();
+        (cryptoJson.data || []).forEach((c: any) => {
+          const price = parseFloat(c.priceUsd);
+          if (price > 0) {
+            loadedRates[c.symbol] = 1 / price;
+          }
+        });
+      }
+    } catch {
+      try {
+        const binanceRes = await fetch("https://api.binance.com/api/v3/ticker/24hr");
+        if (binanceRes.ok) {
+          const binanceList = await binanceRes.json();
+          binanceList.forEach((item: any) => {
+            if (item.symbol === "BTCUSDT") loadedRates.BTC = 1 / parseFloat(item.lastPrice);
+            if (item.symbol === "ETHUSDT") loadedRates.ETH = 1 / parseFloat(item.lastPrice);
+            if (item.symbol === "SOLUSDT") loadedRates.SOL = 1 / parseFloat(item.lastPrice);
+          });
+        }
+      } catch {}
+    }
+
+    setRates(loadedRates);
+    setLastUpdated(new Date().toLocaleTimeString("tr-TR"));
+    setLoading(false);
+    toast.success("Canlı kurlar başarıyla güncellendi!");
   };
 
   useEffect(() => {
@@ -75,7 +104,6 @@ export function CurrencyExchangeClient() {
 
   const calculateConvertedAmount = (): number => {
     if (!rates[fromCurr] || !rates[toCurr]) return 0;
-    // convert from base (USD)
     const amountInUSD = amount / rates[fromCurr];
     return amountInUSD * rates[toCurr];
   };
@@ -87,38 +115,49 @@ export function CurrencyExchangeClient() {
 
   const convertedValue = calculateConvertedAmount();
 
+  const handleCopyResult = () => {
+    navigator.clipboard.writeText(`${amount} ${fromCurr} = ${convertedValue.toLocaleString("tr-TR", { maximumFractionDigits: 4 })} ${toCurr}`);
+    setCopied(true);
+    toast.success("Sonuç panoya kopyalandı!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-xl mb-3">
           <Coins className="h-3.5 w-3.5 text-emerald-400" />
-          <span>Zero-Auth Live Rates</span>
+          <span>Zero-Auth Multi-Source Live Rates</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
           Canlı Döviz & Kripto Dönüştürücü
         </h1>
         <p className="mt-2 text-sm text-zinc-400 max-w-2xl mx-auto">
-          150+ itibari para birimi ve kripto varlık arasında canlı piyasa verileriyle anında dönüşüm hesaplayın.
+          Avrupa Merkez Bankası (ECB) ve küresel kripto borsalarından anlık verilerle canlı dönüşüm hesaplayın.
         </p>
       </div>
 
       {/* Main Converter Card */}
-      <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl mb-8">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+      <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl mb-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
             <TrendingUp className="h-5 w-5 text-emerald-400" />
             <h2 className="text-base font-bold text-white">Anlık Hesaplama Stüdyosu</h2>
           </div>
-          {lastUpdated && (
-            <span className="text-xs text-zinc-500">Son Güncelleme: {lastUpdated}</span>
-          )}
+          <button
+            onClick={fetchRates}
+            className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-mono transition-colors"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            <span>{lastUpdated ? `Güncelleme: ${lastUpdated}` : "Yenile"}</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-7 gap-4 items-center">
           {/* Input Amount & From */}
           <div className="md:col-span-3 space-y-2">
-            <label className="text-xs font-semibold text-zinc-400">Tutar & Kaynak Birim</label>
+            <label className="text-xs font-semibold text-zinc-400">Tutar & Kaynak Para Birimi</label>
             <div className="flex rounded-xl border border-white/10 bg-white/[0.04] overflow-hidden focus-within:border-emerald-500 transition-all">
               <input
                 type="number"
@@ -151,17 +190,17 @@ export function CurrencyExchangeClient() {
             </button>
           </div>
 
-          {/* Result & To */}
+          {/* Target Amount & To */}
           <div className="md:col-span-3 space-y-2">
-            <label className="text-xs font-semibold text-zinc-400">Dönüştürülen Tutar & Hedef</label>
-            <div className="flex rounded-xl border border-emerald-500/30 bg-emerald-500/10 overflow-hidden">
-              <div className="w-full px-4 py-3 text-lg font-black text-emerald-300 flex items-center">
-                {loading ? "Hesaplamada..." : convertedValue.toLocaleString("tr-TR", { maximumFractionDigits: 4 })}
+            <label className="text-xs font-semibold text-zinc-400">Dönüştürülen Hedef Birim</label>
+            <div className="flex rounded-xl border border-white/10 bg-white/[0.04] overflow-hidden focus-within:border-emerald-500 transition-all">
+              <div className="w-full bg-transparent px-4 py-3 text-lg font-black text-emerald-400 flex items-center">
+                {convertedValue.toLocaleString("tr-TR", { maximumFractionDigits: 4 })}
               </div>
               <select
                 value={toCurr}
                 onChange={(e) => setToCurr(e.target.value)}
-                className="bg-[#181920] px-3 py-3 text-xs font-bold text-emerald-300 border-l border-emerald-500/30 focus:outline-none cursor-pointer"
+                className="bg-[#181920] px-3 py-3 text-xs font-bold text-emerald-300 border-l border-white/10 focus:outline-none cursor-pointer"
               >
                 {POPULAR_CURRENCIES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -172,33 +211,19 @@ export function CurrencyExchangeClient() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Rate Matrix */}
-      <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl">
-        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-          <Globe className="h-4 w-4 text-emerald-400" /> Popüler Çapraz Kurlar
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { from: "USD", to: "TRY", name: "1 USD / TRY" },
-            { from: "EUR", to: "TRY", name: "1 EUR / TRY" },
-            { from: "GBP", to: "TRY", name: "1 GBP / TRY" },
-          ].map((item) => {
-            const val = (1 / (rates[item.from] || 1)) * (rates[item.to] || 1);
-            return (
-              <div
-                key={item.name}
-                className="rounded-xl border border-white/5 bg-white/[0.02] p-4 flex justify-between items-center"
-              >
-                <span className="text-xs font-bold text-zinc-300">{item.name}</span>
-                <span className="text-sm font-mono font-extrabold text-emerald-400">
-                  {loading ? "..." : `${val.toFixed(4)} ₺`}
-                </span>
-              </div>
-            );
-          })}
+        {/* Live conversion summary banner */}
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] gap-3">
+          <div className="text-xs font-mono text-zinc-300">
+            1 {fromCurr} = {(convertedValue / (amount || 1)).toFixed(4)} {toCurr}
+          </div>
+          <button
+            onClick={handleCopyResult}
+            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white font-mono transition-colors"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+            <span>{copied ? "Kopyalandı" : "Sonucu Kopyala"}</span>
+          </button>
         </div>
       </div>
     </div>

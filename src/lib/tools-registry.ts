@@ -23,6 +23,17 @@ import {
   Coins,
   FileText,
   CalendarClock,
+  Terminal,
+  QrCode,
+  Key,
+  Hash,
+  Barcode,
+  CloudSun,
+  Waves,
+  Camera,
+  Database,
+  BookOpen,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -55,10 +66,10 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   video: "Video",
   audio: "Ses & Müzik",
   image: "Görsel",
-  text: "Metin",
-  developer: "Geliştirici",
-  calculator: "Hesaplama",
-  design: "Tasarım",
+  text: "Metin & Dil",
+  developer: "Geliştirici & Ağ",
+  calculator: "Hesaplama & Finans",
+  design: "Tasarım & Vektör",
 };
 
 export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
@@ -72,6 +83,236 @@ export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
 };
 
 export const tools: Tool[] = [
+  // 1. Zero-Auth API Playground (Featured New)
+  {
+    slug: "api-playground",
+    title: "Canlı API Test Konsolu & Açık API Kataloğu",
+    description:
+      "150+ ücretsiz ve sıfır-auth açık API'yi canlı test edin, özel HTTP GET/POST istekleri gönderin, yanıt süresi ve JSON yüklerini anında inceleyin",
+    icon: Terminal,
+    category: "developer",
+    accentColor: "#10b981",
+    accentClass: "from-emerald-500 to-emerald-600",
+    status: "live",
+    tags: ["api", "rest", "http", "freeapi", "hoppscotch", "geliştirici", "test", "curl"],
+    featured: true,
+    newBadge: true,
+  },
+  // 2. Vector QR Studio Pro
+  {
+    slug: "qr-code-studio",
+    title: "QR Kod Stüdyosu Pro",
+    description:
+      "WiFi şifre paylaşımı, vCard kartvizit, URL ve kripto cüzdanlar için özel renkli, logolu ve vektörel SVG/PNG QR kodları üretin",
+    icon: QrCode,
+    category: "design",
+    accentColor: "#10b981",
+    accentClass: "from-emerald-500 to-emerald-600",
+    status: "live",
+    tags: ["qr", "wifi", "vcard", "svg", "tasarım", "vektör", "logo"],
+    featured: true,
+    newBadge: true,
+  },
+  // 3. JWT Debugger
+  {
+    slug: "jwt-debugger",
+    title: "İstemci Taraflı JWT Debugger & Token Çözücü",
+    description:
+      "JSON Web Token (JWT) başlık, payload ve imza verilerini %100 tarayıcı tarafında çözün. Canlı süre geri sayımı ve claim ayrıştırma",
+    icon: Key,
+    category: "developer",
+    accentColor: "#6366f1",
+    accentClass: "from-indigo-500 to-indigo-600",
+    status: "live",
+    tags: ["jwt", "token", "decoder", "auth", "güvenlik", "geliştirici"],
+    featured: true,
+    newBadge: true,
+  },
+  // 4. Crypto Hash & UUID Lab
+  {
+    slug: "crypto-hash-studio",
+    title: "Kriptografik Hash, HMAC & UUID/NanoID Laboratuvarı",
+    description:
+      "SHA-256, SHA-512, MD5, HMAC ve UUID v4/v7/NanoID üretimini %100 tarayıcı tarafında Web Crypto API ile anında gerçekleştirin",
+    icon: Hash,
+    category: "developer",
+    accentColor: "#8b5cf6",
+    accentClass: "from-purple-500 to-purple-600",
+    status: "live",
+    tags: ["sha256", "hash", "hmac", "uuid", "nanoid", "crypto", "checksum"],
+    newBadge: true,
+  },
+  // 5. Barcode Generator
+  {
+    slug: "barcode-generator",
+    title: "Vektörel Barkod Üreteci",
+    description:
+      "EAN-13, UPC-A, Code 128 ve Code 39 barkod standartlarında baskıya hazır vektörel SVG ve yüksek çözünürlüklü PNG barkodları ücretsiz üretin",
+    icon: Barcode,
+    category: "design",
+    accentColor: "#f59e0b",
+    accentClass: "from-amber-500 to-amber-600",
+    status: "live",
+    tags: ["barkod", "ean13", "code128", "upc", "vektör", "svg", "tasarım"],
+    newBadge: true,
+  },
+  // 6. Live Weather & Air Quality Radar
+  {
+    slug: "weather-air-quality",
+    title: "Canlı Hava Durumu & Hava Kalitesi Radarı",
+    description:
+      "Open-Meteo ile dünya genelinde 7 günlük saatlik hava durumu, UV indeksi ve PM2.5/PM10 hava kalitesi indeksini (AQI) canlı takip edin",
+    icon: CloudSun,
+    category: "calculator",
+    accentColor: "#0284c7",
+    accentClass: "from-sky-500 to-sky-600",
+    status: "live",
+    tags: ["hava", "durumu", "aqi", "pm25", "uv", "radar", "açık-veri"],
+    featured: true,
+    newBadge: true,
+  },
+  // 7. World Countries Explorer
+  {
+    slug: "world-countries-explorer",
+    title: "Dünya Ülkeleri & Coğrafya Karşılaştırma Stüdyosu",
+    description:
+      "REST Countries ile 250+ dünya ülkesinin bayrakları, nüfusu, başkenti, dilleri ve para birimlerini canlı keşfedin ve ülkeleri karşılaştırın",
+    icon: Globe,
+    category: "calculator",
+    accentColor: "#4f46e5",
+    accentClass: "from-indigo-500 to-indigo-600",
+    status: "live",
+    tags: ["ülkeler", "bayrak", "nüfus", "başkent", "coğrafya", "karşılaştırma"],
+    newBadge: true,
+  },
+  // 8. Web Audio Spectrum Studio
+  {
+    slug: "audio-spectrum-studio",
+    title: "Web Audio Osiloskop & Spektrum Analizörü",
+    description:
+      "Mikrofon veya ses dalgalarını Web Audio API ile gerçek zamanlı osiloskop ve FFT frekans spektrumu olarak analiz edin. Saf ton üreteci",
+    icon: Waves,
+    category: "audio",
+    accentColor: "#06b6d4",
+    accentClass: "from-cyan-500 to-cyan-600",
+    status: "live",
+    tags: ["audio", "osiloskop", "fft", "spektrum", "frekans", "ses", "ton"],
+    featured: true,
+    newBadge: true,
+  },
+  // 9. Precision BPM Tapper & Metronome
+  {
+    slug: "bpm-tapper",
+    title: "Hassas BPM Tapper & Akıllı Metronom",
+    description:
+      "Klavyeden veya dokunarak anlık BPM hesaplayın, tutarlılık sapmasını görün ve Web Audio milisaniye zamanlayıcılı metronom ile ritim tutun",
+    icon: Music,
+    category: "audio",
+    accentColor: "#10b981",
+    accentClass: "from-emerald-500 to-emerald-600",
+    status: "live",
+    tags: ["bpm", "tempo", "metronom", "ritim", "müzik", "sayıcı"],
+    newBadge: true,
+  },
+  // 10. EXIF Purger
+  {
+    slug: "exif-purger",
+    title: "EXIF Metaveri İnceleyici & Gizlilik Temizleyici",
+    description:
+      "Fotoğraflarınızdaki GPS konum koordinatlarını, kamera modelini ve çekim metaverilerini inceleyin ve paylaşmadan önce %100 temizleyin",
+    icon: Camera,
+    category: "image",
+    accentColor: "#f43f5e",
+    accentClass: "from-rose-500 to-rose-600",
+    status: "live",
+    tags: ["exif", "metadata", "gps", "fotoğraf", "gizlilik", "temizleyici"],
+    newBadge: true,
+  },
+  // 11. SQL to Types
+  {
+    slug: "sql-to-types",
+    title: "SQL'den TypeScript, Zod & Prisma Dönüştürücü",
+    description:
+      "SQL CREATE TABLE tablolarını anında TypeScript interface, Zod şeması, Prisma modeli, Go struct ve Python Pydantic kodlarına dönüştürün",
+    icon: Database,
+    category: "developer",
+    accentColor: "#6366f1",
+    accentClass: "from-indigo-500 to-indigo-600",
+    status: "live",
+    tags: ["sql", "typescript", "zod", "prisma", "go", "pydantic", "şema"],
+    newBadge: true,
+  },
+  // 12. cURL to Code
+  {
+    slug: "curl-to-code",
+    title: "cURL'den Çoklu Dil Kod Üreticisi",
+    description:
+      "cURL komutlarını anında JavaScript fetch, Axios, Python requests, Go ve PHP kodlarına dönüştürün",
+    icon: Terminal,
+    category: "developer",
+    accentColor: "#06b6d4",
+    accentClass: "from-cyan-500 to-cyan-600",
+    status: "live",
+    tags: ["curl", "fetch", "axios", "python", "go", "php", "kod"],
+    newBadge: true,
+  },
+  // 13. Smart Dictionary
+  {
+    slug: "smart-dictionary",
+    title: "İngilizce Akıllı Sözlük, Telaffuz & Kafiye Motoru",
+    description:
+      "İngilizce kelimelerin fonetik telaffuz seslerini dinleyin, tanımları inceleyin, kafiyeli kelimeleri ve eşanlamlıları canlı keşfedin",
+    icon: BookOpen,
+    category: "text",
+    accentColor: "#3b82f6",
+    accentClass: "from-blue-500 to-blue-600",
+    status: "live",
+    tags: ["sözlük", "dictionary", "rhyme", "kafiye", "synonym", "sesli-telaffuz"],
+    newBadge: true,
+  },
+  // 14. Book & ISBN Finder
+  {
+    slug: "book-isbn-finder",
+    title: "Açık Kitaplık & ISBN Arama Motoru",
+    description:
+      "20M+ kitap, yazar ve ISBN numarası üzerinden kitap kapağı, yayıncı, sayfa sayısı ve basım yılı bilgilerini canlı arayın",
+    icon: BookOpen,
+    category: "text",
+    accentColor: "#f59e0b",
+    accentClass: "from-amber-500 to-amber-600",
+    status: "live",
+    tags: ["kitap", "isbn", "openlibrary", "yazar", "kapak", "kütüphane"],
+    newBadge: true,
+  },
+  // 15. Trivia Quiz Arena
+  {
+    slug: "trivia-quiz-arena",
+    title: "İnteraktif Bilgi Yarışması & Trivia Arena",
+    description:
+      "Bilim, teknoloji, tarih ve genel kültür alanlarında binlerce soruyla bilginizi canlı test edin. İnteraktif skor ve kategori filtreli trivia arenası",
+    icon: HelpCircle,
+    category: "text",
+    accentColor: "#ec4899",
+    accentClass: "from-pink-500 to-pink-600",
+    status: "live",
+    tags: ["trivia", "bilgi-yarışması", "quiz", "genel-kültür", "bilim", "oyun"],
+    newBadge: true,
+  },
+  // 16. Mock Data Generator
+  {
+    slug: "mock-data-generator",
+    title: "Geliştiriciler İçin Akıllı Mock Veri Üreteci",
+    description:
+      "Testler ve prototipler için Türkçe ve uluslararası sahte kimlikler, adresler, telefon numaraları, şirket bilgileri ve JSON/CSV mock verileri üretin",
+    icon: Database,
+    category: "developer",
+    accentColor: "#10b981",
+    accentClass: "from-emerald-500 to-emerald-600",
+    status: "live",
+    tags: ["mock", "test-verisi", "sahte-kimlik", "json", "csv", "geliştirici"],
+    newBadge: true,
+  },
+  // Existing Studio Tools
   {
     slug: "spotify-playlist-analyzer",
     title: "Spotify Playlist Analizör",
@@ -82,20 +323,8 @@ export const tools: Tool[] = [
     accentColor: "#10b981",
     accentClass: "from-emerald-500 to-emerald-600",
     status: "live",
-    tags: [
-      "spotify",
-      "playlist",
-      "analiz",
-      "audio-features",
-      "bpm",
-      "bot-kontrol",
-      "chosic",
-      "artist-tools",
-      "submithub",
-      "kapak",
-    ],
+    tags: ["spotify", "playlist", "analiz", "audio-features", "bpm", "bot-kontrol", "chosic", "kapak"],
     featured: true,
-    newBadge: true,
   },
   {
     slug: "spotify-profile-analyzer",
@@ -107,18 +336,8 @@ export const tools: Tool[] = [
     accentColor: "#06b6d4",
     accentClass: "from-cyan-500 to-cyan-600",
     status: "live",
-    tags: [
-      "spotify",
-      "profil",
-      "sanatçı",
-      "küratör",
-      "takipçi",
-      "diskografi",
-      "analiz",
-      "avatar",
-    ],
+    tags: ["spotify", "profil", "sanatçı", "küratör", "takipçi", "diskografi", "avatar"],
     featured: true,
-    newBadge: true,
   },
   {
     slug: "yt-playlist-length",
@@ -132,7 +351,6 @@ export const tools: Tool[] = [
     status: "live",
     tags: ["youtube", "playlist", "video", "sure", "hiz", "thumbnail", "csv"],
     featured: true,
-    newBadge: true,
   },
   {
     slug: "yt-thumbnail-downloader",
@@ -145,7 +363,6 @@ export const tools: Tool[] = [
     accentClass: "from-rose-500 to-rose-600",
     status: "live",
     tags: ["youtube", "thumbnail", "kapak", "görsel", "indir", "hd"],
-    newBadge: true,
   },
   {
     slug: "yt-timestamp-generator",
@@ -248,21 +465,21 @@ export const tools: Tool[] = [
   },
   {
     slug: "word-counter",
-    title: "Kelime ve Metin Sayacı",
+    title: "Kelime & Karakter Sayacı",
     description:
-      "Kelime, karakter, cümle, paragraf ve tahmini okuma süresini anlık olarak analiz edin",
+      "Metninizin kelime, karakter, cümle, paragraf sayısını ve tahmini okuma süresini anlık hesaplayın",
     icon: Type,
     category: "text",
-    accentColor: "#818cf8",
-    accentClass: "from-indigo-500 to-indigo-600",
+    accentColor: "#10b981",
+    accentClass: "from-emerald-500 to-emerald-600",
     status: "live",
-    tags: ["kelime", "karakter", "okuma", "metin", "analiz", "sayac"],
+    tags: ["kelime", "karakter", "sayac", "metin", "okuma-suresi"],
   },
   {
     slug: "case-converter",
-    title: "Metin Kasa Dönüştürücü",
+    title: "Büyük/Küçük Harf & Metin Dönüştürücü",
     description:
-      "camelCase, snake_case, kebab-case, Title Case, UPPERCASE ve lowercase dönüşümlerini anında yapın",
+      "Metinleri UPPERCASE, lowercase, Title Case, camelCase, snake_case ve kebab-case formatlarına dönüştürün",
     icon: CaseSensitive,
     category: "text",
     accentColor: "#a78bfa",
@@ -306,7 +523,6 @@ export const tools: Tool[] = [
     status: "live",
     tags: ["ip", "network", "ping", "latency", "isp", "location", "geliştirici"],
     featured: true,
-    newBadge: true,
   },
   {
     slug: "dns-lookup-tool",
@@ -320,7 +536,6 @@ export const tools: Tool[] = [
     status: "live",
     tags: ["dns", "lookup", "mx", "txt", "cname", "doh", "geliştirici"],
     featured: true,
-    newBadge: true,
   },
   {
     slug: "currency-exchange-converter",
@@ -334,7 +549,6 @@ export const tools: Tool[] = [
     status: "live",
     tags: ["döviz", "kurlar", "dolar", "euro", "tl", "kripto", "dönüştürücü"],
     featured: true,
-    newBadge: true,
   },
   {
     slug: "markdown-studio",
@@ -347,7 +561,6 @@ export const tools: Tool[] = [
     accentClass: "from-purple-500 to-purple-600",
     status: "live",
     tags: ["markdown", "editör", "preview", "html", "metin"],
-    newBadge: true,
   },
   {
     slug: "cron-expression-studio",
@@ -360,7 +573,6 @@ export const tools: Tool[] = [
     accentClass: "from-pink-500 to-pink-600",
     status: "live",
     tags: ["cron", "crontab", "zamanlayıcı", "generator", "geliştirici"],
-    newBadge: true,
   },
   {
     slug: "favicon-extractor",
@@ -373,7 +585,6 @@ export const tools: Tool[] = [
     accentClass: "from-amber-500 to-amber-600",
     status: "live",
     tags: ["favicon", "logo", "görsel", "hd", "extractor", "tasarım"],
-    newBadge: true,
   },
 ];
 

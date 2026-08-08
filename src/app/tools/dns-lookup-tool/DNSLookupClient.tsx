@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Server,
   Search,
@@ -12,6 +13,8 @@ import {
   Clock,
   ArrowRight,
   Database,
+  CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,15 +26,22 @@ interface DNSRecord {
   data: string;
 }
 
+interface ResolverResult {
+  resolver: string;
+  records: DNSRecord[];
+  status: string;
+  dnssec: boolean;
+  latencyMs: number;
+}
+
 const RECORD_TYPES = ["A", "AAAA", "MX", "TXT", "CNAME", "NS", "SOA", "SRV"];
 
 export function DNSLookupClient() {
   const [domain, setDomain] = useState("everythinghub.com.tr");
   const [recordType, setRecordType] = useState("A");
   const [loading, setLoading] = useState(false);
-  const [records, setRecords] = useState<DNSRecord[]>([]);
-  const [status, setStatus] = useState<string | null>(null);
-  const [dnssec, setDnssec] = useState<boolean | null>(null);
+  const [results, setResults] = useState<ResolverResult[]>([]);
+  const [copiedData, setCopiedData] = useState<string | null>(null);
 
   const handleLookup = async (targetDomain = domain, targetType = recordType) => {
     if (!targetDomain.trim()) {
@@ -40,67 +50,107 @@ export function DNSLookupClient() {
     }
 
     setLoading(true);
-    setRecords([]);
-    setStatus(null);
+    setResults([]);
 
     const cleanDomain = targetDomain.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const resolverList: ResolverResult[] = [];
 
+    // 1. Cloudflare DoH
     try {
-      // Query Cloudflare DoH Endpoint
-      const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(cleanDomain)}&type=${targetType}`;
-      const res = await fetch(url, {
+      const start = performance.now();
+      const cfRes = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(cleanDomain)}&type=${targetType}`, {
         headers: { accept: "application/dns-json" },
       });
-      const data = await res.json();
+      const cfData = await cfRes.json();
+      const elapsed = Math.round(performance.now() - start);
 
-      setStatus(data.Status === 0 ? "NOERROR" : `Status ${data.Status}`);
-      setDnssec(data.AD ?? false);
+      const parsedRecords: DNSRecord[] = (cfData.Answer || []).map((ans: any) => ({
+        name: ans.name,
+        type: ans.type,
+        typeName: targetType,
+        TTL: ans.TTL,
+        data: ans.data,
+      }));
 
-      if (data.Answer && Array.isArray(data.Answer)) {
-        const parsed: DNSRecord[] = data.Answer.map((ans: any) => ({
-          name: ans.name,
-          type: ans.type,
-          typeName: targetType,
-          TTL: ans.TTL,
-          data: ans.data,
-        }));
-        setRecords(parsed);
-        toast.success(`${parsed.length} adet ${targetType} kaydı bulundu!`);
-      } else {
-        setRecords([]);
-        toast.info(`${targetType} türünde kayıt bulunamadı.`);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("DNS sorgulanırken hata oluştu.");
-    } finally {
-      setLoading(false);
+      resolverList.push({
+        resolver: "Cloudflare DoH (1.1.1.1)",
+        records: parsedRecords,
+        status: cfData.Status === 0 ? "NOERROR" : `Status ${cfData.Status}`,
+        dnssec: cfData.AD ?? false,
+        latencyMs: elapsed,
+      });
+    } catch {
+      resolverList.push({
+        resolver: "Cloudflare DoH (1.1.1.1)",
+        records: [],
+        status: "Bağlantı Hatası",
+        dnssec: false,
+        latencyMs: 0,
+      });
     }
+
+    // 2. Google DoH
+    try {
+      const start = performance.now();
+      const gRes = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(cleanDomain)}&type=${targetType}`);
+      const gData = await gRes.json();
+      const elapsed = Math.round(performance.now() - start);
+
+      const parsedRecords: DNSRecord[] = (gData.Answer || []).map((ans: any) => ({
+        name: ans.name,
+        type: ans.type,
+        typeName: targetType,
+        TTL: ans.TTL,
+        data: ans.data,
+      }));
+
+      resolverList.push({
+        resolver: "Google Public DoH (8.8.8.8)",
+        records: parsedRecords,
+        status: gData.Status === 0 ? "NOERROR" : `Status ${gData.Status}`,
+        dnssec: gData.AD ?? false,
+        latencyMs: elapsed,
+      });
+    } catch {
+      resolverList.push({
+        resolver: "Google Public DoH (8.8.8.8)",
+        records: [],
+        status: "Bağlantı Hatası",
+        dnssec: false,
+        latencyMs: 0,
+      });
+    }
+
+    setResults(resolverList);
+    setLoading(false);
+    toast.success(`${cleanDomain} için DNS kayıtları başarıyla sorgulandı!`);
   };
 
   const copyRecord = (text: string) => {
     navigator.clipboard.writeText(text);
+    setCopiedData(text);
     toast.success("Kayıt panoya kopyalandı!");
+    setTimeout(() => setCopiedData(null), 2000);
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-300 backdrop-blur-xl mb-3">
           <Server className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Zero-Auth DNS over HTTPS</span>
+          <span>Multi-Resolver DoH Verification</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
           DNS Kayıtları & DoH Sorgulayıcı
         </h1>
         <p className="mt-2 text-sm text-zinc-400 max-w-2xl mx-auto">
-          Cloudflare & Google DoH güvenli altyapısıyla herhangi bir alan adının A, AAAA, MX, TXT ve NS kayıtlarını anında tarayın.
+          Cloudflare ve Google DoH altyapısıyla A, AAAA, MX, TXT ve CNAME kayıtlarını çoklu doğrulama ile anında sorgulayın.
         </p>
       </div>
 
       {/* Control Box */}
-      <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl mb-8">
+      <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl mb-8 space-y-4">
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
           {/* Domain Input */}
           <div className="relative flex-1">
@@ -139,84 +189,71 @@ export function DNSLookupClient() {
           <button
             onClick={() => handleLookup()}
             disabled={loading}
-            className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-6 py-3 text-xs font-bold text-indigo-200 hover:bg-indigo-500/30 transition-all shrink-0 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-6 py-3 text-xs font-bold text-indigo-200 hover:bg-indigo-500/30 transition-all shrink-0"
           >
-            {loading ? <RefreshCw className="h-4 w-4 animate-spin text-indigo-300" /> : <Search className="h-4 w-4 text-indigo-300" />}
-            <span>Sorgula</span>
+            <Search className="h-4 w-4 text-indigo-300" />
+            <span>{loading ? "Sorgulanıyor..." : "DNS Sorgula"}</span>
           </button>
         </div>
       </div>
 
-      {/* Results Box */}
-      <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
-          <div className="flex items-center gap-3">
-            <Database className="h-5 w-5 text-indigo-400" />
-            <h2 className="text-base font-bold text-white">
-              Sorgu Sonuçları ({recordType})
-            </h2>
-          </div>
-
-          {status && (
-            <div className="flex items-center gap-3">
-              <span className="rounded-md bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-xs font-semibold text-emerald-400">
-                {status}
-              </span>
-              {dnssec !== null && (
-                <span className="flex items-center gap-1 text-xs font-semibold text-cyan-400">
-                  <ShieldCheck className="h-3.5 w-3.5" /> DNSSEC: {dnssec ? "Aktif" : "Pasif"}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="py-16 text-center text-zinc-500 text-sm">
-            DNS sunucusu sorgulanıyor...
-          </div>
-        ) : records.length > 0 ? (
-          <div className="space-y-3">
-            {records.map((rec, i) => (
-              <div
-                key={i}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4 hover:border-indigo-500/30 transition-all"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="rounded bg-indigo-500/20 text-indigo-300 px-2 py-0.5 text-[10px] font-bold border border-indigo-500/30">
-                      {rec.typeName}
-                    </span>
-                    <span className="text-xs text-zinc-400 truncate">{rec.name}</span>
-                  </div>
-                  <div className="font-mono text-sm font-semibold text-white break-all bg-black/40 p-2.5 rounded-lg border border-white/5 mt-2">
-                    {rec.data}
-                  </div>
+      {/* Multi-Resolver Evidence Cards */}
+      {results.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {results.map((res, idx) => (
+            <div
+              key={idx}
+              className="rounded-3xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <Server className="h-4 w-4 text-indigo-400" />
+                  <span className="text-xs font-bold text-white">{res.resolver}</span>
                 </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                  <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                    <Clock className="h-3.5 w-3.5 text-zinc-500" />
-                    <span>TTL: {rec.TTL}s</span>
-                  </div>
-
-                  <button
-                    onClick={() => copyRecord(rec.data)}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white transition-all border border-white/5"
-                  >
-                    <Copy className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>Kopyala</span>
-                  </button>
+                <div className="flex items-center gap-2 font-mono text-[11px]">
+                  {res.dnssec && (
+                    <span className="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                      <Lock className="h-2.5 w-2.5" />
+                      <span>DNSSEC</span>
+                    </span>
+                  )}
+                  <span className="text-zinc-400">{res.latencyMs}ms</span>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-12 text-center text-zinc-500 text-sm">
-            Sorgulama yapmak için alan adınızı yazıp Sorgula butonuna basınız.
-          </div>
-        )}
-      </div>
+
+              {res.records.length > 0 ? (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {res.records.map((rec, rIdx) => (
+                    <div
+                      key={rIdx}
+                      className="p-3 rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-between gap-3 text-xs font-mono"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-zinc-200 break-all font-semibold">{rec.data}</div>
+                        <div className="text-[10px] text-zinc-500 mt-0.5">TTL: {rec.TTL}s</div>
+                      </div>
+                      <button
+                        onClick={() => copyRecord(rec.data)}
+                        className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                      >
+                        {copiedData === rec.data ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-zinc-500 text-xs">
+                  Bu resolver üzerinde {recordType} kaydı bulunamadı.
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

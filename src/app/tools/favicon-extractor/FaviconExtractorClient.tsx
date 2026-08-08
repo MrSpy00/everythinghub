@@ -24,6 +24,7 @@ export function FaviconExtractorClient() {
   const [domainInput, setDomainInput] = useState<string>("github.com");
   const [activeDomain, setActiveDomain] = useState<string>("github.com");
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleExtract = () => {
     if (!domainInput.trim()) {
@@ -37,12 +38,12 @@ export function FaviconExtractorClient() {
 
   const variants: FaviconVariant[] = [
     {
-      title: "Google HD Favicon (256x256)",
+      title: "Google Ultra HD Favicon (256x256)",
       size: "256x256",
       url: `https://www.google.com/s2/favicons?domain=${activeDomain}&sz=256`,
     },
     {
-      title: "Icon Horse Full Favicon",
+      title: "Icon Horse Orijinal Favicon",
       size: "Orijinal",
       url: `https://icon.horse/icon/${activeDomain}`,
     },
@@ -52,9 +53,9 @@ export function FaviconExtractorClient() {
       url: `https://www.google.com/s2/favicons?domain=${activeDomain}&sz=128`,
     },
     {
-      title: "Google Standard Favicon (64x64)",
+      title: "DuckDuckGo Favicon",
       size: "64x64",
-      url: `https://www.google.com/s2/favicons?domain=${activeDomain}&sz=64`,
+      url: `https://icons.duckduckgo.com/ip3/${activeDomain}.ico`,
     },
   ];
 
@@ -65,6 +66,40 @@ export function FaviconExtractorClient() {
     setCopiedCode(true);
     toast.success("HTML Kodu panoya kopyalandı!");
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  // Bulletproof Cross-Origin Canvas/Blob download
+  const handleDownloadImage = async (imgUrl: string, title: string) => {
+    setDownloading(title);
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width || 128;
+        canvas.height = img.height || 128;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL("image/png");
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = `favicon-${activeDomain}-${title.toLowerCase().replace(/[^a-z0-9]/g, "-")}.png`;
+          a.click();
+          toast.success("Favicon başarıyla indirildi!");
+        }
+        setDownloading(null);
+      };
+      img.onerror = () => {
+        // Fallback open in new tab if CORS prevents canvas export
+        window.open(imgUrl, "_blank");
+        setDownloading(null);
+      };
+      img.src = imgUrl;
+    } catch {
+      window.open(imgUrl, "_blank");
+      setDownloading(null);
+    }
   };
 
   return (
@@ -123,6 +158,7 @@ export function FaviconExtractorClient() {
 
             {/* Image Preview Box */}
             <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-white/10 bg-black/40 p-4 shadow-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={variant.url}
                 alt={variant.title}
@@ -133,23 +169,21 @@ export function FaviconExtractorClient() {
               />
             </div>
 
-            {/* Direct Open / Download Link */}
+            {/* Direct Download & New Tab Buttons */}
             <div className="flex items-center gap-2 w-full pt-2">
-              <a
-                href={variant.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={`favicon-${activeDomain}.png`}
+              <button
+                onClick={() => handleDownloadImage(variant.url, variant.title)}
+                disabled={downloading === variant.title}
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 border border-amber-500/40 py-2.5 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition-all"
               >
                 <Download className="h-3.5 w-3.5 text-amber-300" />
-                <span>Resmi İndir</span>
-              </a>
+                <span>{downloading === variant.title ? "İndiriliyor..." : "Resmi İndir"}</span>
+              </button>
               <a
                 href={variant.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 transition-all"
+                className="p-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all"
                 title="Yeni Sekmede Aç"
               >
                 <ExternalLink className="h-4 w-4" />
@@ -159,24 +193,23 @@ export function FaviconExtractorClient() {
         ))}
       </div>
 
-      {/* HTML Embed Snippet Card */}
+      {/* HTML Meta Tag Snippet Card */}
       <div className="rounded-2xl border border-white/10 bg-[#0d0e12]/80 backdrop-blur-3xl p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
           <div className="flex items-center gap-2">
             <Code className="h-4 w-4 text-amber-400" />
-            <h3 className="text-sm font-bold text-white">Web Sitenize Ekleyin (HTML Snippet)</h3>
+            <h2 className="text-sm font-bold text-white">HTML Meta Etiketi</h2>
           </div>
           <button
             onClick={copyHTML}
-            className="flex items-center gap-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition-all"
+            className="flex items-center gap-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition-all"
           >
-            {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-amber-300" />}
-            <span>Kodu Kopyala</span>
+            {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+            <span>{copiedCode ? "Kopyalandı" : "Kodu Kopyala"}</span>
           </button>
         </div>
-
-        <pre className="bg-black/60 border border-white/10 p-4 rounded-xl font-mono text-xs text-amber-300 overflow-x-auto">
-          <code>{htmlSnippet}</code>
+        <pre className="rounded-xl border border-white/10 bg-black/60 p-4 font-mono text-xs text-amber-300 overflow-x-auto">
+          {htmlSnippet}
         </pre>
       </div>
     </div>
