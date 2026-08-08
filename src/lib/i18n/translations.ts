@@ -337,7 +337,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Navigation & General
     home: "Ana Sayfa",
     tools: "Araçlar",
-    categories: "Hızlı Erişim",
+    categories: "Kategoriler",
     quickAccess: "Hızlı Erişim",
     ytAnalyzerBadge: "YT Analizörü",
     live: "Canlı",
@@ -816,7 +816,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Navigation & General
     home: "Home",
     tools: "Tools",
-    categories: "Quick Access",
+    categories: "Categories",
     quickAccess: "Quick Access",
     ytAnalyzerBadge: "YT Analyzer",
     live: "Live",

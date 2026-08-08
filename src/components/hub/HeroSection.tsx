@@ -114,10 +114,10 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <button
               type="button"
               onClick={scrollToTools}
-              className="relative group/btn inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-pink-600/30 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-lg shadow-indigo-950/40 transition-all hover:border-indigo-400 hover:shadow-indigo-500/30 hover:scale-[1.03] active:scale-95 shrink-0 overflow-hidden"
+              className="relative group/btn inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-white/[0.06] px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-lg transition-all duration-300 hover:border-indigo-400/80 hover:bg-indigo-500/20 hover:shadow-indigo-500/25 hover:scale-[1.03] active:scale-95 shrink-0 overflow-hidden"
               data-cursor={t.explore}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
               <Compass className="h-4 w-4 text-indigo-300 transition-transform duration-500 group-hover/btn:rotate-180" />
               <span className="relative z-10">{t.explore}</span>
             </button>

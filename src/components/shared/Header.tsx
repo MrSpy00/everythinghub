@@ -41,6 +41,13 @@ export function Header() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { t } = useLanguage();
 
+  const handleHomeClick = (e: React.MouseEvent) => {
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -68,6 +75,7 @@ export function Header() {
           {/* Brand Logo */}
           <Link
             href="/"
+            onClick={handleHomeClick}
             className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
             data-cursor={t.home}
           >

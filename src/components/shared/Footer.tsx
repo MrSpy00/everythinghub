@@ -36,6 +36,13 @@ export function Footer() {
     setQuickTools(getTop4QuickAccessTools());
   }, []);
 
+  const handleHomeClick = (e: React.MouseEvent) => {
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <footer className="relative border-t border-white/10 bg-[#09090b]/90 backdrop-blur-2xl py-12 sm:py-16">
       <div className="mx-auto max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8">
@@ -43,7 +50,12 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4 mb-10 pb-10 border-b border-white/10">
           {/* Brand Column */}
           <div className="md:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
+            <Link
+              href="/"
+              onClick={handleHomeClick}
+              className="inline-flex items-center gap-2.5 mb-4 group"
+              data-cursor={t.home}
+            >
               <StudioLogo className="h-9 w-9 group-hover:scale-105 transition-transform" />
               <span className="text-xl font-black tracking-tight text-white">
                 everything<span className="gradient-text">hub</span>
