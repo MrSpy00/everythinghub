@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,6 +23,13 @@ import {
   BarChart3,
   Layers,
   TrendingUp,
+  Calendar,
+  Award,
+  Sliders,
+  CheckSquare,
+  Square,
+  FileCode,
+  Share2,
 } from "lucide-react";
 import { parseYouTubeUrl, formatDuration, formatDurationAtSpeed, cn, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
@@ -48,11 +55,12 @@ interface PlaylistData {
 }
 
 const SPEED_PRESETS = [
-  { speed: 1, label: "1.0× Standart" },
+  { speed: 1.0, label: "1.0× Standart" },
   { speed: 1.25, label: "1.25× Hızlı" },
   { speed: 1.5, label: "1.5× Akıcı" },
   { speed: 1.75, label: "1.75× Seri" },
-  { speed: 2, label: "2.0× Çift Hız" },
+  { speed: 2.0, label: "2.0× Çift Hız" },
+  { speed: 2.5, label: "2.5× Ekstra Hızlı" },
 ];
 
 const EXAMPLE_PLAYLISTS = [
@@ -71,10 +79,24 @@ export function YTPlaylistClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PlaylistData | null>(null);
+
+  // Selected videos state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [rangeStart, setRangeStart] = useState<number>(1);
+  const [rangeEnd, setRangeEnd] = useState<number>(100);
+
+  // Custom Speed Simulator
   const [customSpeed, setCustomSpeed] = useState("");
+
+  // Daily Schedule Planner
+  const [dailyMinutes, setDailyMinutes] = useState<number>(60);
+  const [scheduleSpeed, setScheduleSpeed] = useState<number>(1.5);
+
+  // Video Catalogue List State
   const [showAllVideos, setShowAllVideos] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"index" | "desc" | "asc" | "title">("index");
 
   const handleAnalyzeWithUrl = useCallback(async (targetUrl: string) => {
     const trimmed = targetUrl.trim();
@@ -93,7 +115,6 @@ export function YTPlaylistClient() {
         playlistId = parsed.id;
         break;
       }
-      // If user typed raw playlist ID (starts with PL, UU, RD, OLAK)
       if (/^(PL|UU|RD|OLAK)[a-zA-Z0-9_-]+$/.test(line)) {
         playlistId = line;
         break;
@@ -119,6 +140,11 @@ export function YTPlaylistClient() {
       }
 
       setData(json);
+      // Select all videos by default
+      const allIds = new Set<string>((json.videos as VideoInfo[]).map((v) => v.videoId));
+      setSelectedIds(allIds);
+      setRangeStart(1);
+      setRangeEnd(json.videos.length);
       toast.success("Oynatma listesi başarıyla analiz edildi!");
     } catch {
       setError("Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
@@ -128,6 +154,137 @@ export function YTPlaylistClient() {
   }, []);
 
   const handleAnalyze = () => handleAnalyzeWithUrl(url);
+
+  // Active / Selected Videos Calculation
+  const activeVideos = useMemo(() => {
+    if (!data) return [];
+    return data.videos.filter((v) => selectedIds.has(v.videoId));
+  }, [data, selectedIds]);
+
+  const activeTotalSeconds = useMemo(() => {
+    return activeVideos.reduce((sum, v) => sum + v.durationSeconds, 0);
+  }, [activeVideos]);
+
+  const duration = useMemo(() => {
+    return formatDuration(activeTotalSeconds);
+  }, [activeTotalSeconds]);
+
+  // Handle Range Selection
+  const applyRange = (start: number, end: number) => {
+    if (!data) return;
+    const clampedStart = Math.max(1, Math.min(start, data.videos.length));
+    const clampedEnd = Math.max(clampedStart, Math.min(end, data.videos.length));
+    setRangeStart(clampedStart);
+    setRangeEnd(clampedEnd);
+
+    const newSet = new Set<string>();
+    for (let i = clampedStart - 1; i < clampedEnd; i++) {
+      if (data.videos[i]) newSet.add(data.videos[i].videoId);
+    }
+    setSelectedIds(newSet);
+    toast.success(`${clampedStart}. ve ${clampedEnd}. videolar arasındaki aralık seçildi!`);
+  };
+
+  const toggleSelectAll = () => {
+    if (!data) return;
+    if (selectedIds.size === data.videos.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(data.videos.map((v) => v.videoId)));
+    }
+  };
+
+  const toggleVideoSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  // Highs and Lows (Records)
+  const records = useMemo(() => {
+    if (activeVideos.length === 0) return null;
+    const sorted = [...activeVideos].sort((a, b) => b.durationSeconds - a.durationSeconds);
+    const longest = sorted[0];
+    const shortest = sorted[sorted.length - 1];
+    const avgSec = Math.round(activeTotalSeconds / activeVideos.length);
+
+    // Median
+    const midIdx = Math.floor(sorted.length / 2);
+    const medianSec = sorted.length % 2 !== 0
+      ? sorted[midIdx].durationSeconds
+      : Math.round((sorted[midIdx - 1].durationSeconds + sorted[midIdx].durationSeconds) / 2);
+
+    return {
+      longest,
+      shortest,
+      avgSec,
+      medianSec,
+    };
+  }, [activeVideos, activeTotalSeconds]);
+
+  // Duration distribution stats
+  const distribution = useMemo(() => {
+    if (activeVideos.length === 0) return { short: 0, mid: 0, long: 0, epic: 0 };
+    let short = 0;
+    let mid = 0;
+    let long = 0;
+    let epic = 0;
+    activeVideos.forEach((v) => {
+      if (v.durationSeconds < 300) short++;
+      else if (v.durationSeconds < 1200) mid++;
+      else if (v.durationSeconds < 3600) long++;
+      else epic++;
+    });
+    return { short, mid, long, epic };
+  }, [activeVideos]);
+
+  // Daily Schedule Calculations
+  const scheduleInfo = useMemo(() => {
+    if (activeTotalSeconds <= 0 || dailyMinutes <= 0) return null;
+    const effectiveSeconds = activeTotalSeconds / scheduleSpeed;
+    const dailySeconds = dailyMinutes * 60;
+    const daysNeeded = Math.ceil(effectiveSeconds / dailySeconds);
+
+    const completionDate = new Date();
+    completionDate.setDate(completionDate.getDate() + daysNeeded);
+
+    const formatter = new Intl.DateTimeFormat("tr-TR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      weekday: "long",
+    });
+
+    const videosPerDay = (activeVideos.length / Math.max(1, daysNeeded)).toFixed(1);
+    const timeSavedSeconds = activeTotalSeconds - effectiveSeconds;
+
+    return {
+      daysNeeded,
+      dateFormatted: formatter.format(completionDate),
+      videosPerDay,
+      timeSavedFormatted: formatDuration(timeSavedSeconds).short,
+    };
+  }, [activeTotalSeconds, dailyMinutes, scheduleSpeed, activeVideos.length]);
+
+  // Sorted and Filtered catalogue
+  const processedCatalogue = useMemo(() => {
+    if (!data) return [];
+    let list = data.videos.filter((v) =>
+      filterQuery ? v.title.toLowerCase().includes(filterQuery.toLowerCase()) : true
+    );
+
+    if (sortBy === "desc") {
+      list = [...list].sort((a, b) => b.durationSeconds - a.durationSeconds);
+    } else if (sortBy === "asc") {
+      list = [...list].sort((a, b) => a.durationSeconds - b.durationSeconds);
+    } else if (sortBy === "title") {
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title, "tr"));
+    }
+    return list;
+  }, [data, filterQuery, sortBy]);
+
+  const visibleCatalogue = showAllVideos ? processedCatalogue : processedCatalogue.slice(0, 12);
 
   const handleCopy = async (text: string, id: string) => {
     const ok = await copyToClipboard(text);
@@ -142,7 +299,7 @@ export function YTPlaylistClient() {
     if (!data) return;
     const rows = [
       ["#", "Video Basligi", "Sure (saniye)", "Formatli Sure", "Video ID", "YouTube Baglantisi"].join(","),
-      ...data.videos.map((v, i) => {
+      ...activeVideos.map((v, i) => {
         const dur = formatDuration(v.durationSeconds);
         return [
           i + 1,
@@ -160,23 +317,28 @@ export function YTPlaylistClient() {
     link.href = URL.createObjectURL(blob);
     link.download = `playlist-${data.playlistId}.csv`;
     link.click();
-    toast.success("CSV dosyası indirildi!");
+    toast.success("CSV tablosu başarıyla indirildi!");
   };
 
-  const duration = data ? formatDuration(data.totalSeconds) : null;
+  const handleDownloadJSON = () => {
+    if (!data) return;
+    const exportObj = {
+      playlistId: data.playlistId,
+      title: data.title,
+      channelName: data.channelName,
+      totalVideos: activeVideos.length,
+      totalSeconds: activeTotalSeconds,
+      formattedDuration: duration.formatted,
+      videos: activeVideos,
+    };
 
-  const filteredVideos = data?.videos.filter((v) =>
-    filterQuery ? v.title.toLowerCase().includes(filterQuery.toLowerCase()) : true
-  );
-
-  const visibleVideos = showAllVideos
-    ? filteredVideos
-    : filteredVideos?.slice(0, 12);
-
-  // Duration distribution stats
-  const shortCount = data?.videos.filter((v) => v.durationSeconds > 0 && v.durationSeconds < 300).length || 0;
-  const midCount = data?.videos.filter((v) => v.durationSeconds >= 300 && v.durationSeconds < 1200).length || 0;
-  const longCount = data?.videos.filter((v) => v.durationSeconds >= 1200).length || 0;
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `playlist-${data.playlistId}.json`;
+    link.click();
+    toast.success("JSON verisi başarıyla indirildi!");
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -204,15 +366,15 @@ export function YTPlaylistClient() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Stüdyo Sürümü
+                  Stüdyo Pro 2.0
                 </span>
-                <span className="text-xs text-[var(--hub-text-subtle)]">· Hızlı & Limitsiz</span>
+                <span className="text-xs text-[var(--hub-text-subtle)]">· Gelişmiş Playlist Analizi</span>
               </div>
               <h1 className="text-2xl font-black text-white sm:text-3xl">
                 YouTube Playlist Analyzer
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-                Oynatma listesi süresi hesapla, farklı oynatma hızlarını simüle et, HD thumbnail ve CSV dışa aktar.
+                Gerçek canlı süreler, çalışma planlayıcısı, özel video aralıkları, istatistiksel rekorlar ve dışa aktarma.
               </p>
             </div>
           </div>
@@ -245,9 +407,7 @@ export function YTPlaylistClient() {
               data-cursor="Yapıştır"
             />
 
-            {/* Presets & Actions */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              {/* Quick sample chips */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] text-[var(--hub-text-subtle)] mr-1">Örnekler:</span>
                 {EXAMPLE_PLAYLISTS.map((ex) => (
@@ -265,7 +425,6 @@ export function YTPlaylistClient() {
                 ))}
               </div>
 
-              {/* Main Submit Button */}
               <button
                 onClick={handleAnalyze}
                 disabled={loading || !url.trim()}
@@ -317,8 +476,8 @@ export function YTPlaylistClient() {
             transition={{ duration: 0.4 }}
             className="space-y-8"
           >
-            {/* Playlist Info Pill */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/90 p-5 backdrop-blur-xl">
+            {/* Playlist Info Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/90 p-5 backdrop-blur-xl">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
                   Oynatma Listesi
@@ -330,25 +489,106 @@ export function YTPlaylistClient() {
                   </p>
                 )}
               </div>
-              <a
-                href={`https://youtube.com/playlist?list=${data.playlistId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3.5 py-2 text-xs font-semibold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shrink-0"
-                data-cursor="YouTube"
-              >
-                <span>YouTube&apos;da Aç</span>
-                <ExternalLink className="h-3.5 w-3.5 text-indigo-400" />
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://youtube.com/playlist?list=${data.playlistId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3.5 py-2 text-xs font-semibold text-white hover:border-indigo-500/40 hover:bg-indigo-500/10 transition-all shrink-0"
+                  data-cursor="YouTube"
+                >
+                  <span>YouTube&apos;da Aç</span>
+                  <ExternalLink className="h-3.5 w-3.5 text-indigo-400" />
+                </a>
+              </div>
+            </div>
+
+            {/* Range & Video Selection Control Bar */}
+            <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--hub-border)] pb-4">
+                <div className="flex items-center gap-2">
+                  <Sliders className="h-4 w-4 text-indigo-400" />
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    Özel Video Aralığı & Seçim Filtresi
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-[var(--hub-text-muted)]">
+                    Seçili Video: <strong className="text-indigo-300">{activeVideos.length}</strong> / {data.videos.length}
+                  </span>
+                  <button
+                    onClick={toggleSelectAll}
+                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] font-bold text-white hover:border-indigo-500/40 transition-all"
+                  >
+                    {selectedIds.size === data.videos.length ? "Seçimleri Temizle" : "Tümünü Seç"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-xs text-[var(--hub-text-muted)]">Aralık:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={data.videos.length}
+                    value={rangeStart}
+                    onChange={(e) => setRangeStart(parseInt(e.target.value, 10) || 1)}
+                    className="w-16 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2 py-1 text-center text-xs text-white focus:outline-none"
+                  />
+                  <span className="text-xs text-[var(--hub-text-subtle)]">ile</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={data.videos.length}
+                    value={rangeEnd}
+                    onChange={(e) => setRangeEnd(parseInt(e.target.value, 10) || data.videos.length)}
+                    className="w-16 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2 py-1 text-center text-xs text-white focus:outline-none"
+                  />
+                  <span className="text-xs text-[var(--hub-text-subtle)]">arası</span>
+                  <button
+                    onClick={() => applyRange(rangeStart, rangeEnd)}
+                    className="rounded-lg bg-indigo-500/20 border border-indigo-500/40 px-3 py-1 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all"
+                  >
+                    Uygula
+                  </button>
+                </div>
+
+                {/* Quick preset buttons */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    onClick={() => applyRange(1, Math.min(10, data.videos.length))}
+                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
+                  >
+                    İlk 10 Video
+                  </button>
+                  <button
+                    onClick={() => applyRange(1, Math.min(25, data.videos.length))}
+                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
+                  >
+                    İlk 25 Video
+                  </button>
+                  <button
+                    onClick={() => {
+                      const longIds = new Set(data.videos.filter((v) => v.durationSeconds >= 600).map((v) => v.videoId));
+                      setSelectedIds(longIds);
+                      toast.success("10 dakikadan uzun videolar seçildi!");
+                    }}
+                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
+                  >
+                    &gt;10dk Olanlar
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Quick Metrics Grid */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <MetricBox
                 icon={<Video className="h-4 w-4 text-indigo-400" />}
-                title="Toplam Video"
-                value={`${data.totalVideos} adet`}
-                subtitle="Listedeki içerik"
+                title="Seçili Video"
+                value={`${activeVideos.length} adet`}
+                subtitle={`Toplam ${data.videos.length} videodan`}
               />
               <MetricBox
                 icon={<Clock className="h-4 w-4 text-purple-400" />}
@@ -361,22 +601,138 @@ export function YTPlaylistClient() {
                 icon={<Gauge className="h-4 w-4 text-pink-400" />}
                 title="Ortalama Süre"
                 value={
-                  data.totalVideos > 0
-                    ? formatDuration(Math.floor(data.totalSeconds / data.totalVideos)).short
-                    : "—"
+                  records ? formatDuration(records.avgSec).short : "—"
                 }
                 subtitle="Video başına"
               />
               <MetricBox
                 icon={<TrendingUp className="h-4 w-4 text-emerald-400" />}
                 title="2.0× İzleme Süresi"
-                value={formatDurationAtSpeed(data.totalSeconds, 2)}
+                value={formatDurationAtSpeed(activeTotalSeconds, 2)}
                 subtitle={`%50 zaman tasarrufu`}
               />
             </div>
 
+            {/* Statistical Records & Milestones */}
+            {records && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl flex items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <Award className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
+                      En Uzun Video
+                    </span>
+                    <a
+                      href={`https://youtu.be/${records.longest.videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate text-xs font-bold text-white hover:text-purple-300 transition-colors mt-0.5"
+                    >
+                      {records.longest.title}
+                    </a>
+                    <span className="text-xs font-mono font-bold text-purple-300 mt-1 block">
+                      {formatDuration(records.longest.durationSeconds).short}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl flex items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <ZapIcon className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                      En Kısa Video
+                    </span>
+                    <a
+                      href={`https://youtu.be/${records.shortest.videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate text-xs font-bold text-white hover:text-emerald-300 transition-colors mt-0.5"
+                    >
+                      {records.shortest.title}
+                    </a>
+                    <span className="text-xs font-mono font-bold text-emerald-300 mt-1 block">
+                      {formatDuration(records.shortest.durationSeconds).short}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Daily Schedule Study Planner */}
+            <div className="rounded-2xl border border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-[var(--hub-border)] pb-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-indigo-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Günlük Çalışma & İzleme Planlayıcısı</h3>
+                    <p className="text-xs text-[var(--hub-text-muted)]">
+                      Günde ayıracağınız zamana ve izleme hızınıza göre bitiş tarihini hesaplayın.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 items-center">
+                <div>
+                  <label className="text-xs font-bold text-indigo-300 mb-1.5 block">
+                    Günde Kaç Dakika Ayırabilirsiniz?
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={5}
+                      max={720}
+                      step={5}
+                      value={dailyMinutes}
+                      onChange={(e) => setDailyMinutes(parseInt(e.target.value, 10) || 30)}
+                      className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:outline-none"
+                    />
+                    <span className="text-xs text-[var(--hub-text-subtle)] shrink-0">dk / gün</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-indigo-300 mb-1.5 block">
+                    İzleme Hızı
+                  </label>
+                  <select
+                    value={scheduleSpeed}
+                    onChange={(e) => setScheduleSpeed(parseFloat(e.target.value))}
+                    className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:outline-none"
+                  >
+                    <option value={1.0}>1.0× (Normal Hız)</option>
+                    <option value={1.25}>1.25× Hızlı</option>
+                    <option value={1.5}>1.5× Akıcı (Tavsiye Edilen)</option>
+                    <option value={1.75}>1.75× Seri</option>
+                    <option value={2.0}>2.0× Çift Hız</option>
+                  </select>
+                </div>
+
+                {scheduleInfo && (
+                  <div className="rounded-xl border border-indigo-500/40 bg-black/40 p-4 space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
+                      Tahmini Bitiş Planı
+                    </span>
+                    <p className="text-base font-black text-white">
+                      Tam <span className="text-indigo-300">{scheduleInfo.daysNeeded} Gün</span> İçinde Biter
+                    </p>
+                    <p className="text-xs text-[var(--hub-text-muted)]">
+                      Bitiş Tarihi: <strong className="text-white">{scheduleInfo.dateFormatted}</strong>
+                    </p>
+                    <p className="text-[11px] text-emerald-300 mt-1">
+                      (Günde ortalama {scheduleInfo.videosPerDay} video · -{scheduleInfo.timeSavedFormatted} kazanç)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Video Length Breakdown Progress */}
-            {data.totalVideos > 0 && (
+            {activeVideos.length > 0 && (
               <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
@@ -384,37 +740,45 @@ export function YTPlaylistClient() {
                     <span>Süre Dağılım Analizi</span>
                   </span>
                   <span className="text-xs text-[var(--hub-text-muted)]">
-                    Kısa (&lt;5dk), Orta (5-20dk), Uzun (&gt;20dk)
+                    Kısa (&lt;5dk), Orta (5-20dk), Uzun (20-60dk), Epic (&gt;60dk)
                   </span>
                 </div>
 
                 <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden flex gap-1 p-0.5">
                   <div
-                    style={{ width: `${(shortCount / data.totalVideos) * 100}%` }}
+                    style={{ width: `${(distribution.short / activeVideos.length) * 100}%` }}
                     className="h-full rounded-full bg-emerald-500"
-                    title={`Kısa Videolar: ${shortCount}`}
+                    title={`Kısa Videolar: ${distribution.short}`}
                   />
                   <div
-                    style={{ width: `${(midCount / data.totalVideos) * 100}%` }}
+                    style={{ width: `${(distribution.mid / activeVideos.length) * 100}%` }}
                     className="h-full rounded-full bg-indigo-500"
-                    title={`Orta Videolar: ${midCount}`}
+                    title={`Orta Videolar: ${distribution.mid}`}
                   />
                   <div
-                    style={{ width: `${(longCount / data.totalVideos) * 100}%` }}
+                    style={{ width: `${(distribution.long / activeVideos.length) * 100}%` }}
                     className="h-full rounded-full bg-purple-500"
-                    title={`Uzun Videolar: ${longCount}`}
+                    title={`Uzun Videolar: ${distribution.long}`}
+                  />
+                  <div
+                    style={{ width: `${(distribution.epic / activeVideos.length) * 100}%` }}
+                    className="h-full rounded-full bg-pink-500"
+                    title={`Epic Videolar: ${distribution.epic}`}
                   />
                 </div>
 
-                <div className="flex items-center justify-between mt-3 text-[11px] text-[var(--hub-text-muted)]">
+                <div className="flex flex-wrap items-center justify-between mt-3 text-[11px] text-[var(--hub-text-muted)] gap-2">
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" /> Kısa: {shortCount}
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" /> Kısa (&lt;5dk): {distribution.short}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" /> Orta: {midCount}
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" /> Orta (5-20dk): {distribution.mid}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-purple-500" /> Uzun: {longCount}
+                    <span className="h-2 w-2 rounded-full bg-purple-500" /> Uzun (20-60dk): {distribution.long}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-pink-500" /> Epic (&gt;60dk): {distribution.epic}
                   </span>
                 </div>
               </div>
@@ -425,14 +789,14 @@ export function YTPlaylistClient() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Gauge className="h-4 w-4 text-indigo-400" />
-                  <span>Oynatma Hızına Göre Bitiş Süreleri</span>
+                  <span>Oynatma Hızına Göre Bitiş Süreleri Matrixi</span>
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 mb-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-4">
                 {SPEED_PRESETS.map(({ speed, label }) => {
-                  const timeAtSpeed = formatDurationAtSpeed(data.totalSeconds, speed);
-                  const saved = data.totalSeconds - data.totalSeconds / speed;
+                  const timeAtSpeed = formatDurationAtSpeed(activeTotalSeconds, speed);
+                  const saved = activeTotalSeconds - activeTotalSeconds / speed;
                   const savedFmt = formatDuration(saved).short;
                   return (
                     <div
@@ -468,7 +832,7 @@ export function YTPlaylistClient() {
                     value={customSpeed}
                     onChange={(e) => setCustomSpeed(e.target.value)}
                     min="0.25"
-                    max="4"
+                    max="5"
                     step="0.05"
                     className="w-20 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-center text-xs text-white focus:border-indigo-500/50 focus:outline-none"
                   />
@@ -478,13 +842,13 @@ export function YTPlaylistClient() {
                 {customSpeed && !isNaN(parseFloat(customSpeed)) && parseFloat(customSpeed) > 0 && (
                   <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/30">
                     {customSpeed}× Hızda Süre:{" "}
-                    <strong>{formatDurationAtSpeed(data.totalSeconds, parseFloat(customSpeed))}</strong>
+                    <strong>{formatDurationAtSpeed(activeTotalSeconds, parseFloat(customSpeed))}</strong>
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Export and Copy Bar */}
+            {/* Export and Copy Tools */}
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={handleDownloadCSV}
@@ -492,13 +856,22 @@ export function YTPlaylistClient() {
                 data-cursor="CSV İndir"
               >
                 <Download className="h-3.5 w-3.5 text-indigo-400" />
-                <span>CSV Tablosu Olarak İndir</span>
+                <span>CSV Tablosu İndir</span>
+              </button>
+
+              <button
+                onClick={handleDownloadJSON}
+                className="flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-4 py-2.5 text-xs font-bold text-white transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10"
+                data-cursor="JSON İndir"
+              >
+                <FileCode className="h-3.5 w-3.5 text-purple-400" />
+                <span>JSON İndir</span>
               </button>
 
               <button
                 onClick={() =>
                   handleCopy(
-                    `YouTube Playlist: ${data.title}\nKanal: ${data.channelName || "—"}\nToplam Video: ${data.totalVideos}\nToplam Süre: ${duration?.formatted}\n1.5× Hızda: ${formatDurationAtSpeed(data.totalSeconds, 1.5)}\n2.0× Hızda: ${formatDurationAtSpeed(data.totalSeconds, 2)}`,
+                    `🎬 YouTube Playlist: ${data.title}\nKanal: ${data.channelName || "—"}\nSeçili Video: ${activeVideos.length} / ${data.totalVideos}\nToplam Süre: ${duration?.formatted}\n1.5× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 1.5)}\n2.0× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 2.0)}\n\neverythinghub stüdyosu ile analiz edildi: https://everythinghub.vercel.app/tools/yt-playlist-length`,
                     "summary"
                   )
                 }
@@ -508,7 +881,7 @@ export function YTPlaylistClient() {
                 {copiedId === "summary" ? (
                   <Check className="h-3.5 w-3.5 text-emerald-400" />
                 ) : (
-                  <Copy className="h-3.5 w-3.5 text-indigo-400" />
+                  <Share2 className="h-3.5 w-3.5 text-pink-400" />
                 )}
                 <span>Özet Raporu Kopyala</span>
               </button>
@@ -523,32 +896,62 @@ export function YTPlaylistClient() {
                       <Layers className="h-4 w-4 text-indigo-400" />
                       <span>Video Kataloğu & Süreler</span>
                       <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs font-normal text-[var(--hub-text-muted)]">
-                        {filteredVideos?.length} video
+                        {processedCatalogue.length} video
                       </span>
                     </h3>
                   </div>
 
-                  {/* Filter inside table */}
-                  <div className="relative w-full sm:w-60">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--hub-text-subtle)]" />
-                    <input
-                      type="text"
-                      placeholder="Videolarda filtrele..."
-                      value={filterQuery}
-                      onChange={(e) => setFilterQuery(e.target.value)}
-                      className="w-full rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-[var(--hub-text-subtle)] focus:border-indigo-500/50 focus:outline-none"
-                    />
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    {/* Sort Options */}
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as "index" | "desc" | "asc" | "title")}
+                      className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
+                    >
+                      <option value="index">Sıralama: Varsayılan (#)</option>
+                      <option value="desc">Sıralama: En Uzun İlk</option>
+                      <option value="asc">Sıralama: En Kısa İlk</option>
+                      <option value="title">Sıralama: İsim (A-Z)</option>
+                    </select>
+
+                    {/* Filter inside table */}
+                    <div className="relative w-full sm:w-52">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--hub-text-subtle)]" />
+                      <input
+                        type="text"
+                        placeholder="Arayın..."
+                        value={filterQuery}
+                        onChange={(e) => setFilterQuery(e.target.value)}
+                        className="w-full rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-[var(--hub-text-subtle)] focus:border-indigo-500/50 focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="divide-y divide-[var(--hub-border)]">
-                  {visibleVideos?.map((video, i) => {
+                  {visibleCatalogue.map((video, i) => {
                     const dur = formatDuration(video.durationSeconds);
+                    const isSelected = selectedIds.has(video.videoId);
                     return (
                       <div
                         key={video.videoId}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 transition-colors",
+                          isSelected ? "hover:bg-white/[0.03]" : "opacity-40 bg-black/40 hover:opacity-60"
+                        )}
                       >
+                        {/* Selection Checkbox */}
+                        <button
+                          onClick={() => toggleVideoSelect(video.videoId)}
+                          className="shrink-0 text-[var(--hub-text-muted)] hover:text-white"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-4 w-4 text-indigo-400" />
+                          ) : (
+                            <Square className="h-4 w-4" />
+                          )}
+                        </button>
+
                         <span className="w-6 shrink-0 text-center font-mono text-xs text-[var(--hub-text-subtle)]">
                           {i + 1}
                         </span>
@@ -598,7 +1001,7 @@ export function YTPlaylistClient() {
                   })}
                 </div>
 
-                {filteredVideos && filteredVideos.length > 12 && (
+                {processedCatalogue.length > 12 && (
                   <button
                     onClick={() => setShowAllVideos(!showAllVideos)}
                     className="flex w-full items-center justify-center gap-2 border-t border-[var(--hub-border)] px-5 py-3 text-xs font-bold text-indigo-300 hover:bg-white/[0.02] transition-colors"
@@ -609,7 +1012,7 @@ export function YTPlaylistClient() {
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="h-4 w-4" /> {filteredVideos.length - 12} Video Daha Göster
+                        <ChevronDown className="h-4 w-4" /> {processedCatalogue.length - 12} Video Daha Göster
                       </>
                     )}
                   </button>
@@ -654,5 +1057,24 @@ function MetricBox({
         <p className="text-[10px] text-[var(--hub-text-subtle)] mt-0.5 truncate">{subtitle}</p>
       )}
     </div>
+  );
+}
+
+function ZapIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
   );
 }

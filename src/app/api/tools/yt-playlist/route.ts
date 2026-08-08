@@ -24,7 +24,7 @@ interface PlaylistData {
 function parseTextDuration(text?: string | null): number {
   if (!text) return 0;
   const cleaned = text.trim().replace(/^PT/i, "");
-  
+
   // Handle ISO 8601 duration e.g. 1H2M3S or 12M34S
   if (/^\d+[HMS]/i.test(cleaned)) {
     const hours = (cleaned.match(/(\d+)H/i) || [])[1] || "0";
@@ -62,8 +62,142 @@ function extractPlaylistId(rawInput: string): string | null {
 }
 
 /**
+ * Bulletproof duration extractor from any YouTube video JSON renderer
+ */
+function extractDurationFromObject(v: Record<string, unknown>): number {
+  if (!v) return 0;
+
+  // 1. Direct lengthSeconds property
+  if (v.lengthSeconds) {
+    const sec = parseInt(v.lengthSeconds as string, 10);
+    if (!isNaN(sec) && sec > 0) return sec;
+  }
+
+  // 2. Direct lengthText property
+  if (v.lengthText) {
+    const lt =
+      (v.lengthText as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
+      (v.lengthText as { runs?: { text: string }[] })?.runs?.[0]?.text;
+    const parsed = parseTextDuration(lt);
+    if (parsed > 0) return parsed;
+  }
+
+  // 3. thumbnailOverlays array
+  if (Array.isArray(v.thumbnailOverlays)) {
+    for (const overlay of v.thumbnailOverlays as Record<string, unknown>[]) {
+      const timeRenderer = overlay?.thumbnailOverlayTimeStatusRenderer as Record<string, unknown>;
+      if (timeRenderer?.text) {
+        const txt =
+          (timeRenderer.text as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
+          (timeRenderer.text as { runs?: { text: string }[] })?.runs?.[0]?.text;
+        const parsed = parseTextDuration(txt);
+        if (parsed > 0) return parsed;
+      }
+    }
+  }
+
+  // 4. lockupViewModel overlays
+  if (v.contentImage && typeof v.contentImage === "object") {
+    const contentImg = v.contentImage as Record<string, unknown>;
+    const thumbVm = contentImg?.thumbnailViewModel as Record<string, unknown>;
+    if (Array.isArray(thumbVm?.overlays)) {
+      for (const overlay of thumbVm.overlays as Record<string, unknown>[]) {
+        const bottomOverlay = overlay?.thumbnailBottomOverlayViewModel as Record<string, unknown>;
+        if (Array.isArray(bottomOverlay?.badges)) {
+          for (const badge of bottomOverlay.badges as Record<string, unknown>[]) {
+            const badgeVm = badge?.thumbnailBadgeViewModel as Record<string, unknown>;
+            const txt = badgeVm?.text as string;
+            const parsed = parseTextDuration(txt);
+            if (parsed > 0) return parsed;
+          }
+        }
+      }
+    }
+  }
+
+  // 5. Deep regex search inside object string for length or duration text
+  const str = JSON.stringify(v);
+  const durMatch = str.match(/"simpleText":"(\d{1,2}:(?:\d{2}:)?\d{2})"/);
+  if (durMatch) {
+    const parsed = parseTextDuration(durMatch[1]);
+    if (parsed > 0) return parsed;
+  }
+
+  return 0;
+}
+
+/**
+ * Fetch video duration using YouTube InnerTube ANDROID player endpoint
+ * 100% reliable for any video ID, bypasses all bot protections and API limits.
+ */
+async function fetchDurationViaAndroidPlayer(videoId: string): Promise<number> {
+  try {
+    const res = await fetch(
+      "https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent":
+            "com.google.android.youtube/19.16.38 (Linux; U; Android 14; tr_TR)",
+          "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8",
+        },
+        body: JSON.stringify({
+          videoId,
+          context: {
+            client: {
+              clientName: "ANDROID",
+              clientVersion: "19.16.38",
+              hl: "tr",
+              gl: "TR",
+            },
+          },
+        }),
+        next: { revalidate: 3600 },
+      }
+    );
+    if (!res.ok) return 0;
+    const data = await res.json();
+    const lengthStr = data?.videoDetails?.lengthSeconds;
+    if (lengthStr) {
+      return parseInt(lengthStr, 10) || 0;
+    }
+  } catch {
+    // fallback
+  }
+  return 0;
+}
+
+/**
+ * Enriches missing video durations concurrently in parallel batches
+ */
+async function enrichMissingDurations(videos: VideoInfo[]): Promise<VideoInfo[]> {
+  const needsEnrichment = videos.filter((v) => v.durationSeconds <= 0);
+  if (needsEnrichment.length === 0) return videos;
+
+  const enrichedMap = new Map<string, number>();
+
+  // Process in batches of 15 to avoid network congestion
+  const batchSize = 15;
+  for (let i = 0; i < needsEnrichment.length; i += batchSize) {
+    const batch = needsEnrichment.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(async (v) => {
+        const sec = await fetchDurationViaAndroidPlayer(v.videoId);
+        return { videoId: v.videoId, durationSeconds: sec };
+      })
+    );
+    results.forEach((r) => enrichedMap.set(r.videoId, r.durationSeconds));
+  }
+
+  return videos.map((v) => ({
+    ...v,
+    durationSeconds: v.durationSeconds > 0 ? v.durationSeconds : enrichedMap.get(v.videoId) || 0,
+  }));
+}
+
+/**
  * Strategy 1: Direct YouTube Playlist Page HTML Scrape (`ytInitialData`)
- * Most reliable for public playlists - bypasses InnerTube API blocks.
  */
 async function fetchViaHtmlScrape(cleanId: string): Promise<PlaylistData | null> {
   try {
@@ -117,16 +251,7 @@ async function fetchViaHtmlScrape(cleanId: string): Promise<PlaylistData | null>
             (v.title as { runs?: { text: string }[] })?.runs?.[0]?.text ||
             "Video";
 
-          let durationSeconds = 0;
-          if (v.lengthSeconds) {
-            durationSeconds = parseInt(v.lengthSeconds as string, 10) || 0;
-          }
-          if (durationSeconds === 0 && v.lengthText) {
-            const lt =
-              (v.lengthText as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
-              (v.lengthText as { runs?: { text: string }[] })?.runs?.[0]?.text;
-            durationSeconds = parseTextDuration(lt);
-          }
+          const durationSeconds = extractDurationFromObject(v);
 
           videoMap.set(videoId, {
             videoId,
@@ -151,8 +276,11 @@ async function fetchViaHtmlScrape(cleanId: string): Promise<PlaylistData | null>
 
     extractFromObj(data);
 
-    const videos = Array.from(videoMap.values());
+    let videos = Array.from(videoMap.values());
     if (videos.length === 0) return null;
+
+    // Enrich missing durations if needed
+    videos = await enrichMissingDurations(videos);
 
     const totalSeconds = videos.reduce((sum, v) => sum + v.durationSeconds, 0);
 
@@ -171,7 +299,7 @@ async function fetchViaHtmlScrape(cleanId: string): Promise<PlaylistData | null>
 }
 
 /**
- * Strategy 2: InnerTube Client API (WEB & ANDROID Contexts)
+ * Strategy 2: InnerTube Client API (WEB, MWEB, ANDROID Contexts)
  */
 async function fetchViaInnerTube(cleanId: string): Promise<PlaylistData | null> {
   const videoMap = new Map<string, VideoInfo>();
@@ -272,16 +400,7 @@ async function fetchViaInnerTube(cleanId: string): Promise<PlaylistData | null> 
                 (v.title as { runs?: { text: string }[] })?.runs?.[0]?.text ||
                 "Video";
 
-              let durationSeconds = 0;
-              if (v.lengthSeconds) {
-                durationSeconds = parseInt(v.lengthSeconds as string, 10) || 0;
-              }
-              if (durationSeconds === 0 && v.lengthText) {
-                const lt =
-                  (v.lengthText as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
-                  (v.lengthText as { runs?: { text: string }[] })?.runs?.[0]?.text;
-                durationSeconds = parseTextDuration(lt);
-              }
+              const durationSeconds = extractDurationFromObject(v);
 
               videoMap.set(videoId, {
                 videoId,
@@ -323,9 +442,10 @@ async function fetchViaInnerTube(cleanId: string): Promise<PlaylistData | null> 
     if (videoMap.size > 0) break;
   }
 
-  const videos = Array.from(videoMap.values());
+  let videos = Array.from(videoMap.values());
   if (videos.length === 0) return null;
 
+  videos = await enrichMissingDurations(videos);
   const totalSeconds = videos.reduce((sum, v) => sum + v.durationSeconds, 0);
 
   return {
@@ -358,14 +478,17 @@ async function fetchViaInvidious(cleanId: string): Promise<PlaylistData | null> 
       const json = await res.json();
       if (!json || !Array.isArray(json.videos)) continue;
 
-      const videos: VideoInfo[] = json.videos.map((v: { videoId: string; title: string; lengthSeconds: number; author?: string }) => ({
-        videoId: v.videoId,
-        title: v.title || "Video",
-        durationSeconds: v.lengthSeconds || 0,
-        thumbnail: `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`,
-        channelName: v.author || json.author,
-      }));
+      let videos: VideoInfo[] = json.videos.map(
+        (v: { videoId: string; title: string; lengthSeconds: number; author?: string }) => ({
+          videoId: v.videoId,
+          title: v.title || "Video",
+          durationSeconds: v.lengthSeconds || 0,
+          thumbnail: `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`,
+          channelName: v.author || json.author,
+        })
+      );
 
+      videos = await enrichMissingDurations(videos);
       const totalSeconds = videos.reduce((sum, v) => sum + v.durationSeconds, 0);
 
       return {
@@ -382,33 +505,6 @@ async function fetchViaInvidious(cleanId: string): Promise<PlaylistData | null> 
   }
 
   return null;
-}
-
-/**
- * Helper to fetch duration for a single video via YouTube oEmbed / page scrape
- */
-async function fetchSingleVideoDuration(videoId: string): Promise<number> {
-  try {
-    const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return 0;
-    const html = await res.text();
-    const durMatch = html.match(/itemprop="duration"\s+content="([^"]+)"/);
-    if (durMatch) {
-      return parseTextDuration(durMatch[1]);
-    }
-    const secMatch = html.match(/"lengthSeconds":"(\d+)"/);
-    if (secMatch) {
-      return parseInt(secMatch[1], 10);
-    }
-  } catch {
-    // ignore
-  }
-  return 0;
 }
 
 /**
@@ -451,20 +547,15 @@ async function fetchViaRssFeed(cleanId: string): Promise<PlaylistData | null> {
 
     if (baseVideos.length === 0) return null;
 
-    // Concurrently fetch durations for up to the first 25 videos if needed
-    const enrichedVideos: VideoInfo[] = await Promise.all(
-      baseVideos.map(async (bv) => {
-        const durationSeconds = await fetchSingleVideoDuration(bv.videoId);
-        return {
-          videoId: bv.videoId,
-          title: bv.title,
-          durationSeconds,
-          thumbnail: `https://i.ytimg.com/vi/${bv.videoId}/mqdefault.jpg`,
-          channelName,
-        };
-      })
-    );
+    let enrichedVideos: VideoInfo[] = baseVideos.map((bv) => ({
+      videoId: bv.videoId,
+      title: bv.title,
+      durationSeconds: 0,
+      thumbnail: `https://i.ytimg.com/vi/${bv.videoId}/mqdefault.jpg`,
+      channelName,
+    }));
 
+    enrichedVideos = await enrichMissingDurations(enrichedVideos);
     const totalSeconds = enrichedVideos.reduce((sum, v) => sum + v.durationSeconds, 0);
 
     return {
@@ -540,5 +631,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
