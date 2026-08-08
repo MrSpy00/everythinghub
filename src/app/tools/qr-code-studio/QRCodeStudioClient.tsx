@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   QrCode,
   Wifi,
@@ -22,6 +23,12 @@ import {
   Smartphone,
   AtSign,
   Printer,
+  ChevronDown,
+  Layers,
+  Shield,
+  Circle,
+  Square,
+  Sparkle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createQRCodeMatrix, type ErrorCorrectionLevel } from "@/lib/qr-generator";
@@ -44,7 +51,7 @@ type TabType =
 type DotStyle = "square" | "dots" | "rounded" | "extra-rounded" | "diamond" | "leaf" | "fluid";
 type CornerFrameStyle = "square" | "rounded" | "extra-rounded" | "circle" | "leaf" | "shield";
 type CornerDotStyle = "square" | "circle" | "diamond" | "rounded";
-type CtaStyle = "none" | "bottom-pill" | "top-banner" | "boxed-frame" | "polaroid";
+type CtaStyle = "none" | "bottom-pill";
 
 const COLOR_PRESETS = [
   { name: "Royal Indigo", start: "#6366f1", end: "#a855f7", bg: "#090a10" },
@@ -56,7 +63,7 @@ const COLOR_PRESETS = [
 ];
 
 const PRESET_LOGOS = [
-  { id: "none", nameTr: "Yok", nameEn: "None" },
+  { id: "none", nameTr: "Yok / Logosuz", nameEn: "None / No Logo" },
   { id: "hub", nameTr: "EverythingHub", nameEn: "EverythingHub" },
   { id: "wifi", nameTr: "Wi-Fi", nameEn: "Wi-Fi" },
   { id: "whatsapp", nameTr: "WhatsApp", nameEn: "WhatsApp" },
@@ -68,6 +75,101 @@ const PRESET_LOGOS = [
   { id: "mail", nameTr: "E-Posta", nameEn: "Email" },
   { id: "map", nameTr: "Konum", nameEn: "Location" },
 ];
+
+interface StudioSelectOption<T extends string> {
+  value: T;
+  label: string;
+  icon?: React.ElementType;
+}
+
+interface StudioSelectProps<T extends string> {
+  value: T;
+  onChange: (val: T) => void;
+  options: StudioSelectOption<T>[];
+  label?: string;
+}
+
+function StudioSelect<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+}: StudioSelectProps<T>) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selected = options.find((o) => o.value === value) || options[0];
+  const SelectedIcon = selected?.icon;
+
+  return (
+    <div className="relative w-full" ref={ref}>
+      {label && <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{label}</label>}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white backdrop-blur-2xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer shadow-md"
+      >
+        <div className="flex items-center gap-2 truncate">
+          {SelectedIcon && <SelectedIcon className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
+          <span className="truncate">{selected?.label}</span>
+        </div>
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-zinc-400 transition-transform duration-200 shrink-0 ${
+            open ? "rotate-180 text-white" : ""
+          }`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 4, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl border border-white/15 bg-[#0e1017]/95 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/80 max-h-60 overflow-y-auto no-scrollbar"
+          >
+            {options.map((opt) => {
+              const OptIcon = opt.icon;
+              const isSelected = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                  className={`flex items-center justify-between w-full rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-indigo-500/20 text-indigo-200 border border-indigo-500/30"
+                      : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    {OptIcon && <OptIcon className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
+                    <span className="truncate">{opt.label}</span>
+                  </div>
+                  {isSelected && <Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export function QRCodeStudioClient() {
   const { lang } = useLanguage();
@@ -146,21 +248,40 @@ export function QRCodeStudioClient() {
   const [customCornerColor, setCustomCornerColor] = useState(false);
 
   const [ecLevel, setEcLevel] = useState<ErrorCorrectionLevel>("H");
-  const [resolution, setResolution] = useState<number>(1024);
 
   // Logo & CTA
   const [selectedLogo, setSelectedLogo] = useState<string>("hub");
   const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
+  const [uploadedImgElement, setUploadedImgElement] = useState<HTMLImageElement | null>(null);
   const [logoSizePercent, setLogoSizePercent] = useState<number>(22);
-  const [logoShape, setLogoShape] = useState<"circle" | "rounded" | "square" | "none">("rounded");
+  const [logoShape, setLogoShape] = useState<"circle" | "rounded" | "square">("rounded");
 
   const [ctaStyle, setCtaStyle] = useState<CtaStyle>("none");
-  const [ctaText, setCtaText] = useState(isTurkish ? "BANA TARA" : "SCAN ME");
+  const [ctaText, setCtaText] = useState(isTurkish ? "BENİ TARA" : "SCAN ME");
   const [ctaBgColor, setCtaBgColor] = useState("#6366f1");
 
   const [copied, setCopied] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Sync CTA default text when language changes
+  useEffect(() => {
+    setCtaText(isTurkish ? "BENİ TARA" : "SCAN ME");
+  }, [isTurkish]);
+
+  // Pre-load custom uploaded logo image to avoid async canvas race conditions
+  useEffect(() => {
+    if (uploadedLogo) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = uploadedLogo;
+      img.onload = () => {
+        setUploadedImgElement(img);
+      };
+    } else {
+      setUploadedImgElement(null);
+    }
+  }, [uploadedLogo]);
 
   // Build Payload
   const getPayload = useCallback((): string => {
@@ -328,7 +449,7 @@ export function QRCodeStudioClient() {
     };
 
     // Helper: Is inside center logo exclusion zone?
-    const hasLogo = selectedLogo !== "none" || !!uploadedLogo;
+    const hasLogo = selectedLogo !== "none";
     const logoCells = hasLogo ? Math.floor(matrixSize * (logoSizePercent / 100)) : 0;
     const centerStart = Math.floor((matrixSize - logoCells) / 2);
     const centerEnd = centerStart + logoCells;
@@ -441,30 +562,153 @@ export function QRCodeStudioClient() {
       const ly = padding + centerStart * cellSize;
       const lw = logoCells * cellSize;
       const lh = logoCells * cellSize;
+      const cx = lx + lw / 2;
+      const cy = ly + lh / 2;
 
-      // Draw Badge Background
+      // Draw Badge Background Ring
       ctx.fillStyle = transparentBg ? "#090a10" : bgColor;
       ctx.beginPath();
       if (logoShape === "circle") {
-        ctx.arc(lx + lw / 2, ly + lh / 2, lw / 2, 0, Math.PI * 2);
+        ctx.arc(cx, cy, lw / 2, 0, Math.PI * 2);
       } else if (logoShape === "rounded") {
         ctx.roundRect(lx, ly, lw, lh, lw * 0.25);
-      } else if (logoShape === "square") {
+      } else {
         ctx.rect(lx, ly, lw, lh);
       }
       ctx.fill();
 
-      // Draw Inner Logo Glyph or Image
-      if (uploadedLogo && selectedLogo === "uploaded") {
-        const img = new Image();
-        img.src = uploadedLogo;
-        img.onload = () => {
-          ctx.drawImage(img, lx + lw * 0.15, ly + lh * 0.15, lw * 0.7, lh * 0.7);
-        };
+      // Draw Inner Preset Logo or Custom Uploaded Image
+      if (uploadedLogo && selectedLogo === "uploaded" && uploadedImgElement) {
+        ctx.drawImage(uploadedImgElement, lx + lw * 0.15, ly + lh * 0.15, lw * 0.7, lh * 0.7);
       } else if (selectedLogo === "hub") {
-        ctx.fillStyle = "#818cf8";
+        // Hexagon Studio Symbol
+        const r = lw * 0.34;
+        ctx.fillStyle = "#6366f1";
         ctx.beginPath();
-        ctx.arc(lx + lw / 2, ly + lh / 2, lw * 0.32, 0, Math.PI * 2);
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI) / 3 - Math.PI / 6;
+          const px = cx + r * Math.cos(a);
+          const py = cy + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.42, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (selectedLogo === "wifi") {
+        ctx.strokeStyle = "#6366f1";
+        ctx.lineWidth = lw * 0.08;
+        ctx.lineCap = "round";
+        for (let i = 1; i <= 3; i++) {
+          ctx.beginPath();
+          ctx.arc(cx, cy + lw * 0.08, (lw * 0.1) * i, Math.PI * 1.25, Math.PI * 1.75);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#6366f1";
+        ctx.beginPath();
+        ctx.arc(cx, cy + lw * 0.08, lw * 0.04, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (selectedLogo === "whatsapp") {
+        ctx.fillStyle = "#25d366";
+        ctx.beginPath();
+        ctx.arc(cx, cy, lw * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, lw * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (selectedLogo === "youtube") {
+        const bw = lw * 0.65;
+        const bh = lh * 0.45;
+        ctx.fillStyle = "#ff0000";
+        ctx.beginPath();
+        ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, bh * 0.3);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(cx - bw * 0.12, cy - bh * 0.28);
+        ctx.lineTo(cx + bw * 0.18, cy);
+        ctx.lineTo(cx - bw * 0.12, cy + bh * 0.28);
+        ctx.closePath();
+        ctx.fill();
+      } else if (selectedLogo === "instagram") {
+        const s = lw * 0.6;
+        const grad = ctx.createLinearGradient(cx - s/2, cy + s/2, cx + s/2, cy - s/2);
+        grad.addColorStop(0, "#f09433");
+        grad.addColorStop(0.5, "#dc2743");
+        grad.addColorStop(1, "#bc1888");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(cx - s / 2, cy - s / 2, s, s, s * 0.28);
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = s * 0.1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, s * 0.24, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (selectedLogo === "x") {
+        const s = lw * 0.55;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, s * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#000000";
+        ctx.font = `bold ${Math.round(lw * 0.42)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("X", cx, cy);
+      } else if (selectedLogo === "bitcoin") {
+        ctx.fillStyle = "#f7931a";
+        ctx.beginPath();
+        ctx.arc(cx, cy, lw * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `bold ${Math.round(lw * 0.42)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("₿", cx, cy + lw * 0.02);
+      } else if (selectedLogo === "phone") {
+        ctx.fillStyle = "#3b82f6";
+        ctx.beginPath();
+        ctx.arc(cx, cy, lw * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(cx - lw * 0.1, cy - lw * 0.16, lw * 0.2, lw * 0.32);
+        ctx.fillStyle = "#3b82f6";
+        ctx.fillRect(cx - lw * 0.06, cy - lw * 0.12, lw * 0.12, lw * 0.22);
+      } else if (selectedLogo === "mail") {
+        ctx.fillStyle = "#8b5cf6";
+        ctx.beginPath();
+        ctx.arc(cx, cy, lw * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        const ew = lw * 0.42;
+        const eh = lw * 0.28;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(cx - ew / 2, cy - eh / 2, ew, eh);
+        ctx.strokeStyle = "#8b5cf6";
+        ctx.lineWidth = lw * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(cx - ew / 2, cy - eh / 2);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx + ew / 2, cy - eh / 2);
+        ctx.stroke();
+      } else if (selectedLogo === "map") {
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(cx, cy - lw * 0.06, lw * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx - lw * 0.18, cy - lw * 0.02);
+        ctx.lineTo(cx, cy + lw * 0.26);
+        ctx.lineTo(cx + lw * 0.18, cy - lw * 0.02);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy - lw * 0.06, lw * 0.08, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -483,7 +727,7 @@ export function QRCodeStudioClient() {
       ctx.font = "bold 13px Inter, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(ctaText.toUpperCase(), qrSize / 2, ctaY + 22);
+      ctx.fillText((ctaText || (isTurkish ? "BENİ TARA" : "SCAN ME")).toUpperCase(), qrSize / 2, ctaY + 22);
     }
   }, [
     getPayload,
@@ -501,11 +745,13 @@ export function QRCodeStudioClient() {
     customCornerColor,
     selectedLogo,
     uploadedLogo,
+    uploadedImgElement,
     logoSizePercent,
     logoShape,
     ctaStyle,
     ctaText,
     ctaBgColor,
+    isTurkish,
   ]);
 
   useEffect(() => {
@@ -517,47 +763,45 @@ export function QRCodeStudioClient() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // High resolution render
-    const exportCanvas = document.createElement("canvas");
-    exportCanvas.width = canvas.width * scale;
-    exportCanvas.height = canvas.height * scale;
-    const expCtx = exportCanvas.getContext("2d");
-    if (!expCtx) return;
-
-    expCtx.imageSmoothingEnabled = false;
-    expCtx.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
-
-    const a = document.createElement("a");
-    a.download = `EverythingHub_QRCode_${activeTab}_${scale}x.png`;
-    a.href = exportCanvas.toDataURL("image/png");
-    a.click();
-    toast.success(isTurkish ? "Yüksek çözünürlüklü PNG indirildi!" : "High-Res PNG downloaded!");
+    const link = document.createElement("a");
+    link.download = `EverythingHub_QRCode_${Date.now()}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    toast.success(isTurkish ? "HD PNG başarıyla indirildi!" : "HD PNG downloaded successfully!");
   };
 
   const downloadSVG = () => {
     const payload = getPayload();
     const matrix = createQRCodeMatrix(payload, ecLevel);
-    const size = matrix.length;
-    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${resolution}" height="${resolution}">`;
+    const matrixSize = matrix.length;
+    const qrSize = 512;
+    const padding = 28;
+
+    let svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${qrSize} ${qrSize}" width="${qrSize}" height="${qrSize}">`;
     if (!transparentBg) {
-      svg += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
+      svgStr += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
     }
-    svg += `<path d="`;
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (matrix[r][c]) {
-          svg += `M${c},${r}h1v1h-1z `;
-        }
+
+    const availableArea = qrSize - padding * 2;
+    const cellSize = availableArea / matrixSize;
+
+    svgStr += `<g fill="${fgColor}">`;
+    for (let r = 0; r < matrixSize; r++) {
+      for (let c = 0; c < matrixSize; c++) {
+        if (!matrix[r][c]) continue;
+        const x = padding + c * cellSize;
+        const y = padding + r * cellSize;
+        svgStr += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="${dotStyle === "rounded" ? cellSize * 0.3 : 0}"/>`;
       }
     }
-    svg += `" fill="${fgColor}"/></svg>`;
+    svgStr += `</g></svg>`;
 
-    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const blob = new Blob([svgStr], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.download = `EverythingHub_QRCode_${activeTab}.svg`;
-    a.href = url;
-    a.click();
+    const link = document.createElement("a");
+    link.download = `EverythingHub_QRCode_${Date.now()}.svg`;
+    link.href = url;
+    link.click();
     URL.revokeObjectURL(url);
     toast.success(isTurkish ? "Vektörel SVG indirildi!" : "Vector SVG downloaded!");
   };
@@ -575,26 +819,26 @@ export function QRCodeStudioClient() {
         }
       });
     } catch {
-      toast.error(isTurkish ? "Kopyalama başarısız oldu." : "Failed to copy image.");
+      toast.error(isTurkish ? "Panoya kopyalama desteklenmiyor." : "Clipboard copy not supported.");
     }
   };
 
   const handlePrint = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const dataUrl = canvas.toDataURL();
     const win = window.open("");
-    if (!win) return;
-    win.document.write(
-      `<html><head><title>Print EverythingHub QR</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><img src="${canvas.toDataURL()}" style="max-width:80%;max-height:80%;" onload="window.print();window.close();"/></body></html>`
-    );
-    win.document.close();
+    if (win) {
+      win.document.write(`<img src="${dataUrl}" onload="window.print();window.close();"/>`);
+      win.document.close();
+    }
   };
 
   const TABS = [
-    { id: "url", labelTr: "Web Sitesi", labelEn: "Website", icon: Globe },
-    { id: "text", labelTr: "Düz Metin", labelEn: "Plain Text", icon: FileCode2 },
-    { id: "wifi", labelTr: "Wi-Fi Ağı", labelEn: "Wi-Fi Network", icon: Wifi },
-    { id: "vcard", labelTr: "Dijital Kartvizit", labelEn: "vCard 3.0", icon: User },
+    { id: "url", labelTr: "Web URL", labelEn: "Web URL", icon: Globe },
+    { id: "text", labelTr: "Metin", labelEn: "Text", icon: QrCode },
+    { id: "wifi", labelTr: "Wi-Fi Ağ", labelEn: "Wi-Fi Network", icon: Wifi },
+    { id: "vcard", labelTr: "vCard Kartvizit", labelEn: "vCard Contact", icon: User },
     { id: "email", labelTr: "E-Posta", labelEn: "Email", icon: Mail },
     { id: "sms", labelTr: "SMS Mesaj", labelEn: "SMS", icon: Smartphone },
     { id: "whatsapp", labelTr: "WhatsApp", labelEn: "WhatsApp", icon: MessageCircle },
@@ -709,20 +953,16 @@ export function QRCodeStudioClient() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                    <div>
-                      <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                        {isTurkish ? "Şifreleme Türü" : "Encryption Type"}
-                      </label>
-                      <select
-                        value={wifiType}
-                        onChange={(e) => setWifiType(e.target.value as any)}
-                        className="w-full rounded-2xl border border-white/10 bg-[#181920] px-4 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none cursor-pointer"
-                      >
-                        <option value="WPA">WPA / WPA2 / WPA3</option>
-                        <option value="WEP">WEP</option>
-                        <option value="nopass">{isTurkish ? "Şifresiz (Açık Ağ)" : "Open / No Password"}</option>
-                      </select>
-                    </div>
+                    <StudioSelect
+                      label={isTurkish ? "Şifreleme Türü" : "Encryption Type"}
+                      value={wifiType}
+                      onChange={(val) => setWifiType(val as any)}
+                      options={[
+                        { value: "WPA", label: "WPA / WPA2 / WPA3", icon: Shield },
+                        { value: "WEP", label: "WEP", icon: Layers },
+                        { value: "nopass", label: isTurkish ? "Şifresiz (Açık Ağ)" : "Open / No Password", icon: Globe },
+                      ]}
+                    />
                     <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer pt-4">
                       <input
                         type="checkbox"
@@ -758,46 +998,6 @@ export function QRCodeStudioClient() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{isTurkish ? "Şirket / Organizasyon" : "Organization"}</label>
-                      <input
-                        type="text"
-                        value={vcardOrg}
-                        onChange={(e) => setVcardOrg(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{isTurkish ? "Unvan / Görev" : "Job Title"}</label>
-                      <input
-                        type="text"
-                        value={vcardTitle}
-                        onChange={(e) => setVcardTitle(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{isTurkish ? "Telefon" : "Phone"}</label>
-                      <input
-                        type="text"
-                        value={vcardPhone}
-                        onChange={(e) => setVcardPhone(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{isTurkish ? "E-Posta" : "Email"}</label>
-                      <input
-                        type="email"
-                        value={vcardEmail}
-                        onChange={(e) => setVcardEmail(e.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -821,15 +1021,6 @@ export function QRCodeStudioClient() {
                       className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{isTurkish ? "Mesaj Metni" : "Message Body"}</label>
-                    <textarea
-                      rows={2}
-                      value={emailBody}
-                      onChange={(e) => setEmailBody(e.target.value)}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
                 </div>
               )}
 
@@ -844,17 +1035,6 @@ export function QRCodeStudioClient() {
                       value={waPhone}
                       onChange={(e) => setWaPhone(e.target.value)}
                       placeholder="+905551234567"
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                      {isTurkish ? "Hazır Karşılama Mesajı" : "Pre-filled Message"}
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={waMessage}
-                      onChange={(e) => setWaMessage(e.target.value)}
                       className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
@@ -877,17 +1057,6 @@ export function QRCodeStudioClient() {
                         {coin}
                       </button>
                     ))}
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                      {isTurkish ? "Cüzdan Adresi" : "Wallet Address"}
-                    </label>
-                    <input
-                      type="text"
-                      value={cryptoAddress}
-                      onChange={(e) => setCryptoAddress(e.target.value)}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-mono text-white focus:border-amber-500 focus:outline-none"
-                    />
                   </div>
                 </div>
               )}
@@ -996,57 +1165,45 @@ export function QRCodeStudioClient() {
               </div>
             </div>
 
-            {/* Pattern & Corner Customizers */}
+            {/* Pattern & Corner Customizer Dropdowns */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-white/10 pt-4">
-              <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                  {isTurkish ? "Gövde Deseni" : "Dot Pattern"}
-                </label>
-                <select
-                  value={dotStyle}
-                  onChange={(e) => setDotStyle(e.target.value as DotStyle)}
-                  className="w-full rounded-xl border border-white/10 bg-[#181920] px-3 py-2 text-xs font-bold text-white cursor-pointer"
-                >
-                  <option value="square">{isTurkish ? "Kare (Klasik)" : "Square (Classic)"}</option>
-                  <option value="rounded">{isTurkish ? "Yuvarlatılmış" : "Rounded"}</option>
-                  <option value="extra-rounded">{isTurkish ? "Pürüzsüz Daire" : "Smooth Circle"}</option>
-                  <option value="diamond">{isTurkish ? "Elmas" : "Diamond"}</option>
-                  <option value="leaf">{isTurkish ? "Yaprak" : "Leaf"}</option>
-                  <option value="fluid">{isTurkish ? "Akışkan Fluid" : "Connected Fluid"}</option>
-                </select>
-              </div>
+              <StudioSelect
+                label={isTurkish ? "Gövde Deseni" : "Dot Pattern"}
+                value={dotStyle}
+                onChange={(val) => setDotStyle(val as DotStyle)}
+                options={[
+                  { value: "square", label: isTurkish ? "Kare (Klasik)" : "Square (Classic)", icon: Square },
+                  { value: "rounded", label: isTurkish ? "Yuvarlatılmış" : "Rounded", icon: Circle },
+                  { value: "extra-rounded", label: isTurkish ? "Pürüzsüz Daire" : "Smooth Circle", icon: Circle },
+                  { value: "diamond", label: isTurkish ? "Elmas" : "Diamond", icon: Sparkle },
+                  { value: "leaf", label: isTurkish ? "Yaprak" : "Leaf", icon: Layers },
+                  { value: "fluid", label: isTurkish ? "Akışkan Fluid" : "Connected Fluid", icon: Sparkles },
+                ]}
+              />
 
-              <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                  {isTurkish ? "Köşe Çerçeve Stili" : "Corner Eye Frame"}
-                </label>
-                <select
-                  value={cornerFrameStyle}
-                  onChange={(e) => setCornerFrameStyle(e.target.value as CornerFrameStyle)}
-                  className="w-full rounded-xl border border-white/10 bg-[#181920] px-3 py-2 text-xs font-bold text-white cursor-pointer"
-                >
-                  <option value="square">{isTurkish ? "Kare" : "Square"}</option>
-                  <option value="rounded">{isTurkish ? "Yuvarlatılmış Kutu" : "Rounded Box"}</option>
-                  <option value="circle">{isTurkish ? "Daire" : "Circle"}</option>
-                  <option value="shield">{isTurkish ? "Kalkan" : "Shield"}</option>
-                </select>
-              </div>
+              <StudioSelect
+                label={isTurkish ? "Köşe Çerçeve Stili" : "Corner Eye Frame"}
+                value={cornerFrameStyle}
+                onChange={(val) => setCornerFrameStyle(val as CornerFrameStyle)}
+                options={[
+                  { value: "square", label: isTurkish ? "Kare" : "Square", icon: Square },
+                  { value: "rounded", label: isTurkish ? "Yuvarlatılmış Kutu" : "Rounded Box", icon: Circle },
+                  { value: "circle", label: isTurkish ? "Daire" : "Circle", icon: Circle },
+                  { value: "shield", label: isTurkish ? "Kalkan" : "Shield", icon: Shield },
+                ]}
+              />
 
-              <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                  {isTurkish ? "Köşe İç Noktası" : "Corner Inner Dot"}
-                </label>
-                <select
-                  value={cornerDotStyle}
-                  onChange={(e) => setCornerDotStyle(e.target.value as CornerDotStyle)}
-                  className="w-full rounded-xl border border-white/10 bg-[#181920] px-3 py-2 text-xs font-bold text-white cursor-pointer"
-                >
-                  <option value="circle">{isTurkish ? "Daire" : "Circle"}</option>
-                  <option value="square">{isTurkish ? "Kare" : "Square"}</option>
-                  <option value="diamond">{isTurkish ? "Elmas" : "Diamond"}</option>
-                  <option value="rounded">{isTurkish ? "Yuvarlatılmış" : "Rounded"}</option>
-                </select>
-              </div>
+              <StudioSelect
+                label={isTurkish ? "Köşe İç Noktası" : "Corner Inner Dot"}
+                value={cornerDotStyle}
+                onChange={(val) => setCornerDotStyle(val as CornerDotStyle)}
+                options={[
+                  { value: "circle", label: isTurkish ? "Daire" : "Circle", icon: Circle },
+                  { value: "square", label: isTurkish ? "Kare" : "Square", icon: Square },
+                  { value: "diamond", label: isTurkish ? "Elmas" : "Diamond", icon: Sparkle },
+                  { value: "rounded", label: isTurkish ? "Yuvarlatılmış" : "Rounded", icon: Circle },
+                ]}
+              />
             </div>
 
             {/* Center Brand Logo & CTA Bar */}
@@ -1056,21 +1213,29 @@ export function QRCodeStudioClient() {
                   {isTurkish ? "Merkez Logo / İkon" : "Center Brand Logo"}
                 </label>
                 <div className="flex items-center gap-2">
-                  <select
+                  <StudioSelect
                     value={selectedLogo}
-                    onChange={(e) => setSelectedLogo(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-[#181920] px-3 py-2 text-xs font-bold text-white cursor-pointer"
-                  >
-                    {PRESET_LOGOS.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {isTurkish ? l.nameTr : l.nameEn}
-                      </option>
-                    ))}
-                    {uploadedLogo && <option value="uploaded">{isTurkish ? "Özel Yüklenen Logo" : "Uploaded Custom Logo"}</option>}
-                  </select>
+                    onChange={(val) => setSelectedLogo(val)}
+                    options={[
+                      ...PRESET_LOGOS.map((l) => ({
+                        value: l.id,
+                        label: isTurkish ? l.nameTr : l.nameEn,
+                        icon: QrCode,
+                      })),
+                      ...(uploadedLogo
+                        ? [
+                            {
+                              value: "uploaded",
+                              label: isTurkish ? "Özel Yüklenen Logo" : "Uploaded Custom Logo",
+                              icon: Upload,
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] text-zinc-300 transition-all shrink-0 cursor-pointer"
+                    className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] text-zinc-300 transition-all shrink-0 cursor-pointer shadow-md"
                     title={isTurkish ? "Özel Logo Yükle" : "Upload Custom Logo"}
                   >
                     <Upload className="h-4 w-4" />
@@ -1085,19 +1250,19 @@ export function QRCodeStudioClient() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                  {isTurkish ? "Harekete Geçirici Çerçeve (CTA)" : "Call-to-Action (CTA) Frame"}
-                </label>
-                <select
-                  value={ctaStyle}
-                  onChange={(e) => setCtaStyle(e.target.value as CtaStyle)}
-                  className="w-full rounded-xl border border-white/10 bg-[#181920] px-3 py-2 text-xs font-bold text-white cursor-pointer"
-                >
-                  <option value="none">{isTurkish ? "Çerçevesiz" : "None / Frameless"}</option>
-                  <option value="bottom-pill">{isTurkish ? "Alt Rozet (SCAN ME)" : "Bottom Badge (SCAN ME)"}</option>
-                </select>
-              </div>
+              <StudioSelect
+                label={isTurkish ? "Harekete Geçirici Çerçeve (CTA)" : "Call-to-Action (CTA) Frame"}
+                value={ctaStyle}
+                onChange={(val) => setCtaStyle(val as CtaStyle)}
+                options={[
+                  { value: "none", label: isTurkish ? "Çerçevesiz" : "None / Frameless", icon: Layers },
+                  {
+                    value: "bottom-pill",
+                    label: isTurkish ? "Alt Rozet (BENİ TARA)" : "Bottom Badge (SCAN ME)",
+                    icon: QrCode,
+                  },
+                ]}
+              />
             </div>
           </div>
         </div>
