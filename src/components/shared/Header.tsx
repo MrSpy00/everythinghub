@@ -63,7 +63,7 @@ export function Header() {
   };
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
     
     const handleOpenPalette = () => setCommandPaletteOpen(true);
@@ -77,22 +77,20 @@ export function Header() {
 
   return (
     <>
-      <header
-        className={cn(
-          "z-50 transition-all duration-300 ease-out",
-          scrolled
-            ? "fixed top-3 inset-x-3 sm:inset-x-6 max-w-7xl 2xl:max-w-8xl mx-auto"
-            : "sticky top-0 w-full bg-transparent border-none"
-        )}
-      >
-        <div
-          className={cn(
-            "mx-auto flex items-center justify-between transition-all duration-300 ease-out",
-            scrolled
-              ? "h-14 w-full rounded-2xl border border-white/15 bg-[#09090b]/80 backdrop-blur-3xl shadow-2xl shadow-black/80 px-4 sm:px-6"
-              : "h-16 max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8 bg-transparent border-none shadow-none"
-          )}
-        >
+      <header className="fixed top-0 inset-x-0 z-50 w-full pointer-events-none pt-2 sm:pt-3">
+        <div className="mx-auto max-w-7xl 2xl:max-w-8xl px-3 sm:px-6">
+          <motion.div
+            initial={false}
+            animate={{
+              backgroundColor: scrolled ? "rgba(9, 9, 11, 0.85)" : "rgba(0, 0, 0, 0)",
+              borderColor: scrolled ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0)",
+              boxShadow: scrolled ? "0 25px 50px -12px rgba(0, 0, 0, 0.8)" : "0 0 0 0 rgba(0, 0, 0, 0)",
+              borderRadius: scrolled ? "16px" : "0px",
+              backdropFilter: scrolled ? "blur(24px)" : "blur(0px)",
+            }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="flex h-14 w-full items-center justify-between px-4 sm:px-6 border pointer-events-auto"
+          >
           {/* Brand Logo */}
           <Link
             href="/"
@@ -191,7 +189,9 @@ export function Header() {
             </AnimatePresence>
           </button>
         </div>
-      </div>
+      </motion.div>
+    </div>
+      </header>
 
       {/* Mobile animated dropdown drawer */}
       <AnimatePresence>
@@ -262,8 +262,7 @@ export function Header() {
             </motion.nav>
           </motion.div>
         )}
-      </AnimatePresence>
-      </header>
+        </AnimatePresence>
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
