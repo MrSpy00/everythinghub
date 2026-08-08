@@ -82,7 +82,7 @@ export function Header() {
           "z-50 transition-all duration-300 ease-out",
           scrolled
             ? "fixed top-3 inset-x-3 sm:inset-x-6 max-w-7xl 2xl:max-w-8xl mx-auto"
-            : "sticky top-0 w-full bg-transparent border-b border-white/[0.06]"
+            : "sticky top-0 w-full bg-transparent border-none"
         )}
       >
         <div
@@ -90,7 +90,7 @@ export function Header() {
             "mx-auto flex items-center justify-between transition-all duration-300 ease-out",
             scrolled
               ? "h-14 w-full rounded-2xl border border-white/15 bg-[#09090b]/80 backdrop-blur-3xl shadow-2xl shadow-black/80 px-4 sm:px-6"
-              : "h-16 max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8 bg-transparent"
+              : "h-16 max-w-7xl 2xl:max-w-8xl px-4 sm:px-6 lg:px-8 bg-transparent border-none shadow-none"
           )}
         >
           {/* Brand Logo */}
