@@ -13,10 +13,10 @@ interface NeonBorderProps {
 }
 
 export function NeonBorder({
-  color = "#8b5cf6",
-  rounded = 20,
-  glow = 40,
-  speed = 10,
+  color = "#a855f7",
+  rounded = 22,
+  glow = 50,
+  speed = 8,
   children,
   className,
   style,
@@ -29,26 +29,26 @@ export function NeonBorder({
         ...style,
       }}
     >
-      {/* Outer Ambient Soft Glow - Hardware Accelerated Pure CSS Animation */}
+      {/* Outer Ambient Diffused Neon Glow - GPU Accelerated Conic Sweep */}
       <div
-        className="absolute -inset-[1px] pointer-events-none transition-opacity duration-500 opacity-30 group-hover:opacity-60 overflow-hidden"
+        className="absolute -inset-[2px] pointer-events-none transition-opacity duration-500 opacity-40 group-hover:opacity-85 overflow-hidden"
         style={{
-          borderRadius: rounded + 1,
+          borderRadius: rounded + 2,
         }}
       >
         <div
-          className="absolute inset-[-150%] animate-[spin_8s_linear_infinite] opacity-75 pointer-events-none"
+          className="absolute inset-[-150%] animate-[spin_6s_linear_infinite] opacity-80 pointer-events-none"
           style={{
-            background: `conic-gradient(from 0deg at 50% 50%, rgba(139,92,246,0.6), rgba(99,102,241,0.6), rgba(16,185,129,0.5), transparent 65%, rgba(139,92,246,0.6))`,
-            filter: `blur(${Math.max(10, glow * 0.25)}px)`,
+            background: `conic-gradient(from 0deg at 50% 50%, rgba(168,85,247,0.85), rgba(99,102,241,0.85), rgba(16,185,129,0.75), rgba(236,72,153,0.75), rgba(168,85,247,0.85))`,
+            filter: `blur(${Math.max(12, glow * 0.3)}px)`,
             willChange: "transform",
           }}
         />
       </div>
 
-      {/* Inner Mask Border - Pure GPU Rotation */}
+      {/* Inner Precision Neon Mask Border */}
       <div
-        className="absolute inset-0 pointer-events-none p-[1px] overflow-hidden"
+        className="absolute inset-0 pointer-events-none p-[1.5px] overflow-hidden"
         style={{
           borderRadius: rounded,
           WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
@@ -57,15 +57,15 @@ export function NeonBorder({
         }}
       >
         <div
-          className="absolute inset-[-150%] animate-[spin_8s_linear_infinite] opacity-80 pointer-events-none"
+          className="absolute inset-[-150%] animate-[spin_6s_linear_infinite] opacity-90 pointer-events-none"
           style={{
-            background: `conic-gradient(from 0deg at 50% 50%, rgba(139,92,246,0.7), rgba(99,102,241,0.7), rgba(16,185,129,0.6), transparent 60%, rgba(139,92,246,0.7))`,
+            background: `conic-gradient(from 0deg at 50% 50%, rgba(168,85,247,0.9), rgba(99,102,241,0.9), rgba(16,185,129,0.8), rgba(236,72,153,0.8), rgba(168,85,247,0.9))`,
             willChange: "transform",
           }}
         />
       </div>
 
-      {/* Inner Interactive Content Container */}
+      {/* Inner Container */}
       <div
         className="relative z-10 w-full h-full"
         style={{ borderRadius: rounded }}

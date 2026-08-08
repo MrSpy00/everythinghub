@@ -85,7 +85,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
 
       {/* Hero Quick Search Bar - Sleek Liquid Glass Studio Container */}
       <div className="mb-6 sm:mb-8 w-full max-w-xl 2xl:max-w-2xl px-2">
-        <NeonBorder color="#8b5cf6" rounded={22} glow={40}>
+        <NeonBorder color="#8b5cf6" rounded={22} glow={50}>
           <div className="relative flex items-center rounded-[20px] border border-white/10 bg-[#0e1017]/90 p-1.5 sm:p-2 backdrop-blur-3xl shadow-2xl transition-all hover:border-indigo-500/40 focus-within:border-indigo-500/60">
             <Search className="ml-3 h-4 w-4 text-indigo-400/80 shrink-0" />
             <input
@@ -98,7 +98,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
               }}
               style={{ outline: "none", boxShadow: "none" }}
               className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm text-white placeholder:text-[var(--hub-text-subtle)] border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus-visible:outline-none focus-visible:ring-0 shadow-none"
-              data-cursor="Ara"
+              data-cursor={t.searchPlaceholder}
             />
             {searchQuery && (
               <button
@@ -114,11 +114,12 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <button
               type="button"
               onClick={scrollToTools}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-lg transition-all hover:bg-indigo-500/20 hover:border-indigo-400/60 hover:scale-[1.02] active:scale-95 shrink-0"
-              data-cursor="Keşfet"
+              className="relative group/btn inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-pink-600/30 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-lg shadow-indigo-950/40 transition-all hover:border-indigo-400 hover:shadow-indigo-500/30 hover:scale-[1.03] active:scale-95 shrink-0 overflow-hidden"
+              data-cursor={t.explore}
             >
-              <Compass className="h-4 w-4 text-indigo-300 transition-transform duration-300 group-hover:rotate-45" />
-              <span>{t.explore}</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              <Compass className="h-4 w-4 text-indigo-300 transition-transform duration-500 group-hover/btn:rotate-180" />
+              <span className="relative z-10">{t.explore}</span>
             </button>
           </div>
         </NeonBorder>
@@ -129,7 +130,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         <Link
           href="/tools/yt-playlist-length"
           className="group flex items-center gap-2.5 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3.5 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-xl shadow-purple-950/20 transition-all hover:scale-105 hover:bg-white/[0.1] hover:border-indigo-400/80"
-          data-cursor="YouTube"
+          data-cursor={t.ytPlaylistTitle}
         >
           <PlaySquare className="h-4 w-4 text-indigo-400" />
           <span>{t.ytPlaylistTitle}</span>
@@ -142,7 +143,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
           type="button"
           onClick={scrollToTools}
           className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-3.5 text-xs sm:text-sm font-semibold text-[var(--hub-text)] backdrop-blur-xl transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10 hover:text-white"
-          data-cursor="Katalog"
+          data-cursor={t.inspectAllTools}
         >
           <ArrowDown className="h-4 w-4 text-indigo-400" />
           <span>{t.inspectAllTools}</span>
