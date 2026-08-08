@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Search, SlidersHorizontal, Play, Pause, Flame, Zap, Clock, Star, ExternalLink, ShieldAlert } from "lucide-react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { Search, Play, Pause, ExternalLink, Sparkles } from "lucide-react";
 import { SpotifyTrack, formatKeyAndCamelot } from "@/lib/spotify-analyzer";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,41 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
   const [sortBy, setSortBy] = useState<"default" | "bpm" | "energy" | "popularity" | "duration">("default");
   const [filterExplicit, setFilterExplicit] = useState(false);
   const [filterInstrumental, setFilterInstrumental] = useState(false);
+
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const togglePlayPreview = (trackId: string, previewUrl?: string | null) => {
+    if (!previewUrl) return;
+
+    if (playingTrackId === trackId) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setPlayingTrackId(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const newAudio = new Audio(previewUrl);
+      audioRef.current = newAudio;
+      newAudio.play().catch((err) => console.log("Audio play error:", err));
+      setPlayingTrackId(trackId);
+
+      newAudio.onended = () => {
+        setPlayingTrackId(null);
+      };
+    }
+  };
 
   const filteredTracks = useMemo(() => {
     return tracks
@@ -40,17 +74,8 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
       });
   }, [tracks, search, sortBy, filterExplicit, filterInstrumental]);
 
-  const togglePlayPreview = (trackId: string, previewUrl?: string | null) => {
-    if (!previewUrl) return;
-    if (playingTrackId === trackId) {
-      setPlayingTrackId(null);
-    } else {
-      setPlayingTrackId(trackId);
-    }
-  };
-
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-6">
+    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-xl space-y-6">
       {/* Search and Filters Header */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-white/10 pb-6">
         {/* Search Input */}
@@ -61,7 +86,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={isTurkish ? "Şarkı, sanatçı veya albüm ara..." : "Search tracks, artists, or albums..."}
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.08] transition-all"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.07] transition-all"
           />
         </div>
 
@@ -71,7 +96,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs font-semibold text-white/90 focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 focus:outline-none focus:border-emerald-500/30 cursor-pointer"
           >
             <option value="default">{isTurkish ? "Sıralama: Varsayılan" : "Sort: Default"}</option>
             <option value="bpm">{isTurkish ? "BPM (Hız) Yüksek" : "Sort: Highest BPM"}</option>
@@ -86,7 +111,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
             className={cn(
               "px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-all",
               filterExplicit
-                ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                ? "bg-rose-500/15 text-rose-300 border-rose-500/30"
                 : "bg-white/[0.04] text-white/70 border-white/10 hover:bg-white/[0.08]"
             )}
           >
@@ -99,7 +124,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
             className={cn(
               "px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-all",
               filterInstrumental
-                ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
                 : "bg-white/[0.04] text-white/70 border-white/10 hover:bg-white/[0.08]"
             )}
           >
@@ -130,30 +155,49 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
           </thead>
           <tbody className="divide-y divide-white/5">
             {filteredTracks.map((t, idx) => {
-              const { name: keyName, camelot } = formatKeyAndCamelot(t.audioFeatures.key, t.audioFeatures.mode);
+              const { camelot } = formatKeyAndCamelot(t.audioFeatures.key, t.audioFeatures.mode);
               const durSec = Math.round(t.durationMs / 1000);
               const m = Math.floor(durSec / 60);
               const s = String(durSec % 60).padStart(2, "0");
+              const isPlaying = playingTrackId === t.id;
 
               return (
-                <tr key={t.id} className="hover:bg-white/[0.04] transition-colors group">
+                <tr key={t.id} className="hover:bg-white/[0.03] transition-colors group">
                   <td className="py-3 pl-3 font-mono text-white/40">{idx + 1}</td>
 
-                  {/* Title & Artwork */}
+                  {/* Title & Artwork with Preview Player */}
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={t.albumCover}
-                        alt={t.name}
-                        className="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0"
-                      />
+                      <div className="relative w-10 h-10 shrink-0 group/cover cursor-pointer" onClick={() => togglePlayPreview(t.id, t.previewUrl)}>
+                        <img
+                          src={t.albumCover}
+                          alt={t.name}
+                          className="w-10 h-10 rounded-xl object-cover border border-white/10"
+                        />
+                        {t.previewUrl && (
+                          <div className={cn(
+                            "absolute inset-0 rounded-xl bg-black/60 flex items-center justify-center transition-opacity",
+                            isPlaying ? "opacity-100" : "opacity-0 group-hover/cover:opacity-100"
+                          )}>
+                            {isPlaying ? (
+                              <Pause className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+                            ) : (
+                              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm group-hover:text-emerald-400 transition-colors">
+                          <span className={cn(
+                            "font-bold text-sm transition-colors",
+                            isPlaying ? "text-emerald-400" : "text-white group-hover:text-emerald-300"
+                          )}>
                             {t.name}
                           </span>
                           {t.explicit && (
-                            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/15 text-rose-300 border border-rose-500/20">
                               EXPLICIT
                             </span>
                           )}
@@ -167,7 +211,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                   <td className="py-3 pr-4 text-white/60 truncate max-w-[140px]">{t.albumName}</td>
 
                   {/* BPM */}
-                  <td className="py-3 pr-4 font-mono font-bold text-emerald-400">{t.audioFeatures.tempo}</td>
+                  <td className="py-3 pr-4 font-mono font-bold text-emerald-400/90">{t.audioFeatures.tempo}</td>
 
                   {/* Key */}
                   <td className="py-3 pr-4 font-mono">
@@ -177,10 +221,10 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                   </td>
 
                   {/* Energy */}
-                  <td className="py-3 pr-4 font-mono text-amber-400">%{Math.round(t.audioFeatures.energy * 100)}</td>
+                  <td className="py-3 pr-4 font-mono text-amber-300">%{Math.round(t.audioFeatures.energy * 100)}</td>
 
                   {/* Popularity */}
-                  <td className="py-3 pr-4 font-mono text-cyan-400">{t.popularity}</td>
+                  <td className="py-3 pr-4 font-mono text-cyan-300">{t.popularity}</td>
 
                   {/* Duration */}
                   <td className="py-3 pr-3 text-right font-mono text-white/60">{m}:{s}</td>

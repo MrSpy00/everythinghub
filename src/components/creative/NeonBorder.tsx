@@ -46,21 +46,21 @@ export function NeonBorder({
         ...style,
       }}
     >
-      {/* Outer Glow */}
+      {/* Outer Ambient Soft Glow */}
       <div
-        className="absolute -inset-[1px] pointer-events-none transition-opacity duration-500 opacity-60 group-hover:opacity-100"
+        className="absolute -inset-[1px] pointer-events-none transition-opacity duration-500 opacity-25 group-hover:opacity-45"
         style={{
           borderRadius: rounded + 1,
-          background: `conic-gradient(from ${angle}deg at 50% 50%, ${color}, #6366f1, #ec4899, transparent 65%, ${color})`,
-          filter: `blur(${Math.max(4, glow * 0.1)}px)`,
+          background: `conic-gradient(from ${angle}deg at 50% 50%, rgba(168,85,247,0.5), rgba(99,102,241,0.5), rgba(16,185,129,0.5), transparent 60%, rgba(168,85,247,0.5))`,
+          filter: `blur(${Math.max(12, glow * 0.2)}px)`,
         }}
       />
       {/* Inner Mask Border */}
       <div
-        className="absolute inset-0 pointer-events-none p-[1.5px]"
+        className="absolute inset-0 pointer-events-none p-[1px]"
         style={{
           borderRadius: rounded,
-          background: `conic-gradient(from ${angle}deg at 50% 50%, ${color}, #6366f1, #ec4899, transparent 65%, ${color})`,
+          background: `conic-gradient(from ${angle}deg at 50% 50%, rgba(168,85,247,0.4), rgba(99,102,241,0.4), rgba(16,185,129,0.4), transparent 60%, rgba(168,85,247,0.4))`,
           WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           WebkitMaskComposite: "xor",
           maskComposite: "exclude",

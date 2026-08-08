@@ -152,7 +152,7 @@ export default function SpotifyProfileClient() {
           <button
             onClick={() => handleAnalyze()}
             disabled={loading}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-bold backdrop-blur-xl hover:bg-cyan-500/20 hover:border-cyan-400 active:scale-95 transition-all shadow-xl shadow-cyan-950/20 shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 font-bold backdrop-blur-xl hover:bg-cyan-500/15 hover:border-cyan-500/40 active:scale-95 transition-all shadow-lg shadow-black/20 shrink-0"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin text-cyan-400" /> : <Sparkles className="w-5 h-5 text-cyan-400" />}
             <span>{loading ? (isTurkish ? "Analiz Ediliyor..." : "Analyzing...") : isTurkish ? "Profili Analiz Et" : "Analyze Profile"}</span>

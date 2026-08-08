@@ -109,7 +109,7 @@ export function SpotifySonicRadar({ summary, isTurkish = true }: SpotifySonicRad
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             points={polygonPath}
-            className="fill-emerald-500/25 stroke-emerald-400 stroke-2 drop-shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+            className="fill-emerald-500/15 stroke-emerald-400/80 stroke-[1.5] drop-shadow-[0_0_6px_rgba(16,185,129,0.2)]"
           />
 
           {/* Interactive Radar Vertex Nodes */}

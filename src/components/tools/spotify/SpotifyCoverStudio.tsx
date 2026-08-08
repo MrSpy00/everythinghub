@@ -104,7 +104,7 @@ export function SpotifyCoverStudio({
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               onClick={handleDownloadCover}
-              className="flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-semibold backdrop-blur-xl hover:border-emerald-400 hover:bg-emerald-500/20 active:scale-95 transition-all shadow-xl shadow-emerald-950/20"
+              className="flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-semibold backdrop-blur-xl hover:border-emerald-500/40 hover:bg-emerald-500/15 active:scale-95 transition-all shadow-lg shadow-black/20"
             >
               <Download className="w-4 h-4" />
               <span>{isTurkish ? "HD Kapak Resmi İndir (640px)" : "Download HD Cover (640px)"}</span>

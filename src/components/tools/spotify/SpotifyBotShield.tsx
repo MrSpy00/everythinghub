@@ -22,20 +22,20 @@ export function SpotifyBotShield({
   isTurkish = true,
 }: SpotifyBotShieldProps) {
   const getScoreColor = () => {
-    if (score >= 80) return { stroke: "#10b981", bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-400" };
-    if (score >= 50) return { stroke: "#f59e0b", bg: "bg-amber-500/10", border: "border-amber-500/30", text: "text-amber-400" };
-    return { stroke: "#f43f5e", bg: "bg-rose-500/10", border: "border-rose-500/30", text: "text-rose-400" };
+    if (score >= 80) return { stroke: "rgba(16,185,129,0.85)", bg: "bg-emerald-500/10", border: "border-emerald-500/25", text: "text-emerald-300" };
+    if (score >= 50) return { stroke: "rgba(245,158,11,0.85)", bg: "bg-amber-500/10", border: "border-amber-500/25", text: "text-amber-300" };
+    return { stroke: "rgba(244,63,94,0.85)", bg: "bg-rose-500/10", border: "border-rose-500/25", text: "text-rose-300" };
   };
 
   const style = getScoreColor();
 
-  const circleRadius = 54;
-  const strokeWidth = 10;
+  const circleRadius = 52;
+  const strokeWidth = 7;
   const circumference = 2 * Math.PI * circleRadius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-6">
+    <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
         <div className="flex items-center gap-3">
@@ -65,10 +65,10 @@ export function SpotifyBotShield({
           className={cn(
             "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border backdrop-blur-xl",
             riskLevel === "safe"
-              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+              ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
               : riskLevel === "moderate"
-              ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-              : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+              ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+              : "bg-rose-500/15 text-rose-300 border-rose-500/30"
           )}
         >
           {riskLevel === "safe"
@@ -88,7 +88,7 @@ export function SpotifyBotShield({
       {/* Main Gauge & Pitching Verdict Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
         {/* SVG Circular Quality Score Gauge */}
-        <div className="flex flex-col items-center justify-center p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+        <div className="flex flex-col items-center justify-center p-6 bg-white/[0.02] border border-white/10 rounded-3xl backdrop-blur-xl shadow-lg">
           <div className="relative w-36 h-36 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
               <circle
@@ -112,11 +112,11 @@ export function SpotifyBotShield({
                 animate={{ strokeDashoffset }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
                 strokeLinecap="round"
-                className="drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                className="drop-shadow-[0_0_6px_rgba(16,185,129,0.2)]"
               />
             </svg>
             <div className="absolute flex flex-col items-center">
-              <span className={cn("text-3xl font-black font-mono", style.text)}>%{score}</span>
+              <span className={cn("text-3xl font-black font-mono tracking-tight", style.text)}>%{score}</span>
               <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">
                 {isTurkish ? "Kalite Skoru" : "Quality Score"}
               </span>

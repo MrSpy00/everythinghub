@@ -197,7 +197,7 @@ export default function SpotifyPlaylistClient() {
           <button
             onClick={() => handleAnalyze()}
             disabled={loading}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-bold backdrop-blur-xl hover:bg-emerald-500/20 hover:border-emerald-400 active:scale-95 transition-all shadow-xl shadow-emerald-950/20 shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-bold backdrop-blur-xl hover:bg-emerald-500/15 hover:border-emerald-500/40 active:scale-95 transition-all shadow-lg shadow-black/20 shrink-0"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-400" /> : <Sparkles className="w-5 h-5 text-emerald-400" />}
             <span>{loading ? (isTurkish ? "Analiz Ediliyor..." : "Analyzing...") : isTurkish ? "Listeyi Analiz Et" : "Analyze Playlist"}</span>
@@ -212,37 +212,37 @@ export default function SpotifyPlaylistClient() {
         </span>
         <button
           onClick={() => handleLoadDemo("global-top-50")}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
           Today's Top Hits (Global)
         </button>
         <button
           onClick={() => handleLoadDemo("lofi-beats")}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
           Lo-Fi Study Beats
         </button>
         <button
           onClick={() => handleLoadDemo("synthwave-80s")}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
           Synthwave Cyberpunk 2077
         </button>
         <button
           onClick={() => handleLoadDemo("anatolian-rock")}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
           Anadolu Rock & Türkçe Klasikler
         </button>
         <button
           onClick={() => handleLoadDemo("deep-house")}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
           Deep House & Ibiza Sunset
         </button>
         <button
           onClick={() => handleLoadDemo("acoustic-indie")}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.1] hover:text-white transition-all"
+          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.04] border border-white/10 text-white/80 hover:bg-white/[0.08] hover:text-white transition-all"
         >
           Acoustic Indie & Warm Folk
         </button>
@@ -252,21 +252,21 @@ export default function SpotifyPlaylistClient() {
       {analysisData && (
         <div className="space-y-8 pt-4">
           {/* Header Card with Cover Artwork */}
-          <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl flex flex-col md:flex-row items-center gap-6">
+          <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-xl flex flex-col md:flex-row items-center gap-6">
             <img
               src={analysisData.coverArtUrl}
               alt={analysisData.title}
-              className="w-36 h-36 rounded-2xl object-cover border border-white/10 shadow-2xl shrink-0"
+              className="w-36 h-36 rounded-2xl object-cover border border-white/10 shadow-lg shrink-0"
             />
             <div className="space-y-3 text-center md:text-left flex-1">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
                   {analysisData.totalTracks} {isTurkish ? "Parça" : "Tracks"}
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-violet-500/15 text-violet-300 border border-violet-500/25">
                   {formattedDur?.hours}s {formattedDur?.minutes}d
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25">
                   {analysisData.followers.toLocaleString()} {isTurkish ? "Takipçi" : "Followers"}
                 </span>
               </div>
@@ -300,8 +300,8 @@ export default function SpotifyPlaylistClient() {
                   className={cn(
                     "flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold transition-all shrink-0 border",
                     isActive
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-lg shadow-emerald-950/20"
-                      : "bg-white/[0.03] text-white/70 border-white/10 hover:bg-white/[0.08] hover:text-white"
+                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-md shadow-black/20"
+                      : "bg-white/[0.03] text-white/70 border-white/10 hover:bg-white/[0.07] hover:text-white"
                   )}
                 >
                   <Icon className="w-4 h-4" />
