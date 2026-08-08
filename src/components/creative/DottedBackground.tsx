@@ -452,7 +452,7 @@ export function DottedBackground({
       }`}
       style={{
         background: bgColor,
-        filter: "blur(0.8px)",
+        filter: "blur(1.6px)",
         ...style,
       }}
     >

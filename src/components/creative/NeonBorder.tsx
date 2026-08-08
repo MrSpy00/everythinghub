@@ -15,8 +15,8 @@ interface NeonBorderProps {
 export function NeonBorder({
   color = "#a855f7",
   rounded = 22,
-  glow = 50,
-  speed = 8,
+  glow = 60,
+  speed = 7,
   children,
   className,
   style,
@@ -29,26 +29,26 @@ export function NeonBorder({
         ...style,
       }}
     >
-      {/* Outer Ambient Diffused Neon Glow - GPU Accelerated Conic Sweep */}
+      {/* Outer Atmospheric Specular Glow - Enhanced Brightness & Diffusion */}
       <div
-        className="absolute -inset-[2px] pointer-events-none transition-opacity duration-500 opacity-40 group-hover:opacity-85 overflow-hidden"
+        className="absolute -inset-[3px] pointer-events-none transition-opacity duration-500 opacity-60 group-hover:opacity-100 overflow-hidden"
         style={{
-          borderRadius: rounded + 2,
+          borderRadius: rounded + 3,
         }}
       >
         <div
-          className="absolute inset-[-150%] animate-[spin_6s_linear_infinite] opacity-80 pointer-events-none"
+          className="absolute inset-[-150%] animate-[spin_5.5s_linear_infinite] opacity-90 pointer-events-none"
           style={{
-            background: `conic-gradient(from 0deg at 50% 50%, rgba(168,85,247,0.85), rgba(99,102,241,0.85), rgba(16,185,129,0.75), rgba(236,72,153,0.75), rgba(168,85,247,0.85))`,
-            filter: `blur(${Math.max(12, glow * 0.3)}px)`,
+            background: `conic-gradient(from 0deg at 50% 50%, rgba(168,85,247,1), rgba(99,102,241,1), rgba(16,185,129,0.9), rgba(236,72,153,0.9), rgba(168,85,247,1))`,
+            filter: `blur(${Math.max(14, glow * 0.4)}px)`,
             willChange: "transform",
           }}
         />
       </div>
 
-      {/* Inner Precision Neon Mask Border */}
+      {/* Inner Mask Border - Razor-Sharp Specular Neon Contour */}
       <div
-        className="absolute inset-0 pointer-events-none p-[1.5px] overflow-hidden"
+        className="absolute inset-0 pointer-events-none p-[1.8px] overflow-hidden"
         style={{
           borderRadius: rounded,
           WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
@@ -57,9 +57,9 @@ export function NeonBorder({
         }}
       >
         <div
-          className="absolute inset-[-150%] animate-[spin_6s_linear_infinite] opacity-90 pointer-events-none"
+          className="absolute inset-[-150%] animate-[spin_5.5s_linear_infinite] opacity-100 pointer-events-none"
           style={{
-            background: `conic-gradient(from 0deg at 50% 50%, rgba(168,85,247,0.9), rgba(99,102,241,0.9), rgba(16,185,129,0.8), rgba(236,72,153,0.8), rgba(168,85,247,0.9))`,
+            background: `conic-gradient(from 0deg at 50% 50%, rgba(168,85,247,1), rgba(99,102,241,1), rgba(16,185,129,0.95), rgba(236,72,153,0.95), rgba(168,85,247,1))`,
             willChange: "transform",
           }}
         />

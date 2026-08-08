@@ -1,9 +1,22 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { Search, X, LayoutGrid, Rows3, Compass, Flame, ArrowUpDown, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  X,
+  LayoutGrid,
+  Rows3,
+  Compass,
+  Flame,
+  ArrowUpDown,
+  Star,
+  Sparkles,
+  Check,
+  ChevronDown,
+  SortAsc,
+} from "lucide-react";
 import { type Tool, type ToolCategory, tools, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -38,8 +51,10 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
   const [activeCategory, setActiveCategory] = useState<ToolCategory | typeof ALL_CATEGORIES>(ALL_CATEGORIES);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sortMode, setSortMode] = useState<SortOption>("recommended");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [analyticsVersion, setAnalyticsVersion] = useState(0);
   const { t, lang } = useLanguage();
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const search = searchQuery !== undefined ? searchQuery : internalSearch;
 
@@ -52,6 +67,17 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
     const onAnalyticsUpdate = () => setAnalyticsVersion((v) => v + 1);
     window.addEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
     return () => window.removeEventListener("hub-tool-analytics-updated", onAnalyticsUpdate);
+  }, []);
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const categories = useMemo(() => {
@@ -78,6 +104,47 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
         return t.all;
     }
   };
+
+  const sortOptionsConfig = useMemo(
+    () => [
+      {
+        id: "recommended" as SortOption,
+        label: lang === "en" ? "Recommended (Smart)" : "Önerilen (Akıllı)",
+        icon: Sparkles,
+        iconColor: "text-indigo-400",
+      },
+      {
+        id: "favorites" as SortOption,
+        label: lang === "en" ? "My Favorites" : "Favorilerim",
+        icon: Star,
+        iconColor: "text-amber-400",
+      },
+      {
+        id: "popular" as SortOption,
+        label: lang === "en" ? "Most Popular" : "En Popüler",
+        icon: Flame,
+        iconColor: "text-rose-400",
+      },
+      {
+        id: "newest" as SortOption,
+        label: lang === "en" ? "Newly Released" : "Yeni Eklenenler",
+        icon: Sparkles,
+        iconColor: "text-emerald-400",
+      },
+      {
+        id: "alphabetical" as SortOption,
+        label: lang === "en" ? "Alphabetical (A-Z)" : "Alfabetik (A-Z)",
+        icon: SortAsc,
+        iconColor: "text-sky-400",
+      },
+    ],
+    [lang]
+  );
+
+  const currentSortConfig = useMemo(
+    () => sortOptionsConfig.find((o) => o.id === sortMode) || sortOptionsConfig[0],
+    [sortMode, sortOptionsConfig]
+  );
 
   // Dynamically ranked tools across All categories and Category subviews
   const filteredTools = useMemo(() => {
@@ -115,28 +182,35 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 {t.toolHubHeader}
               </span>
             </div>
-            <h2 suppressHydrationWarning className="text-2xl font-black text-white sm:text-3xl">
-              {t.allToolsTitle}
-              <span className="ml-3 rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
+
+            {/* Mobile & Responsive Line Wrap Protection */}
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+              <h2 suppressHydrationWarning className="text-xl sm:text-2xl lg:text-3xl font-black text-white">
+                {t.allToolsTitle}
+              </h2>
+              <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] sm:text-xs font-bold text-emerald-400 border border-emerald-500/30 whitespace-nowrap shrink-0 shadow-sm">
                 {liveCount} {t.activeCountLabel} · {tools.length} Total
               </span>
-            </h2>
-            <p className="mt-1 text-sm text-[var(--hub-text-muted)]">
+            </div>
+            
+            <p className="mt-1.5 text-xs sm:text-sm text-[var(--hub-text-muted)]">
               {t.searchFilterDesc}
             </p>
           </div>
 
-          {/* Controls: Search + Sort Switcher + View Switcher */}
+          {/* Controls: Search + Studio Custom Sort Dropdown + View Switcher */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Search Input */}
+            {/* Search Input with Vector Magnifier */}
             <div className="relative w-full sm:w-60">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none">
+                <Search className="h-4 w-4" />
+              </div>
               <input
                 type="text"
                 placeholder={t.filterPlaceholder}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-[var(--hub-text-subtle)] backdrop-blur-xl transition-all focus:border-indigo-500/50 focus:bg-white/[0.07] focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-9 text-xs sm:text-sm text-white placeholder:text-[var(--hub-text-subtle)] backdrop-blur-xl transition-all focus:border-indigo-500/60 focus:bg-white/[0.08] focus:outline-none"
                 data-cursor={lang === "en" ? "Search Tools" : "Araçlarda Ara"}
               />
               {search && (
@@ -150,33 +224,62 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
               )}
             </div>
 
-            {/* Sort Mode Dropdown */}
-            <div className="relative shrink-0">
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white backdrop-blur-xl transition-all hover:border-white/20">
-                <ArrowUpDown className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                <select
-                  value={sortMode}
-                  onChange={(e) => setSortMode(e.target.value as SortOption)}
-                  className="bg-transparent text-xs font-bold text-white border-none outline-none focus:ring-0 cursor-pointer pr-1"
-                  data-cursor={lang === "en" ? "Sort Option" : "Sıralama Seçeneği"}
-                >
-                  <option value="recommended" className="bg-zinc-900 text-white">
-                    {lang === "en" ? "✨ Recommended (Smart)" : "✨ Önerilen (Akıllı)"}
-                  </option>
-                  <option value="favorites" className="bg-zinc-900 text-white">
-                    {lang === "en" ? "⭐ My Favorites" : "⭐ Favorilerim"}
-                  </option>
-                  <option value="popular" className="bg-zinc-900 text-white">
-                    {lang === "en" ? "🔥 Most Popular" : "🔥 En Popüler"}
-                  </option>
-                  <option value="newest" className="bg-zinc-900 text-white">
-                    {lang === "en" ? "🆕 Newly Released" : "🆕 Yeni Eklenenler"}
-                  </option>
-                  <option value="alphabetical" className="bg-zinc-900 text-white">
-                    {lang === "en" ? "🔤 Alphabetical (A-Z)" : "🔤 Alfabetik (A-Z)"}
-                  </option>
-                </select>
-              </div>
+            {/* Custom Studio Floating Dropdown */}
+            <div className="relative shrink-0" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="flex items-center justify-between gap-2.5 rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-2.5 text-xs font-bold text-white backdrop-blur-2xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                data-cursor={lang === "en" ? "Sort Option" : "Sıralama Seçeneği"}
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                  <currentSortConfig.icon className={`h-3.5 w-3.5 ${currentSortConfig.iconColor} shrink-0`} />
+                  <span className="truncate">{currentSortConfig.label}</span>
+                </div>
+                <ChevronDown className={`h-3.5 w-3.5 text-zinc-400 transition-transform duration-200 ${sortDropdownOpen ? "rotate-180 text-white" : ""}`} />
+              </button>
+
+              {/* Floating Menu Popover */}
+              <AnimatePresence>
+                {sortDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 4, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-full mt-1.5 w-56 z-50 rounded-2xl border border-white/15 bg-[#0e1017]/95 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/80"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      {sortOptionsConfig.map((opt) => {
+                        const Icon = opt.icon;
+                        const isSelected = opt.id === sortMode;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              setSortMode(opt.id);
+                              setSortDropdownOpen(false);
+                            }}
+                            className={`flex items-center justify-between w-full rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                              isSelected
+                                ? "bg-indigo-500/20 text-indigo-200 border border-indigo-500/30"
+                                : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Icon className={`h-3.5 w-3.5 ${opt.iconColor}`} />
+                              <span>{opt.label}</span>
+                            </div>
+                            {isSelected && <Check className="h-3.5 w-3.5 text-indigo-400" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* View Mode Toggle */}
