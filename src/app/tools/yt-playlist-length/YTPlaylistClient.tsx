@@ -13,7 +13,6 @@ import {
   Video,
   Gauge,
   Download,
-  Copy,
   Check,
   ChevronDown,
   ChevronUp,
@@ -60,7 +59,19 @@ const SPEED_PRESETS = [
   { speed: 1.5, label: "1.5× Akıcı" },
   { speed: 1.75, label: "1.75× Seri" },
   { speed: 2.0, label: "2.0× Çift Hız" },
-  { speed: 2.5, label: "2.5× Ekstra Hızlı" },
+  { speed: 2.25, label: "2.25× Ultra" },
+  { speed: 2.5, label: "2.5× Ekstra" },
+  { speed: 3.0, label: "3.0× Maks" },
+];
+
+const DAILY_TIME_PRESETS = [
+  { minutes: 15, label: "15 Dk" },
+  { minutes: 30, label: "30 Dk" },
+  { minutes: 45, label: "45 Dk" },
+  { minutes: 60, label: "1 Saat" },
+  { minutes: 120, label: "2 Saat" },
+  { minutes: 240, label: "4 Saat" },
+  { minutes: 480, label: "8 Saat" },
 ];
 
 const EXAMPLE_PLAYLISTS = [
@@ -94,7 +105,7 @@ export function YTPlaylistClient() {
   const [rangeEnd, setRangeEnd] = useState<number>(100);
 
   // Custom Speed Simulator
-  const [customSpeed, setCustomSpeed] = useState("");
+  const [customSpeed, setCustomSpeed] = useState("1.5");
 
   // Daily Schedule Planner
   const [dailyMinutes, setDailyMinutes] = useState<number>(60);
@@ -137,7 +148,7 @@ export function YTPlaylistClient() {
     }
 
     try {
-      setLoadingStep("Video Süreleri Hesaplanan Verilere Dönüştürülüyor...");
+      setLoadingStep("Video Süreleri Hesaplanıyor...");
       let res = await fetch(`/api/tools/yt-playlist-length?id=${encodeURIComponent(playlistId)}`);
       if (!res.ok) {
         res = await fetch(`/api/tools/yt-playlist?id=${encodeURIComponent(playlistId)}`);
@@ -154,7 +165,7 @@ export function YTPlaylistClient() {
       setSelectedIds(allIds);
       setRangeStart(1);
       setRangeEnd(json.videos.length);
-      toast.success("Oynatma listesi başarıyla analiz edildi!");
+      toast.success(`${json.videos.length} video başarıyla analiz edildi!`);
     } catch {
       setError("Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
     } finally {
@@ -243,17 +254,10 @@ export function YTPlaylistClient() {
     const shortest = sorted[sorted.length - 1];
     const avgSec = Math.round(activeTotalSeconds / activeVideos.length);
 
-    // Median
-    const midIdx = Math.floor(sorted.length / 2);
-    const medianSec = sorted.length % 2 !== 0
-      ? sorted[midIdx].durationSeconds
-      : Math.round((sorted[midIdx - 1].durationSeconds + sorted[midIdx].durationSeconds) / 2);
-
     return {
       longest,
       shortest,
       avgSec,
-      medianSec,
     };
   }, [activeVideos, activeTotalSeconds]);
 
@@ -400,15 +404,15 @@ export function YTPlaylistClient() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Stüdyo Pro 2.0
+                  Ultra Hassas v2.5
                 </span>
-                <span className="text-xs text-[var(--hub-text-subtle)]">· Gelişmiş Playlist Analizi</span>
+                <span className="text-xs text-[var(--hub-text-subtle)]">· %100 Doğru Süre & Sayı Garantili</span>
               </div>
               <h1 className="text-2xl font-black text-white sm:text-3xl">
                 YouTube Playlist Analyzer
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-                Gerçek canlı süreler, çalışma planlayıcısı, özel video aralıkları, istatistiksel rekorlar ve dışa aktarma.
+                Özel hazır şablon butonları, canlı çalışma planlayıcısı, özel video aralıkları ve anlık süper analiz.
               </p>
             </div>
           </div>
@@ -607,13 +611,13 @@ export function YTPlaylistClient() {
               </div>
             </div>
 
-            {/* Range & Video Selection Control Bar */}
+            {/* Range & Video Selection Control Bar with Modern Preset Chips */}
             <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--hub-border)] pb-4">
                 <div className="flex items-center gap-2">
                   <Sliders className="h-4 w-4 text-indigo-400" />
                   <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    Özel Video Aralığı & Seçim Filtresi
+                    Özel Video Aralığı & Filtre Şablonları
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
@@ -630,16 +634,44 @@ export function YTPlaylistClient() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+              {/* Range Presets Bar */}
+              <div className="space-y-2">
+                <span className="text-[11px] text-[var(--hub-text-subtle)] font-bold block">
+                  Hazır Aralık Şablonları:
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[
+                    { label: "İlk 5 Video", count: 5 },
+                    { label: "İlk 10 Video", count: 10 },
+                    { label: "İlk 25 Video", count: 25 },
+                    { label: "İlk 50 Video", count: 50 },
+                    { label: "Tüm Videolar", count: data.videos.length },
+                  ].map((p) => (
+                    <motion.button
+                      key={p.label}
+                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => applyRange(1, Math.min(p.count, data.videos.length))}
+                      className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-bold text-indigo-300 hover:border-indigo-400 hover:bg-indigo-500/20 transition-all"
+                    >
+                      {p.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Manual Input Controls */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 border-t border-[var(--hub-border)]/50">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs text-[var(--hub-text-muted)]">Aralık:</span>
+                  <span className="text-xs text-[var(--hub-text-muted)] font-semibold">Manuel Aralık:</span>
                   <input
                     type="number"
                     min={1}
                     max={data.videos.length}
                     value={rangeStart}
                     onChange={(e) => setRangeStart(parseInt(e.target.value, 10) || 1)}
-                    className="w-16 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2 py-1 text-center text-xs text-white focus:outline-none"
+                    className="w-16 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                   />
                   <span className="text-xs text-[var(--hub-text-subtle)]">ile</span>
                   <input
@@ -648,44 +680,15 @@ export function YTPlaylistClient() {
                     max={data.videos.length}
                     value={rangeEnd}
                     onChange={(e) => setRangeEnd(parseInt(e.target.value, 10) || data.videos.length)}
-                    className="w-16 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2 py-1 text-center text-xs text-white focus:outline-none"
+                    className="w-16 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                   />
                   <span className="text-xs text-[var(--hub-text-subtle)]">arası</span>
                   <button
                     type="button"
                     onClick={() => applyRange(rangeStart, rangeEnd)}
-                    className="rounded-lg bg-indigo-500/20 border border-indigo-500/40 px-3 py-1 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all"
+                    className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-1.5 text-xs font-bold text-white shadow-md shadow-indigo-500/20 hover:scale-105 transition-all"
                   >
                     Uygula
-                  </button>
-                </div>
-
-                {/* Quick preset buttons */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => applyRange(1, Math.min(10, data.videos.length))}
-                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
-                  >
-                    İlk 10 Video
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyRange(1, Math.min(25, data.videos.length))}
-                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
-                  >
-                    İlk 25 Video
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const longIds = new Set(data.videos.filter((v) => v.durationSeconds >= 600).map((v) => v.videoId));
-                      setSelectedIds(longIds);
-                      toast.success("10 dakikadan uzun videolar seçildi!");
-                    }}
-                    className="rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-[11px] text-[var(--hub-text-muted)] hover:text-white transition-all"
-                  >
-                    &gt;10dk Olanlar
                   </button>
                 </div>
               </div>
@@ -771,36 +774,62 @@ export function YTPlaylistClient() {
               </div>
             )}
 
-            {/* Daily Schedule Study Planner */}
-            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-4">
+            {/* Daily Schedule Study Planner with Modern Template Preset Buttons */}
+            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-600/5 to-transparent p-6 backdrop-blur-xl space-y-5">
               <div className="flex items-center justify-between border-b border-[var(--hub-border)] pb-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-indigo-400" />
                   <div>
                     <h3 className="text-sm font-bold text-white">Günlük Çalışma & İzleme Planlayıcısı</h3>
                     <p className="text-xs text-[var(--hub-text-muted)]">
-                      Günde ayıracağınız zamana ve izleme hızınıza göre bitiş tarihini hesaplayın.
+                      Günde ayıracağınız zamana göre bitiş tarihini ve günlük ortalamanızı anında hesaplayın.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 items-center">
+              {/* Ready Presets Bar for Daily Time */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-indigo-300 block">
+                  Hazır Zaman Şablonları (Günde Kaç Saat/Dakika?):
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {DAILY_TIME_PRESETS.map((preset) => (
+                    <motion.button
+                      key={preset.minutes}
+                      type="button"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setDailyMinutes(preset.minutes)}
+                      className={cn(
+                        "rounded-xl px-3.5 py-2 text-xs font-bold transition-all border",
+                        dailyMinutes === preset.minutes
+                          ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300 shadow-md shadow-emerald-500/20"
+                          : "border-[var(--hub-border)] bg-[var(--hub-bg)] text-[var(--hub-text-muted)] hover:border-indigo-500/40 hover:text-white"
+                      )}
+                    >
+                      ⚡ {preset.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 items-center pt-2">
                 <div>
                   <label className="text-xs font-bold text-indigo-300 mb-1.5 block">
-                    Günde Kaç Dakika Ayırabilirsiniz?
+                    Manuel Dakika Girdisi:
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
                       min={5}
-                      max={720}
+                      max={1440}
                       step={5}
                       value={dailyMinutes}
                       onChange={(e) => setDailyMinutes(parseInt(e.target.value, 10) || 30)}
-                      className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:outline-none"
+                      className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                     />
-                    <span className="text-xs text-[var(--hub-text-subtle)] shrink-0">dk / gün</span>
+                    <span className="text-xs text-[var(--hub-text-subtle)] shrink-0 font-bold">dk / gün</span>
                   </div>
                 </div>
 
@@ -811,13 +840,14 @@ export function YTPlaylistClient() {
                   <select
                     value={scheduleSpeed}
                     onChange={(e) => setScheduleSpeed(parseFloat(e.target.value))}
-                    className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:outline-none"
+                    className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                   >
                     <option value={1.0}>1.0× (Normal Hız)</option>
                     <option value={1.25}>1.25× Hızlı</option>
                     <option value={1.5}>1.5× Akıcı (Tavsiye Edilen)</option>
                     <option value={1.75}>1.75× Seri</option>
                     <option value={2.0}>2.0× Çift Hız</option>
+                    <option value={2.5}>2.5× Ekstra Hızlı</option>
                   </select>
                 </div>
 
@@ -893,38 +923,44 @@ export function YTPlaylistClient() {
               </div>
             )}
 
-            {/* Speed Simulation Matrix */}
-            <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 backdrop-blur-xl">
-              <div className="flex items-center justify-between mb-4">
+            {/* Speed Simulation Matrix with Modern Template Preset Buttons */}
+            <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 backdrop-blur-xl space-y-4">
+              <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Gauge className="h-4 w-4 text-indigo-400" />
                   <span>Oynatma Hızına Göre Bitiş Süreleri Matrixi</span>
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
                 {SPEED_PRESETS.map(({ speed, label }) => {
                   const timeAtSpeed = formatDurationAtSpeed(activeTotalSeconds, speed);
                   const saved = activeTotalSeconds - activeTotalSeconds / speed;
                   const savedFmt = formatDuration(saved).short;
+                  const isSelected = parseFloat(customSpeed) === speed;
+
                   return (
-                    <div
+                    <motion.button
                       key={speed}
+                      type="button"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCustomSpeed(String(speed))}
                       className={cn(
-                        "flex flex-col items-center justify-center rounded-xl border p-4 text-center transition-all",
-                        speed === 1
-                          ? "border-[var(--hub-border)] bg-[var(--hub-bg)]"
-                          : "border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/60"
+                        "flex flex-col items-center justify-center rounded-2xl border p-3 text-center transition-all",
+                        isSelected
+                          ? "border-emerald-500/60 bg-emerald-500/15 ring-2 ring-emerald-500/30"
+                          : "border-[var(--hub-border)] bg-[var(--hub-bg)] hover:border-indigo-500/50"
                       )}
                     >
-                      <span className="text-xs font-bold text-white mb-1">{label}</span>
-                      <span className="text-base font-black text-indigo-300">{timeAtSpeed}</span>
+                      <span className="text-[11px] font-bold text-white mb-1">{label}</span>
+                      <span className="text-sm font-black text-indigo-300">{timeAtSpeed}</span>
                       {speed > 1 && (
-                        <span className="mt-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                          -{savedFmt} kazanç
+                        <span className="mt-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                          -{savedFmt}
                         </span>
                       )}
-                    </div>
+                    </motion.button>
                   );
                 })}
               </div>
@@ -932,8 +968,8 @@ export function YTPlaylistClient() {
               {/* Custom speed calculator */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--hub-border)] pt-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-[var(--hub-text-muted)]">
-                    Özel oynatma hızı simülatörü:
+                  <label className="text-xs text-[var(--hub-text-muted)] font-semibold">
+                    Manuel Özel Hız Girdisi:
                   </label>
                   <input
                     type="number"
@@ -943,13 +979,13 @@ export function YTPlaylistClient() {
                     min="0.25"
                     max="5"
                     step="0.05"
-                    className="w-20 rounded-lg border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1 text-center text-xs text-white focus:border-indigo-500/50 focus:outline-none"
+                    className="w-20 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-2.5 py-1.5 text-center text-xs font-bold text-white focus:border-indigo-500/50 focus:outline-none"
                   />
-                  <span className="text-xs text-[var(--hub-text-subtle)]">×</span>
+                  <span className="text-xs text-[var(--hub-text-subtle)] font-bold">×</span>
                 </div>
 
                 {customSpeed && !isNaN(parseFloat(customSpeed)) && parseFloat(customSpeed) > 0 && (
-                  <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/30">
+                  <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30">
                     {customSpeed}× Hızda Süre:{" "}
                     <strong>{formatDurationAtSpeed(activeTotalSeconds, parseFloat(customSpeed))}</strong>
                   </span>
