@@ -87,6 +87,7 @@ interface StudioSelectProps<T extends string> {
   onChange: (val: T) => void;
   options: StudioSelectOption<T>[];
   label?: string;
+  dropUp?: boolean;
 }
 
 function StudioSelect<T extends string>({
@@ -94,6 +95,7 @@ function StudioSelect<T extends string>({
   onChange,
   options,
   label,
+  dropUp = false,
 }: StudioSelectProps<T>) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -112,7 +114,7 @@ function StudioSelect<T extends string>({
   const SelectedIcon = selected?.icon;
 
   return (
-    <div className="relative w-full" ref={ref}>
+    <div className="relative w-full z-30" ref={ref}>
       {label && <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{label}</label>}
       <button
         type="button"
@@ -133,11 +135,13 @@ function StudioSelect<T extends string>({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.96 }}
-            animate={{ opacity: 1, y: 4, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            initial={dropUp ? { opacity: 0, y: 6, scale: 0.96 } : { opacity: 0, y: -6, scale: 0.96 }}
+            animate={dropUp ? { opacity: 1, y: -4, scale: 1 } : { opacity: 1, y: 4, scale: 1 }}
+            exit={dropUp ? { opacity: 0, y: 6, scale: 0.96 } : { opacity: 0, y: -6, scale: 0.96 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl border border-white/15 bg-[#0e1017]/95 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/80 max-h-60 overflow-y-auto no-scrollbar"
+            className={`absolute left-0 right-0 ${
+              dropUp ? "bottom-full mb-1.5 z-[100]" : "top-full mt-1.5 z-50"
+            } rounded-2xl border border-white/15 bg-[#0e1017]/98 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/90 max-h-60 overflow-y-auto no-scrollbar`}
           >
             {options.map((opt) => {
               const OptIcon = opt.icon;
@@ -1216,6 +1220,7 @@ export function QRCodeStudioClient() {
                   <StudioSelect
                     value={selectedLogo}
                     onChange={(val) => setSelectedLogo(val)}
+                    dropUp={true}
                     options={[
                       ...PRESET_LOGOS.map((l) => ({
                         value: l.id,
@@ -1254,6 +1259,7 @@ export function QRCodeStudioClient() {
                 label={isTurkish ? "Harekete Geçirici Çerçeve (CTA)" : "Call-to-Action (CTA) Frame"}
                 value={ctaStyle}
                 onChange={(val) => setCtaStyle(val as CtaStyle)}
+                dropUp={true}
                 options={[
                   { value: "none", label: isTurkish ? "Çerçevesiz" : "None / Frameless", icon: Layers },
                   {
