@@ -235,10 +235,10 @@ function mapPaletteBiasUiToShader(ui: number): number {
 
 const MAX_COLORS = 10;
 const DEFAULT_COLORS = [
-  "rgba(139, 92, 246, 0.75)",
-  "rgba(99, 102, 241, 0.65)",
-  "rgba(16, 185, 129, 0.55)",
-  "rgba(245, 158, 11, 0.45)",
+  "rgba(139, 92, 246, 0.85)", // Vibrant Violet / Mor
+  "rgba(147, 51, 234, 0.75)", // Deep Purple
+  "rgba(159, 18, 57, 0.75)",  // Deep Burgundy / Bordo
+  "rgba(136, 19, 55, 0.65)",  // Dark Claret / Bordo
 ];
 
 function buildPaletteUniforms(colorList: string[]) {
@@ -447,20 +447,21 @@ export function DottedBackground({
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-60 transition-opacity duration-1000 ${
+      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-65 transition-opacity duration-1000 ${
         className || ""
       }`}
       style={{
         background: bgColor,
+        filter: "blur(0.8px)",
         ...style,
       }}
     >
-      {/* High-Aesthetic Atmospheric Diffusion Underlay */}
+      {/* High-Aesthetic Mor & Bordo Atmospheric Diffusion Underlay */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-50"
+        className="absolute inset-0 pointer-events-none opacity-55"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139,92,246,0.4), transparent 70%), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(99,102,241,0.3), transparent 60%)",
+            "radial-gradient(ellipse 80% 55% at 50% -20%, rgba(139,92,246,0.38), transparent 70%), radial-gradient(ellipse 65% 45% at 85% 65%, rgba(159,18,57,0.32), transparent 60%)",
         }}
       />
     </div>
