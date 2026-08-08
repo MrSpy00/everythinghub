@@ -58,7 +58,10 @@ export function ToolCard({ tool }: ToolCardProps) {
 
       {/* Title */}
       <div className="mb-2">
-        <h3 className="text-lg font-bold text-white leading-tight flex items-center gap-2 group-hover:text-indigo-300 transition-colors">
+        <h3
+          suppressHydrationWarning
+          className="text-lg font-bold text-white leading-tight flex items-center gap-2 group-hover:text-indigo-300 transition-colors"
+        >
           <span>{tool.title}</span>
         </h3>
       </div>

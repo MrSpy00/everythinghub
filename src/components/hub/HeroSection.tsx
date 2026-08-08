@@ -42,7 +42,10 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 
       {/* Main Kinetic Title with Originkit Gooey TextMorph */}
       <div className="mb-6 max-w-4xl w-full">
-        <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl leading-tight">
+        <h1
+          suppressHydrationWarning
+          className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl leading-tight"
+        >
           Dijital Araçların{" "}
           <span className="block mt-3 h-[1.3em] flex items-center justify-center">
             <TextMorph

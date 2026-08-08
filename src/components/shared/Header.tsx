@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Zap, Menu, X, ExternalLink } from "lucide-react";
+import { Zap, Menu, X, ExternalLink, PlaySquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
@@ -48,7 +48,7 @@ export function Header() {
           className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
           data-cursor="Home"
         >
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-md shadow-indigo-500/25 transition-transform group-hover:scale-105">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-md shadow-indigo-500/25 transition-transform group-hover:scale-105">
             <Zap className="h-4 w-4 text-white" />
           </div>
           <span className="text-lg font-black tracking-tight text-white">
@@ -79,11 +79,14 @@ export function Header() {
           </Link>
           <Link
             href="/tools/yt-playlist-length"
-            className="rounded-xl px-3 py-1.5 text-xs font-bold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 transition-all flex items-center gap-1.5"
+            className="rounded-xl px-3.5 py-1.5 text-xs font-bold text-indigo-300 bg-gradient-to-r from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 hover:border-indigo-400 hover:bg-indigo-500/25 transition-all flex items-center gap-2 shadow-sm"
             data-cursor="Canlı"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <PlaySquare className="h-3.5 w-3.5 text-indigo-400" />
             <span>YT Analyzer</span>
+            <span className="rounded-full bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 text-[9px] font-extrabold uppercase ring-1 ring-emerald-500/30">
+              Canlı
+            </span>
           </Link>
         </nav>
 
@@ -116,21 +119,35 @@ export function Header() {
       {menuOpen && (
         <div className="border-b border-[var(--hub-border)] bg-[var(--hub-bg)]/95 backdrop-blur-2xl md:hidden">
           <nav className="flex flex-col gap-1 p-4">
-            {[
-              { href: "/", label: "Ana Sayfa" },
-              { href: "/#tools", label: "Araçlar" },
-              { href: "/#categories", label: "Kategoriler" },
-              { href: "/tools/yt-playlist-length", label: "🎬 YouTube Playlist Analyzer" },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
+            <Link
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Ana Sayfa
+            </Link>
+            <Link
+              href="/#tools"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Araçlar
+            </Link>
+            <Link
+              href="/#categories"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Kategoriler
+            </Link>
+            <Link
+              href="/tools/yt-playlist-length"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-indigo-300 bg-indigo-500/10 flex items-center gap-2"
+            >
+              <PlaySquare className="h-4 w-4 text-indigo-400" />
+              <span>YouTube Playlist Analyzer</span>
+            </Link>
             <a
               href="https://github.com/MrSpy00/everythinghub"
               target="_blank"

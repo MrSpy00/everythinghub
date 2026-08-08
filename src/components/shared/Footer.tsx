@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Zap, Heart, ExternalLink, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Zap,
+  Heart,
+  ExternalLink,
+  ShieldCheck,
+  Sparkles,
+  PlaySquare,
+  Image as ImageIcon,
+  Code2,
+  Palette,
+} from "lucide-react";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -29,7 +39,7 @@ export function Footer() {
           {/* Brand Column */}
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
                 <Zap className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-black tracking-tight text-white">
@@ -37,7 +47,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-[var(--hub-text-muted)] max-w-sm leading-relaxed mb-4">
-              Ücretsiz, modern, hızlı ve login gerektirmeyen hepsi-bir-arada dijital araçlar platformu.
+              Ücretsiz, modern, hızlı ve login gerektirmeyen hepsi-bir-arada dijital araçlar stüdyosu.
               Gizliliğinizi korur, verilerinizi asla sunucuda saklamaz.
             </p>
             <div className="flex items-center gap-3">
@@ -64,38 +74,60 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Categories with pure vector SVG icons */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-3">
+            <h4
+              suppressHydrationWarning
+              className="text-xs font-bold uppercase tracking-wider text-white mb-3"
+            >
               Kategoriler
             </h4>
-            <ul className="space-y-2 text-xs text-[var(--hub-text-muted)]">
+            <ul className="space-y-2.5 text-xs text-[var(--hub-text-muted)]">
               <li>
-                <Link href="/tools/yt-playlist-length" className="hover:text-indigo-300 transition-colors">
-                  🎬 YouTube Playlist Analyzer
+                <Link
+                  href="/tools/yt-playlist-length"
+                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
+                >
+                  <PlaySquare className="h-3.5 w-3.5 text-red-400" />
+                  <span>YouTube Playlist Analyzer</span>
                 </Link>
               </li>
               <li>
-                <Link href="/#tools" className="hover:text-indigo-300 transition-colors">
-                  🖼️ Görsel Sıkıştırıcı (Yakında)
+                <Link
+                  href="/#tools"
+                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
+                >
+                  <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
+                  <span>Görsel Sıkıştırıcı (Yakında)</span>
                 </Link>
               </li>
               <li>
-                <Link href="/#tools" className="hover:text-indigo-300 transition-colors">
-                  ⚙️ JSON Formatlayıcı (Yakında)
+                <Link
+                  href="/#tools"
+                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
+                >
+                  <Code2 className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>JSON Formatlayıcı (Yakında)</span>
                 </Link>
               </li>
               <li>
-                <Link href="/#tools" className="hover:text-indigo-300 transition-colors">
-                  🎨 Renk Paleti Üretici (Yakında)
+                <Link
+                  href="/#tools"
+                  className="flex items-center gap-2 hover:text-indigo-300 transition-colors"
+                >
+                  <Palette className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Renk Paleti Üretici (Yakında)</span>
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Studio & Attribution */}
+          {/* Studio & Attribution with sleek liquid glass styling */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-3">
+            <h4
+              suppressHydrationWarning
+              className="text-xs font-bold uppercase tracking-wider text-white mb-3"
+            >
               Tasarım & Geliştirme
             </h4>
             <p className="text-xs text-[var(--hub-text-muted)] mb-3 leading-relaxed">
@@ -105,12 +137,12 @@ export function Footer() {
               href="https://www.aegissoft.com.tr/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/40 px-3.5 py-2 text-xs font-bold text-indigo-300 shadow-md transition-all hover:scale-105 hover:border-indigo-400 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-600/20 to-pink-500/20 border border-indigo-500/40 px-4 py-2.5 text-xs font-bold text-indigo-200 shadow-xl backdrop-blur-xl transition-all hover:scale-105 hover:border-indigo-400 hover:text-white"
               data-cursor="aegisSoft"
             >
               <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
               <span>Tasarım ve Geliştirme: aegisSoft</span>
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3 w-3 opacity-70" />
             </a>
           </div>
         </div>

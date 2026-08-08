@@ -17,7 +17,6 @@ interface PlaylistData {
   totalVideos: number;
   totalSeconds: number;
   channelName?: string;
-  viewCount?: string;
   error?: string;
   fallback?: boolean;
 }
@@ -33,19 +32,38 @@ function parseTextDuration(text?: string | null): number {
   return 0;
 }
 
+function extractPlaylistId(rawInput: string): string | null {
+  const trimmed = decodeURIComponent(rawInput).trim();
+
+  // Pattern 1: ?list=... or &list=...
+  const matchParam = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
+  if (matchParam) return matchParam[1].replace(/^VL/, "");
+
+  // Pattern 2: /playlist/...
+  const matchPath = trimmed.match(/playlist\/([a-zA-Z0-9_-]+)/i);
+  if (matchPath) return matchPath[1].replace(/^VL/, "");
+
+  // Pattern 3: Raw ID string (PL..., UU..., RD..., OLAK..., etc.)
+  const rawId = trimmed.replace(/^VL/, "");
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(rawId)) {
+    return rawId;
+  }
+
+  return null;
+}
+
 /**
- * Strategy 1: Direct HTML Scrape of YouTube Playlist Page (extracting ytInitialData)
- * Extremely reliable for getting exact video durations, full metadata and title.
+ * Strategy 1: Direct YouTube HTML Scrape with Consent Bypass Cookies
  */
-async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | null> {
+async function fetchPlaylistViaHtml(cleanId: string): Promise<PlaylistData | null> {
   try {
-    const cleanId = playlistId.replace(/^VL/, "");
     const url = `https://www.youtube.com/playlist?list=${cleanId}`;
     const res = await fetch(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+        Cookie: "SOCS=CAESEwgDEgk0ODE3Nzk3MjQaAnRyIAEaBgiA_LyaBg; CONSENT=YES+cb.20210328-17-p0.tr+FX+478",
       },
       next: { revalidate: 60 },
     });
@@ -61,11 +79,10 @@ async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | 
     let playlistTitle = "";
     let channelName = "";
 
-    // Extract title & channel
+    const header = initialData?.header?.playlistHeaderRenderer;
     const sidebar =
       initialData?.sidebar?.playlistSidebarRenderer?.items?.[0]
         ?.playlistSidebarPrimaryInfoRenderer;
-    const header = initialData?.header?.playlistHeaderRenderer;
 
     playlistTitle =
       header?.title?.simpleText ||
@@ -79,7 +96,6 @@ async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | 
         ?.playlistSidebarSecondaryInfoRenderer?.videoOwner?.videoOwnerRenderer;
     channelName = owner?.title?.runs?.[0]?.text || "";
 
-    // Recursive search for all playlistVideoRenderer items
     const findVideos = (obj: unknown): void => {
       if (!obj || typeof obj !== "object") return;
       const o = obj as Record<string, unknown>;
@@ -93,7 +109,6 @@ async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | 
             (v.title as { runs?: { text: string }[] })?.runs?.[0]?.text ||
             "Video";
 
-          // Try multiple duration fields
           let durationSeconds = 0;
           if (v.lengthSeconds) {
             durationSeconds = parseInt(v.lengthSeconds as string, 10) || 0;
@@ -123,9 +138,7 @@ async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | 
             }
           }
 
-          const thumbnail =
-            `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-
+          const thumbnail = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
           videos.push({
             videoId,
             title,
@@ -156,7 +169,7 @@ async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | 
 
     return {
       playlistId: cleanId,
-      title: playlistTitle || `YouTube Playlist (${cleanId})`,
+      title: playlistTitle || `Playlist (${cleanId})`,
       videos,
       totalVideos: videos.length,
       totalSeconds,
@@ -169,10 +182,9 @@ async function fetchPlaylistViaHtml(playlistId: string): Promise<PlaylistData | 
 }
 
 /**
- * Strategy 2: InnerTube WEB & ANDROID API
+ * Strategy 2: YouTube Android & Web InnerTube API
  */
-async function fetchPlaylistViaInnerTube(playlistId: string): Promise<PlaylistData | null> {
-  const cleanId = playlistId.replace(/^VL/, "");
+async function fetchPlaylistViaInnerTube(cleanId: string): Promise<PlaylistData | null> {
   const videos: VideoInfo[] = [];
   let continuationToken: string | null = null;
   let playlistTitle = "";
@@ -183,17 +195,15 @@ async function fetchPlaylistViaInnerTube(playlistId: string): Promise<PlaylistDa
   const headers = {
     "Content-Type": "application/json",
     "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-    Referer: "https://www.youtube.com/",
-    Origin: "https://www.youtube.com",
+      "com.google.android.youtube/19.09.35 (Linux; U; Android 13; tr_TR) gzip",
+    "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8",
   };
 
   const baseBody = {
     context: {
       client: {
-        clientName: "WEB",
-        clientVersion: "2.20240401.00.00",
+        clientName: "ANDROID",
+        clientVersion: "19.09.35",
         hl: "tr",
         gl: "TR",
       },
@@ -242,8 +252,7 @@ async function fetchPlaylistViaInnerTube(playlistId: string): Promise<PlaylistDa
           const videoId = v.videoId as string;
           if (videoId) {
             const title =
-              (v.title as { simpleText?: string; runs?: { text: string }[] })
-                ?.simpleText ||
+              (v.title as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
               (v.title as { runs?: { text: string }[] })?.runs?.[0]?.text ||
               "Video";
 
@@ -253,8 +262,7 @@ async function fetchPlaylistViaInnerTube(playlistId: string): Promise<PlaylistDa
             }
             if (durationSeconds === 0 && v.lengthText) {
               const lt =
-                (v.lengthText as { simpleText?: string; runs?: { text: string }[] })
-                  ?.simpleText ||
+                (v.lengthText as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
                 (v.lengthText as { runs?: { text: string }[] })?.runs?.[0]?.text;
               durationSeconds = parseTextDuration(lt);
             }
@@ -277,9 +285,7 @@ async function fetchPlaylistViaInnerTube(playlistId: string): Promise<PlaylistDa
               }
             }
 
-            const thumbnail =
-              `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-
+            const thumbnail = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
             videos.push({ videoId, title, durationSeconds, thumbnail });
           }
           return;
@@ -335,21 +341,22 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Sanitize playlist ID
-  const cleanId = rawId
-    .replace(/^https?:\/\/(?:www\.)?youtube\.com\/playlist\?list=/, "")
-    .replace(/&.*$/, "")
-    .replace(/^VL/, "")
-    .trim();
+  const cleanId = extractPlaylistId(rawId);
+  if (!cleanId) {
+    return NextResponse.json(
+      { error: "Geçerli bir YouTube oynatma listesi URL'si veya ID'si tespit edilemedi." },
+      { status: 400 }
+    );
+  }
 
   try {
-    // 1. Try HTML scraping first (provides exact durations & rich metadata)
+    // 1. Try HTML scraping with Turkish/EU consent bypass
     const htmlData = await fetchPlaylistViaHtml(cleanId);
     if (htmlData && htmlData.videos.length > 0) {
       return NextResponse.json(htmlData);
     }
 
-    // 2. Try InnerTube API
+    // 2. Try InnerTube Android API
     const innerTubeData = await fetchPlaylistViaInnerTube(cleanId);
     if (innerTubeData && innerTubeData.videos.length > 0) {
       return NextResponse.json(innerTubeData);

@@ -184,11 +184,20 @@ $RECYCLE.BIN/
 .gemini/
 .claude/
 .cursor/
+.cursorrules
 .aider*
 .continue/
 .cline/
 .roo/
 antigravity/
+agents.md
+AGENTS.md
+CLAUDE.md
+claude.md
+.system_generated/
+brain/
+*.prompt.md
+*.scratchpad.md
 
 # ─── 10. User Uploads, Temp Files & Scratch ──────────────────────────────────
 public/uploads/

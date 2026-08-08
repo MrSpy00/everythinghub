@@ -6,6 +6,7 @@ import { Footer } from "@/components/shared/Footer";
 import { DottedBackground } from "@/components/creative/DottedBackground";
 import { UserCursor } from "@/components/creative/UserCursor";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://everythinghub.com"),
+  metadataBase: new URL("https://everythinghub.vercel.app"),
   title: {
     default: "everythinghub — Dijital Araçların Merkezi",
     template: "%s — everythinghub",
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    url: "https://everythinghub.com",
+    url: "https://everythinghub.vercel.app",
     siteName: "everythinghub",
     title: "everythinghub — Dijital Araçların Merkezi",
     description:
@@ -65,6 +66,7 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning className="dark">
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#09090b] text-[#fafafa] min-h-screen selection:bg-indigo-500/30 selection:text-white`}
       >
         {/* Creative WebGL Ambient Background */}
@@ -92,6 +94,9 @@ export default function RootLayout({
             },
           }}
         />
+
+        {/* Vercel Analytics */}
+        <Analytics />
       </body>
     </html>
   );

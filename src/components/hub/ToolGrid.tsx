@@ -58,7 +58,7 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
                 Araç Merkezi
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white sm:text-3xl">
+            <h2 suppressHydrationWarning className="text-2xl font-black text-white sm:text-3xl">
               Tüm Dijital Araçlar
               <span className="ml-3 rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                 {liveCount} Aktif · {tools.length} Toplam
