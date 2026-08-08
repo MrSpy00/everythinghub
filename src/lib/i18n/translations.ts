@@ -197,7 +197,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Hero Section
     studioTagline: "Studio v1.0 · 14 Aktif Araç · Sınırsız & Ücretsiz",
     studioHeroTitle: "Dijital Araçların Stüdyosu",
-    heroSubtitle: "YouTube oynatma listesi canlı süresi, görsel sıkıştırma, format dönüştürme, JSON validator, renk paleti ve geliştirici araçları. Kayıt gerektirmez, %100 tarayıcı taraflı çalışır.",
+    heroSubtitle: "YouTube oynatma listesi canlı süresi, yüksek kaliteli görsel sıkıştırma, format dönüştürücü, JSON validator, renk paleti ve geliştirici araçları. Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
     searchPlaceholder: "Araç veya özellik ara (örn: youtube, playlist, json, gradient)...",
     clear: "Temizle",
     explore: "Keşfet",
@@ -207,12 +207,12 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Feature Highlights
     zeroDataTitle: "Sıfır Veri Saklama",
     zeroDataDesc: "Tamamen gizlilik odaklı",
-    turbopackTitle: "Turbopack Motoru",
-    turbopackDesc: "Ultra hızlı derleme",
+    turbopackTitle: "Ultra Hızlı Altyapı",
+    turbopackDesc: "Yüksek hızlı işlem gücü",
     openSourceTitle: "Açık Kaynak Kod",
     openSourceDesc: "GitHub üzerinde şeffaf",
-    freeForeverTitle: "Sonsuz Ücretsiz",
-    freeForeverDesc: "Login / Kredi kartı yok",
+    freeForeverTitle: "Sınırsız & Ücretsiz",
+    freeForeverDesc: "Kayıt veya üyelik gerektirmez",
 
     // Tool Grid & Categories
     toolHubHeader: "Araç Merkezi",
@@ -377,7 +377,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Hero Section
     studioTagline: "Studio v1.0 · 14 Active Tools · Unlimited & Free",
     studioHeroTitle: "Digital Tools Studio",
-    heroSubtitle: "YouTube playlist live duration, image compression, format conversion, JSON validator, color palette extractor, and developer tools. No login required, 100% browser-based.",
+    heroSubtitle: "YouTube playlist live duration, high-quality image compressor, format converter, JSON validator, color palette extractor, and developer utilities. No registration, login, or API keys required; 100% private and browser-processed.",
     searchPlaceholder: "Search tools or features (e.g. youtube, playlist, json, gradient)...",
     clear: "Clear",
     explore: "Explore",
@@ -387,12 +387,12 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Feature Highlights
     zeroDataTitle: "Zero Data Retention",
     zeroDataDesc: "Strictly privacy-first",
-    turbopackTitle: "Turbopack Engine",
-    turbopackDesc: "Ultra-fast compilation",
+    turbopackTitle: "Ultra-Fast Engine",
+    turbopackDesc: "High-speed processing power",
     openSourceTitle: "Open Source Code",
     openSourceDesc: "Transparent on GitHub",
-    freeForeverTitle: "Free Forever",
-    freeForeverDesc: "No login / credit card",
+    freeForeverTitle: "Unlimited & Free",
+    freeForeverDesc: "No registration or login needed",
 
     // Tool Grid & Categories
     toolHubHeader: "Tool Hub",
