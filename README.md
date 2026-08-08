@@ -1,4 +1,4 @@
-# everythinghub
+# EverythingHub
 
 <div align="center">
 
@@ -13,8 +13,8 @@
   <em>Modern, ultra-fast, zero-login, privacy-first all-in-one digital tools studio.</em>
 </p>
 
-[![Türkçe Dokümantasyon](https://img.shields.io/badge/Türkiye_TR-E30A17?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAwIDgwMCI+PHBhdGggZmlsbD0iI2UzMGExNyIgZD0iTTAgMGgxMjAwdjgwMEgweiIvPjxjaXJjbGUgY3g9IjQyNSIgY3k9IjQwMCIgcj0iMjAwIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNDc1IiBjeT0iNDAwIiByPSIxNjAiIGZpbGw9IiNlMzBhMTciLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjU4My4zMzMsNDAwIDY4My4zMzMsNDMyLjUgNjIxLjY2NywzNDUuNzg2IDYyMS42NjcsNDU0LjIxNCA2ODMuMzMzLDM2Ny41Ii8+PC9zdmc+)](#turkce-dokumantasyon)
-[![English Documentation](https://img.shields.io/badge/United_Kingdom_GB-00247D?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHBhdGggZmlsbD0iIzAwMjQ3RCIgZD0iTTAgMGg2MHYzMEgweiIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJNMCAwbDYwIDMwTTYwIDBMMC zMCIvPjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI0IiBkPSJNMCAwbDYwIDMwTTYwIDBMMC zMCIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxMCIgZD0iTTMwIDB2MzBNMCAxNWg6MCIvPjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJNMzAgMHYzMEgwIDE1aDYwIi8+PC9zdmc+)](#english-documentation)
+[![Türkçe Dokümantasyon](https://img.shields.io/badge/Dokümantasyon-🇹🇷_Türkiye-e30a17?style=for-the-badge)](#turkce-dokumantasyon)
+[![English Documentation](https://img.shields.io/badge/Documentation-🇬🇧_United_Kingdom-00247d?style=for-the-badge)](#english-documentation)
 
 ---
 
@@ -27,22 +27,22 @@
 
 ## 💡 Proje Hakkında ve Vizyon
 
-**everythinghub**, modern web teknolojileri (Next.js 16 Turbopack, React 19, Tailwind CSS v4, OGL WebGL ve Framer Motion) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar platformudur.
+**EverythingHub**, modern web teknolojileri (Next.js 16 Turbopack, React 19, Tailwind CSS v4, OGL WebGL ve Framer Motion) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar platformudur.
 
-Platform, standart veya basit şablonlar yerine **Originkit kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (Spring UserCursor), neon ışıma efektleri ve SVG gooey filtreli kinetik tipografi (`TextMorph`) ile donatılmıştır.
+Platform, standart şablonlar yerine **Originkit kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (Spring UserCursor), Liquid Glass mofizm ve neon ışıma efektleri ile donatılmıştır.
 
 ### 🌟 Temel Değerler ve İlkeler
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleştirilir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
 3. **Işık Hızında Performans:** Next.js 16 Turbopack motoru ve OGL WebGL donanım hızlandırması sayesinde sıfır gecikmeyle çalışır.
-4. **14+ Aktif Modüler Araç:** Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç registry altyapısı.
+4. **14+ Aktif Modüler Araç:** Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
 
 ---
 
 ## 🛠️ Canlı Araç Kataloğu (14 Aktif Araç)
 
 ### 🎬 Video Kategorisi
-1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** Playlist süresi hesaplama, farklı oynatma hızları (1.0x-2.0x) simülasyonu, HD thumbnail ve CSV dışa aktarma.
+1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube 2025/2026 `lockupViewModel` destekli playlist süresi hesaplama, farklı oynatma hızları (1.0x-3.0x) simülasyonu, hazır şablon butonları, HD thumbnail ve CSV dışa aktarma.
 2. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD ve HD video kapak resimlerini ücretsiz indirme.
 3. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Özel başlama süreli zaman damgalı (timestamp) bağlantılar oluşturma.
 
@@ -55,7 +55,7 @@ Platform, standart veya basit şablonlar yerine **Originkit kreatif stüdyo este
 7. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
 8. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
 9. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme ve eşleşmeleri listeleme.
-10. **CSS & Tailwind Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli CSS linear-gradient üretme ve kopyalama.
+10. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli CSS linear-gradient üretme ve kopyalama.
 
 ### 📝 Metin Kategorisi
 11. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter, cümle, paragraf ve okuma süresi analizi.
@@ -69,7 +69,7 @@ Platform, standart veya basit şablonlar yerine **Originkit kreatif stüdyo este
 
 ## 💻 Windows Akıllı Konsol (`server.bat`)
 
-Projeyi Windows ortamında tek tıkla çalıştırmak, yönetmek ve derlemek için geliştirilmiş akıllı yönetim konsoludur:
+Proje yönetimi ve yerel geliştirme için akıllı konsol:
 
 ```cmd
 ===============================================================================
@@ -105,8 +105,6 @@ Projeyi Windows ortamında tek tıkla çalıştırmak, yönetmek ve derlemek iç
 ---
 
 ## ⚙️ Kurulum ve Yerel Geliştirme
-
-Projeyi yerel makinenizde çalıştırmak için:
 
 ```bash
 # 1. Depoyu klonlayın
@@ -145,9 +143,9 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 ## 💡 About and Vision
 
-**everythinghub** is a modern, high-performance, privacy-first all-in-one digital utility hub built with Next.js 16 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, and Framer Motion.
+**EverythingHub** is a modern, high-performance, privacy-first all-in-one digital utility hub built with Next.js 16 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, and Framer Motion.
 
-Instead of looking like a generic AI wrapper or standard dashboard, **everythinghub** embraces a **creative studio aesthetic** inspired by Originkit — featuring GPU-accelerated chromatic dotted waves, a spring-physics follower cursor (`UserCursor`) with OS cursor disabled, sweeping violet/indigo neon borders, and kinetic typography (`TextMorph`).
+Featuring a **creative studio aesthetic** inspired by Originkit — with GPU-accelerated chromatic dotted waves, a spring-physics follower cursor (`UserCursor`) with OS cursor disabled, sweeping violet/indigo neon borders, and Liquid Glass UI components.
 
 ### 🌟 Core Philosophy
 1. **Zero Data Retention:** Everything runs strictly client-side or in-memory. No databases, no user trackers, no personal data collection.
@@ -160,7 +158,7 @@ Instead of looking like a generic AI wrapper or standard dashboard, **everything
 ## 🛠️ Live Tool Catalog (14 Active Tools)
 
 ### 🎬 Video Category
-1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** Playlist duration calculator, playback speed (1.0x-2.0x) simulation, HD thumbnails, and CSV export.
+1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube 2025/2026 `lockupViewModel` supported playlist duration calculator, playback speed (1.0x-3.0x) simulation, ready preset template buttons, HD thumbnails, and CSV export.
 2. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD, and HD video cover images for free.
 3. **YouTube Timestamp Generator (`/tools/yt-timestamp-generator`):** Generate custom start time links and description timestamps.
 
@@ -173,7 +171,7 @@ Instead of looking like a generic AI wrapper or standard dashboard, **everything
 7. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
 8. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
 9. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts and list matches.
-10. **CSS & Tailwind Gradient Generator (`/tools/css-gradient-generator`):** Create multi-color linear CSS gradients and copy CSS snippet.
+10. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Create multi-color linear CSS gradients and copy CSS snippet.
 
 ### 📝 Text Category
 11. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading time analysis.
@@ -223,8 +221,6 @@ A specialized Windows command-line utility for managing local dev servers, ports
 ---
 
 ## ⚙️ Setup and Local Development
-
-To run everythinghub locally:
 
 ```bash
 # 1. Clone repository

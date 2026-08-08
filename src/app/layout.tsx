@@ -21,19 +21,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://everythinghub.vercel.app"),
   title: {
-    default: "everythinghub — Dijital Araçların Merkezi",
-    template: "%s — everythinghub",
+    default: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
+    template: "%s — EverythingHub",
   },
   description:
-    "YouTube playlist analizi, geliştirici yardımcıları, görsel ve tasarım araçları. Sıfır hesap gereksinimi, tamamen ücretsiz ve açık kaynak.",
+    "YouTube playlist canlı süre ve video analizi, görsel sıkıştırma, format dönüştürme, JSON validator, renk paleti çıkarıcı, regex tester ve geliştirici araçları stüdyosu. Sıfır hesap gereksinimi, %100 gizli ve ücretsiz.",
   keywords: [
     "youtube playlist analyzer",
-    "youtube playlist süresi",
-    "dijital araçlar",
-    "online tools",
+    "youtube playlist süresi hesaplama",
+    "dijital araçlar stüdyosu",
+    "online developer tools",
     "everythinghub",
-    "geliştirici araçları",
-    "free online tools",
+    "görsel sıkıştırma",
+    "görsel format dönüştürücü",
+    "json formatter",
     "aegissoft",
   ],
   authors: [{ name: "aegisSoft", url: "https://www.aegissoft.com.tr/" }],
@@ -42,22 +43,35 @@ export const metadata: Metadata = {
     type: "website",
     locale: "tr_TR",
     url: "https://everythinghub.vercel.app",
-    siteName: "everythinghub",
-    title: "everythinghub — Dijital Araçların Merkezi",
+    siteName: "EverythingHub",
+    title: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
     description:
-      "YouTube playlist analizi, geliştirici yardımcıları, görsel ve tasarım araçları. Ücretsiz ve modern.",
+      "YouTube playlist süresi hesaplama, görsel sıkıştırma, JSON validator, renk paleti ve geliştirici araçları. Kayıt gerektirmez, %100 gizlilik odaklı.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "EverythingHub Dijital Araçlar Stüdyosu",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "everythinghub — Dijital Araçların Merkezi",
-    description: "Her şeyin tek bir merkezi. Ücretsiz, login gerektirmez.",
+    title: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
+    description:
+      "YouTube playlist analizi, görsel ve geliştirici araçları. Kayıt gerektirmez, %100 gizli.",
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
     shortcut: "/favicon.svg",
     apple: "/icon.svg",
   },
