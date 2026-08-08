@@ -208,9 +208,9 @@ export default function SpotifyPlaylistClient() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-semibold text-emerald-300 backdrop-blur-xl"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-xs font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-2xl shadow-lg shadow-emerald-950/20"
         >
-          <ListMusic className="w-4 h-4" />
+          <ListMusic className="w-4 h-4 text-emerald-400" />
           <span>{isTurkish ? "Spotify Studio v1.0 · Sonic DNA & Bot Control" : "Spotify Studio v1.0 · Sonic DNA & Bot Control"}</span>
         </motion.div>
 
@@ -247,7 +247,7 @@ export default function SpotifyPlaylistClient() {
           <button
             onClick={() => handleAnalyze()}
             disabled={loading}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-bold backdrop-blur-xl hover:bg-emerald-500/15 hover:border-emerald-500/40 active:scale-95 transition-all shadow-lg shadow-black/20 shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl border border-emerald-400/40 bg-white/[0.06] text-emerald-300 font-bold backdrop-blur-3xl shadow-xl transition-all duration-300 hover:bg-emerald-500/20 hover:border-emerald-300 hover:text-white hover:shadow-emerald-500/25 active:scale-95 shrink-0"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-400" /> : <Sparkles className="w-5 h-5 text-emerald-400" />}
             <span>{loading ? (isTurkish ? "Analiz Ediliyor..." : "Analyzing...") : isTurkish ? "Listeyi Analiz Et" : "Analyze Playlist"}</span>
@@ -597,9 +597,9 @@ export default function SpotifyPlaylistClient() {
       {!analysisData && !loading && (
         <div className="space-y-12 pt-6">
           {/* Welcome Intro Banner */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl text-center space-y-4 shadow-2xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-4 h-4" />
+          <div className="p-8 sm:p-10 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl text-center space-y-4 shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-400/30 bg-white/[0.04] text-emerald-300 text-xs font-bold uppercase tracking-wider backdrop-blur-2xl shadow-lg">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
               <span>{isTurkish ? "Spotify Analiz & DJ Stüdyosuna Hoş Geldiniz" : "Welcome to Spotify Sonic Studio"}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white max-w-2xl mx-auto leading-tight">

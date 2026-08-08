@@ -681,17 +681,17 @@ export function YTPlaylistClient() {
                 type="button"
                 onClick={handleAnalyze}
                 disabled={loading || !url.trim()}
-                className="flex items-center justify-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-500/20 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-2xl shadow-xl shadow-indigo-500/10 transition-all hover:scale-[1.02] hover:bg-indigo-500/30 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center justify-center gap-2.5 rounded-xl border border-indigo-400/40 bg-white/[0.06] px-6 py-3 text-sm font-bold text-white backdrop-blur-3xl shadow-xl transition-all duration-300 hover:scale-[1.02] hover:bg-indigo-500/20 hover:border-indigo-300 hover:shadow-indigo-500/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 data-cursor="Analiz"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
                     <span>{loadingStep}</span>
                   </>
                 ) : (
                   <>
-                    <Search className="h-4 w-4" />
+                    <Search className="h-4 w-4 text-indigo-400" />
                     <span>{t.analyze}</span>
                   </>
                 )}

@@ -189,7 +189,7 @@ export default function SpotifyProfileClient() {
           <button
             onClick={() => handleAnalyze()}
             disabled={loading}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 font-bold backdrop-blur-xl hover:bg-cyan-500/15 hover:border-cyan-500/40 active:scale-95 transition-all shadow-lg shadow-black/20 shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl border border-cyan-400/40 bg-white/[0.06] text-cyan-300 font-bold backdrop-blur-3xl shadow-xl transition-all duration-300 hover:bg-cyan-500/20 hover:border-cyan-300 hover:text-white hover:shadow-cyan-500/25 active:scale-95 shrink-0"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin text-cyan-400" /> : <Sparkles className="w-5 h-5 text-cyan-400" />}
             <span>{loading ? (isTurkish ? "Analiz Ediliyor..." : "Analyzing...") : isTurkish ? "Profili Analiz Et" : "Analyze Profile"}</span>
@@ -492,9 +492,9 @@ export default function SpotifyProfileClient() {
       {!profileData && !loading && (
         <div className="space-y-12 pt-6">
           {/* Welcome Intro Banner */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl text-center space-y-4 shadow-2xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-4 h-4" />
+          <div className="p-8 sm:p-10 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl text-center space-y-4 shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-white/[0.04] text-cyan-300 text-xs font-bold uppercase tracking-wider backdrop-blur-2xl shadow-lg">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
               <span>{isTurkish ? "Spotify Profil & Sanatçı Stüdyosuna Hoş Geldiniz" : "Welcome to Spotify Profile Studio"}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white max-w-2xl mx-auto leading-tight">
