@@ -33,13 +33,13 @@ export const metadata: Metadata = {
     template: "%s — EverythingHub",
   },
   description:
-    "YouTube playlist canlı süre ve video analizi, görsel sıkıştırma, format dönüştürme, JSON validator, renk paleti çıkarıcı, regex tester ve geliştirici araçları stüdyosu. Sıfır hesap gereksinimi, %100 gizli ve ücretsiz.",
+    "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
   keywords: [
+    "EverythingHub",
+    "dijital araçlar stüdyosu",
     "youtube playlist analyzer",
     "youtube playlist süresi hesaplama",
-    "dijital araçlar stüdyosu",
     "online developer tools",
-    "everythinghub",
     "görsel sıkıştırma",
     "görsel format dönüştürücü",
     "json formatter",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     siteName: "EverythingHub",
     title: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
     description:
-      "YouTube playlist süresi hesaplama, görsel sıkıştırma, JSON validator, renk paleti ve geliştirici araçları. Kayıt gerektirmez, %100 gizlilik odaklı.",
+      "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
     images: [
       {
         url: "/opengraph-image",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EverythingHub — Ultra Hızlı, Ücretsiz Dijital Araçlar Stüdyosu",
     description:
-      "YouTube playlist analizi, görsel ve geliştirici araçları. Kayıt gerektirmez, %100 gizli.",
+      "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
     images: ["/opengraph-image"],
   },
   robots: {
