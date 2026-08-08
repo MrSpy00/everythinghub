@@ -1,0 +1,219 @@
+# =============================================================================
+# everythinghub — Comprehensive, Multi-Layer Security & Cleanliness .gitignore
+# =============================================================================
+
+# ─── 1. Dependencies & Package Managers ──────────────────────────────────────
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json.bak
+bun.lockb.bak
+
+# Yarn v2+ zero-installs
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# ─── 2. Frameworks & Build Artifacts ─────────────────────────────────────────
+# Next.js
+.next/
+out/
+.vercel/
+.turbo/
+next-env.d.ts
+
+# General Build & Transpilation
+dist/
+build/
+*.tsbuildinfo
+.cache/
+.swc/
+.parcel-cache/
+.rollup.cache/
+
+# Source Maps & Type Maps
+*.js.map
+*.d.ts.map
+*.css.map
+
+# ─── 3. Environment, Secrets & Credentials (CRITICAL) ─────────────────────────
+# Env Files
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env*.local
+*.env
+*.env.*
+
+# Certificates, Keys & Passwords
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.pkcs12
+*.kdbx
+*.ovpn
+*.keystore
+*.jks
+id_rsa*
+id_ed25519*
+*.pub.key
+
+# Cloud & API Service Account Credentials
+secrets/
+.secrets/
+private/
+.private/
+credentials.json
+service-account*.json
+serviceAccountKey*.json
+client_secret*.json
+auth.json
+token.json
+tokens.json
+*.credentials
+firebase-debug.log*
+firestore-debug.log*
+
+# Secret Config Files
+config/local.*
+config/secrets.*
+src/config/secrets.*
+src/config/local.*
+
+# ─── 4. Databases & Storage Dumps ────────────────────────────────────────────
+*.db
+*.db3
+*.sqlite
+*.sqlite3
+*.sdb
+*.dump
+*.rdb
+*.idb
+prisma/*.db
+prisma/*.db-journal
+
+# ─── 5. Logs, Process IDs & Diagnostic Traces ────────────────────────────────
+logs/
+*.log
+*.log.*
+pids/
+*.pid
+*.seed
+*.pid.lock
+.node_repl_history
+.eslintcache
+.stylelintcache
+.prettiercache
+.sentryclirc
+
+# ─── 6. Testing, Coverage & Reports ──────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+.playwright/
+cypress/videos/
+cypress/screenshots/
+.test-results/
+
+# ─── 7. Operating System Artifacts ───────────────────────────────────────────
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ─── 8. IDEs & Text Editors ──────────────────────────────────────────────────
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+!.vscode/launch.json.example
+
+# JetBrains (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Vim / Emacs / Sublime
+*.swp
+*.swo
+*.swn
+\#*\#
+.\#*
+*.orig
+*.rej
+*.sublime-project
+*.sublime-workspace
+
+# ─── 9. AI Assistants, Agents & Local Tooling ────────────────────────────────
+.gemini/
+.claude/
+.cursor/
+.aider*
+.continue/
+.cline/
+.roo/
+antigravity/
+
+# ─── 10. User Uploads, Temp Files & Scratch ──────────────────────────────────
+public/uploads/
+public/user-content/
+public/temp/
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.bak
+*.backup
+*.old
+*.orig
+*.patch
+stash/
+
+# ─── 11. Bundle Analysis & Profiling ─────────────────────────────────────────
+.bundle-analyzer/
+bundle-stats.json
+stats.json
+
+# ─── 12. Explicitly Whitelisted Files ────────────────────────────────────────
+!.gitkeep
+!.gitignore
+!.gitattributes
+!.env.example
+!.env.template
