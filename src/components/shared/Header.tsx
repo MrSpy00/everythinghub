@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X, ExternalLink, PlaySquare, Coffee } from "lucide-react";
 import { StudioLogo } from "@/components/shared/StudioLogo";
+import { LanguageToggle } from "@/components/shared/LanguageToggle";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
@@ -26,6 +28,7 @@ function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -62,19 +65,19 @@ export function Header() {
             href="/"
             className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
           >
-            Ana Sayfa
+            {t.home}
           </Link>
           <Link
             href="/#tools"
             className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
           >
-            Araçlar
+            {t.tools}
           </Link>
           <Link
             href="/#categories"
             className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
           >
-            Kategoriler
+            {t.categories}
           </Link>
           <Link
             href="/tools/yt-playlist-length"
@@ -82,15 +85,17 @@ export function Header() {
             data-cursor="Canlı"
           >
             <PlaySquare className="h-3.5 w-3.5 text-indigo-400" />
-            <span>YT Analyzer</span>
+            <span>{t.ytAnalyzerBadge}</span>
             <span className="rounded-full bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 text-[9px] font-extrabold uppercase ring-1 ring-emerald-500/30">
-              Canlı
+              {t.live}
             </span>
           </Link>
         </nav>
 
-        {/* Right side CTA & GitHub */}
+        {/* Right side CTA & Language Toggle */}
         <div className="flex items-center gap-3">
+          <LanguageToggle />
+
           <a
             href="https://buymeacoffee.com/aegissoft"
             target="_blank"
@@ -99,7 +104,7 @@ export function Header() {
             data-cursor="Destek"
           >
             <Coffee className="h-4 w-4 text-amber-400" />
-            <span>Kahve Ismarla</span>
+            <span>{t.buyCoffee}</span>
           </a>
 
           <a
@@ -110,7 +115,7 @@ export function Header() {
             data-cursor="Yıldızla"
           >
             <GitHubLogo className="h-4 w-4 text-indigo-400" />
-            <span>GitHub Projesi</span>
+            <span>{t.githubRepo}</span>
             <ExternalLink className="h-3 w-3 opacity-60" />
           </a>
 

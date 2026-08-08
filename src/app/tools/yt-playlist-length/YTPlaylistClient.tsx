@@ -33,6 +33,7 @@ import {
 import { parseYouTubeUrl, formatDuration, formatDurationAtSpeed, cn, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface VideoInfo {
   videoId: string;
@@ -88,9 +89,10 @@ const EXAMPLE_PLAYLISTS = [
 type CalculationMode = "full" | "range" | "remaining";
 
 export function YTPlaylistClient() {
+  const { t } = useLanguage();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState("Oynatma Listesi Taranıyor...");
+  const [loadingStep, setLoadingStep] = useState(t.analyzing);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PlaylistData | null>(null);
 
@@ -388,7 +390,7 @@ export function YTPlaylistClient() {
           data-cursor="Geri"
         >
           <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
@@ -404,15 +406,15 @@ export function YTPlaylistClient() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Ultra Hassas v2.5
+                  {t.ultraPrecise}
                 </span>
-                <span className="text-xs text-[var(--hub-text-subtle)]">· %100 Doğru Süre & Sayı Garantili</span>
+                <span className="text-xs text-[var(--hub-text-subtle)]">· {t.guaranteedAccuracy}</span>
               </div>
               <h1 className="text-2xl font-black text-white sm:text-3xl">
-                YouTube Playlist Analyzer
+                {t.ytPlaylistTitle}
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-                Özel hazır şablon butonları, canlı çalışma planlayıcısı, özel video aralıkları ve anlık süper analiz.
+                {t.ytPlaylistSub}
               </p>
             </div>
           </div>

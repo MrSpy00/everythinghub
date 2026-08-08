@@ -17,6 +17,7 @@ import {
 import { getLiveTools } from "@/lib/tools-registry";
 import { NeonBorder } from "@/components/creative/NeonBorder";
 import { MeshText } from "@/components/creative/MeshText";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const TOOL_TITLES = [
   { text: "HER ŞEYİN MERKEZİ", style: "gradient" },
@@ -39,6 +40,7 @@ interface HeroSectionProps {
 export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
   const liveCount = getLiveTools().length;
   const [titleIndex, setTitleIndex] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -67,7 +69,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        <span>Studio v1.0 · {liveCount} Aktif Araç · Sınırsız & Ücretsiz</span>
+        <span>Studio v1.0 · {liveCount} {t.activeCountLabel} · {t.studioTagline}</span>
       </div>
 
       {/* Main Studio Title */}
@@ -76,7 +78,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
           suppressHydrationWarning
           className="text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight"
         >
-          Dijital Araçların Stüdyosu
+          {t.studioHeroTitle}
         </h1>
 
         {/* Dynamic Shuffled Kinetic Tool Titles with Diverse Typographic Effects */}
@@ -110,7 +112,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
 
       {/* Subtitle */}
       <p className="mb-8 max-w-2xl text-xs sm:text-sm lg:text-base leading-relaxed text-[var(--hub-text-muted)]">
-        YouTube oynatma listesi canlı süresi, görsel sıkıştırma, format dönüştürme, JSON validator, renk paleti ve geliştirici araçları. Kayıt gerektirmez, %100 tarayıcı taraflı çalışır.
+        {t.heroSubtitle}
       </p>
 
       {/* Hero Quick Search Bar - Sleek Liquid Glass */}
@@ -120,7 +122,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <Search className="ml-3.5 h-5 w-5 text-purple-400 shrink-0" />
             <input
               type="text"
-              placeholder="Araç veya özellik ara (örn: youtube, playlist, json, gradient)..."
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => handleInputChange(e.target.value)}
               className="w-full bg-transparent px-3 py-2 text-sm text-white placeholder:text-[var(--hub-text-subtle)] border-none outline-none focus:outline-none focus:ring-0"
@@ -133,7 +135,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
                 className="mr-2 flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white transition-all shrink-0"
               >
                 <X className="h-3.5 w-3.5" />
-                <span>Temizle</span>
+                <span>{t.clear}</span>
               </button>
             )}
             <a
@@ -142,7 +144,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
               data-cursor="Keşfet"
             >
               <Compass className="h-4 w-4 text-purple-300" />
-              <span>Keşfet</span>
+              <span>{t.explore}</span>
             </a>
           </div>
         </NeonBorder>
@@ -156,9 +158,9 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
           data-cursor="YouTube"
         >
           <PlaySquare className="h-4 w-4 text-purple-400" />
-          <span>YouTube Playlist Analyzer</span>
+          <span>{t.ytPlaylistTitle}</span>
           <span className="ml-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase">
-            Canlı
+            {t.live}
           </span>
         </Link>
 
@@ -168,7 +170,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
           data-cursor="Katalog"
         >
           <ArrowDown className="h-4 w-4 text-purple-400" />
-          <span>Tüm Araçları İncele</span>
+          <span>{t.inspectAllTools}</span>
         </a>
       </div>
 
@@ -177,29 +179,29 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         {[
           {
             icon: ShieldCheck,
-            title: "Sıfır Veri Saklama",
-            desc: "Tamamen gizlilik odaklı",
+            title: t.zeroDataTitle,
+            desc: t.zeroDataDesc,
             color: "text-emerald-400",
             borderColor: "hover:border-emerald-500/50",
           },
           {
             icon: Cpu,
-            title: "Turbopack Motoru",
-            desc: "Ultra hızlı derleme",
+            title: t.turbopackTitle,
+            desc: t.turbopackDesc,
             color: "text-indigo-400",
             borderColor: "hover:border-indigo-500/50",
           },
           {
             icon: Code2,
-            title: "Açık Kaynak Kod",
-            desc: "GitHub üzerinde şeffaf",
+            title: t.openSourceTitle,
+            desc: t.openSourceDesc,
             color: "text-purple-400",
             borderColor: "hover:border-purple-500/50",
           },
           {
             icon: Globe,
-            title: "Sonsuz Ücretsiz",
-            desc: "Login / Kredi kartı yok",
+            title: t.freeForeverTitle,
+            desc: t.freeForeverDesc,
             color: "text-pink-400",
             borderColor: "hover:border-pink-500/50",
           },

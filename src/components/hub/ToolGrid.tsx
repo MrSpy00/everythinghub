@@ -6,6 +6,7 @@ import Fuse from "fuse.js";
 import { type Tool, type ToolCategory, tools, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
 import { InteractiveShowcase } from "@/components/creative/InteractiveShowcase";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const fuse = new Fuse(tools, {
   keys: ["title", "description", "tags", "category"],
@@ -26,6 +27,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
   const [internalSearch, setInternalSearch] = useState(searchQuery);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | typeof ALL_CATEGORIES>(ALL_CATEGORIES);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const { t } = useLanguage();
 
   const search = searchQuery !== undefined ? searchQuery : internalSearch;
 
@@ -63,17 +65,17 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 <Compass className="h-3.5 w-3.5" />
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
-                Araç Merkezi
+                {t.toolHubHeader}
               </span>
             </div>
             <h2 suppressHydrationWarning className="text-2xl font-black text-white sm:text-3xl">
-              Tüm Dijital Araçlar
+              {t.allToolsTitle}
               <span className="ml-3 rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/30">
-                {liveCount} Aktif · {tools.length} Toplam
+                {liveCount} {t.activeCountLabel} · {tools.length} Total
               </span>
             </h2>
             <p className="mt-1 text-sm text-[var(--hub-text-muted)]">
-              İhtiyacınız olan aracı anında arayın, kategorilere göre filtreleyin veya etkileşimli vitrinde kaydırın.
+              {t.searchFilterDesc}
             </p>
           </div>
 
@@ -84,7 +86,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--hub-text-subtle)]" />
               <input
                 type="text"
-                placeholder="Araç filtrele..."
+                placeholder={t.filterPlaceholder}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none"
@@ -110,11 +112,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                     ? "bg-indigo-500 text-white shadow-md"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
-                title="Izgara Görünümü"
+                title={t.viewGrid}
                 data-cursor="Izgara"
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Izgara</span>
+                <span className="hidden sm:inline">{t.viewGrid}</span>
               </button>
               <button
                 onClick={() => setViewMode("showcase")}
@@ -123,11 +125,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                     ? "bg-indigo-500 text-white shadow-md"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
-                title="Vitrin Kaydırıcı"
+                title={t.viewShowcase}
                 data-cursor="Vitrin"
               >
                 <Flame className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Vitrin</span>
+                <span className="hidden sm:inline">{t.viewShowcase}</span>
               </button>
               <button
                 onClick={() => setViewMode("compact")}
@@ -136,11 +138,11 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                     ? "bg-indigo-500 text-white shadow-md"
                     : "text-[var(--hub-text-muted)] hover:text-white"
                 }`}
-                title="Kompakt Liste"
+                title={t.viewCompact}
                 data-cursor="Liste"
               >
                 <Rows3 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Liste</span>
+                <span className="hidden sm:inline">{t.viewCompact}</span>
               </button>
             </div>
           </div>

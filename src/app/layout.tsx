@@ -7,6 +7,7 @@ import { DottedBackground } from "@/components/creative/DottedBackground";
 import { UserCursor } from "@/components/creative/UserCursor";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -94,12 +95,14 @@ export default function RootLayout({
         {/* Studio User Follower Cursor */}
         <UserCursor name="EverythingHub" color="#8b5cf6" size={26} />
 
-        {/* Main Application Container */}
-        <div className="relative z-10 flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        <LanguageProvider>
+          {/* Main Application Container */}
+          <div className="relative z-10 flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </LanguageProvider>
 
         {/* Global Notifications */}
         <Toaster

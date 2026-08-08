@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { StudioLogo } from "@/components/shared/StudioLogo";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import {
   Heart,
   ExternalLink,
@@ -31,6 +34,7 @@ function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { t } = useLanguage();
 
   return (
     <footer className="relative border-t border-[var(--hub-border)] bg-[var(--hub-bg)]/80 backdrop-blur-2xl py-12">
@@ -141,7 +145,7 @@ export function Footer() {
                 data-cursor="aegisSoft"
               >
                 <Code2 className="h-3.5 w-3.5 text-indigo-400" />
-                <span>Tasarım ve Geliştirme: aegisSoft</span>
+                <span>{t.designDevBy}</span>
                 <ExternalLink className="h-3 w-3 opacity-70" />
               </a>
 
@@ -153,7 +157,7 @@ export function Footer() {
                 data-cursor="Kahve"
               >
                 <Coffee className="h-3.5 w-3.5 text-amber-400" />
-                <span>Kahve Ismarla (Buy Me a Coffee)</span>
+                <span>{t.buyCoffee}</span>
                 <ExternalLink className="h-3 w-3 opacity-70" />
               </a>
             </div>
@@ -164,7 +168,7 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-[var(--hub-text-subtle)]">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-indigo-400" />
-            <span>© {currentYear} <strong>aegisSoft</strong>. Tüm hakları saklıdır.</span>
+            <span>© {currentYear} <strong>aegisSoft</strong>. {t.allRightsReserved}</span>
           </div>
 
           <div className="flex items-center gap-4">

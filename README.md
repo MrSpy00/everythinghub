@@ -13,8 +13,15 @@
   <em>Modern, ultra-fast, zero-login, privacy-first all-in-one digital tools studio.</em>
 </p>
 
-[![Türkçe Dokümantasyon](https://img.shields.io/badge/Dokümantasyon-🇹🇷_Türkiye-e30a17?style=for-the-badge)](#turkce-dokumantasyon)
-[![English Documentation](https://img.shields.io/badge/Documentation-🇬🇧_United_Kingdom-00247d?style=for-the-badge)](#english-documentation)
+<p align="center">
+  <a href="#turkce-dokumantasyon">
+    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="24" height="16" alt="Türkiye" inline /> <strong>Türkçe Dokümantasyon</strong>
+  </a>
+  &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+  <a href="#english-documentation">
+    <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="24" height="16" alt="United Kingdom" inline /> <strong>English Documentation</strong>
+  </a>
+</p>
 
 ---
 
