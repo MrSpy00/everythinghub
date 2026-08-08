@@ -30,7 +30,6 @@ import {
   Square,
   FileCode,
   Share2,
-  Zap,
 } from "lucide-react";
 import { parseYouTubeUrl, formatDuration, formatDurationAtSpeed, cn, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
@@ -750,7 +749,7 @@ export function YTPlaylistClient() {
 
                 <div className="rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-5 backdrop-blur-xl flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <Zap className="h-6 w-6" />
+                    <Clock className="h-6 w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">

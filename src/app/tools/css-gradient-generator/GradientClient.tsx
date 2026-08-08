@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Zap, Copy, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, Check, Sparkles } from "lucide-react";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -49,7 +49,7 @@ export function GradientClient() {
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30">
-            <Zap className="h-7 w-7 text-white" />
+            <Sparkles className="h-7 w-7 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">CSS Gradient Üretici</h1>

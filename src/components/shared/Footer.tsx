@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { StudioLogo } from "@/components/shared/StudioLogo";
 import {
-  Zap,
   Heart,
   ExternalLink,
   ShieldCheck,
@@ -39,9 +39,7 @@ export function Footer() {
           {/* Brand Column */}
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-lg shadow-indigo-500/25 transition-transform group-hover:scale-105">
-                <Zap className="h-5 w-5 text-white" />
-              </div>
+              <StudioLogo className="h-9 w-9 group-hover:scale-105" />
               <span className="text-xl font-black tracking-tight text-white">
                 everything<span className="gradient-text">hub</span>
               </span>

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Zap, Menu, X, ExternalLink, PlaySquare } from "lucide-react";
+import { Menu, X, ExternalLink, PlaySquare } from "lucide-react";
+import { StudioLogo } from "@/components/shared/StudioLogo";
 import { cn } from "@/lib/utils";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
@@ -48,9 +49,7 @@ export function Header() {
           className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
           data-cursor="Home"
         >
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-md shadow-indigo-500/25 transition-transform group-hover:scale-105">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
+          <StudioLogo className="h-8 w-8 group-hover:scale-105" />
           <span className="text-lg font-black tracking-tight text-white">
             everything
             <span className="gradient-text">hub</span>

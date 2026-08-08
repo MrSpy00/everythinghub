@@ -3,7 +3,7 @@
 import React, { useRef, useState, useMemo } from "react";
 import { motion, useMotionValue } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Zap, CheckCircle2, Lock } from "lucide-react";
+import { ArrowRight, Sparkles, CheckCircle2, Lock } from "lucide-react";
 import { tools } from "@/lib/tools-registry";
 
 export function InteractiveShowcase() {
@@ -123,7 +123,7 @@ export function InteractiveShowcase() {
               ) : (
                 <div className="flex items-center justify-between w-full rounded-xl bg-white/[0.02] px-3 py-2 text-xs font-medium text-[var(--hub-text-subtle)] border border-white/[0.04]">
                   <span>Geliştirilme Aşamasında</span>
-                  <Zap className="h-3.5 w-3.5 opacity-50" />
+                  <Sparkles className="h-3.5 w-3.5 opacity-50" />
                 </div>
               )}
             </motion.div>
