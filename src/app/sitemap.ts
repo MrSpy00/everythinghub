@@ -4,7 +4,6 @@ import { getLiveTools } from "@/lib/tools-registry";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://www.everythinghub.com.tr";
   const liveTools = getLiveTools();
-
   const now = new Date();
 
   return [

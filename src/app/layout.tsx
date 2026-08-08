@@ -178,10 +178,16 @@ const jsonLdSchema = {
         "everythinghub.com.tr",
         "www.everythinghub.com.tr",
         "everythinghub.info",
-        "www.everythinghub.info"
+        "www.everythinghub.info",
+        "EverythingHub Dijital Araçlar"
       ],
       "description": "Ultra hızlı, ücretsiz, üyeliksiz ve %100 gizli dijital araçlar stüdyosu.",
       "inLanguage": ["tr-TR", "en-US"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.everythinghub.com.tr/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
       "sameAs": [
         "https://everythinghub.com.tr",
         "https://www.everythinghub.info",
@@ -204,6 +210,60 @@ const jsonLdSchema = {
       "sameAs": [
         "https://github.com/MrSpy00",
         "https://www.aegissoft.com.tr/"
+      ]
+    },
+    {
+      "@type": "SiteNavigationElement",
+      "@id": "https://www.everythinghub.com.tr/#navigation",
+      "name": [
+        "YouTube Playlist Analizörü",
+        "Spotify Playlist Analizörü",
+        "QR Kod Stüdyosu Pro",
+        "Görsel Sıkıştırıcı & WebP",
+        "Canlı Döviz & Kripto Dönüştürücü",
+        "Canlı Hava Durumu & Radar",
+        "JSON Formatter & Validator",
+        "JWT Debugger Studio"
+      ],
+      "url": [
+        "https://www.everythinghub.com.tr/tools/yt-playlist-length",
+        "https://www.everythinghub.com.tr/tools/spotify-playlist-analyzer",
+        "https://www.everythinghub.com.tr/tools/qr-code-studio",
+        "https://www.everythinghub.com.tr/tools/image-compressor",
+        "https://www.everythinghub.com.tr/tools/currency-exchange-converter",
+        "https://www.everythinghub.com.tr/tools/weather-air-quality",
+        "https://www.everythinghub.com.tr/tools/json-formatter",
+        "https://www.everythinghub.com.tr/tools/jwt-debugger"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.everythinghub.com.tr/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "EverythingHub nedir ve ne amaçla kullanılır?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "EverythingHub; geliştiriciler, içerik üreticileri, tasarımcılar ve günlük kullanıcılar için tasarlanmış 38+ ultra hızlı, üyeliksiz ve %100 gizli dijital araç içeren bir online araçlar stüdyosudur."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "EverythingHub araçları ücretsiz mi ve kayıt gerektiriyor mu?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Evet, EverythingHub üzerindeki tüm araçlar %100 ücretsizdir. Kayıt, üyelik, kredi kartı veya API anahtarı gerektirmez."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Verilerim sunucularda saklanıyor mu?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Hayır. EverythingHub 'Sıfır Veri Saklama (Zero Data Retention)' ilkesiyle çalışır. Tüm işlemler doğrudan tarayıcınızda veya belpekte işlenir, sunuculara hiçbir hassas veri kaydedilmez."
+          }
+        }
       ]
     },
     {

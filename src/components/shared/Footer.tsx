@@ -58,7 +58,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-white transition-all hover:border-indigo-500/50 hover:bg-white/[0.08]"
-                data-cursor="GitHub"
+                data-cursor={t.githubRepo}
               >
                 <GitHubLogo className="h-3.5 w-3.5 text-indigo-400" />
                 <span>{t.githubRepo}</span>
@@ -69,7 +69,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-xs font-semibold text-[var(--hub-text-muted)] transition-all hover:text-white hover:border-white/20"
-                data-cursor="Geliştirici"
+                data-cursor="Developer @MrSpy00"
               >
                 <span>@MrSpy00</span>
               </a>
@@ -118,7 +118,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-bold text-indigo-300 backdrop-blur-2xl transition-all duration-300 hover:scale-[1.02] hover:border-indigo-400/50 hover:bg-white/[0.08] hover:text-white shadow-lg"
-                data-cursor="aegisSoft"
+                data-cursor="aegisSoft Studio"
               >
                 <div className="flex items-center gap-2.5">
                   <ExternalLink className="h-4 w-4 text-indigo-400 transition-transform group-hover:scale-110" />
@@ -132,7 +132,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-bold text-amber-300 backdrop-blur-2xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-400/50 hover:bg-white/[0.08] hover:text-white shadow-lg"
-                data-cursor="Kahve"
+                data-cursor={t.buyCoffee}
               >
                 <div className="flex items-center gap-2.5">
                   <Coffee className="h-4 w-4 text-amber-400 transition-transform group-hover:scale-110" />
