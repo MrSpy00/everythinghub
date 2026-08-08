@@ -5,7 +5,7 @@ import {
   Calculator,
   Type,
   Palette,
-  Sparkles,
+  Layers,
   Download,
   Clock,
   FileCode2,
@@ -179,7 +179,7 @@ export const tools: Tool[] = [
     title: "CSS & Tailwind Gradient Üretici",
     description:
       "Çok renkli doğrusal ve dairesel CSS/Tailwind gradientler oluşturun, tek tıkla CSS kodunu alın",
-    icon: Sparkles,
+    icon: Layers,
     category: "developer",
     accentColor: "#ec4899",
     accentClass: "from-pink-500 to-pink-600",

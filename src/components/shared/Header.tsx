@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, ExternalLink, PlaySquare } from "lucide-react";
+import { Menu, X, ExternalLink, PlaySquare, Coffee } from "lucide-react";
 import { StudioLogo } from "@/components/shared/StudioLogo";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +92,17 @@ export function Header() {
         {/* Right side CTA & GitHub */}
         <div className="flex items-center gap-3">
           <a
+            href="https://buymeacoffee.com/aegissoft"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-bold text-amber-300 backdrop-blur-xl transition-all hover:border-amber-400 hover:bg-amber-500/20 shadow-sm"
+            data-cursor="Destek"
+          >
+            <Coffee className="h-4 w-4 text-amber-400" />
+            <span>Kahve Ismarla</span>
+          </a>
+
+          <a
             href="https://github.com/MrSpy00/everythinghub"
             target="_blank"
             rel="noopener noreferrer"
@@ -148,10 +159,19 @@ export function Header() {
               <span>YouTube Playlist Analyzer</span>
             </Link>
             <a
+              href="https://buymeacoffee.com/aegissoft"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 p-2.5 text-sm font-bold text-amber-300"
+            >
+              <Coffee className="h-4 w-4" />
+              <span>Kahve Ismarla (Buy Me a Coffee)</span>
+            </a>
+            <a
               href="https://github.com/MrSpy00/everythinghub"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 p-2.5 text-sm font-bold text-indigo-300"
+              className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 p-2.5 text-sm font-bold text-indigo-300"
             >
               <GitHubLogo className="h-4 w-4" />
               <span>GitHub Deposunu Aç</span>

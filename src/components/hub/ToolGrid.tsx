@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, LayoutGrid, Rows3, Sparkles } from "lucide-react";
+import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
 import Fuse from "fuse.js";
 import { type Tool, type ToolCategory, tools, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/tools-registry";
 import { ToolCard } from "./ToolCard";
@@ -18,13 +18,21 @@ const ALL_CATEGORIES = "all";
 type ViewMode = "grid" | "showcase" | "compact";
 
 interface ToolGridProps {
-  initialSearch?: string;
+  searchQuery?: string;
+  onSearch?: (query: string) => void;
 }
 
-export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
-  const [search, setSearch] = useState(initialSearch);
+export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
+  const [internalSearch, setInternalSearch] = useState(searchQuery);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | typeof ALL_CATEGORIES>(ALL_CATEGORIES);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  const search = searchQuery !== undefined ? searchQuery : internalSearch;
+
+  const handleSearchChange = (val: string) => {
+    setInternalSearch(val);
+    if (onSearch) onSearch(val);
+  };
 
   const categories = useMemo(() => {
     return [...new Set(tools.map((t) => t.category))];
@@ -32,7 +40,7 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
 
   const filteredTools = useMemo(() => {
     let result: Tool[] = search
-      ? fuse.search(search).map((r) => r.item)
+      ? fuse.search(search).map((r: { item: Tool }) => r.item)
       : tools;
 
     if (activeCategory !== ALL_CATEGORIES) {
@@ -52,7 +60,7 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Compass className="h-3.5 w-3.5" />
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
                 Araç Merkezi
@@ -78,13 +86,13 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
                 type="text"
                 placeholder="Araç filtrele..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-[var(--hub-text-subtle)] transition-all focus:border-indigo-500/50 focus:outline-none"
                 data-cursor="Filtrele"
               />
               {search && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => handleSearchChange("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--hub-text-subtle)] hover:text-white"
                   aria-label="Temizle"
                 >
@@ -118,7 +126,7 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
                 title="Vitrin Kaydırıcı"
                 data-cursor="Vitrin"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Flame className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Vitrin</span>
               </button>
               <button
@@ -197,7 +205,7 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
                 </p>
                 <button
                   onClick={() => {
-                    setSearch("");
+                    handleSearchChange("");
                     setActiveCategory(ALL_CATEGORIES);
                   }}
                   className="mt-6 rounded-xl bg-indigo-500/15 border border-indigo-500/30 px-5 py-2.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/25 transition-all"

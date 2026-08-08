@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Code2,
   Palette,
+  Coffee,
 } from "lucide-react";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
@@ -131,17 +132,31 @@ export function Footer() {
             <p className="text-xs text-[var(--hub-text-muted)] mb-3 leading-relaxed">
               Bu platform, yüksek performans ve estetik standartlarıyla geliştirilmiştir.
             </p>
-            <a
-              href="https://www.aegissoft.com.tr/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs font-bold text-indigo-300 backdrop-blur-2xl transition-all hover:scale-105 hover:border-indigo-400 hover:bg-indigo-500/20 hover:text-white shadow-xl shadow-indigo-500/5"
-              data-cursor="aegisSoft"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Tasarım ve Geliştirme: aegisSoft</span>
-              <ExternalLink className="h-3 w-3 opacity-70" />
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href="https://www.aegissoft.com.tr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs font-bold text-indigo-300 backdrop-blur-2xl transition-all hover:scale-105 hover:border-indigo-400 hover:bg-indigo-500/20 hover:text-white shadow-xl shadow-indigo-500/5"
+                data-cursor="aegisSoft"
+              >
+                <Code2 className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Tasarım ve Geliştirme: aegisSoft</span>
+                <ExternalLink className="h-3 w-3 opacity-70" />
+              </a>
+
+              <a
+                href="https://buymeacoffee.com/aegissoft"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-300 backdrop-blur-2xl transition-all hover:scale-105 hover:border-amber-400 hover:bg-amber-500/20 hover:text-white shadow-xl shadow-amber-500/5"
+                data-cursor="Kahve"
+              >
+                <Coffee className="h-3.5 w-3.5 text-amber-400" />
+                <span>Kahve Ismarla (Buy Me a Coffee)</span>
+                <ExternalLink className="h-3 w-3 opacity-70" />
+              </a>
+            </div>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Lock, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Lock, Flame, CheckCircle2 } from "lucide-react";
 import { type Tool, CATEGORY_LABELS } from "@/lib/tools-registry";
 
 interface ToolCardProps {
@@ -38,7 +38,7 @@ export function ToolCard({ tool }: ToolCardProps) {
         <div className="flex items-center gap-1.5">
           {tool.newBadge && isLive && (
             <span className="flex items-center gap-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-sm">
-              <Sparkles className="h-2.5 w-2.5" />
+              <Flame className="h-2.5 w-2.5 text-amber-400" />
               Yeni
             </span>
           )}
