@@ -140,7 +140,6 @@ export function YTPlaylistClient() {
       }
 
       setData(json);
-      // Select all videos by default
       const allIds = new Set<string>((json.videos as VideoInfo[]).map((v) => v.videoId));
       setSelectedIds(allIds);
       setRangeStart(1);
@@ -152,6 +151,18 @@ export function YTPlaylistClient() {
       setLoading(false);
     }
   }, []);
+
+  // Auto-analyze on page mount if URL contains ?id=PLAYLIST_ID
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const queryId = params.get("id");
+      if (queryId) {
+        setUrl(queryId);
+        handleAnalyzeWithUrl(queryId);
+      }
+    }
+  });
 
   const handleAnalyze = () => handleAnalyzeWithUrl(url);
 
@@ -871,7 +882,21 @@ export function YTPlaylistClient() {
               <button
                 onClick={() =>
                   handleCopy(
-                    `🎬 YouTube Playlist: ${data.title}\nKanal: ${data.channelName || "—"}\nSeçili Video: ${activeVideos.length} / ${data.totalVideos}\nToplam Süre: ${duration?.formatted}\n1.5× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 1.5)}\n2.0× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 2.0)}\n\neverythinghub stüdyosu ile analiz edildi: https://everythinghub.vercel.app/tools/yt-playlist-length`,
+                    [
+                      `🎬 YouTube Playlist: ${data.title}`,
+                      `📺 Kanal: ${data.channelName || "—"}`,
+                      `📊 Seçili Video: ${activeVideos.length} / ${data.totalVideos} adet`,
+                      `⏱️ Toplam Süre: ${duration?.formatted} (${duration?.short})`,
+                      `⚡ 1.25× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 1.25)}`,
+                      `⚡ 1.50× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 1.50)}`,
+                      `⚡ 2.00× Hızda: ${formatDurationAtSpeed(activeTotalSeconds, 2.00)}`,
+                      "",
+                      `🔗 everythinghub ile doğrudan aç & analiz et:`,
+                      `https://everythinghub.vercel.app/tools/yt-playlist-length?id=${data.playlistId}`,
+                      "",
+                      `▶️ YouTube'da izle:`,
+                      `https://www.youtube.com/playlist?list=${data.playlistId}`,
+                    ].join("\n"),
                     "summary"
                   )
                 }

@@ -21,23 +21,72 @@ interface PlaylistData {
   fallback?: boolean;
 }
 
+function extractTextFromObject(obj: unknown): string {
+  if (!obj) return "";
+  if (typeof obj === "string") return obj;
+  if (typeof obj === "number") return String(obj);
+  if (typeof obj === "object") {
+    const o = obj as Record<string, unknown>;
+    if (typeof o.simpleText === "string") return o.simpleText;
+    if (Array.isArray(o.runs)) {
+      return (o.runs as { text: string }[]).map((r) => r?.text || "").join("");
+    }
+    if (o.accessibility && typeof o.accessibility === "object") {
+      const acc = o.accessibility as Record<string, unknown>;
+      const accData = acc.accessibilityData as Record<string, unknown>;
+      if (typeof accData?.label === "string") return accData.label;
+    }
+  }
+  return "";
+}
+
 function parseTextDuration(text?: string | null): number {
   if (!text) return 0;
-  const cleaned = text.trim().replace(/^PT/i, "");
+  const cleaned = text.trim();
 
-  // Handle ISO 8601 duration e.g. 1H2M3S or 12M34S
-  if (/^\d+[HMS]/i.test(cleaned)) {
-    const hours = (cleaned.match(/(\d+)H/i) || [])[1] || "0";
-    const minutes = (cleaned.match(/(\d+)M/i) || [])[1] || "0";
-    const seconds = (cleaned.match(/(\d+)S/i) || [])[1] || "0";
-    return parseInt(hours, 10) * 3600 + parseInt(minutes, 10) * 60 + parseInt(seconds, 10);
+  // 1. ISO 8601 duration e.g. PT1H2M3S or 12M34S
+  if (/PT|\d+[HMS]/i.test(cleaned)) {
+    const hours = (cleaned.match(/(\d+)\s*H/i) || [])[1] || "0";
+    const minutes = (cleaned.match(/(\d+)\s*M/i) || [])[1] || "0";
+    const seconds = (cleaned.match(/(\d+)\s*S/i) || [])[1] || "0";
+    const total = parseInt(hours, 10) * 3600 + parseInt(minutes, 10) * 60 + parseInt(seconds, 10);
+    if (total > 0) return total;
   }
 
-  const parts = cleaned.split(":").map((p) => parseInt(p, 10));
-  if (parts.some((p) => isNaN(p))) return 0;
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 4) return parts[0] * 86400 + parts[1] * 3600 + parts[2] * 60 + parts[3];
+  // 2. Colon formatted e.g. "01:14:05" or "14:05" or "4:05"
+  const colonMatch = cleaned.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (colonMatch) {
+    if (colonMatch[3] !== undefined) {
+      const h = parseInt(colonMatch[1], 10);
+      const m = parseInt(colonMatch[2], 10);
+      const s = parseInt(colonMatch[3], 10);
+      return h * 3600 + m * 60 + s;
+    } else {
+      const m = parseInt(colonMatch[1], 10);
+      const s = parseInt(colonMatch[2], 10);
+      return m * 60 + s;
+    }
+  }
+
+  // 3. Turkish accessibility text e.g. "14 dakika, 5 saniye" or "1 saat, 20 dakika"
+  const trHours = (cleaned.match(/(\d+)\s*saat/i) || [])[1] || "0";
+  const trMinutes = (cleaned.match(/(\d+)\s*dakika/i) || [])[1] || "0";
+  const trSeconds = (cleaned.match(/(\d+)\s*saniye/i) || [])[1] || "0";
+  const trTotal = parseInt(trHours, 10) * 3600 + parseInt(trMinutes, 10) * 60 + parseInt(trSeconds, 10);
+  if (trTotal > 0) return trTotal;
+
+  // 4. English accessibility text e.g. "14 minutes, 5 seconds"
+  const enHours = (cleaned.match(/(\d+)\s*hour/i) || [])[1] || "0";
+  const enMinutes = (cleaned.match(/(\d+)\s*minute/i) || [])[1] || "0";
+  const enSeconds = (cleaned.match(/(\d+)\s*second/i) || [])[1] || "0";
+  const enTotal = parseInt(enHours, 10) * 3600 + parseInt(enMinutes, 10) * 60 + parseInt(enSeconds, 10);
+  if (enTotal > 0) return enTotal;
+
+  // 5. Raw seconds integer string e.g. "845"
+  if (/^\d+$/.test(cleaned)) {
+    return parseInt(cleaned, 10);
+  }
+
   return 0;
 }
 
@@ -75,10 +124,8 @@ function extractDurationFromObject(v: Record<string, unknown>): number {
 
   // 2. Direct lengthText property
   if (v.lengthText) {
-    const lt =
-      (v.lengthText as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
-      (v.lengthText as { runs?: { text: string }[] })?.runs?.[0]?.text;
-    const parsed = parseTextDuration(lt);
+    const txt = extractTextFromObject(v.lengthText);
+    const parsed = parseTextDuration(txt);
     if (parsed > 0) return parsed;
   }
 
@@ -87,9 +134,7 @@ function extractDurationFromObject(v: Record<string, unknown>): number {
     for (const overlay of v.thumbnailOverlays as Record<string, unknown>[]) {
       const timeRenderer = overlay?.thumbnailOverlayTimeStatusRenderer as Record<string, unknown>;
       if (timeRenderer?.text) {
-        const txt =
-          (timeRenderer.text as { simpleText?: string; runs?: { text: string }[] })?.simpleText ||
-          (timeRenderer.text as { runs?: { text: string }[] })?.runs?.[0]?.text;
+        const txt = extractTextFromObject(timeRenderer.text);
         const parsed = parseTextDuration(txt);
         if (parsed > 0) return parsed;
       }
@@ -106,7 +151,7 @@ function extractDurationFromObject(v: Record<string, unknown>): number {
         if (Array.isArray(bottomOverlay?.badges)) {
           for (const badge of bottomOverlay.badges as Record<string, unknown>[]) {
             const badgeVm = badge?.thumbnailBadgeViewModel as Record<string, unknown>;
-            const txt = badgeVm?.text as string;
+            const txt = extractTextFromObject(badgeVm?.text);
             const parsed = parseTextDuration(txt);
             if (parsed > 0) return parsed;
           }
@@ -123,48 +168,64 @@ function extractDurationFromObject(v: Record<string, unknown>): number {
     if (parsed > 0) return parsed;
   }
 
+  const runsMatch = str.match(/"text":"(\d{1,2}:(?:\d{2}:)?\d{2})"/);
+  if (runsMatch) {
+    const parsed = parseTextDuration(runsMatch[1]);
+    if (parsed > 0) return parsed;
+  }
+
   return 0;
 }
 
 /**
- * Fetch video duration using YouTube InnerTube ANDROID player endpoint
- * 100% reliable for any video ID, bypasses all bot protections and API limits.
+ * Single Video Duration Fallback Engine
  */
-async function fetchDurationViaAndroidPlayer(videoId: string): Promise<number> {
+async function fetchSingleVideoDuration(videoId: string): Promise<number> {
+  // Method 1: YouTube Watch Page HTML
   try {
-    const res = await fetch(
-      "https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent":
-            "com.google.android.youtube/19.16.38 (Linux; U; Android 14; tr_TR)",
-          "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8",
-        },
-        body: JSON.stringify({
-          videoId,
-          context: {
-            client: {
-              clientName: "ANDROID",
-              clientVersion: "19.16.38",
-              hl: "tr",
-              gl: "TR",
-            },
-          },
-        }),
-        next: { revalidate: 3600 },
+    const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8",
+      },
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const secMatch = html.match(/"lengthSeconds":"(\d+)"/);
+      if (secMatch) return parseInt(secMatch[1], 10);
+
+      const msMatch = html.match(/"approxDurationMs":"(\d+)"/);
+      if (msMatch) return Math.round(parseInt(msMatch[1], 10) / 1000);
+
+      const durMatch = html.match(/itemprop="duration"\s+content="([^"]+)"/);
+      if (durMatch) {
+        const parsed = parseTextDuration(durMatch[1]);
+        if (parsed > 0) return parsed;
       }
-    );
-    if (!res.ok) return 0;
-    const data = await res.json();
-    const lengthStr = data?.videoDetails?.lengthSeconds;
-    if (lengthStr) {
-      return parseInt(lengthStr, 10) || 0;
     }
   } catch {
-    // fallback
+    // ignore
   }
+
+  // Method 2: Invidious Video API
+  const invidiousInstances = ["https://inv.tux.pizza", "https://invidious.nerdvpn.de", "https://vid.puffyan.us"];
+  for (const inst of invidiousInstances) {
+    try {
+      const res = await fetch(`${inst}/api/v1/videos/${videoId}`, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        next: { revalidate: 3600 },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.lengthSeconds) return parseInt(data.lengthSeconds, 10);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   return 0;
 }
 
@@ -177,13 +238,12 @@ async function enrichMissingDurations(videos: VideoInfo[]): Promise<VideoInfo[]>
 
   const enrichedMap = new Map<string, number>();
 
-  // Process in batches of 15 to avoid network congestion
   const batchSize = 15;
   for (let i = 0; i < needsEnrichment.length; i += batchSize) {
     const batch = needsEnrichment.slice(i, i + batchSize);
     const results = await Promise.all(
       batch.map(async (v) => {
-        const sec = await fetchDurationViaAndroidPlayer(v.videoId);
+        const sec = await fetchSingleVideoDuration(v.videoId);
         return { videoId: v.videoId, durationSeconds: sec };
       })
     );
