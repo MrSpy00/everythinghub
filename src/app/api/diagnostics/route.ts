@@ -5,7 +5,13 @@ export const runtime = "nodejs";
 
 export async function GET() {
   const status = logger.getSystemStatus();
-  const recentLogs = logger.getRecentLogs().slice(-20);
+  const recentLogs = logger.getRecentLogs().slice(-20).map((log) => ({
+    id: log.id,
+    timestamp: log.timestamp,
+    level: log.level,
+    context: log.context,
+    message: log.message,
+  }));
 
   return NextResponse.json({
     project: "everythinghub",
