@@ -13,14 +13,12 @@
   <em>Modern, ultra-fast, zero-login, privacy-first all-in-one digital tools studio.</em>
 </p>
 
-[![Türkçe Dokümantasyon](https://img.shields.io/badge/Dil-Türkçe_TR-E30A17?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAwIDgwMCI+PHBhdGggZmlsbD0iI2UzMGExNyIgZD0iTTAgMGgxMjAwdjgwMEgweiIvPjxjaXJjbGUgY3g9IjQyNSIgY3k9IjQwMCIgcj0iMjAwIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNDc1IiBjeT0iNDAwIiByPSIxNjAiIGZpbGw9IiNlMzBhMTciLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjU4My4zMzMsNDAwIDY4My4zMzMsNDMyLjUgNjIxLjY2NywzNDUuNzg2IDYyMS42NjcsNDU0LjIxNCA2ODMuMzMzLDM2Ny41Ii8+PC9zdmc+)](#turkce-dokumantasyon)
-[![English Documentation](https://img.shields.io/badge/Language-English_EN-00247D?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHBhdGggZmlsbD0iIzAwMjQ3RCIgZD0iTTAgMGg2MHYzMEgweiIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJNMCAwbDYwIDMwTTYwIDBMMC zMCIvPjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI0IiBkPSJNMCAwbDYwIDMwTTYwIDBMMC zMCIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxMCIgZD0iTTMwIDB2MzBNMCAxNWg2MCIvPjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJNMzAgMHYzMEgwIDE1aDYwIi8+PC9zdmc+)](#english-documentation)
+[![Türkçe Dokümantasyon](https://img.shields.io/badge/Türkiye_TR-E30A17?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAwIDgwMCI+PHBhdGggZmlsbD0iI2UzMGExNyIgZD0iTTAgMGgxMjAwdjgwMEgweiIvPjxjaXJjbGUgY3g9IjQyNSIgY3k9IjQwMCIgcj0iMjAwIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNDc1IiBjeT0iNDAwIiByPSIxNjAiIGZpbGw9IiNlMzBhMTciLz48cG9seWdvbiBmaWxsPSIjZmZmIiBwb2ludHM9IjU4My4zMzMsNDAwIDY4My4zMzMsNDMyLjUgNjIxLjY2NywzNDUuNzg2IDYyMS42NjcsNDU0LjIxNCA2ODMuMzMzLDM2Ny41Ii8+PC9zdmc+)](#turkce-dokumantasyon)
+[![English Documentation](https://img.shields.io/badge/United_Kingdom_GB-00247D?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHBhdGggZmlsbD0iIzAwMjQ3RCIgZD0iTTAgMGg2MHYzMEgweiIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJNMCAwbDYwIDMwTTYwIDBMMC zMCIvPjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI0IiBkPSJNMCAwbDYwIDMwTTYwIDBMMC zMCIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxMCIgZD0iTTMwIDB2MzBNMCAxNWg6MCIvPjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJNMzAgMHYzMEgwIDE1aDYwIi8+PC9zdmc+)](#english-documentation)
 
 ---
 
 </div>
-
----
 
 # [TR] Türkçe Dokümantasyon
 
@@ -37,32 +35,41 @@ Platform, standart veya basit şablonlar yerine **Originkit kreatif stüdyo este
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleştirilir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
 3. **Işık Hızında Performans:** Next.js 16 Turbopack motoru ve OGL WebGL donanım hızlandırması sayesinde sıfır gecikmeyle çalışır.
-4. **Kapsamlı Loglama & Hata Takibi:** Dahili telemetri ve sistem tanılama (`/api/diagnostics`) motoru barındırır.
+4. **14+ Aktif Modüler Araç:** Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç registry altyapısı.
 
 ---
 
-## 🛠️ Canlı ve Geliştirilmekte Olan Araçlar
+## 🛠️ Canlı Araç Kataloğu (14 Aktif Araç)
 
-### 1. YouTube Playlist Analyzer (`/tools/yt-playlist-length`) — [CANLI]
-* **Playlist Süresi Hesaplama:** YouTube oynatma listesindeki tüm videoların sürelerini saniyeler içinde tam doğrulukla hesaplar.
-* **Farklı Hızlarda İzleme Simülasyonu:** 1.0x, 1.25x, 1.5x, 1.75x ve 2.0x hızlarında listenin ne kadar sürede biteceğini ve zaman tasarrufunu gösterir.
-* **Çift Katmanlı Ayrıştırıcı:** YouTube InnerTube Web/Android istemci API'si ve RSS XML motoru ile çalışır.
-* **Thumbnail İndirici & CSV Dışa Aktarma:** Oynatma listesindeki videoların yüksek çözünürlüklü kapak görsellerini ve süre tablosunu CSV olarak indirme imkanı.
+### 🎬 Video Kategorisi
+1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** Playlist süresi hesaplama, farklı oynatma hızları (1.0x-2.0x) simülasyonu, HD thumbnail ve CSV dışa aktarma.
+2. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD ve HD video kapak resimlerini ücretsiz indirme.
+3. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Özel başlama süreli zaman damgalı (timestamp) bağlantılar oluşturma.
 
-### 2. Görsel Sıkıştırıcı (`image-compressor`) — [Geliştirilme Aşamasında]
-* Kalite kaybı olmadan PNG, JPEG ve WebP formatlarını doğrudan tarayıcıda optimize eder.
+### 🖼️ Görsel Kategorisi
+4. **Görsel Sıkıştırıcı (`/tools/image-compressor`):** Cihazınızda sıfır veri transferi ile %90'a varan oranda görsel sıkıştırma.
+5. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG ve WebP formatları arasında anında dönüştürme.
+6. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX kopyalama.
 
-### 3. JSON Formatlayıcı ve Doğrulayıcı (`json-formatter`) — [Geliştirilme Aşamasında]
-* Büyük JSON verilerini anında formatlar, sözdizimi hatalarını satır bazında vurgular.
+### ⚙️ Geliştirici Kategorisi
+7. **JSON Formatlayıcı & Validator (`/tools/json-formatter`):** JSON beautify, minify, sözdizimi doğrulama ve biçimlendirme.
+8. **Base64 Kodlayıcı & Çözücü (`/tools/base64-encoder`):** UTF-8 destekli güvenli Base64 encode ve decode.
+9. **İnteraktif Regex Tester (`/tools/regex-tester`):** Düzenli ifadeleri canlı metinler üzerinde test etme ve eşleşmeleri listeleme.
+10. **CSS & Tailwind Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli CSS linear-gradient üretme ve kopyalama.
 
-### 4. Renk Paleti ve Gradient Üretici (`color-picker`) — [Geliştirilme Aşamasında]
-* Görsellerden renk paleti çıkarma ve CSS3 uyumlu yumuşak gradient kodları üretme aracı.
+### 📝 Metin Kategorisi
+11. **Kelime ve Metin Sayacı (`/tools/word-counter`):** Kelime, karakter, cümle, paragraf ve okuma süresi analizi.
+12. **Metin Kasa Dönüştürücü (`/tools/case-converter`):** camelCase, snake_case, kebab-case, Title Case, BÜYÜK/KÜÇÜK harf dönüşümü.
+
+### 🔢 Hesaplama Kategorisi
+13. **Çoklu Birim Dönüştürücü (`/tools/unit-converter`):** Uzunluk, kütle ve veri depolama birimleri arasında hassas dönüştürme.
+14. **Yüzde & İndirim Hesaplayıcı (`/tools/percentage-calculator`):** Yüzde oranları, indirimli fiyat ve tutar hesaplama.
 
 ---
 
 ## 💻 Windows Akıllı Konsol (`server.bat`)
 
-Projeyi Windows ortamında tek tıkla çalıştırmak, yönetmek ve test etmek için geliştirilmiş akıllı yönetim konsoludur:
+Projeyi Windows ortamında tek tıkla çalıştırmak, yönetmek ve derlemek için geliştirilmiş akıllı yönetim konsoludur:
 
 ```cmd
 ===============================================================================
@@ -146,26 +153,35 @@ Instead of looking like a generic AI wrapper or standard dashboard, **everything
 1. **Zero Data Retention:** Everything runs strictly client-side or in-memory. No databases, no user trackers, no personal data collection.
 2. **Zero Login / Authentication:** Free forever, no registration, no API keys, no credit cards required.
 3. **Instantaneous Performance:** Powered by Turbopack compilation and lightweight WebGL rendering.
-4. **Built-in Diagnostics:** Complete logging and telemetry engine (`/api/diagnostics`) to track latencies and system health without privacy compromises.
+4. **14+ Active Modular Tools:** Expandable tool registry architecture across Video, Image, Developer, Text, and Calculation categories.
 
 ---
 
-## 🛠️ Available and Upcoming Tools
+## 🛠️ Live Tool Catalog (14 Active Tools)
 
-### 1. YouTube Playlist Analyzer (`/tools/yt-playlist-length`) — [LIVE]
-* **Accurate Playlist Duration:** Computes exact video duration for playlists up to hundreds of videos.
-* **Speed Multipliers:** Shows exact watch time for 1.0x, 1.25x, 1.5x, 1.75x, and 2.0x playback speeds.
-* **Multi-Strategy Scraper:** Uses InnerTube Web/Android client API and RSS XML fallback.
-* **Thumbnail Browser & Downloader:** Instant access to high-res video thumbnails and CSV export.
+### 🎬 Video Category
+1. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** Playlist duration calculator, playback speed (1.0x-2.0x) simulation, HD thumbnails, and CSV export.
+2. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD, and HD video cover images for free.
+3. **YouTube Timestamp Generator (`/tools/yt-timestamp-generator`):** Generate custom start time links and description timestamps.
 
-### 2. Image Compressor (`image-compressor`) — [Coming Soon]
-* Lossless and lossy compression for PNG, JPEG, and WebP formats processed 100% in the browser.
+### 🖼️ Image Category
+4. **Image Compressor (`/tools/image-compressor`):** Up to 90% image size reduction with zero data transfer, processed locally on your device.
+5. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, and WebP formats.
+6. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX codes.
 
-### 3. JSON Formatter and Validator (`json-formatter`) — [Coming Soon]
-* Real-time JSON tree viewer, beautifier, minifier, and error highlighter.
+### ⚙️ Developer Category
+7. **JSON Formatter & Validator (`/tools/json-formatter`):** JSON beautify, minify, syntax validation, and formatting.
+8. **Base64 Encoder & Decoder (`/tools/base64-encoder`):** UTF-8 safe Base64 encoding and decoding.
+9. **Interactive Regex Tester (`/tools/regex-tester`):** Test regular expressions live on sample texts and list matches.
+10. **CSS & Tailwind Gradient Generator (`/tools/css-gradient-generator`):** Create multi-color linear CSS gradients and copy CSS snippet.
 
-### 4. Palette and Gradient Studio (`color-picker`) — [Coming Soon]
-* Image color extractor and CSS3 gradient generator with one-click export.
+### 📝 Text Category
+11. **Word and Text Counter (`/tools/word-counter`):** Word, character, sentence, paragraph, and estimated reading time analysis.
+12. **Case Converter (`/tools/case-converter`):** Convert text between camelCase, snake_case, kebab-case, Title Case, UPPERCASE, and lowercase.
+
+### 🔢 Calculation Category
+13. **Multi-Unit Converter (`/tools/unit-converter`):** Precise conversion across Length, Mass, and Data Storage units.
+14. **Percentage & Discount Calculator (`/tools/percentage-calculator`):** Instant calculation of percentage rates, discounted prices, and amounts.
 
 ---
 
