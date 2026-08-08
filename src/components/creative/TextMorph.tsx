@@ -1,58 +1,209 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useId, useMemo, type CSSProperties, type ElementType } from "react";
 
-interface TextMorphProps {
-  words?: string[];
-  duration?: number;
-  className?: string;
-  gradient?: boolean;
+function mapEaseToCSS(ease?: string | number[]): string {
+  if (Array.isArray(ease) && ease.length === 4) {
+    return `cubic-bezier(${ease.join(",")})`;
+  }
+  switch (ease) {
+    case "linear":
+      return "linear";
+    case "easeIn":
+      return "ease-in";
+    case "easeOut":
+      return "ease-out";
+    case "easeInOut":
+      return "ease-in-out";
+    case "circIn":
+      return "cubic-bezier(0.6, 0.04, 0.98, 0.335)";
+    case "circOut":
+      return "cubic-bezier(0.075, 0.82, 0.165, 1)";
+    case "circInOut":
+      return "cubic-bezier(0.785, 0.135, 0.15, 0.86)";
+    case "backIn":
+      return "cubic-bezier(0.6, -0.28, 0.735, 0.045)";
+    case "backOut":
+      return "cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+    case "backInOut":
+      return "cubic-bezier(0.68, -0.55, 0.265, 1.55)";
+    default:
+      return "ease-in-out";
+  }
 }
 
-const DEFAULT_WORDS = [
-  "HER ŞEYİN MERKEZİ",
-  "YOUTUBE ANALİZİ",
-  "HIZLI VE ÜCRETSİZ",
-  "GİZLİLİK ODAKLI",
-  "MODERN ARAÇLAR",
-];
+export interface TextMorphProps {
+  words?: string | string[];
+  color?: string;
+  font?: CSSProperties;
+  transition?: {
+    duration?: number;
+    delay?: number;
+    ease?: string | number[];
+  };
+  tag?: ElementType;
+  className?: string;
+  style?: CSSProperties;
+}
 
 export function TextMorph({
-  words = DEFAULT_WORDS,
-  duration = 2800,
+  words = "HER ŞEYİN MERKEZİ\nYOUTUBE ANALİZİ\nHIZLI & GÜVENLİ\nMODERN STÜDYO\nGİZLİLİK ODAKLI",
+  color = "#c084fc",
+  font,
+  transition = { duration: 0.9, delay: 1.4, ease: "easeInOut" },
+  tag: Tag = "div",
   className = "",
-  gradient = true,
+  style,
 }: TextMorphProps) {
-  const [index, setIndex] = useState(0);
+  const morph = Math.max(0.1, transition?.duration ?? 0.9);
+  const hold = Math.max(0, transition?.delay ?? 1.4);
+  const easeCurve = transition?.ease ?? "easeInOut";
+  const easeCSS = mapEaseToCSS(easeCurve);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % words.length);
-    }, duration);
-    return () => clearInterval(timer);
-  }, [words.length, duration]);
+  const wordList = useMemo<string[]>(() => {
+    if (Array.isArray(words)) return words.map((w) => w.trim()).filter(Boolean);
+    return words
+      .split(/\r?\n|,/)
+      .map((w) => w.trim())
+      .filter(Boolean);
+  }, [words]);
 
-  const currentWord = useMemo(() => words[index], [words, index]);
+  const rawId = useId();
+  const safeId = rawId.replace(/[:]/g, "");
+  const filterId = `tm-thr-${safeId}`;
+  const animName = `tm-rot-${safeId}`;
+
+  const count = Math.max(1, wordList.length);
+  const slot = morph + hold;
+  const cycle = slot * count;
+  const pct = (s: number) => Math.min(100, (s / cycle) * 100).toFixed(4);
+  const mIn = pct(morph);
+  const mHold = pct(morph + hold);
+  const mOut = pct(2 * morph + hold);
+
+  const keyframes = `
+@keyframes ${animName} {
+  0% {
+    opacity: 0;
+    filter: blur(20px);
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  ${mIn}% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  ${mHold}% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  ${mOut}%, 100% {
+    opacity: 0;
+    filter: blur(20px);
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+`;
+
+  const longest = wordList.reduce(
+    (acc, w) => (w.length > acc.length ? w : acc),
+    ""
+  );
 
   return (
-    <div className={`relative inline-flex items-center justify-center overflow-hidden py-1 ${className}`}>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={currentWord}
-          initial={{ opacity: 0, y: 20, filter: "blur(10px)", scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
-          exit={{ opacity: 0, y: -20, filter: "blur(10px)", scale: 1.05 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className={
-            gradient
-              ? "bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent font-black tracking-tight drop-shadow-sm"
-              : "text-white font-black tracking-tight"
-          }
+    <Tag
+      className={`relative inline-flex items-center justify-center overflow-hidden select-none ${className}`}
+      style={{
+        display: "inline-flex",
+        justifyContent: "center",
+        alignItems: "center",
+        ...style,
+      }}
+    >
+      <style>{keyframes}</style>
+
+      {/* SVG Gooey Filter */}
+      <svg
+        style={{
+          position: "absolute",
+          width: 0,
+          height: 0,
+          pointerEvents: "none",
+        }}
+        aria-hidden="true"
+      >
+        <defs>
+          <filter id={filterId}>
+            <feColorMatrix
+              in="SourceGraphic"
+              type="matrix"
+              values="1 0 0 0 0
+                      0 1 0 0 0
+                      0 0 1 0 0
+                      0 0 0 25 -9"
+              result="goo"
+            />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+
+      <div
+        style={{
+          position: "relative",
+          filter: `url(#${filterId})`,
+          display: "inline-flex",
+          justifyContent: "center",
+          alignItems: "center",
+          ...font,
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            display: "inline-flex",
+            justifyContent: "center",
+            alignItems: "center",
+            lineHeight: 1.2,
+            minHeight: "1.2em",
+          }}
         >
-          {currentWord}
-        </motion.span>
-      </AnimatePresence>
-    </div>
+          {/* Width anchor to prevent layout shifts */}
+          <span
+            style={{
+              visibility: "hidden",
+              whiteSpace: "nowrap",
+              display: "inline-block",
+            }}
+          >
+            {longest || " "}
+          </span>
+
+          {wordList.map((word, i) => (
+            <span
+              key={`${word}-${i}`}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                opacity: 0,
+                color,
+                whiteSpace: "nowrap",
+                animation: `${animName} ${cycle}s ${(slot * i).toFixed(
+                  3
+                )}s infinite ${easeCSS}`,
+                willChange: "opacity, filter, transform",
+              }}
+            >
+              {word}
+            </span>
+          ))}
+        </div>
+      </div>
+    </Tag>
   );
 }
+
+export default TextMorph;

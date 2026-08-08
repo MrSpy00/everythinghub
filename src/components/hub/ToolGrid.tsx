@@ -186,7 +186,9 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
           <div>
             {filteredTools.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/50">
-                <div className="mb-4 text-5xl">🔍</div>
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <Search className="h-7 w-7" />
+                </div>
                 <h3 className="mb-2 text-lg font-bold text-white">
                   Eşleşen araç bulunamadı
                 </h3>
@@ -237,7 +239,7 @@ export function ToolGrid({ initialSearch = "" }: ToolGridProps) {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white truncate">
-                          {tool.emoji} {tool.title}
+                          {tool.title}
                         </span>
                         {isLive ? (
                           <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md">

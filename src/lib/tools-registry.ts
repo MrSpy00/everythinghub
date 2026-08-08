@@ -1,6 +1,6 @@
 import {
   PlaySquare,
-  Image,
+  Image as ImageIcon,
   Code2,
   Calculator,
   Type,
@@ -35,7 +35,6 @@ export interface Tool {
   tags?: string[];
   featured?: boolean;
   newBadge?: boolean;
-  emoji?: string;
 }
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
@@ -51,7 +50,7 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
 
 export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
   video: PlaySquare,
-  image: Image,
+  image: ImageIcon,
   text: Type,
   developer: Code2,
   calculator: Calculator,
@@ -65,81 +64,73 @@ export const tools: Tool[] = [
     slug: "yt-playlist-length",
     title: "YouTube Playlist Analyzer",
     description:
-      "Playlist süresini hesapla, farklı hızlarda izleme sürelerini gör, thumbnail'ları indir",
+      "Playlist süresini hesapla, farklı hızlarda izleme sürelerini gör, thumbnail'ları ve CSV'yi dışa aktar",
     icon: PlaySquare,
     category: "video",
     accentColor: "#ef4444",
     accentClass: "from-red-500 to-red-600",
     status: "live",
-    tags: ["youtube", "playlist", "video", "süre", "hız", "thumbnail"],
+    tags: ["youtube", "playlist", "video", "sure", "hiz", "thumbnail", "csv"],
     featured: true,
     newBadge: true,
-    emoji: "🎬",
   },
-  // Coming soon tools — altyapı hazır, eklenmeyi bekliyor
   {
     slug: "image-compressor",
     title: "Görsel Sıkıştırıcı",
-    description: "Görselleri kalite kaybı olmadan sıkıştır — tamamen tarayıcıda",
-    icon: Image,
+    description: "Görselleri kalite kaybı olmadan sıkıştır — tamamen tarayıcıda sıfır veri transferi",
+    icon: ImageIcon,
     category: "image",
     accentColor: "#8b5cf6",
     accentClass: "from-violet-500 to-violet-600",
     status: "coming-soon",
-    tags: ["görsel", "sıkıştırma", "webp", "png", "jpeg"],
-    emoji: "🖼️",
+    tags: ["gorsel", "sikistirma", "webp", "png", "jpeg"],
   },
   {
     slug: "json-formatter",
     title: "JSON Formatlayıcı",
-    description: "JSON'ı formatla, doğrula ve güzelleştir",
+    description: "JSON verisini anında formatla, sözdizimini doğrula ve hatasız ağaç görünümü al",
     icon: Code2,
     category: "developer",
     accentColor: "#10b981",
     accentClass: "from-emerald-500 to-emerald-600",
     status: "coming-soon",
-    tags: ["json", "format", "validate", "developer"],
-    emoji: "⚙️",
+    tags: ["json", "format", "validate", "developer", "tree"],
   },
   {
     slug: "color-picker",
     title: "Renk Paleti Oluşturucu",
-    description: "Görselden renk çıkar, uyumlu paletler oluştur",
+    description: "Görselden renk çıkar, uyumlu CSS3 ve Tailwind renk paletleri üret",
     icon: Palette,
     category: "design",
     accentColor: "#f59e0b",
     accentClass: "from-amber-500 to-amber-600",
     status: "coming-soon",
-    tags: ["renk", "palet", "tasarım", "css"],
-    emoji: "🎨",
+    tags: ["renk", "palet", "tasarim", "css", "tailwind"],
   },
   {
     slug: "word-counter",
-    title: "Kelime Sayacı",
-    description: "Kelime, karakter ve okuma süresi hesapla",
+    title: "Kelime ve Metin Sayacı",
+    description: "Kelime, karakter, hece ve ortalama okuma süresi hesapla",
     icon: Type,
     category: "text",
     accentColor: "#3b82f6",
     accentClass: "from-blue-500 to-blue-600",
     status: "coming-soon",
-    tags: ["kelime", "karakter", "okuma", "metin"],
-    emoji: "📝",
+    tags: ["kelime", "karakter", "okuma", "metin", "analiz"],
   },
   {
     slug: "css-gradient-generator",
     title: "CSS Gradient Üretici",
-    description: "Görsel olarak CSS gradientler oluştur ve dışa aktar",
+    description: "Görsel olarak modern çok katmanlı CSS gradientler oluştur ve kodu kopyala",
     icon: Zap,
     category: "developer",
     accentColor: "#ec4899",
     accentClass: "from-pink-500 to-pink-600",
     status: "coming-soon",
-    tags: ["css", "gradient", "tasarım", "developer"],
-    emoji: "✨",
+    tags: ["css", "gradient", "tasarim", "developer", "mesh"],
   },
 ];
 
-// Yardımcı fonksiyonlar
 export const getToolBySlug = (slug: string) =>
   tools.find((t) => t.slug === slug);
 

@@ -16,7 +16,7 @@ export function ToolCard({ tool }: ToolCardProps) {
     <div
       className={`group relative flex h-full flex-col p-6 rounded-2xl border transition-all duration-300 ${
         isLive
-          ? "border-[var(--hub-border)] bg-[var(--hub-surface)]/90 backdrop-blur-xl hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10"
+          ? "border-[var(--hub-border)] bg-[var(--hub-surface)]/90 backdrop-blur-xl hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/15 hover:-translate-y-1"
           : "border-[var(--hub-border)]/60 bg-[var(--hub-surface)]/40 backdrop-blur-md opacity-75"
       }`}
       data-cursor={isLive ? "Aç" : "Yakında"}
@@ -56,10 +56,9 @@ export function ToolCard({ tool }: ToolCardProps) {
         </div>
       </div>
 
-      {/* Emoji & Title */}
+      {/* Title */}
       <div className="mb-2">
         <h3 className="text-lg font-bold text-white leading-tight flex items-center gap-2 group-hover:text-indigo-300 transition-colors">
-          <span>{tool.emoji}</span>
           <span>{tool.title}</span>
         </h3>
       </div>

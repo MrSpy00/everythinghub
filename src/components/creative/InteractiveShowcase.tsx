@@ -3,7 +3,7 @@
 import React, { useRef, useState, useMemo } from "react";
 import { motion, useMotionValue } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, CheckCircle2, Lock } from "lucide-react";
 import { tools } from "@/lib/tools-registry";
 
 export function InteractiveShowcase() {
@@ -12,7 +12,6 @@ export function InteractiveShowcase() {
   const [isDragging, setIsDragging] = useState(false);
 
   const displayTools = useMemo(() => {
-    // Duplicate tools for infinite carousel feel
     return [...tools, ...tools, ...tools];
   }, []);
 
@@ -74,11 +73,12 @@ export function InteractiveShowcase() {
                 <div className="flex items-center gap-1.5">
                   {isLive ? (
                     <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <CheckCircle2 className="h-3 w-3" />
                       Aktif
                     </span>
                   ) : (
-                    <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-[var(--hub-text-subtle)] ring-1 ring-white/10">
+                    <span className="flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-[var(--hub-text-subtle)] ring-1 ring-white/10">
+                      <Lock className="h-3 w-3" />
                       Yakında
                     </span>
                   )}
@@ -87,8 +87,8 @@ export function InteractiveShowcase() {
 
               {/* Title & Desc */}
               <div className="mb-4">
-                <h4 className="text-base font-bold text-white mb-1 flex items-center gap-1.5">
-                  {tool.emoji} {tool.title}
+                <h4 className="text-base font-bold text-white mb-1">
+                  {tool.title}
                 </h4>
                 <p className="text-xs text-[var(--hub-text-muted)] line-clamp-2 leading-relaxed">
                   {tool.description}

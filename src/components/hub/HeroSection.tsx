@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowDown, Sparkles, Search, ShieldCheck, Cpu, Code2, Globe } from "lucide-react";
+import {
+  ArrowDown,
+  Sparkles,
+  Search,
+  ShieldCheck,
+  Cpu,
+  Code2,
+  Globe,
+  PlaySquare,
+} from "lucide-react";
 import { getLiveTools } from "@/lib/tools-registry";
 import { TextMorph } from "@/components/creative/TextMorph";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -28,14 +37,14 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        <span>Studio v1.0 · {liveCount} Aktif Araç · %100 Ücretsiz</span>
+        <span>Studio v1.0 · {liveCount} Aktif Araç · Sınırsız & Ücretsiz</span>
       </div>
 
-      {/* Main Kinetic Title with TextMorph */}
-      <div className="mb-4 max-w-4xl">
-        <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+      {/* Main Kinetic Title with Originkit Gooey TextMorph */}
+      <div className="mb-6 max-w-4xl w-full">
+        <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl leading-tight">
           Dijital Araçların{" "}
-          <span className="block mt-2">
+          <span className="block mt-3 h-[1.3em] flex items-center justify-center">
             <TextMorph
               words={[
                 "HER ŞEYİN MERKEZİ",
@@ -44,7 +53,8 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
                 "MODERN STÜDYO",
                 "GİZLİLİK ODAKLI",
               ]}
-              duration={2600}
+              color="#c084fc"
+              transition={{ duration: 0.9, delay: 1.5, ease: "easeInOut" }}
             />
           </span>
         </h1>
@@ -52,7 +62,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 
       {/* Subtitle */}
       <p className="mb-10 max-w-2xl text-base leading-relaxed text-[var(--hub-text-muted)] sm:text-lg">
-        YouTube analizi, geliştirici yardımcıları, görsel optimizasyonu ve tasarım araçları.
+        YouTube oynatma listesi analizi, geliştirici yardımcıları, görsel optimizasyonu ve tasarım araçları.
         Kayıt veya üyelik gerektirmeden, doğrudan tarayıcınızda ışık hızında çalışır.
       </p>
 
@@ -93,10 +103,10 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
       <div className="mb-16 flex flex-wrap items-center justify-center gap-4">
         <Link
           href="/tools/yt-playlist-length"
-          className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 hover:shadow-indigo-500/40"
+          className="group flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/25 transition-all hover:scale-105 hover:shadow-indigo-500/40"
           data-cursor="YouTube"
         >
-          <span className="text-lg">🎬</span>
+          <PlaySquare className="h-4 w-4" />
           <span>YouTube Playlist Analyzer</span>
           <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-extrabold uppercase">
             Canlı
@@ -105,7 +115,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
 
         <a
           href="#tools"
-          className="flex items-center gap-2 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-xl transition-all hover:border-white/25 hover:bg-white/5"
+          className="flex items-center gap-2 rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-xl transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10"
           data-cursor="Katalog"
         >
           <ArrowDown className="h-4 w-4 text-indigo-400" />
@@ -113,7 +123,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
         </a>
       </div>
 
-      {/* Highlights Grid */}
+      {/* Highlights Grid with Pure Vector SVGs */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-4xl w-full">
         {[
           {
@@ -124,7 +134,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           },
           {
             icon: Cpu,
-            title: "Turbopack Engine",
+            title: "Turbopack Motoru",
             desc: "Ultra hızlı derleme",
             color: "text-indigo-400",
           },
