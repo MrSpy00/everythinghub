@@ -83,7 +83,8 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSearchExecute();
               }}
-              className="w-full bg-transparent px-2.5 py-1.5 text-xs sm:text-sm text-white placeholder:text-[var(--hub-text-subtle)] border-none outline-none focus:outline-none focus:ring-0 focus:border-none shadow-none"
+              style={{ outline: "none", boxShadow: "none" }}
+              className="w-full bg-transparent px-2.5 py-1.5 text-xs sm:text-sm text-white placeholder:text-[var(--hub-text-subtle)] border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus-visible:outline-none focus-visible:ring-0 shadow-none"
               data-cursor="Ara"
             />
             {searchQuery && (

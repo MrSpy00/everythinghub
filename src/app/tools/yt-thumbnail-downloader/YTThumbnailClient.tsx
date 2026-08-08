@@ -1,73 +1,146 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Download, Search, Sparkles, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Download, Search, ExternalLink, Image as ImageIcon, Copy, Check } from "lucide-react";
 import { parseYouTubeUrl, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+
+interface ThumbnailItem {
+  id: string;
+  label: string;
+  url: string;
+  badge: string;
+  width: number;
+  height: number;
+}
 
 export function YTThumbnailClient() {
+  const { t } = useLanguage();
   const [url, setUrl] = useState("");
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
-  const handleExtract = () => {
+  const handleExtract = async () => {
     const trimmed = url.trim();
     if (!trimmed) return;
+    let extractedId: string | null = null;
+
     const parsed = parseYouTubeUrl(trimmed);
     if (parsed.type === "video" && parsed.id) {
-      setVideoId(parsed.id);
-      toast.success("Kapak görselleri yüklendi!");
+      extractedId = parsed.id;
     } else if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
-      setVideoId(trimmed);
-      toast.success("Kapak görselleri yüklendi!");
-    } else {
+      extractedId = trimmed;
+    }
+
+    if (!extractedId) {
       toast.error("Geçerli bir YouTube video bağlantısı veya ID giriniz.");
+      return;
+    }
+
+    setVideoId(extractedId);
+    setLoading(true);
+
+    const rawCandidates = [
+      {
+        id: "maxres",
+        label: "Maximum HD (4K/1080p)",
+        url: `https://img.youtube.com/vi/${extractedId}/maxresdefault.jpg`,
+        badge: "4K / HD",
+      },
+      {
+        id: "sddefault",
+        label: "Standard HD (720p)",
+        url: `https://img.youtube.com/vi/${extractedId}/sddefault.jpg`,
+        badge: "720p",
+      },
+      {
+        id: "hqdefault",
+        label: "High Quality (480p)",
+        url: `https://img.youtube.com/vi/${extractedId}/hqdefault.jpg`,
+        badge: "HQ",
+      },
+      {
+        id: "mqdefault",
+        label: "Medium Quality (360p)",
+        url: `https://img.youtube.com/vi/${extractedId}/mqdefault.jpg`,
+        badge: "MQ",
+      },
+    ];
+
+    // Load real dimensions for each thumbnail candidate
+    const resolvedItems: ThumbnailItem[] = await Promise.all(
+      rawCandidates.map((cand) => {
+        return new Promise<ThumbnailItem>((resolve) => {
+          const img = document.createElement("img");
+          img.onload = () => {
+            resolve({
+              ...cand,
+              width: img.naturalWidth,
+              height: img.naturalHeight,
+            });
+          };
+          img.onerror = () => {
+            resolve({
+              ...cand,
+              width: 0,
+              height: 0,
+            });
+          };
+          img.src = cand.url;
+        });
+      })
+    );
+
+    // Filter out missing thumbnails (e.g. 120x90 fallback default errors)
+    const validItems = resolvedItems.filter((item) => item.width > 120);
+    setThumbnails(validItems.length > 0 ? validItems : resolvedItems);
+    setLoading(false);
+    toast.success("Kapak görselleri gerçek boyutlarıyla yüklendi!");
+  };
+
+  const handleDownloadDirect = async (imgUrl: string, qualityId: string) => {
+    const toastId = "down-" + qualityId;
+    toast.loading("Resim indiriliyor...", { id: toastId });
+
+    try {
+      const response = await fetch(imgUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `youtube-thumbnail-${videoId}-${qualityId}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      toast.success("Görsel başarıyla indirildi!", { id: toastId });
+    } catch (err) {
+      // Fallback
+      window.open(imgUrl, "_blank");
+      toast.success("Görsel sekmede açıldı!", { id: toastId });
     }
   };
 
-  const qualities = videoId
-    ? [
-        {
-          label: "Maximum HD (1080p/4K)",
-          res: "1920x1080",
-          url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-          badge: "Ultra HD",
-        },
-        {
-          label: "High Quality (720p)",
-          res: "1280x720",
-          url: `https://img.youtube.com/vi/${videoId}/sddefault.jpg`,
-          badge: "HD",
-        },
-        {
-          label: "Standard Quality",
-          res: "640x480",
-          url: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-          badge: "HQ",
-        },
-        {
-          label: "Medium Quality",
-          res: "320x180",
-          url: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-          badge: "SD",
-        },
-      ]
-    : [];
-
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Back to Hub */}
       <div className="mb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white hover:border-indigo-500/50 transition-all"
+          className="inline-flex items-center gap-2 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3.5 py-1.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white hover:border-rose-500/50 transition-all"
         >
-          <ArrowLeft className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Hub Menüsüne Dön</span>
+          <ArrowLeft className="h-3.5 w-3.5 text-rose-400" />
+          <span>{t.backToHub}</span>
         </Link>
       </div>
 
+      {/* Header Banner */}
       <div className="mb-8 rounded-3xl border border-[var(--hub-border)] bg-[var(--hub-surface)]/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-500/30 bg-rose-500/10 backdrop-blur-2xl shadow-xl shadow-rose-500/10">
@@ -75,21 +148,22 @@ export function YTThumbnailClient() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white sm:text-3xl">
-              YouTube Thumbnail İndirici
+              {t.ytThumbTitle}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-[var(--hub-text-muted)]">
-              YouTube video kapak görsellerini HD, 1080p ve 4K çözünürlüklerde anında indir veya kopyala.
+              {t.ytThumbSub}
             </p>
           </div>
         </div>
       </div>
 
+      {/* Search Input Box */}
       <div className="mb-8">
-        <NeonBorder color="#f43f5e" rounded={24} glow={60}>
+        <NeonBorder color="#f43f5e" rounded={24} glow={50}>
           <div className="rounded-[22px] bg-[var(--hub-surface)]/95 p-6 backdrop-blur-3xl shadow-2xl">
             <label className="text-xs font-bold uppercase tracking-wider text-rose-300 flex items-center gap-1.5 mb-3">
-              <Sparkles className="h-3.5 w-3.5 text-rose-400" />
-              <span>YouTube Video Bağlantısı veya Video ID</span>
+              <ImageIcon className="h-3.5 w-3.5 text-rose-400" />
+              <span>{t.ytThumbUrlLabel}</span>
             </label>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
@@ -97,66 +171,96 @@ export function YTThumbnailClient() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleExtract()}
-                placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ..."
-                className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-4 py-3 text-sm text-white placeholder:text-[var(--hub-text-subtle)] focus:border-rose-500/50 focus:outline-none"
+                placeholder={t.ytThumbUrlPlaceholder}
+                style={{ outline: "none", boxShadow: "none" }}
+                className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-4 py-3 text-sm text-white placeholder:text-[var(--hub-text-subtle)] focus:border-rose-500/50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
               />
               <button
+                type="button"
                 onClick={handleExtract}
+                disabled={loading}
                 className="flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-2xl shadow-xl shadow-rose-500/10 hover:bg-rose-500/30 hover:border-rose-400 hover:scale-[1.02] transition-all shrink-0"
               >
                 <Search className="h-4 w-4" />
-                <span>Görselleri Getir</span>
+                <span>{loading ? t.analyzing : t.fetchThumbnails}</span>
               </button>
             </div>
           </div>
         </NeonBorder>
       </div>
 
-      {videoId && (
+      {/* Thumbnail Results Grid */}
+      {videoId && thumbnails.length > 0 && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {qualities.map((q, i) => (
+          {thumbnails.map((item) => (
             <div
-              key={i}
-              className="flex flex-col rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)] p-4 backdrop-blur-xl overflow-hidden"
+              key={item.id}
+              className="flex flex-col rounded-2xl border border-[var(--hub-border)] bg-[var(--hub-surface)] p-4 backdrop-blur-xl overflow-hidden shadow-xl"
             >
               <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black/40 mb-4 border border-white/10">
                 <Image
-                  src={q.url}
-                  alt={q.label}
+                  src={item.url}
+                  alt={item.label}
                   fill
                   className="object-cover"
                   unoptimized
                 />
-                <span className="absolute top-2 right-2 rounded-md bg-black/80 px-2 py-0.5 text-[10px] font-extrabold text-rose-400 border border-rose-500/30 backdrop-blur-md">
-                  {q.badge}
+                <span className="absolute top-2 right-2 rounded-md bg-black/85 px-2.5 py-1 text-[10px] font-extrabold text-rose-300 border border-rose-500/40 backdrop-blur-md shadow-sm">
+                  {item.badge}
                 </span>
               </div>
+
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-white">{q.label}</h3>
-                  <span className="text-xs text-[var(--hub-text-subtle)]">{q.res}</span>
+                  <h3 className="text-sm font-bold text-white">{item.label}</h3>
+                  <span className="text-xs font-semibold text-rose-300/80">
+                    {item.width && item.height
+                      ? `${item.width} x ${item.height} px (Gerçek Çözünürlük)`
+                      : "Varsayılan Çözünürlük"}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 mt-auto">
+
+              <div className="flex items-center gap-2 mt-auto pt-2 border-t border-white/5">
+                {/* Direct Blob Download */}
+                <button
+                  type="button"
+                  onClick={() => handleDownloadDirect(item.url, item.id)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500/20 border border-rose-500/40 px-4 py-2.5 text-xs font-bold text-rose-200 hover:bg-rose-500/30 hover:border-rose-400 transition-all shadow-sm"
+                >
+                  <Download className="h-4 w-4 text-rose-300" />
+                  <span>{t.download}</span>
+                </button>
+
+                {/* Open in New Tab */}
                 <a
-                  href={q.url}
+                  href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  download={`thumbnail-${videoId}.jpg`}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500/15 border border-rose-500/30 px-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/25 transition-all"
+                  className="flex items-center gap-1.5 rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3 py-2.5 text-xs font-semibold text-[var(--hub-text-muted)] hover:text-white hover:border-white/20 transition-all"
+                  title="Yeni Sekmede Aç"
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  <span>İndir</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Sekmede Aç</span>
                 </a>
+
+                {/* Copy Link */}
                 <button
+                  type="button"
                   onClick={async () => {
-                    await copyToClipboard(q.url);
-                    toast.success("Resim bağlantısı kopyalandı!");
+                    await copyToClipboard(item.url);
+                    setCopiedUrl(item.id);
+                    toast.success("Bağlantı kopyalandı!");
+                    setTimeout(() => setCopiedUrl(null), 2000);
                   }}
-                  className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2 text-[var(--hub-text-muted)] hover:text-white transition-all"
+                  className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-[var(--hub-text-muted)] hover:text-white transition-all"
                   title="URL Kopyala"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  {copiedUrl === item.id ? (
+                    <Check className="h-4 w-4 text-emerald-400" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>

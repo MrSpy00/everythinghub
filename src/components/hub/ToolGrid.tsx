@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, LayoutGrid, Rows3, Compass, Flame } from "lucide-react";
 import Fuse from "fuse.js";
 import { type Tool, type ToolCategory, tools, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/tools-registry";
@@ -152,14 +153,21 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
         <div className="mb-8 flex flex-wrap gap-2" id="categories">
           <button
             onClick={() => setActiveCategory(ALL_CATEGORIES)}
-            className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+            className={`relative rounded-xl px-4 py-2 text-xs font-bold transition-all ${
               activeCategory === ALL_CATEGORIES
-                ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40 shadow-lg shadow-indigo-500/10"
+                ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
                 : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
             }`}
             data-cursor="Kategori"
           >
-            Tümü ({tools.length})
+            {activeCategory === ALL_CATEGORIES && (
+              <motion.div
+                layoutId="activeCategoryTab"
+                className="absolute inset-0 rounded-xl bg-indigo-500/20 border border-indigo-500/40"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className="relative z-10">{t.all} ({tools.length})</span>
           </button>
           {categories.map((cat) => {
             const Icon = CATEGORY_ICONS[cat];
@@ -169,16 +177,23 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                   isActive
-                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40 shadow-lg shadow-indigo-500/10"
+                    ? "text-indigo-300 shadow-lg shadow-indigo-500/10"
                     : "border border-[var(--hub-border)] bg-[var(--hub-surface)] text-[var(--hub-text-muted)] hover:border-white/20 hover:text-white"
                 }`}
                 data-cursor={CATEGORY_LABELS[cat]}
               >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{CATEGORY_LABELS[cat]}</span>
-                <span className="text-[10px] opacity-70">({catCount})</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeCategoryTab"
+                    className="absolute inset-0 rounded-xl bg-indigo-500/20 border border-indigo-500/40"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <Icon className="relative z-10 h-3.5 w-3.5" />
+                <span className="relative z-10">{CATEGORY_LABELS[cat]}</span>
+                <span className="relative z-10 text-[10px] opacity-70">({catCount})</span>
               </button>
             );
           })}
