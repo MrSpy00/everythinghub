@@ -27,7 +27,7 @@
 
 </div>
 
-# [TR] Türkçe Dokümantasyon
+# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_tr.svg" width="32" height="22" alt="TR" /> Türkçe Dokümantasyon
 
 ## 🚀 Canlı Uygulama
 🔗 **[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**
@@ -143,7 +143,7 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 <br><br>
 
-# [EN] English Documentation
+# <img src="https://raw.githubusercontent.com/MrSpy00/aegisScout/6bda15061bb4e7d0c8bd041aa985fe90496fdf87/assets/flag_gb.svg" width="32" height="22" alt="GB" /> English Documentation
 
 ## 🚀 Live Application
 🔗 **[https://everythinghub.vercel.app/](https://everythinghub.vercel.app/)**

@@ -2,29 +2,30 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Zap, Flame, Shield, Layers, Code } from "lucide-react";
 
 export interface KineticTextItem {
   text: string;
   style: "gradient" | "stroke" | "emerald" | "cyan" | "pink" | "amber" | "violet";
-  tag?: string;
+  tag: string;
+  icon: React.ElementType;
 }
 
 export const DEFAULT_KINETIC_ITEMS: KineticTextItem[] = [
-  { text: "HER ŞEYİN MERKEZİ", style: "gradient", tag: "HUB STÜDYOSU" },
-  { text: "YOUTUBE PLAYLIST ANALYZER", style: "stroke", tag: "CANLI SÜRE & ANALİZ" },
-  { text: "GÖRSEL SIKIŞTIRICI", style: "emerald", tag: "SIFIR VERİ KAYBI" },
-  { text: "JSON FORMATTER & VALIDATOR", style: "cyan", tag: "BEAUTIFY & MINIFY" },
-  { text: "RENK PALETİ ÇIKARICI", style: "pink", tag: "DOMINANT PALETTE" },
-  { text: "BASE64 KODLAYICI", style: "amber", tag: "UTF-8 DESTEKLİ" },
-  { text: "İNTERAKTİF REGEX TESTER", style: "violet", tag: "CANLI EŞLEŞME" },
-  { text: "ÇOKLU BİRİM DÖNÜŞTÜRÜCÜ", style: "emerald", tag: "HASSAS DÖNÜŞÜM" },
-  { text: "METİN KASA DÖNÜŞTÜRÜCÜ", style: "gradient", tag: "CAMEL / SNAKE / KEBAB" },
-  { text: "YÜZDE & İNDİRİM HESAPLAYICI", style: "cyan", tag: "HIZLI HESAPLAMA" },
+  { text: "YOUTUBE PLAYLIST ANALYZER", style: "stroke", tag: "CANLI SÜRE & ANALİZ", icon: Zap },
+  { text: "GÖRSEL SIKIŞTIRICI", style: "emerald", tag: "SIFIR VERİ KAYBI", icon: Flame },
+  { text: "JSON FORMATTER & VALIDATOR", style: "cyan", tag: "BEAUTIFY & MINIFY", icon: Code },
+  { text: "RENK PALETİ ÇIKARICI", style: "pink", tag: "DOMINANT PALETTE", icon: Layers },
+  { text: "BASE64 KODLAYICI", style: "amber", tag: "UTF-8 DESTEKLİ", icon: Shield },
+  { text: "İNTERAKTİF REGEX TESTER", style: "violet", tag: "CANLI EŞLEŞME", icon: Zap },
+  { text: "ÇOKLU BİRİM DÖNÜŞTÜRÜCÜ", style: "emerald", tag: "HASSAS DÖNÜŞÜM", icon: Layers },
+  { text: "METİN KASA DÖNÜŞTÜRÜCÜ", style: "gradient", tag: "CAMEL / SNAKE / KEBAB", icon: Sparkles },
+  { text: "YÜZDE & İNDİRİM HESAPLAYICI", style: "cyan", tag: "HIZLI HESAPLAMA", icon: Flame },
 ];
 
 export function KineticText({
   items = DEFAULT_KINETIC_ITEMS,
-  intervalMs = 2800,
+  intervalMs = 3000,
 }: {
   items?: KineticTextItem[];
   intervalMs?: number;
@@ -39,57 +40,63 @@ export function KineticText({
   }, [items.length, intervalMs]);
 
   const currentItem = items[currentIndex];
+  const ItemIcon = currentItem.icon;
 
   return (
-    <div className="relative my-2 flex flex-col items-center justify-center">
-      {/* Shiny Pill LED Display Frame */}
-      <div className="relative inline-flex items-center gap-3 rounded-2xl border border-purple-500/30 bg-[#0d0f1c]/90 px-6 py-3.5 backdrop-blur-2xl shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-        {/* Left LED Status Indicator */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,1)]" />
-          </span>
-          <span className="hidden sm:inline-block text-[10px] font-black uppercase tracking-[0.2em] text-purple-300/80">
-            {currentItem.tag || "LIVE"}
+    <div className="relative my-3 flex flex-col items-center justify-center">
+      {/* Outer Studio Glass Pill Container */}
+      <div className="group relative inline-flex items-center gap-3.5 rounded-full border border-purple-500/30 bg-[#090b14]/95 px-5 py-2.5 sm:px-7 sm:py-3 backdrop-blur-3xl shadow-[0_0_40px_rgba(168,85,247,0.15)] transition-all duration-500 hover:border-purple-400/60 hover:shadow-[0_0_50px_rgba(168,85,247,0.25)]">
+        {/* Subtle Conic Sweep Glow */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600/10 via-indigo-500/10 to-pink-500/10 blur-xl opacity-60 pointer-events-none group-hover:opacity-100 transition-opacity" />
+
+        {/* Left LED Icon Badge */}
+        <div className="relative z-10 flex items-center gap-2 shrink-0">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-sm">
+            <ItemIcon className="h-3.5 w-3.5" />
+          </div>
+          <span className="hidden sm:inline-block text-[10px] font-black uppercase tracking-[0.25em] text-purple-300/90">
+            {currentItem.tag}
           </span>
         </div>
 
-        {/* Letter Swap Morphing Container */}
-        <div className="h-8 sm:h-9 flex items-center justify-center overflow-hidden min-w-[240px] sm:min-w-[340px]">
+        {/* Vertical Divider */}
+        <div className="relative z-10 hidden sm:block h-4 w-[1px] bg-purple-500/30 shrink-0" />
+
+        {/* Letter Swap Morphing Text Container */}
+        <div className="relative z-10 h-7 sm:h-8 flex items-center justify-center overflow-hidden min-w-[200px] sm:min-w-[320px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentItem.text}
-              initial={{ y: 24, opacity: 0, scale: 0.96, filter: "blur(4px)" }}
-              animate={{ y: 0, opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={{ y: -24, opacity: 0, scale: 0.96, filter: "blur(4px)" }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex items-center justify-center gap-[0.05em]"
+              initial={{ y: 20, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -20, opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center justify-center gap-[0.04em]"
             >
               {currentItem.text.split("").map((char, charIdx) => (
                 <motion.span
                   key={charIdx}
-                  initial={{ y: 8, opacity: 0 }}
+                  initial={{ y: 6, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{
-                    duration: 0.25,
-                    delay: charIdx * 0.015,
+                    duration: 0.2,
+                    delay: charIdx * 0.012,
                     ease: "easeOut",
                   }}
-                  className={`inline-block font-extrabold text-sm sm:text-lg lg:text-xl tracking-[0.12em] ${
+                  className={`inline-block font-black text-xs sm:text-base lg:text-lg tracking-[0.1em] ${
                     currentItem.style === "stroke"
-                      ? "text-transparent [-webkit-text-stroke:1.2px_rgba(192,132,252,0.95)] drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]"
+                      ? "text-transparent [-webkit-text-stroke:1px_rgba(192,132,252,0.95)] drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]"
                       : currentItem.style === "emerald"
-                      ? "text-emerald-300 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                      ? "text-emerald-300 drop-shadow-[0_0_10px_rgba(16,185,129,0.6)]"
                       : currentItem.style === "cyan"
-                      ? "text-cyan-300 drop-shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+                      ? "text-cyan-300 drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]"
                       : currentItem.style === "pink"
-                      ? "text-pink-300 drop-shadow-[0_0_12px_rgba(244,63,94,0.6)]"
+                      ? "text-pink-300 drop-shadow-[0_0_10px_rgba(244,63,94,0.6)]"
                       : currentItem.style === "amber"
-                      ? "text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.6)]"
+                      ? "text-amber-300 drop-shadow-[0_0_10px_rgba(245,158,11,0.6)]"
                       : currentItem.style === "violet"
-                      ? "text-purple-300 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]"
-                      : "bg-gradient-to-r from-purple-300 via-indigo-200 to-pink-300 bg-clip-text text-transparent drop-shadow-[0_0_16px_rgba(168,85,247,0.4)]"
+                      ? "text-purple-300 drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]"
+                      : "bg-gradient-to-r from-purple-300 via-indigo-200 to-pink-300 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(168,85,247,0.4)]"
                   }`}
                 >
                   {char === " " ? "\u00A0" : char}
@@ -99,11 +106,12 @@ export function KineticText({
           </AnimatePresence>
         </div>
 
-        {/* Right LED Dot Grid */}
-        <div className="flex items-center gap-1 shrink-0 opacity-60">
-          <div className="h-1.5 w-1.5 rounded-full bg-purple-400" />
-          <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        {/* Right Status Dot */}
+        <div className="relative z-10 flex items-center gap-1 shrink-0">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,1)]" />
+          </span>
         </div>
       </div>
     </div>

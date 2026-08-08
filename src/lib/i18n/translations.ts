@@ -197,7 +197,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Hero Section
     studioTagline: "Studio v1.0 · 14 Aktif Araç · Sınırsız & Ücretsiz",
     studioHeroTitle: "Dijital Araçların Stüdyosu",
-    heroSubtitle: "YouTube oynatma listesi canlı süresi, yüksek kaliteli görsel sıkıştırma, format dönüştürücü, JSON validator, renk paleti ve geliştirici araçları. Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
+    heroSubtitle: "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
     searchPlaceholder: "Araç veya özellik ara (örn: youtube, playlist, json, gradient)...",
     clear: "Temizle",
     explore: "Keşfet",
@@ -377,7 +377,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     // Hero Section
     studioTagline: "Studio v1.0 · 14 Active Tools · Unlimited & Free",
     studioHeroTitle: "Digital Tools Studio",
-    heroSubtitle: "YouTube playlist live duration, high-quality image compressor, format converter, JSON validator, color palette extractor, and developer utilities. No registration, login, or API keys required; 100% private and browser-processed.",
+    heroSubtitle: "No registration, login, or API keys required; 100% private and browser-processed.",
     searchPlaceholder: "Search tools or features (e.g. youtube, playlist, json, gradient)...",
     clear: "Clear",
     explore: "Explore",
