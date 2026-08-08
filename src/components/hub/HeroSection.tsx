@@ -42,7 +42,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative flex flex-col items-center justify-center px-4 pt-4 pb-8 text-center sm:pt-6 sm:pb-10 lg:pt-8 lg:pb-12 max-w-7xl mx-auto w-full">
+    <section className="relative flex min-h-[calc(100vh-4.5rem)] flex-col items-center justify-center px-4 py-4 sm:py-6 lg:py-8 text-center max-w-7xl mx-auto w-full overflow-hidden">
       {/* Top Studio Badge */}
       <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-xs font-semibold text-purple-300 backdrop-blur-xl shadow-lg shadow-purple-950/20">
         <span className="relative flex h-2 w-2">

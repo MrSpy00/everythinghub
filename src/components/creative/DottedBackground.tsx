@@ -301,6 +301,9 @@ export function DottedBackground({
     const renderTarget = new OglRenderTarget(gl);
     renderTargetRef.current = renderTarget;
 
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+    const effectiveCellSize = isMobile ? Math.max(20, cellSize * 0.65) : cellSize;
+
     const palette = buildPaletteUniforms(colors);
     const dotProgram = new Program(gl, {
       vertex: dotVertexShader,
@@ -311,7 +314,7 @@ export function DottedBackground({
         uPaletteCount: { value: Math.min(10, colors.length) },
         uPalette: { value: palette.rgb },
         uPaletteAlpha: { value: palette.alpha },
-        uCellSize: { value: cellSize },
+        uCellSize: { value: effectiveCellSize },
         uGamma: { value: gamma },
         uPaletteBias: { value: paletteBias * 0.05 },
       },
