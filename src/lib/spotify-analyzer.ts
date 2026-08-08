@@ -61,7 +61,8 @@ export interface SpotifyPlaylistAnalysis {
   description: string;
   ownerName: string;
   ownerId: string;
-  followers: number;
+  followers: number | null;
+  isFollowersHidden?: boolean;
   coverArtUrl: string;
   dominantColor: string;
   tracks: SpotifyTrack[];
@@ -118,7 +119,9 @@ export interface SpotifyProfileAnalysis {
   name: string;
   avatarUrl: string;
   bannerUrl?: string;
-  followers: number;
+  followers: number | null;
+  isFollowersHidden?: boolean;
+  privacyNotice?: string;
   popularity?: number;
   verified?: boolean;
   bio?: string;
@@ -372,22 +375,26 @@ export function classifyDominantMood(avgValence: number, avgEnergy: number): Dom
 
 export function exportPlaylistCSV(playlist: SpotifyPlaylistAnalysis): string {
   const headers = [
-    "Track Name",
-    "Primary Artist",
-    "All Artists",
-    "Album",
-    "Duration (mm:ss)",
-    "BPM",
-    "Key & Mode",
-    "Energy (%)",
-    "Danceability (%)",
+    "Şarkı Adı",
+    "Ana Sanatçı",
+    "Tüm Sanatçılar",
+    "Albüm Adı",
+    "Süre (dk:sn)",
+    "BPM (Tempo)",
+    "Key & Mod",
+    "Enerji (%)",
+    "Dans Edilebilirlik (%)",
     "Valence (%)",
-    "Popularity",
-    "Release Date",
-    "ISRC",
+    "Popülerlik",
+    "Çıkış Tarihi",
+    "ISRC Kodu",
     "Explicit",
     "Spotify ID",
   ];
+
+  const delimiter = ";"; // Semicolon for Turkish/European Windows Excel compatibility
+
+  const clean = (val: string) => `"${(val || "").replace(/"/g, '""')}"`;
 
   const rows = playlist.tracks.map((t) => {
     const { name: keyName } = formatKeyAndCamelot(t.audioFeatures.key, t.audioFeatures.mode);
@@ -396,25 +403,26 @@ export function exportPlaylistCSV(playlist: SpotifyPlaylistAnalysis): string {
     const s = String(durSec % 60).padStart(2, "0");
 
     return [
-      `"${t.name.replace(/"/g, '""')}"`,
-      `"${(t.artists[0]?.name || "").replace(/"/g, '""')}"`,
-      `"${t.artists.map((a) => a.name).join(", ").replace(/"/g, '""')}"`,
-      `"${t.albumName.replace(/"/g, '""')}"`,
-      `"${m}:${s}"`,
+      clean(t.name),
+      clean(t.artists[0]?.name || ""),
+      clean(t.artists.map((a) => a.name).join(", ")),
+      clean(t.albumName),
+      clean(`${m}:${s}`),
       t.audioFeatures.tempo,
-      `"${keyName}"`,
+      clean(keyName),
       Math.round(t.audioFeatures.energy * 100),
       Math.round(t.audioFeatures.danceability * 100),
       Math.round(t.audioFeatures.valence * 100),
       t.popularity,
-      `"${t.releaseDate}"`,
-      `"${t.isrc || ""}"`,
-      t.explicit ? "YES" : "NO",
-      `"${t.id}"`,
-    ].join(",");
+      clean(t.releaseDate || ""),
+      clean(t.isrc || ""),
+      t.explicit ? "EVET" : "HAYIR",
+      clean(t.id),
+    ].join(delimiter);
   });
 
-  return [headers.join(","), ...rows].join("\n");
+  // \uFEFF is UTF-8 Byte Order Mark (BOM) for Excel
+  return "\uFEFF" + [headers.join(delimiter), ...rows].join("\n");
 }
 
 export function exportDJSetlistMarkdown(playlist: SpotifyPlaylistAnalysis): string {

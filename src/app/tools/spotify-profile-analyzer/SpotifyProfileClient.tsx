@@ -324,11 +324,26 @@ export default function SpotifyProfileClient() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
               <span className="text-xs text-white/50">{isTurkish ? "Direkt Takipçiler" : "Direct Followers"}</span>
-              <p className="text-3xl font-black font-mono text-cyan-400">{profileData.followers.toLocaleString()}</p>
+              {profileData.followers !== null && profileData.followers !== undefined ? (
+                <p className="text-3xl font-black font-mono text-cyan-400">{profileData.followers.toLocaleString()}</p>
+              ) : (
+                <div>
+                  <p className="text-base font-bold text-amber-400">{isTurkish ? "🔒 Gizli / Kısıtlı" : "🔒 Restricted / Hidden"}</p>
+                  <p className="text-[10px] text-white/40 leading-tight pt-0.5">
+                    {isTurkish
+                      ? "Spotify Web API gizlilik politikaları nedeniyle bu kullanıcının takipçi sayısı dışarıya kapalıdır."
+                      : "Follower count is restricted by Spotify privacy settings."}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
               <span className="text-xs text-white/50">{isTurkish ? "Tahmini Toplam Erişim" : "Total Reach Impact"}</span>
-              <p className="text-3xl font-black font-mono text-emerald-400">{Math.round(profileData.totalFollowerReach).toLocaleString()}</p>
+              {profileData.followers !== null && profileData.followers !== undefined ? (
+                <p className="text-3xl font-black font-mono text-emerald-400">{Math.round(profileData.totalFollowerReach).toLocaleString()}</p>
+              ) : (
+                <p className="text-base font-bold text-white/50">{isTurkish ? "Hesaplanamadı" : "N/A"}</p>
+              )}
             </div>
             <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
               <span className="text-xs text-white/50">{isTurkish ? "Halka Açık Listeler" : "Public Playlists"}</span>
@@ -352,31 +367,46 @@ export default function SpotifyProfileClient() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {profileData.publicPlaylists.map((pl) => (
-                <div
-                  key={pl.id}
-                  className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] transition-all flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <img src={pl.coverUrl} alt={pl.title} className="w-14 h-14 rounded-xl object-cover border border-white/10" />
-                    <div className="space-y-0.5">
-                      <h4 className="font-bold text-white text-sm">{pl.title}</h4>
-                      <p className="text-xs text-white/60">
-                        {pl.tracksCount} {isTurkish ? "Parça" : "Tracks"} · {pl.followersCount.toLocaleString()} {isTurkish ? "Takipçi" : "Followers"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/tools/spotify-playlist-analyzer?url=https://open.spotify.com/playlist/${pl.id}`}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-500/20 active:scale-95 transition-all shrink-0"
+            {profileData.publicPlaylists.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {profileData.publicPlaylists.map((pl) => (
+                  <div
+                    key={pl.id}
+                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] transition-all flex items-center justify-between gap-4"
                   >
-                    {isTurkish ? "Analiz Et" : "Analyze"}
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-3.5">
+                      <img src={pl.coverUrl} alt={pl.title} className="w-14 h-14 rounded-xl object-cover border border-white/10" />
+                      <div className="space-y-0.5">
+                        <h4 className="font-bold text-white text-sm">{pl.title}</h4>
+                        <p className="text-xs text-white/60">
+                          {pl.tracksCount} {isTurkish ? "Parça" : "Tracks"} · {pl.followersCount.toLocaleString()} {isTurkish ? "Takipçi" : "Followers"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/tools/spotify-playlist-analyzer?url=https://open.spotify.com/playlist/${pl.id}`}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-500/20 active:scale-95 transition-all shrink-0"
+                    >
+                      {isTurkish ? "Analiz Et" : "Analyze"}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center space-y-2">
+                <p className="text-sm font-semibold text-white/70">
+                  {isTurkish
+                    ? "⚠️ Bu profilde halka açık çalma listesi bulunamadı veya Spotify gizlilik ayarları nedeniyle listeler erişime kapalı."
+                    : "⚠️ No public playlists found for this profile or restricted by Spotify privacy settings."}
+                </p>
+                <p className="text-xs text-white/40">
+                  {isTurkish
+                    ? "Not: Çalma listelerini analiz etmek için doğrudan Spotify playlist bağlantısını (URL) yapıştırabilirsiniz."
+                    : "Tip: You can paste a direct Spotify playlist URL to analyze any specific playlist."}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* SECTION: Top Tracks (If Artist) */}

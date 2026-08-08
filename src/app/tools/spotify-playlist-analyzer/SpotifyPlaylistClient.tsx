@@ -123,12 +123,34 @@ export default function SpotifyPlaylistClient() {
     toast.success(isTurkish ? "CSV raporu indirildi!" : "CSV report downloaded!");
   };
 
+  const handleCopyCsv = async () => {
+    if (!analysisData) return;
+    const csvContent = exportPlaylistCSV(analysisData);
+    await copyToClipboard(csvContent);
+    setCopiedCsv(true);
+    toast.success(isTurkish ? "CSV içeriği kopyalandı!" : "CSV content copied!");
+    setTimeout(() => setCopiedCsv(false), 2000);
+  };
+
   const handleCopyJson = () => {
     if (!analysisData) return;
     copyToClipboard(JSON.stringify(analysisData, null, 2));
     setCopiedJson(true);
     toast.success(isTurkish ? "JSON verisi kopyalandı!" : "JSON data copied!");
     setTimeout(() => setCopiedJson(false), 2000);
+  };
+
+  const handleDownloadJson = () => {
+    if (!analysisData) return;
+    const jsonStr = JSON.stringify(analysisData, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${analysisData.title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_analysis.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isTurkish ? "JSON raporu indirildi!" : "JSON report downloaded!");
   };
 
   const handleCopyMarkdown = () => {
@@ -138,6 +160,19 @@ export default function SpotifyPlaylistClient() {
     setCopiedMd(true);
     toast.success(isTurkish ? "DJ Setlist Markdown kopyalandı!" : "DJ Setlist Markdown copied!");
     setTimeout(() => setCopiedMd(false), 2000);
+  };
+
+  const handleDownloadMarkdown = () => {
+    if (!analysisData) return;
+    const mdContent = exportDJSetlistMarkdown(analysisData);
+    const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${analysisData.title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_setlist.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isTurkish ? "DJ Setlist Markdown indirildi!" : "DJ Setlist Markdown downloaded!");
   };
 
   const formattedDur = analysisData ? formatDuration(analysisData.totalDurationSeconds) : null;
@@ -277,7 +312,9 @@ export default function SpotifyPlaylistClient() {
                   {formattedDur?.hours}s {formattedDur?.minutes}d
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25">
-                  {analysisData.followers.toLocaleString()} {isTurkish ? "Takipçi" : "Followers"}
+                  {analysisData.followers !== null && analysisData.followers !== undefined
+                    ? `${analysisData.followers.toLocaleString()} ${isTurkish ? "Takipçi / Save" : "Followers / Saves"}`
+                    : (isTurkish ? "🔒 Takipçi Sayısı Gizli" : "🔒 Followers Hidden")}
                 </span>
               </div>
 
@@ -468,45 +505,72 @@ export default function SpotifyPlaylistClient() {
                   <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
                     <h4 className="font-bold text-white text-sm">{isTurkish ? "Kapsamlı CSV Raporu" : "Comprehensive CSV Export"}</h4>
                     <p className="text-xs text-white/60">
-                      {isTurkish ? "Tüm parçalar, BPM, Key, Energy ve ISRC verilerini Excel uyumlu CSV olarak indirin." : "Export all tracks with BPM, Key, Energy and ISRC columns."}
+                      {isTurkish ? "Tüm parçalar, BPM, Key, Energy ve ISRC verilerini Excel uyumlu CSV olarak indirin veya kopyalayın." : "Export all tracks with BPM, Key, Energy and ISRC columns."}
                     </p>
-                    <button
-                      onClick={handleDownloadCsv}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-500/20 active:scale-95 transition-all"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>{isTurkish ? "CSV İndir" : "Download CSV"}</span>
-                    </button>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={handleDownloadCsv}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-500/20 active:scale-95 transition-all"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{isTurkish ? "CSV İndir" : "Download"}</span>
+                      </button>
+                      <button
+                        onClick={handleCopyCsv}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 text-xs font-bold hover:bg-white/[0.1] active:scale-95 transition-all"
+                      >
+                        {copiedCsv ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedCsv ? (isTurkish ? "Kopyalandı" : "Copied") : (isTurkish ? "Kopyala" : "Copy")}</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* DJ Setlist Markdown */}
                   <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
                     <h4 className="font-bold text-white text-sm">{isTurkish ? "DJ Setlist Markdown" : "DJ Setlist Markdown"}</h4>
                     <p className="text-xs text-white/60">
-                      {isTurkish ? "BPM, Camelot ton ve süre sıralı DJ canlı performans tablosu kopyalayın." : "Copy structured DJ live performance table with BPM and Camelot keys."}
+                      {isTurkish ? "BPM, Camelot ton ve süre sıralı DJ canlı performans tablosu indirin veya kopyalayın." : "Structured DJ live performance table with BPM and Camelot keys."}
                     </p>
-                    <button
-                      onClick={handleCopyMarkdown}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-bold hover:bg-violet-500/20 active:scale-95 transition-all"
-                    >
-                      {copiedMd ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                      <span>{copiedMd ? (isTurkish ? "Kopyalandı" : "Copied") : (isTurkish ? "Markdown Kopyala" : "Copy Markdown")}</span>
-                    </button>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={handleDownloadMarkdown}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-bold hover:bg-violet-500/20 active:scale-95 transition-all"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{isTurkish ? "MD İndir" : "Download"}</span>
+                      </button>
+                      <button
+                        onClick={handleCopyMarkdown}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 text-xs font-bold hover:bg-white/[0.1] active:scale-95 transition-all"
+                      >
+                        {copiedMd ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedMd ? (isTurkish ? "Kopyalandı" : "Copied") : (isTurkish ? "Kopyala" : "Copy")}</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Raw JSON Export */}
                   <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
                     <h4 className="font-bold text-white text-sm">{isTurkish ? "Ham JSON Verisi" : "Raw JSON Dataset"}</h4>
                     <p className="text-xs text-white/60">
-                      {isTurkish ? "Tüm analiz sonuçlarını ve bot güvenlik metriklerini ham JSON olarak kopyalayın." : "Copy raw structured analysis output and bot security metrics."}
+                      {isTurkish ? "Tüm analiz sonuçlarını ve bot güvenlik metriklerini ham JSON olarak indirin veya kopyalayın." : "Raw structured analysis output and bot security metrics."}
                     </p>
-                    <button
-                      onClick={handleCopyJson}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 active:scale-95 transition-all"
-                    >
-                      {copiedJson ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                      <span>{copiedJson ? (isTurkish ? "Kopyalandı" : "Copied") : (isTurkish ? "JSON Kopyala" : "Copy JSON")}</span>
-                    </button>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={handleDownloadJson}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 active:scale-95 transition-all"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{isTurkish ? "JSON İndir" : "Download"}</span>
+                      </button>
+                      <button
+                        onClick={handleCopyJson}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 text-xs font-bold hover:bg-white/[0.1] active:scale-95 transition-all"
+                      >
+                        {copiedJson ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedJson ? (isTurkish ? "Kopyalandı" : "Copied") : (isTurkish ? "Kopyala" : "Copy")}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

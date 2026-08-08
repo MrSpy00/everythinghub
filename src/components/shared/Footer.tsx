@@ -32,8 +32,8 @@ function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 export function Footer() {
+  const { lang, t } = useLanguage();
   const currentYear = new Date().getFullYear();
-  const { t } = useLanguage();
 
   return (
     <footer className="relative border-t border-white/10 bg-[#09090b]/90 backdrop-blur-2xl py-12 sm:py-16">
@@ -192,8 +192,16 @@ export function Footer() {
               {t.githubRepo}
             </a>
             <span>·</span>
-            <span className="flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-pink-400 fill-pink-400/30" /> for everyone
+            <span className="flex items-center gap-1.5">
+              {lang === "tr" ? (
+                <>
+                  <Heart className="h-3 w-3 text-pink-400 fill-pink-400/30 inline" /> ile herkes için özenle geliştirildi
+                </>
+              ) : (
+                <>
+                  Built with <Heart className="h-3 w-3 text-pink-400 fill-pink-400/30 inline" /> for everyone
+                </>
+              )}
             </span>
           </div>
         </div>

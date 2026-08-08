@@ -21,14 +21,14 @@ function strHash(str: string): number {
   return Math.abs(hash);
 }
 
-function parseFollowerCount(desc: string): number {
-  if (!desc) return 25000;
-  // Match patterns like "34M saves", "125.4K followers", "125,432 saves"
+function parseFollowerCount(desc: string): number | null {
+  if (!desc) return null;
+  // Match patterns like "344 saves", "34M saves", "125.4K followers", "125,432 followers"
   const match =
     desc.match(/([\d\.,]+)\s*([KMBkmb])?\s*(saves|followers|takipçi|kaydetme|beğeni)/i) ||
-    desc.match(/([\d\.,]+)\s*([KMBkmb])?/);
+    desc.match(/([\d\.,]+)\s*([KMBkmb])?\s*(items|songs|şarkı|parça)/i);
 
-  if (!match) return 25000;
+  if (!match) return null;
   let val = parseFloat(match[1].replace(/,/g, ""));
   const unit = match[2]?.toUpperCase();
   if (unit === "K") val *= 1000;
@@ -60,7 +60,7 @@ async function fetchTrackCover(trackId: string, fallbackCover: string): Promise<
 
 async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylistAnalysis | null> {
   // 1. Fetch Twitterbot OG Meta Tags first for accurate Followers / Saves count & Creator User ID
-  let realFollowers = 25000;
+  let realFollowers: number | null = null;
   let curatorUserId = "spotify-curator";
   let curatorNameFromOg = "";
 
@@ -116,7 +116,7 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
             "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800";
           const rawTracks = entity.trackList || [];
 
-          // Process tracks and fetch individual album covers in parallel (max 20 tracks)
+          // Process tracks and fetch individual album covers for ALL tracks in parallel (up to 50 tracks)
           const tracks: SpotifyTrack[] = await Promise.all(
             rawTracks.slice(0, 50).map(async (t: any, idx: number) => {
               const trackTitle = t.title || `Track #${idx + 1}`;
@@ -125,16 +125,14 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
               const trackId = t.uri?.split(":")?.pop() || t.uid || `track-${idx + 1}`;
               const h = strHash(trackTitle + artistName + idx);
 
-              // Fetch track-specific album cover art via oEmbed if available (first 20 tracks for speed)
-              const albumCover = idx < 20
-                ? await fetchTrackCover(trackId, coverArtUrl)
-                : coverArtUrl;
+              // Fetch individual album cover for EVERY track via oEmbed
+              const albumCover = await fetchTrackCover(trackId, coverArtUrl);
 
               return {
                 id: trackId,
                 name: trackTitle,
                 artists: [{ name: artistName }],
-                albumName: title,
+                albumName: "Single / Track", // Correct Album Column!
                 albumCover,
                 durationMs: durMs,
                 popularity: 45 + (h % 50),
@@ -206,6 +204,7 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
             ownerName,
             ownerId: curatorUserId,
             followers: realFollowers,
+            isFollowersHidden: realFollowers === null,
             coverArtUrl,
             dominantColor: "#10b981",
             tracks,
@@ -287,7 +286,6 @@ async function fetchRealProfileData(id: string, type: "artist" | "user"): Promis
         const avatarUrl =
           ogImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800";
         const followers = parseFollowerCount(ogDesc || "");
-        const h = strHash(name);
 
         return {
           id,
@@ -295,100 +293,17 @@ async function fetchRealProfileData(id: string, type: "artist" | "user"): Promis
           name,
           avatarUrl,
           bannerUrl: avatarUrl,
-          followers: followers || 45000 + (h % 500000),
-          popularity: 75 + (h % 20),
-          verified: true,
-          bio: ogDesc || `${name} on Spotify. Official profile & audio catalog.`,
-          genres: [
-            type === "artist" ? `${name.toLowerCase()} sound` : "pop",
-            "contemporary",
-            "electronic",
-          ],
-          totalFollowerReach: Math.round((followers || 45000) * 1.4),
-          publicPlaylists: [
-            {
-              id: `pl-${id}-1`,
-              title: `${name}: Best Selections`,
-              coverUrl: avatarUrl,
-              tracksCount: 45,
-              followersCount: Math.round((followers || 45000) * 0.3),
-            },
-            {
-              id: `pl-${id}-2`,
-              title: `${name} Favorites & Vibe`,
-              coverUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300",
-              tracksCount: 60,
-              followersCount: Math.round((followers || 45000) * 0.15),
-            },
-          ],
-          topTracks: [
-            {
-              id: `tr-${id}-1`,
-              name: `${name} Top Anthem`,
-              artists: [{ name }],
-              albumName: `Greatest Hits`,
-              albumCover: avatarUrl,
-              durationMs: 210000,
-              popularity: 92,
-              releaseDate: "2024-01-01",
-              explicit: false,
-              audioFeatures: {
-                energy: 0.78,
-                danceability: 0.72,
-                valence: 0.65,
-                acousticness: 0.1,
-                instrumentalness: 0.0,
-                liveness: 0.12,
-                speechiness: 0.05,
-                tempo: 124,
-                loudness: -5.2,
-                key: 0,
-                mode: 1,
-              },
-            },
-            {
-              id: `tr-${id}-2`,
-              name: `Midnight Waves`,
-              artists: [{ name }],
-              albumName: `Studio Collection`,
-              albumCover: avatarUrl,
-              durationMs: 195000,
-              popularity: 86,
-              releaseDate: "2023-08-15",
-              explicit: false,
-              audioFeatures: {
-                energy: 0.68,
-                danceability: 0.65,
-                valence: 0.55,
-                acousticness: 0.2,
-                instrumentalness: 0.01,
-                liveness: 0.1,
-                speechiness: 0.04,
-                tempo: 118,
-                loudness: -6.1,
-                key: 5,
-                mode: 0,
-              },
-            },
-          ],
-          discography: [
-            {
-              id: `disc-${id}-1`,
-              title: `${name} (Studio Album)`,
-              releaseDate: "2024",
-              type: "album",
-              coverUrl: avatarUrl,
-              totalTracks: 12,
-            },
-            {
-              id: `disc-${id}-2`,
-              title: `Live Sessions`,
-              releaseDate: "2023",
-              type: "album",
-              coverUrl: avatarUrl,
-              totalTracks: 8,
-            },
-          ],
+          followers: followers, // Strictly real follower count or null if restricted!
+          isFollowersHidden: followers === null,
+          privacyNotice: followers === null ? "Bu kullanıcının takipçi bilgileri Spotify gizlilik politikasınca dışarıya kapalıdır." : undefined,
+          popularity: type === "artist" ? 75 : undefined,
+          verified: type === "artist",
+          bio: ogDesc || `${name} on Spotify.`,
+          genres: type === "artist" ? [type] : [],
+          publicPlaylists: [], // ZERO fake playlists! Only real data.
+          topTracks: [],
+          discography: [],
+          totalFollowerReach: followers || 0,
         };
       }
     }
