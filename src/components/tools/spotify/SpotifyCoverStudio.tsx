@@ -21,24 +21,43 @@ export function SpotifyCoverStudio({
   isTurkish = true,
 }: SpotifyCoverStudioProps) {
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
-  const handleCopyLink = () => {
-    copyToClipboard(coverUrl);
+  const handleCopyLink = async () => {
+    await copyToClipboard(coverUrl);
     setCopied(true);
     toast.success(isTurkish ? "Kapak resmi bağlantısı kopyalandı!" : "Cover artwork URL copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownloadCover = () => {
-    const a = document.createElement("a");
-    a.href = coverUrl;
-    a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_cover_640x640.jpg`;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success(isTurkish ? "HD Kapak indiriliyor!" : "Downloading HD Cover!");
+  const handleDownloadCover = async () => {
+    setDownloading(true);
+    const toastId = "dl-cover";
+    toast.loading(isTurkish ? "HD Kapak indiriliyor..." : "Downloading HD Cover...", { id: toastId });
+
+    try {
+      const res = await fetch(coverUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_cover_640x640.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      toast.success(isTurkish ? "HD Kapak resmi indirildi!" : "HD Cover artwork downloaded!", { id: toastId });
+    } catch {
+      // Fallback open if blob fetch blocked by CORS
+      const a = document.createElement("a");
+      a.href = coverUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.click();
+      toast.success(isTurkish ? "Kapak resmi yeni sekmede açıldı." : "Cover image opened in new tab.", { id: toastId });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -100,19 +119,35 @@ export function SpotifyCoverStudio({
             </div>
           </div>
 
-          {/* Action Buttons (Strictly respecting liquid glass rules - NO cheap gradients!) */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          {/* Action Buttons: Download, Open New Tab, Copy Link */}
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-2">
+            {/* Direct Blob Download */}
             <button
               onClick={handleDownloadCover}
-              className="flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-semibold backdrop-blur-xl hover:border-emerald-500/40 hover:bg-emerald-500/15 active:scale-95 transition-all shadow-lg shadow-black/20"
+              disabled={downloading}
+              className="flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-bold backdrop-blur-xl hover:border-emerald-500/40 hover:bg-emerald-500/15 active:scale-95 transition-all shadow-lg shadow-black/20"
             >
               <Download className="w-4 h-4" />
-              <span>{isTurkish ? "HD Kapak Resmi İndir (640px)" : "Download HD Cover (640px)"}</span>
+              <span>{isTurkish ? "HD Kapak İndir (640px)" : "Download HD Cover (640px)"}</span>
             </button>
 
+            {/* Open in New Tab */}
+            <a
+              href={coverUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white/[0.05] border border-white/10 text-white/80 font-medium backdrop-blur-2xl hover:bg-white/[0.1] hover:text-white transition-all"
+              title={isTurkish ? "Yeni Sekmede Aç" : "Open in New Tab"}
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">{isTurkish ? "Yeni Sekmede Aç" : "New Tab"}</span>
+            </a>
+
+            {/* Copy Link */}
             <button
               onClick={handleCopyLink}
               className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white/[0.05] border border-white/10 text-white font-medium backdrop-blur-2xl hover:bg-white/[0.1] hover:border-white/20 active:scale-95 transition-all"
+              title={isTurkish ? "Link Kopyala" : "Copy Link"}
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/70" />}
               <span>{copied ? (isTurkish ? "Kopyalandı" : "Copied") : (isTurkish ? "Link Kopyala" : "Copy Link")}</span>

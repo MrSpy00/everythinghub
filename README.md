@@ -41,7 +41,7 @@ Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU h
 ### Temel Değerler ve İlkeler
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
 2. **Kayıt / Login Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
-3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru sayesinde sıfır gecikmeyle çalışır.
+3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru ve optimize WebGL fragment işleme sayesinde sıfır gecikmeyle çalışır.
 4. **16 Aktif Modüler Araç:** Ses & Müzik, Video, Görsel, Geliştirici, Metin ve Hesaplama kategorilerinde genişletilebilir araç altyapısı.
 5. **Kapsamlı Çok Dilli Altyapı:** Türkçe ve İngilizce dilleri arasında anında ve kesintisiz geçiş.
 6. **Çoklu Ekran & Kusursuz Responsive Uyum:** 320px mobil ekranlardan dikey/pivot monitörlere, tabletlerden 4K ve TV ekranlarına kadar hatasız esnek yerleşim.
@@ -50,18 +50,18 @@ Platform, standart hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU h
 
 ## Canlı Araç Kataloğu (16 Aktif Araç)
 
-### Ses & Müzik Kategorisi (YENİ)
-1. **Spotify Playlist Analizör (`/tools/spotify-playlist-analyzer`):** Chosic, Artist.tools ve SubmitHub seviyesinde derin bot & sahte akış tespiti, 0-100 Kalite Skoru kadranı, 8 eksenli Sonic DNA radarı, tür galaksisi & mood sınıflandırıcı, Camelot & Müzikal Key çarkı, kopya şarkı tespiti, 640x640 HD kapak stüdyosu ve CSV/JSON/DJ Setlist dışa aktarma.
-2. **Spotify Profil & Sanatçı Analizör (`/tools/spotify-profile-analyzer`):** Küratör ve sanatçı profillerini inceleme, takipçi erişim gücü analizi, halka açık listeler, diskografi dökümü, en popüler şarkılar ve HD avatar indirici.
+### Ses & Müzik Kategorisi
+1. **Spotify Playlist Analizör (`/tools/spotify-playlist-analyzer`):** Chosic, Artist.tools ve SubmitHub seviyesinde derin bot & sahte akış tespiti, 0-100 Kalite Skoru kadranı, 8 eksenli Sonic DNA radarı, tür galaksisi & mood sınıflandırıcı, Camelot & Müzikal Key çarkı, her şarkının bağımsız albüm kapağı (oEmbed), gerçek takipçi/save sayıları, kopya şarkı tespiti, direkt Spotify bağlantıları ve Lucide SVG kopyalama butonları, 640x640 HD kapak stüdyosu (doğrudan blob indirme, yeni sekmede açma, link kopyalama) ve CSV/JSON/DJ Setlist dışa aktarma.
+2. **Spotify Profil & Sanatçı Analizör (`/tools/spotify-profile-analyzer`):** Küratör ve sanatçı profillerini inceleme, akıllı playlist bağlantısından otomatik küratör çözme (Smart Resolution), takipçi erişim gücü analizi, halka açık listeler, diskografi dökümü, en popüler şarkılar ve doğrudan HD avatar indirici.
 
 ### Video & YouTube Kategorisi
 3. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` destekli playlist süre hesaplama, farklı oynatma hızları (1.0x-3.0x) simülasyonu, %100 doğrulanmış gerçek çalma listesi şablonları, rastgele konu keşfetme (shuffler), tarayıcı cihaz geçmişi ve CSV/JSON dışa aktarma.
-4. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD (1080p), HD (720p) ve MQ video kapak resimlerini ücretsiz indirme ve bağlantı kopyalama.
+4. **YouTube Thumbnail İndirici (`/tools/yt-thumbnail-downloader`):** 4K, Full HD (1080p), HD (720p) ve MQ video kapak resimlerini ücretsiz doğrudan blob indirme, yeni sekmede açma ve bağlantı kopyalama.
 5. **YouTube Zaman Damgası Üretici (`/tools/yt-timestamp-generator`):** Videoları tam istenen dakika ve saniyede başlatan zaman damgalı bağlantılar üretme.
 
 ### Görsel & Tasarım Kategorisi
 6. **Görsel Sıkıştırıcı (`/tools/image-compressor`):** Cihazınızda sıfır veri transferi ile %90'a varan oranda kayıpsız görsel sıkıştırma ve WebP optimizasyonu.
-7. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG ve WebP formatları arasında anında dönüştürme.
+7. **Görsel Format Dönüştürücü (`/tools/image-converter`):** PNG, JPEG, WebP ve AVIF formatları arasında anında dönüştürme.
 8. **Renk Paleti & Resimden Renk Çıkarıcı (`/tools/color-picker`):** Görsellerden öne çıkan dominant renk paletini çıkarma ve HEX/RGB değerlerini kopyalama.
 9. **CSS Gradient Üretici (`/tools/css-gradient-generator`):** Çok renkli, açılı linear ve radial CSS degrade kodları üretme.
 
@@ -173,18 +173,18 @@ Featuring a **creative studio aesthetic** with GPU-accelerated chromatic dotted 
 
 ## Live Tool Catalog (16 Active Tools)
 
-### Audio & Music Category (NEW)
-1. **Spotify Playlist Analyzer (`/tools/spotify-playlist-analyzer`):** Deep bot & artificial stream detection, 0-100 Quality Score gauge, 8-axis Sonic DNA radar, genre galaxy & mood classifier, Camelot & Musical Key wheel, duplicate track scanner, 640x640 HD cover artwork studio, and CSV/JSON/DJ Setlist export matching Chosic, Artist.tools, SubmitHub, and Trackify.
-2. **Spotify Profile & Artist Analyzer (`/tools/spotify-profile-analyzer`):** Inspect curator & artist profiles, follower reach impact analysis, public playlists, discography breakdown, top popular tracks, and HD avatar downloader.
+### Audio & Music Category
+1. **Spotify Playlist Analyzer (`/tools/spotify-playlist-analyzer`):** Deep bot & artificial stream detection, 0-100 Quality Score gauge, 8-axis Sonic DNA radar, genre galaxy & mood classifier, Camelot & Musical Key wheel, individual track album artwork (oEmbed), real follower/save count extraction, duplicate track scanner, direct Spotify track/curator links with Lucide SVG copy buttons, 640x640 HD cover artwork studio (direct blob download, open in new tab, copy link), and CSV/JSON/DJ Setlist export.
+2. **Spotify Profile & Artist Analyzer (`/tools/spotify-profile-analyzer`):** Inspect curator & artist profiles, Smart Playlist-to-Profile resolution, follower reach impact analysis, public playlists, discography breakdown, top popular tracks, direct Spotify profile links with copy buttons, and HD avatar blob downloader.
 
 ### Video & YouTube Category
 3. **YouTube Playlist Analyzer (`/tools/yt-playlist-length`):** YouTube `lockupViewModel` supported duration analysis, playback speed (1.0x-3.0x) simulation, 100% verified real playlist presets, topic shuffler, local device history, and CSV/JSON export.
-4. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD (1080p), HD (720p), and MQ cover images with direct blob download.
+4. **YouTube Thumbnail Downloader (`/tools/yt-thumbnail-downloader`):** Download 4K, Full HD (1080p), HD (720p), and MQ cover images with direct blob download, open in new tab, and copy link.
 5. **YouTube Timestamp Generator (`/tools/yt-timestamp-generator`):** Generate custom start time links and description timestamps.
 
 ### Image & Design Category
 6. **Image Compressor (`/tools/image-compressor`):** Up to 90% client-side image compression and WebP optimization.
-7. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, and WebP formats.
+7. **Image Format Converter (`/tools/image-converter`):** Instant conversion between PNG, JPEG, WebP, and AVIF formats.
 8. **Color Palette Extractor (`/tools/color-picker`):** Extract dominant color palettes from uploaded images and copy HEX/RGB codes.
 9. **CSS Gradient Generator (`/tools/css-gradient-generator`):** Multi-color linear and radial CSS gradient generator and code exporter.
 

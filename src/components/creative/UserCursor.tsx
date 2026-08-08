@@ -51,6 +51,55 @@ export function UserCursor({
       }
     };
 
+    let idleFrames = 0;
+    let isLoopRunning = false;
+
+    // 120-240Hz RAF Loop exclusively for smooth fluid trailing of the name badge
+    const renderLoop = () => {
+      if (isHovering) {
+        const dx = mouseX - labelX;
+        const dy = mouseY - labelY;
+        const dtilt = targetTilt - currentTilt;
+
+        // Fluid trailing lerp for label badge
+        const labelLerp = 0.32;
+        labelX += dx * labelLerp;
+        labelY += dy * labelLerp;
+
+        currentTilt += dtilt * 0.2;
+        targetTilt *= 0.88;
+
+        if (labelRef.current) {
+          const lx = labelX + size * 0.72;
+          const ly = labelY + size * 0.4;
+          const scale = isPressed ? 0.88 : 1;
+          labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0) rotate(${currentTilt}deg) scale(${scale})`;
+          labelRef.current.style.opacity = "1";
+        }
+
+        if (Math.abs(dx) < 0.05 && Math.abs(dy) < 0.05 && Math.abs(dtilt) < 0.01) {
+          idleFrames++;
+        } else {
+          idleFrames = 0;
+        }
+
+        if (idleFrames > 25) {
+          isLoopRunning = false;
+          return;
+        }
+      }
+
+      animId = requestAnimationFrame(renderLoop);
+    };
+
+    const startLoopIfNeeded = () => {
+      idleFrames = 0;
+      if (!isLoopRunning) {
+        isLoopRunning = true;
+        animId = requestAnimationFrame(renderLoop);
+      }
+    };
+
     const onPointerMove = (e: PointerEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
@@ -76,6 +125,7 @@ export function UserCursor({
       targetTilt = sign * norm * 18;
 
       updateLabelText(e.target as HTMLElement | null);
+      startLoopIfNeeded();
     };
 
     const onPointerDown = () => {
@@ -103,31 +153,6 @@ export function UserCursor({
     window.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("pointerup", onPointerUp, { passive: true });
     document.addEventListener("mouseleave", onMouseLeave, { passive: true });
-
-    // 120-240Hz RAF Loop exclusively for smooth fluid trailing of the name badge
-    const renderLoop = () => {
-      if (isHovering) {
-        // Fluid trailing lerp for label badge
-        const labelLerp = 0.32;
-        labelX += (mouseX - labelX) * labelLerp;
-        labelY += (mouseY - labelY) * labelLerp;
-
-        currentTilt += (targetTilt - currentTilt) * 0.2;
-        targetTilt *= 0.88;
-
-        if (labelRef.current) {
-          const lx = labelX + size * 0.72;
-          const ly = labelY + size * 0.4;
-          const scale = isPressed ? 0.88 : 1;
-          labelRef.current.style.transform = `translate3d(${lx}px, ${ly}px, 0) rotate(${currentTilt}deg) scale(${scale})`;
-          labelRef.current.style.opacity = "1";
-        }
-      }
-
-      animId = requestAnimationFrame(renderLoop);
-    };
-
-    animId = requestAnimationFrame(renderLoop);
 
     return () => {
       cancelAnimationFrame(animId);

@@ -167,10 +167,10 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-[var(--hub-text-subtle)]">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-zinc-300">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-indigo-400" />
-            <span>© {currentYear} <strong>aegisSoft</strong>. {t.allRightsReserved}</span>
+            <span>© {currentYear} <strong className="text-white">aegisSoft</strong>. {t.allRightsReserved}</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -178,7 +178,7 @@ export function Footer() {
               href="https://www.aegissoft.com.tr/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors underline-offset-4 hover:underline"
             >
               aegisSoft Studio
             </a>
@@ -187,13 +187,13 @@ export function Footer() {
               href="https://github.com/MrSpy00/everythinghub"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors underline-offset-4 hover:underline"
             >
               {t.githubRepo}
             </a>
             <span>·</span>
             <span className="flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-pink-500 fill-pink-500/20" /> for everyone
+              Made with <Heart className="h-3 w-3 text-pink-400 fill-pink-400/30" /> for everyone
             </span>
           </div>
         </div>

@@ -17,8 +17,10 @@ import {
   Music,
   Tag,
   Check,
+  Copy,
   Star,
   Layers,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
@@ -33,6 +35,8 @@ export default function SpotifyProfileClient() {
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<SpotifyProfileAnalysis | null>(DEMO_PROFILES["daft-punk"]);
+  const [copiedProfileLink, setCopiedProfileLink] = useState(false);
+  const [downloadingAvatar, setDownloadingAvatar] = useState(false);
 
   const handleAnalyze = async (urlToAnalyze?: string) => {
     const targetUrl = urlToAnalyze || inputUrl;
@@ -48,7 +52,7 @@ export default function SpotifyProfileClient() {
       const res = await fetch("/api/tools/spotify-analyzer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: targetUrl }),
+        body: JSON.stringify({ url: targetUrl, mode: "profile" }),
       });
 
       const json = await res.json();
@@ -74,17 +78,43 @@ export default function SpotifyProfileClient() {
     }
   };
 
-  const handleDownloadAvatar = () => {
+  const handleCopyProfileLink = async () => {
+    if (!profileData) return;
+    const profileUrl = `https://open.spotify.com/${profileData.type}/${profileData.id}`;
+    await copyToClipboard(profileUrl);
+    setCopiedProfileLink(true);
+    toast.success(isTurkish ? "Profil bağlantısı kopyalandı!" : "Profile link copied!");
+    setTimeout(() => setCopiedProfileLink(false), 2000);
+  };
+
+  const handleDownloadAvatar = async () => {
     if (!profileData?.avatarUrl) return;
-    const a = document.createElement("a");
-    a.href = profileData.avatarUrl;
-    a.download = `${profileData.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}_avatar.jpg`;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success(isTurkish ? "HD Avatar indiriliyor!" : "Downloading HD Avatar!");
+    setDownloadingAvatar(true);
+    const toastId = "dl-avatar";
+    toast.loading(isTurkish ? "HD Avatar indiriliyor..." : "Downloading HD Avatar...", { id: toastId });
+
+    try {
+      const res = await fetch(profileData.avatarUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${profileData.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}_avatar.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      toast.success(isTurkish ? "HD Avatar başarıyla indirildi!" : "HD Avatar downloaded successfully!", { id: toastId });
+    } catch {
+      const a = document.createElement("a");
+      a.href = profileData.avatarUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.click();
+      toast.success(isTurkish ? "Avatar yeni sekmede açıldı." : "Avatar opened in new tab.", { id: toastId });
+    } finally {
+      setDownloadingAvatar(false);
+    }
   };
 
   return (
@@ -143,7 +173,9 @@ export default function SpotifyProfileClient() {
               onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
               placeholder={
                 t.spotifyProfilePlaceholder ||
-                (isTurkish ? "Spotify Kullanıcı veya Sanatçı URL'si yapıştırın (örn: https://open.spotify.com/artist/...)" : "Paste Spotify User or Artist URL...")
+                (isTurkish
+                  ? "Spotify Profil, Sanatçı veya Çalma Listesi URL'si yapıştırın (Akıllı Çözümleme)..."
+                  : "Paste Spotify Profile, Artist, or Playlist URL (Smart Resolution)...")
               }
               className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50 focus:bg-white/[0.08] transition-all"
             />
@@ -182,6 +214,24 @@ export default function SpotifyProfileClient() {
       {/* Main Profile Workspace */}
       {profileData && (
         <div className="space-y-8 pt-4">
+          {/* Smart Resolution Banner Notice */}
+          {(profileData as any).resolvedFromPlaylist && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 backdrop-blur-xl flex items-center justify-between gap-4 max-w-4xl mx-auto"
+            >
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold">
+                  {isTurkish
+                    ? `Çalma Listesinden Otomatik Küratör Çözümlendi: "${(profileData as any).originalPlaylistTitle}" (Küratör: ${profileData.name})`
+                    : `Resolved Curator from Playlist: "${(profileData as any).originalPlaylistTitle}" (Curator: ${profileData.name})`}
+                </span>
+              </div>
+            </motion.div>
+          )}
+
           {/* Main Profile Header Card */}
           <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] border border-white/10 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
             {profileData.bannerUrl && (
@@ -211,7 +261,27 @@ export default function SpotifyProfileClient() {
                   )}
                 </div>
 
-                <h2 className="text-3xl sm:text-4xl font-black text-white">{profileData.name}</h2>
+                {/* Profile Name & Direct Spotify Link + Copy Button */}
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <a
+                    href={`https://open.spotify.com/${profileData.type}/${profileData.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-3xl sm:text-4xl font-black text-white hover:text-cyan-300 transition-colors flex items-center gap-2"
+                  >
+                    <span>{profileData.name}</span>
+                    <ExternalLink className="w-5 h-5 opacity-40 hover:opacity-100" />
+                  </a>
+
+                  <button
+                    onClick={handleCopyProfileLink}
+                    className="p-1.5 rounded-xl border border-white/10 bg-white/[0.05] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-cyan-500/40 transition-all"
+                    title={isTurkish ? "Profil Bağlantısını Kopyala" : "Copy Profile Link"}
+                  >
+                    {copiedProfileLink ? <Check className="w-4 h-4 text-cyan-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+
                 {profileData.bio && <p className="text-xs sm:text-sm text-white/70 max-w-2xl">{profileData.bio}</p>}
 
                 {/* Genre Tags */}
@@ -226,14 +296,27 @@ export default function SpotifyProfileClient() {
                 )}
               </div>
 
-              {/* Download Avatar Button */}
-              <button
-                onClick={handleDownloadAvatar}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 active:scale-95 transition-all shadow-xl"
-              >
-                <Download className="w-4 h-4" />
-                <span>{isTurkish ? "HD Avatar İndir" : "Download HD Avatar"}</span>
-              </button>
+              {/* Download Avatar & Action Buttons */}
+              <div className="flex flex-col gap-2 shrink-0">
+                <button
+                  onClick={handleDownloadAvatar}
+                  disabled={downloadingAvatar}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 active:scale-95 transition-all shadow-xl"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{isTurkish ? "HD Avatar İndir" : "Download HD Avatar"}</span>
+                </button>
+
+                <a
+                  href={profileData.avatarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white/70 text-xs font-semibold hover:text-white hover:bg-white/[0.08] transition-all"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>{isTurkish ? "Yeni Sekmede Aç" : "Open in New Tab"}</span>
+                </a>
+              </div>
             </div>
           </div>
 

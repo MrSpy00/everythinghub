@@ -23,7 +23,11 @@ function strHash(str: string): number {
 
 function parseFollowerCount(desc: string): number {
   if (!desc) return 25000;
-  const match = desc.match(/([\d\.,]+)\s*([KMBkmb])?/);
+  // Match patterns like "34M saves", "125.4K followers", "125,432 saves"
+  const match =
+    desc.match(/([\d\.,]+)\s*([KMBkmb])?\s*(saves|followers|takipçi|kaydetme|beğeni)/i) ||
+    desc.match(/([\d\.,]+)\s*([KMBkmb])?/);
+
   if (!match) return 25000;
   let val = parseFloat(match[1].replace(/,/g, ""));
   const unit = match[2]?.toUpperCase();
@@ -33,8 +37,61 @@ function parseFollowerCount(desc: string): number {
   return Math.round(val);
 }
 
+// Fetch individual track album cover art using Spotify's public oEmbed API
+async function fetchTrackCover(trackId: string, fallbackCover: string): Promise<string> {
+  if (!trackId || trackId.startsWith("track-") || trackId.startsWith("pl-track-")) {
+    return fallbackCover;
+  }
+  try {
+    const res = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${trackId}`, {
+      next: { revalidate: 86400 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.thumbnail_url) {
+        return json.thumbnail_url;
+      }
+    }
+  } catch {
+    // Return fallback on network error
+  }
+  return fallbackCover;
+}
+
 async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylistAnalysis | null> {
-  // 1. Try Spotify Embed endpoint (gives real title, curator, cover, and FULL track list!)
+  // 1. Fetch Twitterbot OG Meta Tags first for accurate Followers / Saves count & Creator User ID
+  let realFollowers = 25000;
+  let curatorUserId = "spotify-curator";
+  let curatorNameFromOg = "";
+
+  try {
+    const ogUrl = `https://open.spotify.com/playlist/${playlistId}`;
+    const ogRes = await fetch(ogUrl, {
+      headers: { "User-Agent": "Twitterbot/1.0" },
+      next: { revalidate: 60 },
+    });
+
+    if (ogRes.ok) {
+      const html = await ogRes.text();
+      const ogDesc =
+        html.match(/<meta property="og:description" content="([^"]*)"/)?.[1] ||
+        html.match(/<meta content="([^"]*)" property="og:description"/)?.[1] ||
+        html.match(/<meta name="description" content="([^"]*)"/)?.[1];
+
+      if (ogDesc) {
+        realFollowers = parseFollowerCount(ogDesc);
+      }
+
+      const creatorMatch = html.match(/<meta name="music:creator" content="https:\/\/open\.spotify\.com\/(user|artist)\/([^"]+)"/);
+      if (creatorMatch && creatorMatch[2]) {
+        curatorUserId = creatorMatch[2];
+      }
+    }
+  } catch (err) {
+    console.error("OG meta fetch error:", err);
+  }
+
+  // 2. Fetch Spotify Embed endpoint (gives real title, curator, cover, and FULL track list!)
   try {
     const embedUrl = `https://open.spotify.com/embed/playlist/${playlistId}`;
     const res = await fetch(embedUrl, {
@@ -53,44 +110,53 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
         const entity = json.props?.pageProps?.state?.data?.entity;
         if (entity) {
           const title = entity.title || entity.name || "Spotify Playlist";
-          const ownerName = entity.subtitle || entity.authors || "Spotify Curator";
+          const ownerName = entity.subtitle || entity.authors || curatorNameFromOg || "Spotify Curator";
           const coverArtUrl =
             entity.coverArt?.sources?.[0]?.url ||
             "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800";
           const rawTracks = entity.trackList || [];
 
-          const tracks: SpotifyTrack[] = rawTracks.map((t: any, idx: number) => {
-            const trackTitle = t.title || `Track #${idx + 1}`;
-            const artistName = t.subtitle || "Unknown Artist";
-            const durMs = t.duration || 180000 + ((idx * 3000) % 90000);
-            const h = strHash(trackTitle + artistName + idx);
+          // Process tracks and fetch individual album covers in parallel (max 20 tracks)
+          const tracks: SpotifyTrack[] = await Promise.all(
+            rawTracks.slice(0, 50).map(async (t: any, idx: number) => {
+              const trackTitle = t.title || `Track #${idx + 1}`;
+              const artistName = t.subtitle || "Unknown Artist";
+              const durMs = t.duration || 180000 + ((idx * 3000) % 90000);
+              const trackId = t.uri?.split(":")?.pop() || t.uid || `track-${idx + 1}`;
+              const h = strHash(trackTitle + artistName + idx);
 
-            return {
-              id: t.uri?.split(":")?.pop() || t.uid || `track-${idx + 1}`,
-              name: trackTitle,
-              artists: [{ name: artistName }],
-              albumName: title,
-              albumCover: coverArtUrl,
-              durationMs: durMs,
-              popularity: 45 + (h % 50),
-              releaseDate: "2024-01-01",
-              explicit: Boolean(t.isExplicit),
-              previewUrl: t.audioPreview?.url || null,
-              audioFeatures: {
-                energy: Number((0.35 + ((h % 55) / 100)).toFixed(2)),
-                danceability: Number((0.40 + (((h + 3) % 50) / 100)).toFixed(2)),
-                valence: Number((0.30 + (((h + 7) % 60) / 100)).toFixed(2)),
-                acousticness: Number((0.05 + (((h + 11) % 80) / 100)).toFixed(2)),
-                instrumentalness: (h % 100) > 75 ? 0.72 : 0.04,
-                liveness: Number((0.10 + (((h + 13) % 25) / 100)).toFixed(2)),
-                speechiness: Number((0.04 + (((h + 17) % 15) / 100)).toFixed(2)),
-                tempo: 85 + (h % 80),
-                loudness: Number((-4.0 - ((h % 70) / 10)).toFixed(1)),
-                key: h % 12,
-                mode: h % 2,
-              },
-            };
-          });
+              // Fetch track-specific album cover art via oEmbed if available (first 20 tracks for speed)
+              const albumCover = idx < 20
+                ? await fetchTrackCover(trackId, coverArtUrl)
+                : coverArtUrl;
+
+              return {
+                id: trackId,
+                name: trackTitle,
+                artists: [{ name: artistName }],
+                albumName: title,
+                albumCover,
+                durationMs: durMs,
+                popularity: 45 + (h % 50),
+                releaseDate: "2024-01-01",
+                explicit: Boolean(t.isExplicit),
+                previewUrl: t.audioPreview?.url || null,
+                audioFeatures: {
+                  energy: Number((0.35 + ((h % 55) / 100)).toFixed(2)),
+                  danceability: Number((0.40 + (((h + 3) % 50) / 100)).toFixed(2)),
+                  valence: Number((0.30 + (((h + 7) % 60) / 100)).toFixed(2)),
+                  acousticness: Number((0.05 + (((h + 11) % 80) / 100)).toFixed(2)),
+                  instrumentalness: (h % 100) > 75 ? 0.72 : 0.04,
+                  liveness: Number((0.10 + (((h + 13) % 25) / 100)).toFixed(2)),
+                  speechiness: Number((0.04 + (((h + 17) % 15) / 100)).toFixed(2)),
+                  tempo: 85 + (h % 80),
+                  loudness: Number((-4.0 - ((h % 70) / 10)).toFixed(1)),
+                  key: h % 12,
+                  mode: h % 2,
+                },
+              };
+            })
+          );
 
           const { score, riskLevel, botFlags, pitchingVerdict, artistDiversityHHI, duplicates } =
             calculateBotAndSafetyScore(tracks);
@@ -138,8 +204,8 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
             title,
             description: `Spotify playlist curated by ${ownerName}. Includes ${tracks.length} tracks.`,
             ownerName,
-            ownerId: "spotify-curator",
-            followers: 12500 + (strHash(title) % 500000),
+            ownerId: curatorUserId,
+            followers: realFollowers,
             coverArtUrl,
             dominantColor: "#10b981",
             tracks,
@@ -192,120 +258,6 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
     console.error("Embed playlist scrape error:", err);
   }
 
-  // 2. Secondary Fallback: Fetch OG tags via Twitterbot User-Agent
-  try {
-    const ogUrl = `https://open.spotify.com/playlist/${playlistId}`;
-    const ogRes = await fetch(ogUrl, {
-      headers: { "User-Agent": "Twitterbot/1.0" },
-      next: { revalidate: 60 },
-    });
-
-    if (ogRes.ok) {
-      const html = await ogRes.text();
-      const ogTitle =
-        html.match(/<meta property="og:title" content="([^"]*)"/)?.[1] ||
-        html.match(/<meta content="([^"]*)" property="og:title"/)?.[1];
-      const ogImage =
-        html.match(/<meta property="og:image" content="([^"]*)"/)?.[1] ||
-        html.match(/<meta content="([^"]*)" property="og:image"/)?.[1];
-      const ogDesc =
-        html.match(/<meta property="og:description" content="([^"]*)"/)?.[1] ||
-        html.match(/<meta content="([^"]*)" property="og:description"/)?.[1];
-
-      if (ogTitle && !ogTitle.includes("Page not found")) {
-        const title = ogTitle.replace(/ \| Spotify$/i, "");
-        const coverArtUrl =
-          ogImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800";
-        const followers = parseFollowerCount(ogDesc || "");
-
-        const trackCount = Math.max(15, (strHash(title) % 35) + 15);
-        const tracks: SpotifyTrack[] = Array.from({ length: trackCount }, (_, i) => {
-          const h = strHash(`${title}-${i}`);
-          return {
-            id: `pl-track-${i + 1}`,
-            name: `${title} Track #${i + 1}`,
-            artists: [{ name: `Artist ${(h % 20) + 1}` }],
-            albumName: title,
-            albumCover: coverArtUrl,
-            durationMs: 180000 + (h % 90000),
-            popularity: 50 + (h % 40),
-            releaseDate: "2024-01-01",
-            explicit: i % 4 === 0,
-            audioFeatures: {
-              energy: 0.5 + ((h % 40) / 100),
-              danceability: 0.6 + (((h + 3) % 30) / 100),
-              valence: 0.5 + (((h + 7) % 40) / 100),
-              acousticness: 0.2,
-              instrumentalness: 0.1,
-              liveness: 0.12,
-              speechiness: 0.06,
-              tempo: 100 + (h % 50),
-              loudness: -6.0,
-              key: h % 12,
-              mode: h % 2,
-            },
-          };
-        });
-
-        const { score, riskLevel, botFlags, pitchingVerdict, artistDiversityHHI, duplicates } =
-          calculateBotAndSafetyScore(tracks);
-
-        return {
-          id: playlistId,
-          title,
-          description: ogDesc || `Spotify playlist: ${title}`,
-          ownerName: "Spotify Curator",
-          ownerId: "curator",
-          followers: followers || 15000,
-          coverArtUrl,
-          dominantColor: "#10b981",
-          tracks,
-          totalTracks: tracks.length,
-          totalDurationSeconds: Math.round(
-            tracks.reduce((a, b) => a + b.durationMs, 0) / 1000
-          ),
-          uniqueArtistsCount: new Set(tracks.flatMap((t) => t.artists.map((a) => a.name))).size,
-          uniqueAlbumsCount: 10,
-          explicitTrackCount: tracks.filter((t) => t.explicit).length,
-          averagePopularity: 72,
-          qualityScore: score,
-          riskLevel,
-          botFlags,
-          pitchingVerdict,
-          audioFeaturesSummary: {
-            avgEnergy: 0.65,
-            avgDanceability: 0.70,
-            avgValence: 0.60,
-            avgAcousticness: 0.25,
-            avgInstrumentalness: 0.10,
-            avgLiveness: 0.15,
-            avgSpeechiness: 0.07,
-            avgTempo: 120,
-            medianTempo: 118,
-            avgLoudness: -5.5,
-          },
-          dominantMood: classifyDominantMood(0.6, 0.65),
-          topGenres: [
-            { genre: "Pop & Mainstream", count: 15, percentage: 50 },
-            { genre: "Electronic / Dance", count: 9, percentage: 30 },
-            { genre: "Indie Rock", count: 6, percentage: 20 },
-          ],
-          keyDistribution: [
-            { keyName: "C Majör", camelot: "8B", count: 8, percentage: 27 },
-            { keyName: "A Minör", camelot: "8A", count: 7, percentage: 23 },
-            { keyName: "G Majör", camelot: "9B", count: 6, percentage: 20 },
-            { keyName: "Diğer Tonlar", camelot: "Var", count: 9, percentage: 30 },
-          ],
-          decadeDistribution: [{ decade: "2020s", count: tracks.length, percentage: 100 }],
-          artistDiversityHHI,
-          duplicates,
-        };
-      }
-    }
-  } catch (err) {
-    console.error("OG playlist scrape error:", err);
-  }
-
   return null;
 }
 
@@ -327,7 +279,8 @@ async function fetchRealProfileData(id: string, type: "artist" | "user"): Promis
         html.match(/<meta content="([^"]*)" property="og:image"/)?.[1];
       const ogDesc =
         html.match(/<meta property="og:description" content="([^"]*)"/)?.[1] ||
-        html.match(/<meta content="([^"]*)" property="og:description"/)?.[1];
+        html.match(/<meta content="([^"]*)" property="og:description"/)?.[1] ||
+        html.match(/<meta name="description" content="([^"]*)"/)?.[1];
 
       if (ogTitle && !ogTitle.includes("Page not found")) {
         const name = ogTitle.replace(/ \| Spotify$/i, "");
@@ -449,7 +402,7 @@ async function fetchRealProfileData(id: string, type: "artist" | "user"): Promis
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { url } = body;
+    const { url, mode } = body;
 
     if (!url || typeof url !== "string") {
       return NextResponse.json(
@@ -467,7 +420,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Demo preset matches
+    // SMART RESOLUTION: If user inputs a playlist link into Profile Analyzer mode
+    if (parsed.type === "playlist" && mode === "profile") {
+      const plData = await fetchRealPlaylistData(parsed.id);
+      if (plData) {
+        // Fetch curator profile from playlist owner
+        const curatorProfile = await fetchRealProfileData(plData.ownerId || "spotify", "user");
+        if (curatorProfile) {
+          return NextResponse.json({
+            success: true,
+            data: {
+              ...curatorProfile,
+              name: plData.ownerName || curatorProfile.name,
+              resolvedFromPlaylist: true,
+              originalPlaylistTitle: plData.title,
+              curatorName: plData.ownerName,
+            },
+            isDemo: false,
+          });
+        }
+      }
+    }
+
+    // Standard Playlist Mode
     if (parsed.type === "playlist") {
       if (parsed.id === "37i9dQZF1DXcBWIGoYBM5M") {
         return NextResponse.json({ success: true, data: DEMO_PLAYLISTS["global-top-50"], isDemo: true });
@@ -494,7 +469,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, data: realData, isDemo: false });
       }
 
-      // Ultimate fallback if playlist ID does not exist on Spotify at all
       return NextResponse.json({
         success: true,
         data: DEMO_PLAYLISTS["global-top-50"],
@@ -502,6 +476,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Standard Profile Mode (Artist or User)
     if (parsed.type === "artist" || parsed.type === "user" || parsed.type === "album" || parsed.type === "track") {
       if (parsed.id === "4tZ12WiiJrAcoLv0vCgW4j") {
         return NextResponse.json({ success: true, data: DEMO_PROFILES["daft-punk"], isDemo: true });
@@ -510,14 +485,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, data: DEMO_PROFILES["the-weeknd"], isDemo: true });
       }
 
-      // Live Scrape for ANY real profile / artist / user URL!
       const profileType = parsed.type === "user" ? "user" : "artist";
       const realProfile = await fetchRealProfileData(parsed.id, profileType);
       if (realProfile) {
         return NextResponse.json({ success: true, data: realProfile, isDemo: false });
       }
 
-      // Fallback
       return NextResponse.json({
         success: true,
         data: DEMO_PROFILES["daft-punk"],

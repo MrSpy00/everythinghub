@@ -212,7 +212,7 @@ export function ToolGrid({ searchQuery = "", onSearch }: ToolGridProps) {
                 )}
                 <Icon className="relative z-10 h-3.5 w-3.5" />
                 <span className="relative z-10">{getCategoryLabel(cat)}</span>
-                <span className="relative z-10 text-[10px] opacity-70">({catCount})</span>
+                <span className="relative z-10 text-[10px] text-zinc-300 font-semibold">({catCount})</span>
               </button>
             );
           })}

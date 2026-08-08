@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Search, Play, Pause, ExternalLink, Sparkles } from "lucide-react";
+import { Search, Play, Pause, ExternalLink, Copy, Check, Music } from "lucide-react";
 import { SpotifyTrack, formatKeyAndCamelot } from "@/lib/spotify-analyzer";
-import { cn } from "@/lib/utils";
+import { copyToClipboard, cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface SpotifyTrackExplorerProps {
   tracks: SpotifyTrack[];
@@ -17,6 +18,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
   const [filterInstrumental, setFilterInstrumental] = useState(false);
 
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [copiedTrackId, setCopiedTrackId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -49,6 +51,14 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
         setPlayingTrackId(null);
       };
     }
+  };
+
+  const handleCopyTrackLink = async (trackId: string, trackName: string) => {
+    const trackUrl = `https://open.spotify.com/track/${trackId}`;
+    await copyToClipboard(trackUrl);
+    setCopiedTrackId(trackId);
+    toast.success(isTurkish ? `"${trackName}" bağlantısı kopyalandı!` : `Copied link for "${trackName}"!`);
+    setTimeout(() => setCopiedTrackId(null), 2000);
   };
 
   const filteredTracks = useMemo(() => {
@@ -150,7 +160,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
               <th className="pb-3">Key</th>
               <th className="pb-3">Enerji</th>
               <th className="pb-3">Popülerlik</th>
-              <th className="pb-3 pr-3 text-right">Süre</th>
+              <th className="pb-3 pr-3 text-right">İşlemler</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -160,6 +170,8 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
               const m = Math.floor(durSec / 60);
               const s = String(durSec % 60).padStart(2, "0");
               const isPlaying = playingTrackId === t.id;
+              const isCopied = copiedTrackId === t.id;
+              const spotifyTrackUrl = `https://open.spotify.com/track/${t.id}`;
 
               return (
                 <tr key={t.id} className="hover:bg-white/[0.03] transition-colors group">
@@ -172,7 +184,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                         <img
                           src={t.albumCover}
                           alt={t.name}
-                          className="w-10 h-10 rounded-xl object-cover border border-white/10"
+                          className="w-10 h-10 rounded-xl object-cover border border-white/10 shadow-sm"
                         />
                         {t.previewUrl && (
                           <div className={cn(
@@ -190,19 +202,43 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
 
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className={cn(
-                            "font-bold text-sm transition-colors",
-                            isPlaying ? "text-emerald-400" : "text-white group-hover:text-emerald-300"
-                          )}>
-                            {t.name}
-                          </span>
+                          {/* Direct Spotify Link for Track Name */}
+                          <a
+                            href={spotifyTrackUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "font-bold text-sm transition-colors hover:underline underline-offset-4 flex items-center gap-1",
+                              isPlaying ? "text-emerald-400" : "text-white group-hover:text-emerald-300"
+                            )}
+                          >
+                            <span>{t.name}</span>
+                            <ExternalLink className="w-3 h-3 opacity-50 hover:opacity-100 shrink-0" />
+                          </a>
+
                           {t.explicit && (
                             <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/15 text-rose-300 border border-rose-500/20">
                               EXPLICIT
                             </span>
                           )}
                         </div>
-                        <p className="text-white/60">{t.artists.map((a) => a.name).join(", ")}</p>
+
+                        {/* Artists with clickable Spotify search links */}
+                        <p className="text-white/60">
+                          {t.artists.map((a, aIdx) => (
+                            <React.Fragment key={a.name}>
+                              {aIdx > 0 && ", "}
+                              <a
+                                href={`https://open.spotify.com/search/${encodeURIComponent(a.name)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-white hover:underline transition-colors"
+                              >
+                                {a.name}
+                              </a>
+                            </React.Fragment>
+                          ))}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -226,8 +262,21 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                   {/* Popularity */}
                   <td className="py-3 pr-4 font-mono text-cyan-300">{t.popularity}</td>
 
-                  {/* Duration */}
-                  <td className="py-3 pr-3 text-right font-mono text-white/60">{m}:{s}</td>
+                  {/* Action Buttons: Copy Link & Duration */}
+                  <td className="py-3 pr-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-mono text-white/60 mr-1">{m}:{s}</span>
+
+                      {/* SVG Copy Link Button */}
+                      <button
+                        onClick={() => handleCopyTrackLink(t.id, t.name)}
+                        className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-emerald-500/40 transition-all"
+                        title={isTurkish ? "Şarkı Linkini Kopyala" : "Copy Track Link"}
+                      >
+                        {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               );
             })}

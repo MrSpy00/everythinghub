@@ -228,6 +228,7 @@ export function DottedBackground({
   const glRef = useRef<Renderer["gl"] | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const lastTimeRef = useRef(0);
+  const isVisibleRef = useRef(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -236,7 +237,7 @@ export function DottedBackground({
     let renderer: Renderer;
     try {
       renderer = new Renderer({
-        dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+        dpr: 1.0,
         alpha: true,
         premultipliedAlpha: false,
         webgl: 2,
@@ -252,6 +253,10 @@ export function DottedBackground({
     const canvas = glContext?.canvas;
     if (!gl || !canvas) return;
 
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.objectFit = "cover";
+
     container.appendChild(canvas);
     rendererRef.current = renderer;
     glRef.current = gl;
@@ -260,11 +265,17 @@ export function DottedBackground({
     camera.position.set(0, 0, 3);
     cameraRef.current = camera;
 
+    const MAX_CANVAS_WIDTH = 960;
     const doResize = () => {
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
+      const rawWidth = container.clientWidth || window.innerWidth;
+      const rawHeight = container.clientHeight || window.innerHeight;
+      const aspect = rawWidth / Math.max(1, rawHeight);
+
+      const width = Math.min(MAX_CANVAS_WIDTH, rawWidth);
+      const height = Math.round(width / aspect);
+
       renderer.setSize(width, height);
-      camera.perspective({ aspect: canvas.width / Math.max(1, canvas.height) });
+      camera.perspective({ aspect });
       if (renderTargetRef.current?.setSize) {
         renderTargetRef.current.setSize(canvas.width, canvas.height);
       }
@@ -302,7 +313,7 @@ export function DottedBackground({
     renderTargetRef.current = renderTarget;
 
     const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-    const effectiveCellSize = isMobile ? Math.max(20, cellSize * 0.65) : cellSize;
+    const effectiveCellSize = isMobile ? Math.max(18, cellSize * 0.55) : cellSize * 0.7;
 
     const palette = buildPaletteUniforms(colors);
     const dotProgram = new Program(gl, {
@@ -327,8 +338,29 @@ export function DottedBackground({
     });
     dotMeshRef.current = dotMesh;
 
-    const frameInterval = 1000 / 30;
+    const onVisibilityChange = () => {
+      isVisibleRef.current = document.visibilityState === "visible";
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            isVisibleRef.current = entry.isIntersecting && document.visibilityState === "visible";
+          });
+        },
+        { threshold: 0 }
+      );
+      observer.observe(container);
+    }
+
+    const frameInterval = 50;
     const update = (time: number) => {
+      rafIdRef.current = requestAnimationFrame(update);
+      if (!isVisibleRef.current) return;
+
       const last = lastTimeRef.current;
       if (time - last >= frameInterval) {
         lastTimeRef.current = time;
@@ -338,14 +370,18 @@ export function DottedBackground({
         perlinProgram.uniforms.uResolution.value = [canvas.width, canvas.height];
         renderer.render({ scene: dotMesh, camera });
       }
-      rafIdRef.current = requestAnimationFrame(update);
     };
 
-    rafIdRef.current = requestAnimationFrame(update);
+    const startTimer = setTimeout(() => {
+      rafIdRef.current = requestAnimationFrame(update);
+    }, 150);
 
     return () => {
+      clearTimeout(startTimer);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       window.removeEventListener("resize", doResize);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      if (observer) observer.disconnect();
       if (canvas && canvas.parentElement === container) {
         container.removeChild(canvas);
       }
@@ -354,6 +390,7 @@ export function DottedBackground({
 
   return (
     <div
+      ref={containerRef}
       className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-45 transition-opacity duration-1000 ${
         className || ""
       }`}
@@ -370,7 +407,6 @@ export function DottedBackground({
           position: "absolute",
         }}
       />
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" />
     </div>
   );
 }

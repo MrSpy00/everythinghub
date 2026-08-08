@@ -59,6 +59,16 @@ export default function SpotifyPlaylistClient() {
   const [copiedCsv, setCopiedCsv] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedMd, setCopiedMd] = useState(false);
+  const [copiedPlaylistLink, setCopiedPlaylistLink] = useState(false);
+
+  const handleCopyPlaylistLink = async () => {
+    if (!analysisData) return;
+    const playlistUrl = `https://open.spotify.com/playlist/${analysisData.id}`;
+    await copyToClipboard(playlistUrl);
+    setCopiedPlaylistLink(true);
+    toast.success(isTurkish ? "Çalma listesi bağlantısı kopyalandı!" : "Playlist link copied!");
+    setTimeout(() => setCopiedPlaylistLink(false), 2000);
+  };
 
   const handleAnalyze = async (urlToAnalyze?: string) => {
     const targetUrl = urlToAnalyze || inputUrl;
@@ -271,10 +281,38 @@ export default function SpotifyPlaylistClient() {
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-black text-white">{analysisData.title}</h2>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <a
+                  href={`https://open.spotify.com/playlist/${analysisData.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-2xl sm:text-3xl font-black text-white hover:text-emerald-300 transition-colors flex items-center gap-2"
+                >
+                  <span>{analysisData.title}</span>
+                  <FileCode className="w-5 h-5 opacity-40 hover:opacity-100" />
+                </a>
+
+                <button
+                  onClick={handleCopyPlaylistLink}
+                  className="p-1.5 rounded-xl border border-white/10 bg-white/[0.05] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-emerald-500/40 transition-all"
+                  title={isTurkish ? "Çalma Listesi Bağlantısını Kopyala" : "Copy Playlist Link"}
+                >
+                  {copiedPlaylistLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+
               <p className="text-xs sm:text-sm text-white/60 line-clamp-2">{analysisData.description}</p>
-              <p className="text-xs text-white/50">
-                {isTurkish ? "Küratör:" : "Curator:"} <span className="text-white font-medium">{analysisData.ownerName}</span>
+
+              <p className="text-xs text-white/50 flex items-center justify-center md:justify-start gap-1.5">
+                <span>{isTurkish ? "Küratör:" : "Curator:"}</span>
+                <a
+                  href={`https://open.spotify.com/user/${analysisData.ownerId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white font-bold hover:text-emerald-300 hover:underline transition-colors underline-offset-4"
+                >
+                  {analysisData.ownerName}
+                </a>
               </p>
             </div>
           </div>
