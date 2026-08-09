@@ -135,10 +135,12 @@ export function StudioDropdown<T extends string>({
             }
             transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
-              "absolute left-0 right-0 z-[100] min-w-[200px] max-h-64 overflow-y-auto rounded-2xl border border-white/15 bg-[#0e1017]/98 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/95 scrollbar-thin scrollbar-thumb-white/10",
+              "absolute left-0 right-0 z-[100] min-w-[200px] max-h-64 overflow-y-auto overscroll-contain rounded-2xl border border-white/15 bg-[#0e1017]/98 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/95 scrollbar-thin scrollbar-thumb-white/10",
               dropUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
               menuClassName
             )}
+            data-scroll-container="true"
+            data-dropdown-menu="true"
             role="listbox"
           >
             {options.map((opt) => {

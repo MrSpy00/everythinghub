@@ -164,12 +164,24 @@ body {
   transform: translateY(-3px);
 }
 
-/* ===== Horizontal Scroll Boundaries & Containment ===== */
+/* ===== Universal Scroll Boundaries & Zero Chaining Containment ===== */
 [data-horizontal-scroll="true"],
+[data-dropdown-menu="true"],
+[data-scroll-container="true"],
 .overflow-x-auto,
-.overflow-x-scroll {
-  overscroll-behavior-x: contain;
-  overscroll-behavior-y: contain;
+.overflow-x-scroll,
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-auto,
+.overflow-scroll,
+[role="listbox"],
+[role="menu"],
+textarea,
+pre,
+code {
+  overscroll-behavior: contain !important;
+  overscroll-behavior-x: contain !important;
+  overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
 }
 
