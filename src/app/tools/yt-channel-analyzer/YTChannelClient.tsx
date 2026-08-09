@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,9 +11,7 @@ import {
   PlaySquare,
   Users,
   Film,
-  Eye,
   DollarSign,
-  TrendingUp,
   Award,
   Download,
   ExternalLink,
@@ -22,7 +20,6 @@ import {
   Rss,
   FileCode2,
   FileSpreadsheet,
-  Share2,
   Play,
   Calendar,
   CheckCircle2,
@@ -31,15 +28,16 @@ import {
   LayoutGrid,
   List,
   SlidersHorizontal,
-  Clock,
+  ArrowUpDown,
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { NeonBorder } from "@/components/creative/NeonBorder";
 import { FluidSlimeCard } from "@/components/creative/FluidSlimeCard";
+import { MeshText } from "@/components/creative/MeshText";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { copyToClipboard } from "@/lib/utils";
-import { YTChannelAnalysis, DEMO_CHANNELS, YTVideoItem } from "@/lib/yt-channel-analyzer";
+import { YTChannelAnalysis, DEMO_CHANNELS, YTVideoItem, formatViewCount } from "@/lib/yt-channel-analyzer";
 import { trackToolUsage } from "@/lib/user-analytics";
 
 export default function YTChannelClient() {
@@ -57,14 +55,27 @@ export default function YTChannelClient() {
   const [downloadingBanner, setDownloadingBanner] = useState(false);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
 
-  // Video Catalog Search & Filters
+  // Video Catalog Search & Custom Dropdown Sort
   const [videoSearch, setVideoSearch] = useState("");
-  const [videoSort, setVideoSort] = useState<"newest" | "oldest" | "views" | "title">("newest");
+  const [videoSort, setVideoSort] = useState<"newest" | "oldest" | "title">("newest");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [videoLimit, setVideoLimit] = useState<number>(24);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     trackToolUsage("yt-channel-analyzer");
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleAnalyze = async (queryToAnalyze?: string) => {
@@ -173,11 +184,7 @@ export default function YTChannelClient() {
       URL.revokeObjectURL(blobUrl);
       toast.success(isTurkish ? "HD Avatar başarıyla indirildi!" : "HD Avatar downloaded successfully!", { id: toastId });
     } catch {
-      const a = document.createElement("a");
-      a.href = channelData.avatarUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.click();
+      window.open(channelData.avatarUrl, "_blank");
       toast.success(isTurkish ? "Avatar yeni sekmede açıldı." : "Avatar opened in new tab.", { id: toastId });
     } finally {
       setDownloadingAvatar(false);
@@ -203,24 +210,38 @@ export default function YTChannelClient() {
       URL.revokeObjectURL(blobUrl);
       toast.success(isTurkish ? "HD Banner başarıyla indirildi!" : "HD Banner downloaded successfully!", { id: toastId });
     } catch {
-      const a = document.createElement("a");
-      a.href = channelData.bannerUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.click();
+      window.open(channelData.bannerUrl, "_blank");
       toast.success(isTurkish ? "Banner yeni sekmede açıldı." : "Banner opened in new tab.", { id: toastId });
     } finally {
       setDownloadingBanner(false);
     }
   };
 
-  const handleDownloadThumbnail = (v: YTVideoItem) => {
-    const a = document.createElement("a");
-    a.href = v.thumbnail;
-    a.target = "_blank";
-    a.download = `${v.id}_thumbnail.jpg`;
-    a.click();
-    toast.success(isTurkish ? "Video kapağı indiriliyor..." : "Downloading video thumbnail...");
+  // Direct Thumbnail Downloader (Downloads file directly)
+  const handleDownloadThumbnailDirect = async (v: YTVideoItem) => {
+    const toastId = `dl-${v.id}`;
+    toast.loading(isTurkish ? "Video kapağı indiriliyor..." : "Downloading thumbnail...", { id: toastId });
+    try {
+      const res = await fetch(v.thumbnail);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${v.id}_maxres_thumbnail.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      toast.success(isTurkish ? "Video kapağı başarıyla indirildi!" : "Thumbnail downloaded!", { id: toastId });
+    } catch {
+      window.open(v.thumbnail, "_blank");
+      toast.success(isTurkish ? "Görsel yeni sekmede açıldı." : "Image opened in new tab.", { id: toastId });
+    }
+  };
+
+  // Open Thumbnail in New Tab
+  const handleOpenThumbnailInNewTab = (v: YTVideoItem) => {
+    window.open(v.thumbnail, "_blank", "noopener,noreferrer");
   };
 
   const handleCopyVideoLink = async (link: string) => {
@@ -263,6 +284,14 @@ export default function YTChannelClient() {
     return `${uc} Upload Frequency`;
   }, [channelData, isTurkish]);
 
+  const sortOptions = [
+    { id: "newest" as const, label: isTurkish ? "En Yeni" : "Newest" },
+    { id: "oldest" as const, label: isTurkish ? "En Eski" : "Oldest" },
+    { id: "title" as const, label: isTurkish ? "Başlık (A-Z)" : "Title (A-Z)" },
+  ];
+
+  const currentSortLabel = sortOptions.find((o) => o.id === videoSort)?.label || (isTurkish ? "En Yeni" : "Newest");
+
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       {/* Top Navigation */}
@@ -284,25 +313,34 @@ export default function YTChannelClient() {
         </Link>
       </div>
 
-      {/* Hero Header */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
+      {/* Hero Header with Responsive Interactive Mesh Title */}
+      <div className="text-center space-y-3 max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-xs font-semibold text-zinc-300 backdrop-blur-2xl shadow-xl hover:border-indigo-500/40 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-xs font-semibold text-zinc-300 backdrop-blur-2xl shadow-xl hover:border-rose-500/40 transition-colors"
         >
           <PlaySquare className="w-4 h-4 text-rose-500" />
           <span>{isTurkish ? "YouTube Kanal & Profil Stüdyosu Pro" : "YouTube Channel & Profile Studio Pro"}</span>
         </motion.div>
 
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          {isTurkish ? "YouTube Kanal & Profil Analizörü" : "YouTube Channel & Profile Analyzer"}
-        </h1>
+        <div className="w-full max-w-2xl mx-auto px-2">
+          <MeshText
+            text={isTurkish ? "KANAL ANALİZÖRÜ" : "CHANNEL STUDIO"}
+            fontSize={48}
+            fontWeight={900}
+            fontFamily="Outfit"
+            color="#ffffff"
+            customColors={["#f43f5e", "#06b6d4", "#a855f7", "#10b981"]}
+            force={26}
+            className="w-full"
+          />
+        </div>
 
-        <p className="text-sm sm:text-base text-white/70 leading-relaxed">
+        <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-xl mx-auto">
           {isTurkish
-            ? "Herhangi bir YouTube kanalı veya videosu girerek net abone sayısını, tahmini gelirlerini, HD banner & avatarını ve 100+ videoluk zengin video kataloğunu filtreleyin ve inceleyin."
-            : "Inspect any YouTube creator or video to analyze exact subscriber counts, projected revenue, HD artwork downloads, and filter through the complete video catalog."}
+            ? "YouTube kanalı veya videosu girerek net abone sayısını, tahmini gelirlerini, HD artwork görsellerini ve 10.000 videoya kadar zengin video kataloğunu inceleyin."
+            : "Analyze any YouTube creator or video to inspect exact subscribers, projected revenue, artwork downloads, and filter through up to 10,000+ catalog videos."}
         </p>
       </div>
 
@@ -364,12 +402,12 @@ export default function YTChannelClient() {
       {/* Active Channel Result Layout */}
       {channelData && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Main Channel Header Card with Banner & Centered Layout */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d0e14]/90 backdrop-blur-3xl shadow-2xl">
+          {/* Main Channel Header Card */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0e1017] shadow-2xl">
             {/* Banner Artwork */}
             <div className="relative h-48 sm:h-72 w-full bg-zinc-900 overflow-hidden group/banner">
               <img src={channelData.bannerUrl} alt="Channel Banner" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0e14] via-[#0d0e14]/40 to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0e1017] via-[#0e1017]/40 to-black/30" />
               <button
                 onClick={handleDownloadBanner}
                 className="absolute top-4 right-4 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/60 border border-white/20 text-white text-xs font-bold opacity-0 group-hover/banner:opacity-100 transition-opacity cursor-pointer backdrop-blur-md hover:bg-black/80"
@@ -386,7 +424,7 @@ export default function YTChannelClient() {
                 <img
                   src={channelData.avatarUrl}
                   alt={channelData.title}
-                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0d0e14] shadow-2xl ring-4 ring-rose-500/20"
+                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0e1017] shadow-2xl ring-4 ring-rose-500/20"
                 />
                 <button
                   onClick={handleDownloadAvatar}
@@ -496,7 +534,7 @@ export default function YTChannelClient() {
             </div>
           </div>
 
-          {/* 4 Metric Cards (Fixed Glare & Full Bleed) */}
+          {/* 4 Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <FluidSlimeCard glowColor="rgba(244, 63, 94, 0.25)" className="p-5 flex flex-col justify-between space-y-2">
               <div className="flex items-center justify-between">
@@ -543,9 +581,9 @@ export default function YTChannelClient() {
             </FluidSlimeCard>
           </div>
 
-          {/* SECTION: Comprehensive Video Catalog with Search & Filter Controls */}
+          {/* SECTION: Comprehensive Video Catalog with Search & Modern Custom Dropdown */}
           {channelData.latestVideos && channelData.latestVideos.length > 0 && (
-            <div className="bg-[#0d0e14]/90 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-3xl shadow-2xl space-y-6">
+            <div className="bg-[#0e1017] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
               {/* Header with Title & Export Actions */}
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
@@ -557,7 +595,7 @@ export default function YTChannelClient() {
                       {isTurkish ? "Kanal Video Kataloğu & Arşivi" : "Channel Video Catalog & Archive"}
                     </h3>
                     <p className="text-xs text-white/60">
-                      {filteredVideos.length} {isTurkish ? "video listelendi" : "videos listed"} · {channelData.videoCountNum} {isTurkish ? "toplam video" : "total channel uploads"}
+                      {filteredVideos.length} {isTurkish ? "video listelendi" : "videos listed"} · {channelData.videoCountNum.toLocaleString()} {isTurkish ? "toplam video" : "total uploads"}
                     </p>
                   </div>
                 </div>
@@ -595,29 +633,65 @@ export default function YTChannelClient() {
                   />
                 </div>
 
-                {/* Sort & View Mode */}
+                {/* Custom Floating Sort Dropdown (No native select) */}
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                  <select
-                    value={videoSort}
-                    onChange={(e: any) => setVideoSort(e.target.value)}
-                    className="bg-[#12141c] border border-white/10 text-zinc-300 rounded-xl px-3 py-2 text-xs focus:outline-none"
-                  >
-                    <option value="newest">{isTurkish ? "En Yeni" : "Newest"}</option>
-                    <option value="oldest">{isTurkish ? "En Eski" : "Oldest"}</option>
-                    <option value="title">{isTurkish ? "Başlık (A-Z)" : "Title (A-Z)"}</option>
-                  </select>
+                  <div className="relative" ref={sortDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                      className="flex items-center justify-between gap-2.5 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs font-bold text-zinc-300 hover:text-white hover:border-rose-500/40 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <ArrowUpDown className="w-3.5 h-3.5 text-rose-400" />
+                        <span>{currentSortLabel}</span>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${sortDropdownOpen ? "rotate-180 text-white" : ""}`} />
+                    </button>
 
+                    <AnimatePresence>
+                      {sortDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 4, scale: 1 }}
+                          exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 top-full mt-1 w-44 z-50 rounded-2xl border border-white/15 bg-[#12141c] p-1.5 shadow-2xl backdrop-blur-3xl"
+                        >
+                          {sortOptions.map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                setVideoSort(opt.id);
+                                setSortDropdownOpen(false);
+                              }}
+                              className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                videoSort === opt.id
+                                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                  : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {videoSort === opt.id && <Check className="w-3.5 h-3.5 text-rose-400" />}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Grid vs List View Mode Toggle */}
                   <div className="flex items-center border border-white/10 rounded-xl overflow-hidden bg-black/40">
                     <button
                       onClick={() => setViewMode("grid")}
-                      className={`p-2 transition-colors ${viewMode === "grid" ? "bg-rose-500/20 text-rose-300" : "text-zinc-400 hover:text-white"}`}
+                      className={`p-2 transition-colors cursor-pointer ${viewMode === "grid" ? "bg-rose-500/20 text-rose-300" : "text-zinc-400 hover:text-white"}`}
                       title="Grid View"
                     >
                       <LayoutGrid className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setViewMode("list")}
-                      className={`p-2 transition-colors ${viewMode === "list" ? "bg-rose-500/20 text-rose-300" : "text-zinc-400 hover:text-white"}`}
+                      className={`p-2 transition-colors cursor-pointer ${viewMode === "list" ? "bg-rose-500/20 text-rose-300" : "text-zinc-400 hover:text-white"}`}
                       title="List View"
                     >
                       <List className="w-4 h-4" />
@@ -668,31 +742,48 @@ export default function YTChannelClient() {
                         </a>
 
                         <div className="flex items-center justify-between text-[11px] text-white/50 pt-1">
-                          <span className="flex items-center gap-1 font-mono">
-                            <Calendar className="w-3 h-3 text-zinc-400" />
+                          <span className="flex items-center gap-1 font-mono text-[10px]">
+                            <Calendar className="w-3 h-3 text-zinc-400 shrink-0" />
                             {v.publishedAt}
                           </span>
-                          {v.views && <span className="font-bold text-rose-400">{v.views}</span>}
+                          {v.views && (
+                            <span className="font-bold text-rose-400 text-[11px]">
+                              {formatViewCount(v.views, isTurkish)}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Video Actions */}
-                      <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2 text-[11px]">
+                      {/* Video Actions (Separate Download vs Open Tab buttons) */}
+                      <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-1 text-[11px]">
                         <button
                           onClick={() => handleCopyVideoLink(v.link)}
-                          className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer p-1"
+                          title={isTurkish ? "Video Bağlantısını Kopyala" : "Copy Video Link"}
                         >
                           <Copy className="w-3 h-3" />
-                          <span>{isTurkish ? "Linki Al" : "Copy"}</span>
+                          <span className="hidden xl:inline">{isTurkish ? "Linki Al" : "Copy"}</span>
                         </button>
 
-                        <button
-                          onClick={() => handleDownloadThumbnail(v)}
-                          className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                          <Download className="w-3 h-3 text-rose-400" />
-                          <span>{isTurkish ? "Kapak İndir" : "Cover"}</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleOpenThumbnailInNewTab(v)}
+                            className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer p-1"
+                            title={isTurkish ? "Kapağı Yeni Sekmede Aç" : "Open Thumbnail in Tab"}
+                          >
+                            <ExternalLink className="w-3 h-3 text-indigo-400" />
+                            <span className="text-[10px]">{isTurkish ? "Aç" : "Tab"}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleDownloadThumbnailDirect(v)}
+                            className="inline-flex items-center gap-1 text-zinc-400 hover:text-rose-300 transition-colors cursor-pointer p-1"
+                            title={isTurkish ? "Kapağı Doğrudan İndir" : "Download Thumbnail Directly"}
+                          >
+                            <Download className="w-3 h-3 text-rose-400" />
+                            <span className="text-[10px] font-bold text-rose-300">{isTurkish ? "İndir" : "Download"}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -717,11 +808,27 @@ export default function YTChannelClient() {
                           >
                             {v.title}
                           </a>
-                          <p className="text-[10px] text-zinc-400">{v.publishedAt} · {v.views}</p>
+                          <p className="text-[10px] text-zinc-400">
+                            {v.publishedAt} · {formatViewCount(v.views, isTurkish)}
+                          </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleOpenThumbnailInNewTab(v)}
+                          className="p-2 rounded-lg bg-white/[0.04] text-indigo-400 hover:text-white"
+                          title={isTurkish ? "Kapağı Aç" : "Open Thumbnail"}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDownloadThumbnailDirect(v)}
+                          className="p-2 rounded-lg bg-white/[0.04] text-rose-400 hover:text-white"
+                          title={isTurkish ? "Kapağı İndir" : "Download Thumbnail"}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => handleCopyVideoLink(v.link)}
                           className="p-2 rounded-lg bg-white/[0.04] text-zinc-400 hover:text-white"
@@ -764,7 +871,7 @@ export default function YTChannelClient() {
       {/* Empty State Showcase */}
       {!channelData && !loading && (
         <div className="space-y-12 pt-6">
-          <div className="p-8 sm:p-10 rounded-3xl bg-[#0d0e14]/90 border border-white/10 backdrop-blur-3xl text-center space-y-4 shadow-2xl">
+          <div className="p-8 sm:p-10 rounded-3xl bg-[#0e1017] border border-white/10 text-center space-y-4 shadow-2xl">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs font-bold uppercase tracking-wider backdrop-blur-2xl shadow-lg">
               <Sparkles className="w-4 h-4 text-rose-400" />
               <span>{isTurkish ? "YouTube Kanal & Profil Stüdyosuna Hoş Geldiniz" : "Welcome to YouTube Channel Studio"}</span>

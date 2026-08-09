@@ -187,11 +187,13 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <FluidSlimeCard
               key={i}
               glowColor={item.glow}
-              className="flex flex-col items-center justify-center p-3.5 sm:p-4 text-center cursor-default"
+              className="p-3.5 sm:p-4 text-center cursor-default"
             >
-              <ItemIcon className={`h-4.5 w-4.5 sm:h-5 sm:w-5 mb-1.5 sm:mb-2 ${item.color}`} />
-              <span className="text-xs sm:text-sm font-bold text-white leading-snug">{item.title}</span>
-              <span className="text-[10px] sm:text-[11px] text-[var(--hub-text-subtle)] mt-0.5">{item.desc}</span>
+              <div className="flex flex-col items-center justify-center text-center w-full space-y-1">
+                <ItemIcon className={`h-4.5 w-4.5 sm:h-5 sm:w-5 mb-1 ${item.color}`} />
+                <span className="text-xs sm:text-sm font-bold text-white leading-snug block">{item.title}</span>
+                <span className="text-[10px] sm:text-[11px] text-[var(--hub-text-subtle)] block leading-tight">{item.desc}</span>
+              </div>
             </FluidSlimeCard>
           );
         })}

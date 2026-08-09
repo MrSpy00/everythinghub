@@ -284,7 +284,16 @@ export function MeshText({
       const w = Math.max(2, canvas.width);
       const h = Math.max(2, canvas.height);
       const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
-      const realSize = fontSize * dpr;
+      const rect = wrapper.getBoundingClientRect();
+
+      // Ensure text fits comfortably within container on any screen size (mobile to 4K)
+      const maxChars = (text || "").length || 1;
+      const availableWidth = rect.width || (w / dpr);
+      const responsiveFontSize = Math.min(
+        fontSize,
+        Math.max(16, Math.floor((availableWidth * 0.92) / (maxChars * 0.62)))
+      );
+      const realSize = responsiveFontSize * dpr;
 
       try {
         if (typeof document !== "undefined") {

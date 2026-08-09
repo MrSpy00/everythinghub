@@ -111,6 +111,58 @@ export function parseSubscribersTextToNum(text: string): number {
   return Math.round(val);
 }
 
+export function parseVideoCountTextToNum(text?: string): number {
+  if (!text) return 0;
+  const clean = text.replace(/\u00a0/g, " ").trim();
+  const lower = clean.toLowerCase();
+
+  const numMatch = lower.match(/([0-9]+(?:[.,][0-9]+)?)\s*([kmb]|bin|mn|milyon)?/i);
+  if (!numMatch) return 0;
+
+  let val = parseFloat(numMatch[1].replace(",", "."));
+  const suffix = (numMatch[2] || "").toLowerCase();
+
+  if (suffix === "b" || suffix === "bin" || suffix === "k") {
+    val *= 1000;
+  } else if (suffix === "m" || suffix === "mn" || suffix === "milyon") {
+    val *= 1000000;
+  } else {
+    if (/^[0-9]{1,3}\.[0-9]{3}$/.test(numMatch[1])) {
+      val = parseInt(numMatch[1].replace(".", ""), 10);
+    }
+  }
+
+  return Math.round(val);
+}
+
+export function formatViewCount(views: string | number | undefined, isTurkish: boolean): string {
+  if (!views) return isTurkish ? "Yeni" : "New";
+
+  if (typeof views === "number") {
+    if (views >= 1000000) {
+      return isTurkish ? `${(views / 1000000).toFixed(1)} Mn görüntüleme` : `${(views / 1000000).toFixed(1)}M views`;
+    }
+    if (views >= 1000) {
+      return isTurkish ? `${(views / 1000).toFixed(0)} B görüntüleme` : `${(views / 1000).toFixed(0)}K views`;
+    }
+    return isTurkish ? `${views} görüntüleme` : `${views} views`;
+  }
+
+  const str = String(views).trim();
+  if (isTurkish) {
+    return str
+      .replace(/views/gi, "görüntüleme")
+      .replace(/view/gi, "görüntüleme")
+      .replace(/subscribers/gi, "abone")
+      .replace(/subscriber/gi, "abone");
+  } else {
+    return str
+      .replace(/görüntüleme/gi, "views")
+      .replace(/izlenme/gi, "views")
+      .replace(/abone/gi, "subscribers");
+  }
+}
+
 export function calculateEarningsProjection(subsNum: number, videosNum: number): YTEstimatedEarnings {
   // Conservative algorithmic estimation based on subscriber velocity and catalog size
   const monthlyViewsEstimate = Math.max(50000, Math.round(subsNum * 1.8 + videosNum * 1500));

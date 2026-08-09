@@ -12,8 +12,8 @@ interface FluidSlimeCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /**
  * FluidSlimeCard
- * Organic magnetic hover component that subtly distorts, attracts, and creates
- * a seamless liquid-glass slime refraction effect reacting to mouse proximity.
+ * Organic magnetic hover component that subtly tilts and creates
+ * a seamless liquid-glass specular glare reacting to mouse proximity.
  */
 export function FluidSlimeCard({
   children,
@@ -28,9 +28,9 @@ export function FluidSlimeCard({
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
-  const springConfig = { damping: 25, stiffness: 350, mass: 0.5 };
-  const rotateX = useSpring(useTransform(mouseY, [0, 1], [4, -4]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-4, 4]), springConfig);
+  const springConfig = { damping: 30, stiffness: 400, mass: 0.4 };
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [3, -3]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-3, 3]), springConfig);
   const scale = useSpring(isHovered ? 1.015 : 1, springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -64,22 +64,23 @@ export function FluidSlimeCard({
         rotateX,
         rotateY,
         scale,
-        transformStyle: "preserve-3d",
+        transformPerspective: 1000,
       }}
       className={cn(
-        "group relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d0e14]/95 backdrop-blur-3xl transition-all duration-300 hover:border-white/20 shadow-2xl",
+        "group relative rounded-3xl border border-white/10 bg-[#0e1017] shadow-2xl transition-colors duration-300 hover:border-white/20 overflow-hidden",
         className
       )}
       {...(props as any)}
     >
-      {/* Specular Liquid Glare highlight - completely covers the card without cutoff */}
+      {/* Specular Liquid Glare highlight - seamlessly covers 100% of the card */}
       <div
         className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
         style={{
-          background: `radial-gradient(500px circle at ${coords.x}% ${coords.y}%, ${glowColor}, transparent 75%)`,
+          background: `radial-gradient(600px circle at ${coords.x}% ${coords.y}%, ${glowColor}, transparent 80%)`,
         }}
       />
-      <div className="relative z-10 w-full h-full">
+      {/* Direct Content Wrapper */}
+      <div className="relative z-10 flex flex-col h-full w-full justify-between">
         {children}
       </div>
     </motion.div>
