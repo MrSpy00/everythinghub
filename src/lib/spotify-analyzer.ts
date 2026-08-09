@@ -147,6 +147,9 @@ export interface SpotifyProfileAnalysis {
   totalFollowerReach: number;
   searchQuery?: string;
   sourceOrigin?: string;
+  resolvedFromPlaylist?: boolean;
+  originalPlaylistTitle?: string;
+  curatorName?: string;
 }
 
 const PITCH_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

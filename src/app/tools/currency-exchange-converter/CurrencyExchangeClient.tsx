@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { FluidSlimeCard } from "@/components/creative/FluidSlimeCard";
+import { StudioDropdown } from "@/components/shared/StudioDropdown";
 import { copyToClipboard } from "@/lib/utils";
 
 interface RatesMap {
@@ -354,17 +355,17 @@ export function CurrencyExchangeClient() {
             <label className="text-[11px] font-bold text-zinc-400 uppercase">
               {isTurkish ? "Kaynak Varlık (Verilen)" : "From"}
             </label>
-            <select
+            <StudioDropdown
               value={fromCurr}
-              onChange={(e) => setFromCurr(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-[#12141c] p-3 text-xs sm:text-sm font-bold text-white focus:border-amber-500/50 focus:outline-none"
-            >
-              {filteredCurrencies.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} - {isTurkish ? c.nameTr : c.nameEn} ({c.symbol})
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setFromCurr(v)}
+              options={filteredCurrencies.map((c) => ({
+                value: c.code,
+                label: `${c.code} - ${isTurkish ? c.nameTr : c.nameEn} (${c.symbol})`,
+                badge: c.category.toUpperCase(),
+              }))}
+              className="w-full"
+              buttonClassName="py-3 bg-[#12141c] border-white/10 text-xs sm:text-sm font-bold"
+            />
           </div>
 
           {/* SWAP BUTTON */}
@@ -383,17 +384,17 @@ export function CurrencyExchangeClient() {
             <label className="text-[11px] font-bold text-zinc-400 uppercase">
               {isTurkish ? "Hedef Varlık (Alınan)" : "To"}
             </label>
-            <select
+            <StudioDropdown
               value={toCurr}
-              onChange={(e) => setToCurr(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-[#12141c] p-3 text-xs sm:text-sm font-bold text-white focus:border-amber-500/50 focus:outline-none"
-            >
-              {filteredCurrencies.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} - {isTurkish ? c.nameTr : c.nameEn} ({c.symbol})
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setToCurr(v)}
+              options={filteredCurrencies.map((c) => ({
+                value: c.code,
+                label: `${c.code} - ${isTurkish ? c.nameTr : c.nameEn} (${c.symbol})`,
+                badge: c.category.toUpperCase(),
+              }))}
+              className="w-full"
+              buttonClassName="py-3 bg-[#12141c] border-white/10 text-xs sm:text-sm font-bold"
+            />
           </div>
         </div>
 

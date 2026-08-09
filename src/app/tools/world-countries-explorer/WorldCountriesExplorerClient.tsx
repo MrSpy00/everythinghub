@@ -52,6 +52,7 @@ export function WorldCountriesExplorerClient() {
   const [landlockedOnly, setLandlockedOnly] = useState(false);
   const [driveSideFilter, setDriveSideFilter] = useState<"all" | "right" | "left">("all");
   const [sortBy, setSortBy] = useState<"name" | "pop_desc" | "area_desc">("name");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
   // Selected Country for Single View
   const [selectedCountry, setSelectedCountry] = useState<CountryData>(BUNDLED_COUNTRIES[0]);
@@ -345,15 +346,57 @@ export function WorldCountriesExplorerClient() {
                 {isTurkish ? "Karasal (Kıyısız)" : "Landlocked"}
               </button>
 
-              <select
-                value={sortBy}
-                onChange={(e: any) => setSortBy(e.target.value)}
-                className="bg-[#12141c] border border-white/10 text-zinc-300 rounded-lg px-2 py-1 text-[10px] focus:outline-none"
-              >
-                <option value="name">{isTurkish ? "Alfabetik" : "A-Z"}</option>
-                <option value="pop_desc">{isTurkish ? "En Kalabalık" : "Highest Population"}</option>
-                <option value="area_desc">{isTurkish ? "En Geniş Yüzölçümü" : "Largest Area"}</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                  className="flex items-center gap-1.5 bg-[#12141c] border border-white/10 text-zinc-300 hover:text-white rounded-lg px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-all hover:border-white/20"
+                >
+                  <span>
+                    {sortBy === "name"
+                      ? (isTurkish ? "Alfabetik (A-Z)" : "Alphabetical")
+                      : sortBy === "pop_desc"
+                      ? (isTurkish ? "En Kalabalık" : "Population")
+                      : (isTurkish ? "En Geniş Yüzölçümü" : "Area")}
+                  </span>
+                  <SlidersHorizontal className="w-3 h-3 text-zinc-400" />
+                </button>
+
+                <AnimatePresence>
+                  {sortDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 2, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-1 w-44 z-50 rounded-xl border border-white/15 bg-[#12141c] p-1 shadow-2xl backdrop-blur-3xl"
+                    >
+                      {[
+                        { id: "name" as const, label: isTurkish ? "Alfabetik (A-Z)" : "Alphabetical (A-Z)" },
+                        { id: "pop_desc" as const, label: isTurkish ? "En Kalabalık Nüfus" : "Highest Population" },
+                        { id: "area_desc" as const, label: isTurkish ? "En Geniş Yüzölçümü" : "Largest Land Area" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setSortBy(opt.id);
+                            setSortDropdownOpen(false);
+                          }}
+                          className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                            sortBy === opt.id
+                              ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                              : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {sortBy === opt.id && <Check className="w-3 h-3 text-indigo-400" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Country List Directory */}

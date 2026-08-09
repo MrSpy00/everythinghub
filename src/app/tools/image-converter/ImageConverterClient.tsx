@@ -102,20 +102,31 @@ export function ImageConverterClient() {
                   <span className="text-xs font-bold text-white">{file.name}</span>
                   <span className="text-xs text-[var(--hub-text-subtle)] block">{(file.size / 1024).toFixed(1)} KB</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--hub-text-muted)]">{t.targetFormat}:</span>
-                  <select
-                    value={targetFormat}
-                    onChange={(e) => {
-                      setTargetFormat(e.target.value);
-                      convert(file, e.target.value);
-                    }}
-                    className="rounded-xl border border-[var(--hub-border)] bg-[var(--hub-surface)] px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
-                  >
-                    <option value="image/webp">WEBP</option>
-                    <option value="image/png">PNG</option>
-                    <option value="image/jpeg">JPEG</option>
-                  </select>
+                  <div className="flex items-center gap-1 bg-[var(--hub-surface)] p-1 rounded-xl border border-[var(--hub-border)]">
+                    {[
+                      { id: "image/webp", label: "WEBP" },
+                      { id: "image/png", label: "PNG" },
+                      { id: "image/jpeg", label: "JPEG" },
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => {
+                          setTargetFormat(f.id);
+                          convert(file, f.id);
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          targetFormat === f.id
+                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm"
+                            : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

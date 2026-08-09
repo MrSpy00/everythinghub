@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Scale, ArrowRightLeft } from "lucide-react";
 import { NeonBorder } from "@/components/creative/NeonBorder";
+import { StudioDropdown } from "@/components/shared/StudioDropdown";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function UnitConverterClient() {
@@ -114,15 +115,16 @@ export function UnitConverterClient() {
                 onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
                 className="w-full rounded-xl border border-[var(--hub-border)] bg-black/50 p-3 text-sm text-white focus:border-teal-500/50 focus:outline-none mb-2"
               />
-              <select
+              <StudioDropdown
                 value={fromUnit}
-                onChange={(e) => setFromUnit(e.target.value)}
-                className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:outline-none"
-              >
-                {Object.keys(currentCategory.units).map((u) => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
+                onChange={(v) => setFromUnit(v)}
+                options={Object.keys(currentCategory.units).map((u) => ({
+                  value: u,
+                  label: u,
+                }))}
+                className="w-full"
+                buttonClassName="py-2.5 bg-[var(--hub-bg)] border-[var(--hub-border)] text-xs font-bold"
+              />
             </div>
 
             <div className="flex justify-center">
@@ -139,15 +141,16 @@ export function UnitConverterClient() {
                 value={result.toLocaleString(undefined, { maximumFractionDigits: 6 })}
                 className="w-full rounded-xl border border-teal-500/30 bg-black/70 p-3 font-mono text-sm font-bold text-teal-300 focus:outline-none mb-2"
               />
-              <select
+              <StudioDropdown
                 value={toUnit}
-                onChange={(e) => setToUnit(e.target.value)}
-                className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] p-2.5 text-xs font-bold text-white focus:outline-none"
-              >
-                {Object.keys(currentCategory.units).map((u) => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
+                onChange={(v) => setToUnit(v)}
+                options={Object.keys(currentCategory.units).map((u) => ({
+                  value: u,
+                  label: u,
+                }))}
+                className="w-full"
+                buttonClassName="py-2.5 bg-[var(--hub-bg)] border-[var(--hub-border)] text-xs font-bold"
+              />
             </div>
           </div>
         </div>

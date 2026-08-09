@@ -283,6 +283,16 @@ export default function SpotifyProfileClient() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Main Hero Profile Card */}
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d0e14]/90 p-6 sm:p-8 backdrop-blur-3xl shadow-2xl">
+            {profileData.resolvedFromPlaylist && (
+              <div className="mb-6 flex items-center gap-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-3.5 text-xs text-indigo-300 backdrop-blur-xl">
+                <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>
+                  {isTurkish
+                    ? `Bu profil girdiğiniz çalma listesinin (${profileData.originalPlaylistTitle || "Çalma Listesi"}) küratörüne (${profileData.curatorName || profileData.name}) aittir.`
+                    : `This profile belongs to the curator (${profileData.curatorName || profileData.name}) of the playlist you entered (${profileData.originalPlaylistTitle || "Playlist"}).`}
+                </span>
+              </div>
+            )}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               {/* HD Avatar */}
               <div className="relative group/avatar shrink-0">

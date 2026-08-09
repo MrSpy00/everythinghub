@@ -161,15 +161,26 @@ export function ImageCompressorClient() {
                 </div>
                 <div>
                   <label className="text-xs font-bold text-white mb-2 block">{t.targetFormat}</label>
-                  <select
-                    value={format}
-                    onChange={(e) => handleFormatChange(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--hub-border)] bg-[var(--hub-bg)] px-3 py-2 text-xs font-bold text-white focus:outline-none"
-                  >
-                    <option value="image/webp">WebP (Optimal)</option>
-                    <option value="image/jpeg">JPEG</option>
-                    <option value="image/png">PNG</option>
-                  </select>
+                  <div className="flex items-center gap-1 bg-[var(--hub-bg)] p-1 rounded-xl border border-[var(--hub-border)]">
+                    {[
+                      { id: "image/webp", label: "WebP" },
+                      { id: "image/jpeg", label: "JPEG" },
+                      { id: "image/png", label: "PNG" },
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => handleFormatChange(f.id)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          format === f.id
+                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm"
+                            : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

@@ -282,17 +282,19 @@ export function APIPlaygroundClient() {
             {/* Request Bar */}
             <div className="space-y-3 border-b border-white/10 pb-4">
               <div className="flex items-center gap-2">
-                <select
+                <StudioDropdown
                   value={method}
-                  onChange={(e: any) => setMethod(e.target.value)}
-                  className="rounded-xl border border-white/10 bg-black/60 px-3 py-2.5 text-xs font-bold font-mono text-emerald-400 focus:border-emerald-500 focus:outline-none"
-                >
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                  <option value="PATCH">PATCH</option>
-                </select>
+                  onChange={(v) => setMethod(v as any)}
+                  options={[
+                    { value: "GET", label: "GET" },
+                    { value: "POST", label: "POST" },
+                    { value: "PUT", label: "PUT" },
+                    { value: "DELETE", label: "DELETE" },
+                    { value: "PATCH", label: "PATCH" },
+                  ]}
+                  buttonClassName="font-mono text-emerald-400 border-white/10 bg-black/60 py-2 text-xs"
+                  className="w-28 shrink-0"
+                />
 
                 <input
                   type="text"
