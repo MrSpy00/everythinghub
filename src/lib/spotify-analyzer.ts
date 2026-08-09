@@ -134,6 +134,7 @@ export interface SpotifyProfileAnalysis {
   avatarUrl: string;
   bannerUrl?: string;
   followers: number | null;
+  monthlyListeners?: number | null;
   isFollowersHidden?: boolean;
   privacyNotice?: string;
   popularity?: number;
@@ -144,6 +145,8 @@ export interface SpotifyProfileAnalysis {
   discography?: DiscographyItem[];
   genres?: string[];
   totalFollowerReach: number;
+  searchQuery?: string;
+  sourceOrigin?: string;
 }
 
 const PITCH_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -157,8 +160,8 @@ export function parseSpotifyUrl(input: string): SpotifyParsedUrl {
 
   const trimmed = input.trim();
 
-  // Spotify URI format: spotify:playlist:37i9dQZF1DXcBWIGoYBM5M
-  const uriMatch = trimmed.match(/^spotify:(playlist|user|artist|album|track):([a-zA-Z0-9]+)/i);
+  // Spotify URI format: spotify:playlist:37i9dQZF1DXcBWIGoYBM5M, spotify:user:mr.spy
+  const uriMatch = trimmed.match(/^spotify:(playlist|user|artist|album|track):([a-zA-Z0-9._\-~%]+)/i);
   if (uriMatch) {
     return {
       type: uriMatch[1].toLowerCase() as SpotifyInputType,
@@ -167,26 +170,31 @@ export function parseSpotifyUrl(input: string): SpotifyParsedUrl {
     };
   }
 
-  // Spotify URL format: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=... or /intl-tr/playlist/... or /embed/playlist/...
-  const urlMatch = trimmed.match(/open\.spotify\.com\/(?:embed\/|(?:intl-[a-z]{2,4}\/))?(playlist|user|artist|album|track)\/([a-zA-Z0-9]+)/i);
+  // Spotify URL format: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=... or /intl-tr/artist/... or /embed/user/...
+  const urlMatch = trimmed.match(/open\.spotify\.com\/(?:embed\/|(?:intl-[a-z]{2,4}\/))?(playlist|user|artist|album|track)\/([a-zA-Z0-9._\-~%]+)/i);
   if (urlMatch) {
     return {
       type: urlMatch[1].toLowerCase() as SpotifyInputType,
-      id: urlMatch[2],
+      id: urlMatch[2].split("?")[0],
       originalUrl: trimmed,
     };
   }
 
-  // If plain ID
+  // If plain 22-char Spotify ID
   if (/^[a-zA-Z0-9]{22}$/.test(trimmed)) {
     return {
-      type: "playlist",
+      type: "artist",
       id: trimmed,
       originalUrl: trimmed,
     };
   }
 
-  return { type: null, id: null, originalUrl: trimmed };
+  // If text or artist name (e.g. "Taylor Swift", "The Weeknd", "Billie Eilish")
+  return {
+    type: "artist",
+    id: null,
+    originalUrl: trimmed,
+  };
 }
 
 export function formatKeyAndCamelot(key: number, mode: number): { name: string; camelot: string } {
