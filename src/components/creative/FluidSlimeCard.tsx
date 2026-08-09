@@ -65,16 +65,19 @@ export function FluidSlimeCard({
         rotateY,
         scale,
         transformPerspective: 1000,
+        transformStyle: "preserve-3d",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
       }}
       className={cn(
-        "group relative rounded-3xl border border-white/10 bg-[#0e1017] shadow-2xl transition-colors duration-300 hover:border-white/20 overflow-hidden",
+        "group relative rounded-3xl border border-white/10 bg-[#0e1017] shadow-2xl transition-colors duration-300 hover:border-white/20 overflow-hidden isolate",
         className
       )}
       {...(props as any)}
     >
-      {/* Specular Liquid Glare highlight - seamlessly covers 100% of the card */}
+      {/* Specular Liquid Glare highlight - seamlessly covers 100% of the card including borders */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
+        className="pointer-events-none absolute -inset-[1px] rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
         style={{
           background: `radial-gradient(600px circle at ${coords.x}% ${coords.y}%, ${glowColor}, transparent 80%)`,
         }}

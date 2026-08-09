@@ -94,21 +94,30 @@ export function parseYouTubeChannelInput(input: string): {
 
 export function parseSubscribersTextToNum(text: string): number {
   if (!text) return 0;
-  const match = text.match(/([\d\.,]+)\s*([KMBkmbBinMilyarMilyon]*)?/i);
+  const clean = text.replace(/\u00a0/g, " ").trim();
+  const match = clean.match(/([\d\.,]+)\s*([KMBkmbBinMilyarMilyonMNmn]*)?/i);
   if (!match) return 0;
 
-  let val = parseFloat(match[1].replace(/,/g, ""));
-  const unit = match[2]?.toUpperCase() || "";
+  const rawNum = match[1];
+  const unit = (match[2] || "").toUpperCase();
 
-  if (unit.startsWith("K") || unit.startsWith("BİN")) {
-    val *= 1000;
-  } else if (unit.startsWith("M") || unit.startsWith("MİLYON") || unit.startsWith("MN")) {
-    val *= 1000000;
-  } else if (unit.startsWith("B") || unit.startsWith("MR") || unit.startsWith("MİLYAR")) {
-    val *= 1000000000;
+  let val = 0;
+  if (unit) {
+    // If unit is present (e.g. "2,08 Mn" or "2.08M"), comma or dot is decimal separator
+    val = parseFloat(rawNum.replace(",", "."));
+    if (unit.startsWith("K") || unit.startsWith("BİN")) {
+      val *= 1000;
+    } else if (unit.startsWith("M") || unit.startsWith("MN") || unit.startsWith("MİLYON")) {
+      val *= 1000000;
+    } else if (unit.startsWith("B") || unit.startsWith("MR") || unit.startsWith("MİLYAR")) {
+      val *= 1000000000;
+    }
+  } else {
+    // Plain number like 2.080.000 or 2,080,000
+    val = parseInt(rawNum.replace(/[\.,]/g, ""), 10);
   }
 
-  return Math.round(val);
+  return Math.round(val || 0);
 }
 
 export function parseVideoCountTextToNum(text?: string): number {
@@ -164,10 +173,10 @@ export function formatViewCount(views: string | number | undefined, isTurkish: b
 }
 
 export function calculateEarningsProjection(subsNum: number, videosNum: number): YTEstimatedEarnings {
-  // Conservative algorithmic estimation based on subscriber velocity and catalog size
-  const monthlyViewsEstimate = Math.max(50000, Math.round(subsNum * 1.8 + videosNum * 1500));
-  const minRpm = 1.2; // $1.20 per 1k views
-  const maxRpm = 4.5; // $4.50 per 1k views
+  // Realistic industry algorithmic estimation based on subscriber velocity and active catalog views
+  const monthlyViewsEstimate = Math.max(10000, Math.round(subsNum * 0.18 + Math.min(videosNum, 500) * 1200));
+  const minRpm = 0.8; // $0.80 per 1k views
+  const maxRpm = 2.8; // $2.80 per 1k views
 
   const monthlyMin = Math.round((monthlyViewsEstimate / 1000) * minRpm);
   const monthlyMax = Math.round((monthlyViewsEstimate / 1000) * maxRpm);

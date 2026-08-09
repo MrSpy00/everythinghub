@@ -754,34 +754,34 @@ export default function YTChannelClient() {
                         </div>
                       </div>
 
-                      {/* Video Actions (Separate Download vs Open Tab buttons) */}
+                      {/* Video Actions (Clear descriptive thumbnail buttons) */}
                       <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-1 text-[11px]">
                         <button
                           onClick={() => handleCopyVideoLink(v.link)}
                           className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer p-1"
                           title={isTurkish ? "Video Bağlantısını Kopyala" : "Copy Video Link"}
                         >
-                          <Copy className="w-3 h-3" />
-                          <span className="hidden xl:inline">{isTurkish ? "Linki Al" : "Copy"}</span>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">{isTurkish ? "Link" : "Copy"}</span>
                         </button>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleOpenThumbnailInNewTab(v)}
-                            className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer p-1"
-                            title={isTurkish ? "Kapağı Yeni Sekmede Aç" : "Open Thumbnail in Tab"}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.04] border border-white/5 text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer text-[10px] font-semibold"
+                            title={isTurkish ? "HD Video Kapağını Yeni Sekmede Aç" : "Open HD Video Thumbnail in New Tab"}
                           >
                             <ExternalLink className="w-3 h-3 text-indigo-400" />
-                            <span className="text-[10px]">{isTurkish ? "Aç" : "Tab"}</span>
+                            <span>{isTurkish ? "Kapak Aç" : "Cover"}</span>
                           </button>
 
                           <button
                             onClick={() => handleDownloadThumbnailDirect(v)}
-                            className="inline-flex items-center gap-1 text-zinc-400 hover:text-rose-300 transition-colors cursor-pointer p-1"
-                            title={isTurkish ? "Kapağı Doğrudan İndir" : "Download Thumbnail Directly"}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 transition-colors cursor-pointer text-[10px] font-bold"
+                            title={isTurkish ? "HD Video Kapağını Doğrudan İndir" : "Download HD Video Thumbnail Directly"}
                           >
                             <Download className="w-3 h-3 text-rose-400" />
-                            <span className="text-[10px] font-bold text-rose-300">{isTurkish ? "İndir" : "Download"}</span>
+                            <span>{isTurkish ? "Kapağı İndir" : "Download"}</span>
                           </button>
                         </div>
                       </div>
@@ -817,17 +817,19 @@ export default function YTChannelClient() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => handleOpenThumbnailInNewTab(v)}
-                          className="p-2 rounded-lg bg-white/[0.04] text-indigo-400 hover:text-white"
-                          title={isTurkish ? "Kapağı Aç" : "Open Thumbnail"}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/[0.04] text-xs font-semibold text-indigo-300 hover:text-white"
+                          title={isTurkish ? "HD Video Kapağını Aç" : "Open HD Thumbnail"}
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExternalLink className="w-3.5 h-3.5 text-indigo-400" />
+                          <span className="hidden sm:inline">{isTurkish ? "Kapak Aç" : "Cover"}</span>
                         </button>
                         <button
                           onClick={() => handleDownloadThumbnailDirect(v)}
-                          className="p-2 rounded-lg bg-white/[0.04] text-rose-400 hover:text-white"
-                          title={isTurkish ? "Kapağı İndir" : "Download Thumbnail"}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/20 text-xs font-bold text-rose-300 hover:text-white"
+                          title={isTurkish ? "HD Video Kapağını İndir" : "Download HD Thumbnail"}
                         >
-                          <Download className="w-3.5 h-3.5" />
+                          <Download className="w-3.5 h-3.5 text-rose-400" />
+                          <span className="hidden sm:inline">{isTurkish ? "Kapağı İndir" : "Download"}</span>
                         </button>
                         <button
                           onClick={() => handleCopyVideoLink(v.link)}
@@ -851,16 +853,58 @@ export default function YTChannelClient() {
                 </div>
               )}
 
-              {/* Pagination / Show All Button */}
-              {filteredVideos.length > videoLimit && videoLimit !== -1 && (
-                <div className="flex justify-center pt-4 border-t border-white/10">
-                  <button
-                    onClick={() => setVideoLimit(-1)}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-xs font-bold text-white hover:bg-white/[0.08] hover:border-rose-500/40 transition-all cursor-pointer shadow-lg"
-                  >
-                    <span>{isTurkish ? `Tüm Videoları Yükle (${filteredVideos.length} Video)` : `Show All Videos (${filteredVideos.length})`}</span>
-                    <ChevronDown className="w-4 h-4 text-rose-400" />
-                  </button>
+              {/* Incremental & Full Pagination Controls (+50, +100, +250, Show All) */}
+              {filteredVideos.length > 24 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10">
+                  <span className="text-xs text-zinc-400 font-medium">
+                    {isTurkish ? "Gösterilen:" : "Showing:"}{" "}
+                    <strong className="text-white font-bold">{displayedVideos.length}</strong> / {filteredVideos.length} {isTurkish ? "video" : "videos"}
+                  </span>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {filteredVideos.length > displayedVideos.length && (
+                      <>
+                        <button
+                          onClick={() => setVideoLimit((prev) => (prev === -1 ? 50 : prev + 50))}
+                          className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+                        >
+                          +50 {isTurkish ? "Video" : "Videos"}
+                        </button>
+
+                        <button
+                          onClick={() => setVideoLimit((prev) => (prev === -1 ? 100 : prev + 100))}
+                          className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+                        >
+                          +100 {isTurkish ? "Video" : "Videos"}
+                        </button>
+
+                        <button
+                          onClick={() => setVideoLimit((prev) => (prev === -1 ? 250 : prev + 250))}
+                          className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+                        >
+                          +250 {isTurkish ? "Video" : "Videos"}
+                        </button>
+                      </>
+                    )}
+
+                    {videoLimit !== -1 ? (
+                      <button
+                        onClick={() => setVideoLimit(-1)}
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs font-bold text-rose-300 hover:bg-rose-500/25 transition-all cursor-pointer shadow-lg"
+                      >
+                        <span>{isTurkish ? `Tüm Videoları Yükle (${filteredVideos.length})` : `Show All (${filteredVideos.length})`}</span>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setVideoLimit(24)}
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer"
+                      >
+                        <span>{isTurkish ? "Daralt (24 Video)" : "Collapse (24)"}</span>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

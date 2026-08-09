@@ -573,7 +573,10 @@ export function WorldCountriesExplorerClient() {
 
                             <div className="pt-2 flex items-center justify-between">
                               <span className="text-zinc-500 text-[11px]">{isTurkish ? "Trafik Akışı" : "Driving Side"}</span>
-                              <span className="font-bold text-white capitalize">{c.car?.side === "left" ? (isTurkish ? "Soldan 🚗" : "Left") : (isTurkish ? "Sağdan 🚗" : "Right")}</span>
+                              <span className="font-bold text-white flex items-center gap-1 capitalize">
+                                <Car className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                <span>{c.car?.side === "left" ? (isTurkish ? "Soldan" : "Left") : (isTurkish ? "Sağdan" : "Right")}</span>
+                              </span>
                             </div>
 
                             <div className="pt-2 flex items-center justify-between">
@@ -680,8 +683,9 @@ export function WorldCountriesExplorerClient() {
                           TLD: {selectedCountry.tld[0]}
                         </span>
                       )}
-                      <span className="px-3 py-1 rounded-xl bg-white/[0.04] border border-white/10 text-zinc-300">
-                        🚗 {selectedCountry.car?.side === "left" ? (isTurkish ? "Soldan Trafik" : "Left Traffic") : isTurkish ? "Sağdan Trafik" : "Right Traffic"}
+                      <span className="px-3 py-1 rounded-xl bg-white/[0.04] border border-white/10 text-zinc-300 inline-flex items-center gap-1.5">
+                        <Car className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span>{selectedCountry.car?.side === "left" ? (isTurkish ? "Soldan Trafik" : "Left Traffic") : isTurkish ? "Sağdan Trafik" : "Right Traffic"}</span>
                       </span>
                     </div>
                   </div>
