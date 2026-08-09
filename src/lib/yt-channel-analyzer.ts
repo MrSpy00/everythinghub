@@ -5,6 +5,7 @@ export interface YTVideoItem {
   thumbnail: string;
   publishedAt: string;
   views?: string;
+  duration?: string;
   descriptionSnippet?: string;
 }
 

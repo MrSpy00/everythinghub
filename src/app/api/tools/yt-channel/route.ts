@@ -10,15 +10,6 @@ import {
 
 export const runtime = "nodejs";
 
-function strHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
 function unescapeHtml(text: string): string {
   if (!text) return "";
   return text
@@ -29,6 +20,102 @@ function unescapeHtml(text: string): string {
     .replace(/&#x27;/g, "'")
     .replace(/&#39;/g, "'")
     .trim();
+}
+
+async function fetchUploadsPlaylistVideos(channelId: string): Promise<YTVideoItem[]> {
+  try {
+    const uploadsPlaylistId = "UU" + channelId.slice(2);
+    const plUrl = `https://www.youtube.com/playlist?list=${uploadsPlaylistId}`;
+    const res = await fetch(plUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      next: { revalidate: 300 },
+    });
+
+    if (!res.ok) return [];
+
+    const html = await res.text();
+    const ytDataMatch = html.match(/var ytInitialData = ({[\s\S]*?});<\/script>/);
+    if (!ytDataMatch) return [];
+
+    const data = JSON.parse(ytDataMatch[1]);
+    const videos: YTVideoItem[] = [];
+    const seenIds = new Set<string>();
+
+    function traverse(obj: any) {
+      if (!obj || typeof obj !== "object") return;
+
+      // Check lockupViewModel (YouTube Modern Layout)
+      if (obj.lockupViewModel && obj.lockupViewModel.contentId) {
+        const lvm = obj.lockupViewModel;
+        const vid = lvm.contentId;
+        if (!seenIds.has(vid)) {
+          seenIds.add(vid);
+          const meta = lvm.metadata?.lockupMetadataViewModel;
+          const title = meta?.title?.content || lvm.rendererContext?.accessibilityContext?.label?.split(/\d+\s*(?:hour|minute|second|gün|hafta|ay|yıl)/i)[0]?.trim();
+          const rows = meta?.metadata?.contentMetadataViewModel?.metadataRows || [];
+          const parts: string[] = [];
+          rows.forEach((r: any) => {
+            (r.metadataParts || []).forEach((p: any) => {
+              if (p.text?.content) parts.push(p.text.content);
+            });
+          });
+
+          const thumb = lvm.contentImage?.thumbnailViewModel?.image?.sources?.slice(-1)[0]?.url || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+          const durationOverlay = lvm.contentImage?.thumbnailViewModel?.overlays?.find((o: any) => o.thumbnailOverlayTimeStatusViewModel);
+          const duration = durationOverlay?.thumbnailOverlayTimeStatusViewModel?.text?.content || "";
+
+          if (vid && title) {
+            videos.push({
+              id: vid,
+              title: unescapeHtml(title),
+              link: `https://www.youtube.com/watch?v=${vid}`,
+              thumbnail: thumb,
+              duration,
+              publishedAt: parts[1] || parts[0] || "Catalog Item",
+              views: parts[0] || "N/A",
+            });
+          }
+        }
+      }
+
+      // Check playlistVideoRenderer (Classic Layout)
+      if (obj.playlistVideoRenderer && obj.playlistVideoRenderer.videoId) {
+        const pv = obj.playlistVideoRenderer;
+        const vid = pv.videoId;
+        if (!seenIds.has(vid)) {
+          seenIds.add(vid);
+          const title = pv.title?.runs?.[0]?.text || pv.title?.simpleText;
+          const length = pv.lengthText?.simpleText || "";
+          const thumb = pv.thumbnail?.thumbnails?.slice(-1)[0]?.url || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+
+          if (vid && title) {
+            videos.push({
+              id: vid,
+              title: unescapeHtml(title),
+              link: `https://www.youtube.com/watch?v=${vid}`,
+              thumbnail: thumb,
+              duration: length,
+              publishedAt: "Catalog Video",
+              views: "Catalog Item",
+            });
+          }
+        }
+      }
+
+      for (const k of Object.keys(obj)) {
+        traverse(obj[k]);
+      }
+    }
+
+    traverse(data);
+    return videos;
+  } catch (err) {
+    console.error("fetchUploadsPlaylistVideos error:", err);
+    return [];
+  }
 }
 
 async function fetchLatestVideosFromRss(channelId: string): Promise<YTVideoItem[]> {
@@ -46,7 +133,7 @@ async function fetchLatestVideosFromRss(channelId: string): Promise<YTVideoItem[
     const entryMatches = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
     const videos: YTVideoItem[] = [];
 
-    for (const entry of entryMatches.slice(0, 15)) {
+    for (const entry of entryMatches) {
       const idMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
       const titleMatch = entry.match(/<title>([^<]+)<\/title>/);
       const pubMatch = entry.match(/<published>([^<]+)<\/published>/);
@@ -220,7 +307,7 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
                 handle = text;
               } else if (text.includes("subscriber") || text.includes("abone")) {
                 subscriberCountText = text;
-              } else if (text.includes("video")) {
+              } else if (text.includes("video") || text.includes("videos") || /\d+\s*(?:video|videolar)/i.test(text)) {
                 videoCountText = text;
               }
             });
@@ -239,6 +326,9 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
         if (!subscriberCountText && header?.subscriberCountText?.simpleText) {
           subscriberCountText = header.subscriberCountText.simpleText;
         }
+        if (!videoCountText && header?.videosCountText?.runs?.[0]?.text) {
+          videoCountText = header.videosCountText.runs[0].text;
+        }
       } catch (jsonErr) {
         console.error("ytInitialData parse error:", jsonErr);
       }
@@ -256,14 +346,45 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
     }
 
     const subsNum = parseSubscribersTextToNum(subscriberCountText) || 1200000;
-    const vidsNum = parseInt((videoCountText || "").replace(/[^0-9]/g, ""), 10) || 150;
+
+    // 3. Fetch comprehensive video catalog: Uploads Playlist (up to 100 items) + RSS Feed (15 items)
+    const [playlistVideos, rssVideos] = await Promise.all([
+      fetchUploadsPlaylistVideos(channelId),
+      fetchLatestVideosFromRss(channelId),
+    ]);
+
+    // Merge & Deduplicate
+    const videoMap = new Map<string, YTVideoItem>();
+
+    // Start with RSS videos (most accurate timestamps and snippets)
+    rssVideos.forEach((v) => videoMap.set(v.id, v));
+
+    // Add/enrich with playlist videos (up to 100 catalog items)
+    playlistVideos.forEach((pv) => {
+      if (videoMap.has(pv.id)) {
+        const existing = videoMap.get(pv.id)!;
+        if (pv.duration) existing.duration = pv.duration;
+      } else {
+        videoMap.set(pv.id, pv);
+      }
+    });
+
+    const allCombinedVideos = Array.from(videoMap.values());
+
+    // Calculate real video count from text or catalog length
+    let parsedVids = parseInt((videoCountText || "").replace(/[^0-9]/g, ""), 10);
+    if (!parsedVids || isNaN(parsedVids) || parsedVids < allCombinedVideos.length) {
+      parsedVids = Math.max(allCombinedVideos.length, 150);
+    }
+
+    const vidsNum = parsedVids;
     const earnings = calculateEarningsProjection(subsNum, vidsNum);
     const totalEstimatedViews = Math.round(subsNum * 145 + vidsNum * 125000);
 
-    // 3. Fetch latest videos from RSS
-    const latestVideos = await fetchLatestVideosFromRss(channelId);
-
-    const performanceScore = Math.min(99, Math.max(70, Math.round(75 + (subsNum > 1000000 ? 15 : 8) + (latestVideos.length > 5 ? 8 : 4))));
+    const performanceScore = Math.min(
+      99,
+      Math.max(70, Math.round(75 + (subsNum > 1000000 ? 15 : 8) + (allCombinedVideos.length > 5 ? 8 : 4)))
+    );
 
     return {
       id: channelId,
@@ -274,7 +395,7 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
       bannerUrl,
       subscriberCountText: subscriberCountText || `${(subsNum / 1000000).toFixed(1)}M subscribers`,
       subscriberCountNum: subsNum,
-      videoCountText: videoCountText || `${vidsNum} videos`,
+      videoCountText: `${vidsNum.toLocaleString()} video`,
       videoCountNum: vidsNum,
       totalEstimatedViews,
       description: description || `${title} YouTube channel analysis and statistics.`,
@@ -282,10 +403,10 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
       verified: subsNum > 100000,
       rssUrl: `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
       country,
-      uploadConsistency: latestVideos.length >= 10 ? "Weekly" : "Active",
+      uploadConsistency: allCombinedVideos.length >= 10 ? "Weekly" : "Active",
       performanceScore,
       earnings,
-      latestVideos,
+      latestVideos: allCombinedVideos,
       canonicalSource: targetUrl,
       isDemo: false,
     };
@@ -309,7 +430,15 @@ export async function POST(req: NextRequest) {
 
     const trimmed = query.trim();
 
-    // Check instant presets
+    // Resolve URL & Fetch Real Channel Data
+    const resolvedUrl = await resolveChannelUrl(trimmed);
+    const realChannel = await fetchRealYouTubeChannel(resolvedUrl);
+
+    if (realChannel) {
+      return NextResponse.json({ success: true, data: realChannel, isDemo: false });
+    }
+
+    // Check presets if network fails
     const cleanLower = trimmed.toLowerCase();
     if (cleanLower.includes("mrbeast")) {
       return NextResponse.json({ success: true, data: DEMO_CHANNELS.mrbeast, isDemo: true });
@@ -319,14 +448,6 @@ export async function POST(req: NextRequest) {
     }
     if (cleanLower.includes("barış") || cleanLower.includes("baris") || cleanLower.includes("ozcan")) {
       return NextResponse.json({ success: true, data: DEMO_CHANNELS.baris_ozcan, isDemo: true });
-    }
-
-    // Resolve URL & Fetch
-    const resolvedUrl = await resolveChannelUrl(trimmed);
-    const realChannel = await fetchRealYouTubeChannel(resolvedUrl);
-
-    if (realChannel) {
-      return NextResponse.json({ success: true, data: realChannel, isDemo: false });
     }
 
     // Fallback to MrBeast preset if live scraping fails

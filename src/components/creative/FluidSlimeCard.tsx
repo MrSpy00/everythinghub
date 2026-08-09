@@ -13,7 +13,7 @@ interface FluidSlimeCardProps extends React.HTMLAttributes<HTMLDivElement> {
 /**
  * FluidSlimeCard
  * Organic magnetic hover component that subtly distorts, attracts, and creates
- * a liquid-glass slime refraction effect reacting to mouse proximity.
+ * a seamless liquid-glass slime refraction effect reacting to mouse proximity.
  */
 export function FluidSlimeCard({
   children,
@@ -23,22 +23,24 @@ export function FluidSlimeCard({
 }: FluidSlimeCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [coords, setCoords] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
-  const springConfig = { damping: 20, stiffness: 300, mass: 0.5 };
-  const rotateX = useSpring(useTransform(mouseY, [0, 1], [6, -6]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-6, 6]), springConfig);
-  const scale = useSpring(isHovered ? 1.025 : 1, springConfig);
+  const springConfig = { damping: 25, stiffness: 350, mass: 0.5 };
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [4, -4]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-4, 4]), springConfig);
+  const scale = useSpring(isHovered ? 1.015 : 1, springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    mouseX.set(x);
-    mouseY.set(y);
+    const xRatio = (e.clientX - rect.left) / rect.width;
+    const yRatio = (e.clientY - rect.top) / rect.height;
+    mouseX.set(xRatio);
+    mouseY.set(yRatio);
+    setCoords({ x: Math.round(xRatio * 100), y: Math.round(yRatio * 100) });
   };
 
   const handleMouseEnter = () => {
@@ -49,6 +51,7 @@ export function FluidSlimeCard({
     setIsHovered(false);
     mouseX.set(0.5);
     mouseY.set(0.5);
+    setCoords({ x: 50, y: 50 });
   };
 
   return (
@@ -64,19 +67,21 @@ export function FluidSlimeCard({
         transformStyle: "preserve-3d",
       }}
       className={cn(
-        "group relative rounded-3xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl transition-colors duration-300 hover:border-indigo-500/40 shadow-2xl",
+        "group relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d0e14]/95 backdrop-blur-3xl transition-all duration-300 hover:border-white/20 shadow-2xl",
         className
       )}
       {...(props as any)}
     >
-      {/* Specular Liquid Glare highlight */}
+      {/* Specular Liquid Glare highlight - completely covers the card without cutoff */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0"
         style={{
-          background: `radial-gradient(400px circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%), ${glowColor}, transparent 70%)`,
+          background: `radial-gradient(500px circle at ${coords.x}% ${coords.y}%, ${glowColor}, transparent 75%)`,
         }}
       />
-      {children}
+      <div className="relative z-10 w-full h-full">
+        {children}
+      </div>
     </motion.div>
   );
 }
