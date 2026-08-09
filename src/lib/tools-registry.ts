@@ -340,6 +340,20 @@ export const tools: Tool[] = [
     featured: true,
   },
   {
+    slug: "yt-channel-analyzer",
+    title: "YouTube Kanal & Profil Analizörü Pro",
+    description:
+      "Abone sayısı, tahmini gelir hesaplama, 2560x1440 HD banner/avatar indirme ve son videoları anında inceleyin",
+    icon: PlaySquare,
+    category: "video",
+    accentColor: "#ef4444",
+    accentClass: "from-rose-500 to-red-600",
+    status: "live",
+    tags: ["youtube", "kanal", "profil", "abone", "gelir", "banner", "avatar", "analytics", "video"],
+    featured: true,
+    newBadge: true,
+  },
+  {
     slug: "yt-playlist-length",
     title: "YouTube Playlist Analyzer",
     description:
