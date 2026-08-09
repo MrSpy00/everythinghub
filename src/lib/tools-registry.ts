@@ -586,6 +586,20 @@ export const tools: Tool[] = [
     status: "live",
     tags: ["favicon", "logo", "görsel", "hd", "extractor", "tasarım"],
   },
+  {
+    slug: "hex-color-studio",
+    title: "Kapsamlı HEX Kodu & Renk Mimarisi Stüdyosu",
+    description:
+      "HEX, RGB, HSL, CMYK, OKLCH dönüşümleri, WCAG 2.1 kontrast analizi, renk körlüğü simülasyonu ve Tailwind 50-950 palet mimarisi",
+    icon: Palette,
+    category: "design",
+    accentColor: "#8b5cf6",
+    accentClass: "from-purple-500 to-indigo-600",
+    status: "live",
+    tags: ["hex", "renk", "color", "palette", "rgb", "hsl", "cmyk", "oklch", "wcag", "tailwind", "tasarım"],
+    featured: true,
+    newBadge: true,
+  },
 ];
 
 export const getToolBySlug = (slug: string) =>

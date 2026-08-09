@@ -235,9 +235,9 @@ function mapPaletteBiasUiToShader(ui: number): number {
 
 const MAX_COLORS = 10;
 const DEFAULT_COLORS = [
-  "rgba(139, 92, 246, 0.85)", // Vibrant Violet / Mor
+  "rgba(124, 58, 237, 0.85)", // Royal Violet
   "rgba(147, 51, 234, 0.75)", // Deep Purple
-  "rgba(159, 18, 57, 0.75)",  // Deep Burgundy / Bordo
+  "rgba(153, 0, 0, 0.85)",   // #990000 Warm Deep Burgundy / Bordo
   "rgba(136, 19, 55, 0.65)",  // Dark Claret / Bordo
 ];
 

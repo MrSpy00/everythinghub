@@ -13,7 +13,7 @@ export default function ToolsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-20 sm:pt-24 pb-16">
       {children}
     </div>
   );

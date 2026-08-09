@@ -82,14 +82,14 @@ export function Header() {
           <motion.div
             initial={false}
             animate={{
-              backgroundColor: scrolled ? "rgba(9, 9, 11, 0.85)" : "rgba(0, 0, 0, 0)",
-              borderColor: scrolled ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0)",
-              boxShadow: scrolled ? "0 25px 50px -12px rgba(0, 0, 0, 0.8)" : "0 0 0 0 rgba(0, 0, 0, 0)",
-              borderRadius: scrolled ? "16px" : "0px",
-              backdropFilter: scrolled ? "blur(24px)" : "blur(0px)",
+              backgroundColor: scrolled ? "rgba(9, 9, 11, 0.90)" : "rgba(9, 9, 11, 0.65)",
+              borderColor: scrolled ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 255, 255, 0.08)",
+              boxShadow: scrolled ? "0 25px 50px -12px rgba(0, 0, 0, 0.8)" : "0 8px 32px 0 rgba(0, 0, 0, 0.35)",
+              borderRadius: "18px",
+              backdropFilter: scrolled ? "blur(28px)" : "blur(18px)",
             }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="flex h-14 w-full items-center justify-between px-4 sm:px-6 border pointer-events-auto"
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex h-14 w-full items-center justify-between px-4 sm:px-6 border pointer-events-auto shadow-2xl"
           >
           {/* Brand Logo */}
           <Link

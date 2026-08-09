@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { fetchLiveWeather, searchCities, type WeatherData } from "@/lib/api-clients";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { HorizontalScrollContainer } from "@/components/shared/HorizontalScrollContainer";
 
 const POPULAR_CITIES = [
   { name: "İstanbul", lat: 41.0082, lon: 28.9784, country: "TR" },
@@ -252,7 +253,7 @@ export function WeatherAirQualityClient() {
         </div>
 
         {/* Quick Popular Cities */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <HorizontalScrollContainer className="flex items-center gap-1.5 pb-1 text-xs no-scrollbar">
           <Sparkles className="h-3.5 w-3.5 text-zinc-500 shrink-0 mr-1" />
           {POPULAR_CITIES.map((c, i) => (
             <button
@@ -266,7 +267,7 @@ export function WeatherAirQualityClient() {
               {c.name}
             </button>
           ))}
-        </div>
+        </HorizontalScrollContainer>
       </div>
 
       {/* Main Weather Grid */}
@@ -366,7 +367,7 @@ export function WeatherAirQualityClient() {
                 <span>{isTurkish ? "Önümüzdeki 24 Saatlik Sıcaklık & Yağış İhtimali" : "Next 24 Hours Temperature & Rain Probability"}</span>
               </h3>
 
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/10">
+              <HorizontalScrollContainer className="flex gap-3 pb-2 scrollbar-thin scrollbar-thumb-white/10">
                 {weather.hourly.time.map((timeStr, idx) => {
                   const hour = new Date(timeStr).getHours();
                   const temp = Math.round(weather.hourly.temperature[idx]);
@@ -375,7 +376,7 @@ export function WeatherAirQualityClient() {
                   return (
                     <div
                       key={idx}
-                      className="shrink-0 p-3 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col items-center justify-between min-w-[76px] space-y-2 hover:border-sky-500/30 transition-all"
+                      className="shrink-0 p-3 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col items-center justify-between min-w-[76px] space-y-2 hover:border-sky-500/30 transition-all cursor-pointer"
                     >
                       <span className="text-xs font-mono text-zinc-400">{hour}:00</span>
                       <CloudSun className="h-5 w-5 text-sky-300" />
@@ -384,7 +385,7 @@ export function WeatherAirQualityClient() {
                     </div>
                   );
                 })}
-              </div>
+              </HorizontalScrollContainer>
             </div>
 
             {/* 7-Day Forecast Cards */}

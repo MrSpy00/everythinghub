@@ -16,6 +16,7 @@ import {
   Lock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StudioDropdown } from "@/components/shared/StudioDropdown";
 
 export function CryptoHashStudioClient() {
   const [activeTab, setActiveTab] = useState<"text" | "file" | "uuid">("text");
@@ -329,22 +330,23 @@ export function CryptoHashStudioClient() {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs text-zinc-400">Adet:</span>
-                <select
-                  value={uuidCount}
-                  onChange={(e) => setUuidCount(Number(e.target.value))}
-                  className="rounded-xl border border-white/10 bg-black/60 px-3 py-1.5 text-xs text-white focus:border-indigo-500 focus:outline-none font-mono"
-                >
-                  <option value={1}>1 Adet</option>
-                  <option value={5}>5 Adet</option>
-                  <option value={10}>10 Adet</option>
-                  <option value={25}>25 Adet</option>
-                </select>
+                <div className="w-32">
+                  <StudioDropdown
+                    value={String(uuidCount)}
+                    onChange={(val) => setUuidCount(Number(val))}
+                    options={[
+                      { value: "1", label: "1 Adet" },
+                      { value: "5", label: "5 Adet" },
+                      { value: "10", label: "10 Adet" },
+                      { value: "25", label: "25 Adet" },
+                    ]}
+                  />
+                </div>
                 <button
                   onClick={generateIdentifiers}
-                  className="flex items-center gap-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-3 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/30 transition-all"
+                  className="flex items-center gap-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-3.5 py-2.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/30 transition-all shrink-0 cursor-pointer"
                 >
-                  <RefreshCw className="h-3 w-3" />
+                  <RefreshCw className="h-3.5 w-3.5" />
                   <span>Yeniden Üret</span>
                 </button>
               </div>

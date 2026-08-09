@@ -29,10 +29,22 @@ import {
   Circle,
   Square,
   Sparkle,
+  Ban,
+  Radio,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createQRCodeMatrix, type ErrorCorrectionLevel } from "@/lib/qr-generator";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { StudioDropdown } from "@/components/shared/StudioDropdown";
+import { HorizontalScrollContainer } from "@/components/shared/HorizontalScrollContainer";
+import {
+  HubStudioIcon,
+  WhatsAppBrandIcon,
+  YouTubeBrandIcon,
+  InstagramBrandIcon,
+  XTwitterBrandIcon,
+  BitcoinBrandIcon,
+} from "@/components/shared/BrandIcons";
 
 type TabType =
   | "url"
@@ -63,117 +75,18 @@ const COLOR_PRESETS = [
 ];
 
 const PRESET_LOGOS = [
-  { id: "none", nameTr: "Yok / Logosuz", nameEn: "None / No Logo" },
-  { id: "hub", nameTr: "EverythingHub", nameEn: "EverythingHub" },
-  { id: "wifi", nameTr: "Wi-Fi", nameEn: "Wi-Fi" },
-  { id: "whatsapp", nameTr: "WhatsApp", nameEn: "WhatsApp" },
-  { id: "youtube", nameTr: "YouTube", nameEn: "YouTube" },
-  { id: "instagram", nameTr: "Instagram", nameEn: "Instagram" },
-  { id: "x", nameTr: "X / Twitter", nameEn: "X / Twitter" },
-  { id: "bitcoin", nameTr: "Bitcoin", nameEn: "Bitcoin" },
-  { id: "phone", nameTr: "Telefon", nameEn: "Phone" },
-  { id: "mail", nameTr: "E-Posta", nameEn: "Email" },
-  { id: "map", nameTr: "Konum", nameEn: "Location" },
+  { id: "none", nameTr: "Yok / Logosuz", nameEn: "None / No Logo", icon: Ban },
+  { id: "hub", nameTr: "EverythingHub", nameEn: "EverythingHub", icon: HubStudioIcon },
+  { id: "wifi", nameTr: "Wi-Fi", nameEn: "Wi-Fi", icon: Wifi },
+  { id: "whatsapp", nameTr: "WhatsApp", nameEn: "WhatsApp", icon: WhatsAppBrandIcon },
+  { id: "youtube", nameTr: "YouTube", nameEn: "YouTube", icon: YouTubeBrandIcon },
+  { id: "instagram", nameTr: "Instagram", nameEn: "Instagram", icon: InstagramBrandIcon },
+  { id: "x", nameTr: "X / Twitter", nameEn: "X / Twitter", icon: XTwitterBrandIcon },
+  { id: "bitcoin", nameTr: "Bitcoin", nameEn: "Bitcoin", icon: BitcoinBrandIcon },
+  { id: "phone", nameTr: "Telefon", nameEn: "Phone", icon: Phone },
+  { id: "mail", nameTr: "E-Posta", nameEn: "Email", icon: Mail },
+  { id: "map", nameTr: "Konum", nameEn: "Location", icon: MapPin },
 ];
-
-interface StudioSelectOption<T extends string> {
-  value: T;
-  label: string;
-  icon?: React.ElementType;
-}
-
-interface StudioSelectProps<T extends string> {
-  value: T;
-  onChange: (val: T) => void;
-  options: StudioSelectOption<T>[];
-  label?: string;
-  dropUp?: boolean;
-}
-
-function StudioSelect<T extends string>({
-  value,
-  onChange,
-  options,
-  label,
-  dropUp = false,
-}: StudioSelectProps<T>) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selected = options.find((o) => o.value === value) || options[0];
-  const SelectedIcon = selected?.icon;
-
-  return (
-    <div className="relative w-full z-30" ref={ref}>
-      {label && <label className="text-xs font-semibold text-zinc-400 block mb-1.5">{label}</label>}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white backdrop-blur-2xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer shadow-md"
-      >
-        <div className="flex items-center gap-2 truncate">
-          {SelectedIcon && <SelectedIcon className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
-          <span className="truncate">{selected?.label}</span>
-        </div>
-        <ChevronDown
-          className={`h-3.5 w-3.5 text-zinc-400 transition-transform duration-200 shrink-0 ${
-            open ? "rotate-180 text-white" : ""
-          }`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={dropUp ? { opacity: 0, y: 6, scale: 0.96 } : { opacity: 0, y: -6, scale: 0.96 }}
-            animate={dropUp ? { opacity: 1, y: -4, scale: 1 } : { opacity: 1, y: 4, scale: 1 }}
-            exit={dropUp ? { opacity: 0, y: 6, scale: 0.96 } : { opacity: 0, y: -6, scale: 0.96 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className={`absolute left-0 right-0 ${
-              dropUp ? "bottom-full mb-1.5 z-[100]" : "top-full mt-1.5 z-50"
-            } rounded-2xl border border-white/15 bg-[#0e1017]/98 p-1.5 backdrop-blur-3xl shadow-2xl shadow-black/90 max-h-60 overflow-y-auto no-scrollbar`}
-          >
-            {options.map((opt) => {
-              const OptIcon = opt.icon;
-              const isSelected = opt.value === value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    onChange(opt.value);
-                    setOpen(false);
-                  }}
-                  className={`flex items-center justify-between w-full rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-indigo-500/20 text-indigo-200 border border-indigo-500/30"
-                      : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    {OptIcon && <OptIcon className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
-                    <span className="truncate">{opt.label}</span>
-                  </div>
-                  {isSelected && <Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 export function QRCodeStudioClient() {
   const { lang } = useLanguage();
@@ -877,7 +790,7 @@ export function QRCodeStudioClient() {
         <div className="lg:col-span-7 space-y-6">
           {/* Data Type Tabs Bar */}
           <div className="rounded-3xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-4 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <HorizontalScrollContainer className="flex items-center gap-2 pb-1 no-scrollbar">
               {TABS.map((t) => {
                 const Icon = t.icon;
                 const active = activeTab === t.id;
@@ -896,7 +809,7 @@ export function QRCodeStudioClient() {
                   </button>
                 );
               })}
-            </div>
+            </HorizontalScrollContainer>
 
             {/* Tab Form Content */}
             <div className="border-t border-white/10 pt-4 space-y-4">
@@ -957,7 +870,7 @@ export function QRCodeStudioClient() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                    <StudioSelect
+                    <StudioDropdown
                       label={isTurkish ? "Şifreleme Türü" : "Encryption Type"}
                       value={wifiType}
                       onChange={(val) => setWifiType(val as any)}
@@ -1171,7 +1084,7 @@ export function QRCodeStudioClient() {
 
             {/* Pattern & Corner Customizer Dropdowns */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-white/10 pt-4">
-              <StudioSelect
+              <StudioDropdown
                 label={isTurkish ? "Gövde Deseni" : "Dot Pattern"}
                 value={dotStyle}
                 onChange={(val) => setDotStyle(val as DotStyle)}
@@ -1185,7 +1098,7 @@ export function QRCodeStudioClient() {
                 ]}
               />
 
-              <StudioSelect
+              <StudioDropdown
                 label={isTurkish ? "Köşe Çerçeve Stili" : "Corner Eye Frame"}
                 value={cornerFrameStyle}
                 onChange={(val) => setCornerFrameStyle(val as CornerFrameStyle)}
@@ -1197,7 +1110,7 @@ export function QRCodeStudioClient() {
                 ]}
               />
 
-              <StudioSelect
+              <StudioDropdown
                 label={isTurkish ? "Köşe İç Noktası" : "Corner Inner Dot"}
                 value={cornerDotStyle}
                 onChange={(val) => setCornerDotStyle(val as CornerDotStyle)}
@@ -1217,7 +1130,7 @@ export function QRCodeStudioClient() {
                   {isTurkish ? "Merkez Logo / İkon" : "Center Brand Logo"}
                 </label>
                 <div className="flex items-center gap-2">
-                  <StudioSelect
+                  <StudioDropdown
                     value={selectedLogo}
                     onChange={(val) => setSelectedLogo(val)}
                     dropUp={true}
@@ -1225,7 +1138,7 @@ export function QRCodeStudioClient() {
                       ...PRESET_LOGOS.map((l) => ({
                         value: l.id,
                         label: isTurkish ? l.nameTr : l.nameEn,
-                        icon: QrCode,
+                        icon: l.icon,
                       })),
                       ...(uploadedLogo
                         ? [
@@ -1255,7 +1168,7 @@ export function QRCodeStudioClient() {
                 </div>
               </div>
 
-              <StudioSelect
+              <StudioDropdown
                 label={isTurkish ? "Harekete Geçirici Çerçeve (CTA)" : "Call-to-Action (CTA) Frame"}
                 value={ctaStyle}
                 onChange={(val) => setCtaStyle(val as CtaStyle)}

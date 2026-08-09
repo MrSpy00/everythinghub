@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PUBLIC_APIS_CATALOG, type PublicAPIItem } from "@/lib/public-apis-catalog";
+import { HorizontalScrollContainer } from "@/components/shared/HorizontalScrollContainer";
+import { StudioDropdown } from "@/components/shared/StudioDropdown";
 
 export function APIPlaygroundClient() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -215,12 +217,12 @@ export function APIPlaygroundClient() {
             </div>
 
             {/* Category Pills */}
-            <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none">
+            <HorizontalScrollContainer className="flex gap-1.5 pb-2 mb-2 scrollbar-none">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all cursor-pointer ${
                     selectedCategory === cat.id
                       ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                       : "bg-white/[0.04] text-zinc-400 border border-white/5 hover:text-white"
@@ -229,7 +231,7 @@ export function APIPlaygroundClient() {
                   {cat.label}
                 </button>
               ))}
-            </div>
+            </HorizontalScrollContainer>
 
             {/* Catalog List */}
             <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin scrollbar-thumb-white/10">

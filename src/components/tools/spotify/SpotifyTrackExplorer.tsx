@@ -5,6 +5,7 @@ import { Search, Play, Pause, ExternalLink, Copy, Check, Music } from "lucide-re
 import { SpotifyTrack, formatKeyAndCamelot } from "@/lib/spotify-analyzer";
 import { copyToClipboard, cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { HorizontalScrollContainer } from "@/components/shared/HorizontalScrollContainer";
 
 interface SpotifyTrackExplorerProps {
   tracks: SpotifyTrack[];
@@ -151,7 +152,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
       </div>
 
       {/* Tracks Table */}
-      <div className="overflow-x-auto">
+      <HorizontalScrollContainer className="w-full">
         <table className="w-full text-left text-xs text-white/80">
           <thead>
             <tr className="border-b border-white/10 text-white/50 uppercase font-mono tracking-wider">
@@ -288,7 +289,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
             })}
           </tbody>
         </table>
-      </div>
+      </HorizontalScrollContainer>
     </div>
   );
 }
