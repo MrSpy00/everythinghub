@@ -231,14 +231,6 @@ export function Header() {
               >
                 {t.categories}
               </Link>
-              <Link
-                href="/tools/yt-playlist-length"
-                onClick={() => setMenuOpen(false)}
-                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 flex items-center gap-2"
-              >
-                <PlaySquare className="h-4 w-4 text-indigo-400" />
-                <span>{t.ytPlaylistTitle}</span>
-              </Link>
               <div className="pt-2 flex flex-col gap-2 border-t border-white/5 mt-1">
                 <a
                   href="https://buymeacoffee.com/aegissoft"

@@ -129,12 +129,12 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         </NeonBorder>
       </div>
 
-      {/* Hero Action Buttons */}
-      <div className="mb-8 sm:mb-10 flex flex-wrap items-center justify-center gap-3.5">
+      {/* Hero Action Button (Centered) */}
+      <div className="mb-8 sm:mb-10 flex items-center justify-center">
         <button
           type="button"
           onClick={scrollToTools}
-          className="group flex items-center gap-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-6 py-3.5 text-xs sm:text-sm font-bold text-indigo-300 backdrop-blur-2xl shadow-xl transition-all hover:scale-105 hover:bg-indigo-500/20 hover:border-indigo-400 cursor-pointer"
+          className="group inline-flex items-center justify-center gap-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-7 py-3.5 text-xs sm:text-sm font-bold text-indigo-300 backdrop-blur-2xl shadow-xl transition-all hover:scale-105 hover:bg-indigo-500/20 hover:border-indigo-400 cursor-pointer"
           data-cursor={t.inspectAllTools}
         >
           <Layers className="h-4 w-4 text-indigo-400" />
@@ -142,16 +142,6 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
           <span className="ml-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 text-[9px] font-extrabold uppercase font-mono">
             {liveCount} {t.tools}
           </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={scrollToTools}
-          className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-3.5 text-xs sm:text-sm font-semibold text-zinc-300 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white cursor-pointer"
-          data-cursor={t.explore}
-        >
-          <ArrowDown className="h-4 w-4 text-zinc-400" />
-          <span>{isTurkish ? "Kategorileri Görüntüle" : "Browse Categories"}</span>
         </button>
       </div>
 
