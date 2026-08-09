@@ -153,17 +153,17 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
 
       {/* Tracks Table */}
       <HorizontalScrollContainer className="w-full">
-        <table className="w-full text-left text-xs text-white/80">
+        <table className="w-full text-left text-xs text-white/80 min-w-[760px]">
           <thead>
             <tr className="border-b border-white/10 text-white/50 uppercase font-mono tracking-wider">
-              <th className="pb-3 pl-3">#</th>
-              <th className="pb-3">{isTurkish ? "Şarkı & Sanatçı" : "Track & Artist"}</th>
-              <th className="pb-3">{isTurkish ? "Albüm" : "Album"}</th>
-              <th className="pb-3">BPM</th>
-              <th className="pb-3">Key</th>
-              <th className="pb-3">Enerji</th>
-              <th className="pb-3">Popülerlik</th>
-              <th className="pb-3 pr-3 text-right">İşlemler</th>
+              <th className="pb-3 pl-3 w-12 text-center">#</th>
+              <th className="pb-3 min-w-[240px]">{isTurkish ? "Şarkı & Sanatçı" : "Track & Artist"}</th>
+              <th className="pb-3 min-w-[160px]">{isTurkish ? "Albüm" : "Album"}</th>
+              <th className="pb-3 w-20 text-center">BPM</th>
+              <th className="pb-3 w-20 text-center">Key</th>
+              <th className="pb-3 w-20 text-center">{isTurkish ? "Enerji" : "Energy"}</th>
+              <th className="pb-3 w-20 text-center">{isTurkish ? "Popülerlik" : "Popularity"}</th>
+              <th className="pb-3 pr-4 w-28 text-right">{isTurkish ? "İşlemler" : "Actions"}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -181,7 +181,7 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
 
               return (
                 <tr key={t.id || idx} className="hover:bg-white/[0.03] transition-colors group">
-                  <td className="py-3 pl-3 font-mono text-white/40">{idx + 1}</td>
+                  <td className="py-3 pl-3 text-center font-mono text-white/40">{idx + 1}</td>
 
                   {/* Title & Artwork with Preview Player */}
                   <td className="py-3 pr-4">
@@ -206,31 +206,30 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                         )}
                       </div>
 
-                      <div className="space-y-0.5">
+                      <div className="space-y-0.5 min-w-0">
                         <div className="flex items-center gap-2">
-                          {/* Direct Spotify Link for Track Name */}
                           <a
                             href={spotifyTrackUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={cn(
-                              "font-bold text-sm transition-colors hover:underline underline-offset-4 flex items-center gap-1",
+                              "font-bold text-sm transition-colors hover:underline underline-offset-4 flex items-center gap-1 truncate",
                               isPlaying ? "text-emerald-400" : "text-white group-hover:text-emerald-300"
                             )}
                           >
-                            <span>{t.name || "Untitled Track"}</span>
+                            <span className="truncate">{t.name || "Untitled Track"}</span>
                             <ExternalLink className="w-3 h-3 opacity-50 hover:opacity-100 shrink-0" />
                           </a>
 
                           {t.explicit && (
-                            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/15 text-rose-300 border border-rose-500/20">
+                            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/15 text-rose-300 border border-rose-500/20 shrink-0">
                               EXPLICIT
                             </span>
                           )}
                         </div>
 
-                        {/* Artists with clickable Spotify search links */}
-                        <p className="text-white/60">
+                        {/* Artists */}
+                        <p className="text-white/60 text-[11px] truncate">
                           {artistsList.map((a, aIdx) => (
                             <React.Fragment key={a.name || aIdx}>
                               {aIdx > 0 && ", "}
@@ -250,33 +249,32 @@ export function SpotifyTrackExplorer({ tracks, isTurkish = true }: SpotifyTrackE
                   </td>
 
                   {/* Album */}
-                  <td className="py-3 pr-4 text-white/60 truncate max-w-[140px]">{t.albumName || "Album"}</td>
+                  <td className="py-3 pr-4 text-white/70 truncate max-w-[200px]">{t.albumName || "Album"}</td>
 
                   {/* BPM */}
-                  <td className="py-3 pr-4 font-mono font-bold text-emerald-400/90">{t.audioFeatures?.tempo ?? 120}</td>
+                  <td className="py-3 pr-4 text-center font-mono font-bold text-emerald-400/90">{t.audioFeatures?.tempo ?? 120}</td>
 
                   {/* Key */}
-                  <td className="py-3 pr-4 font-mono">
+                  <td className="py-3 pr-4 text-center font-mono">
                     <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/20">
                       {camelot}
                     </span>
                   </td>
 
                   {/* Energy */}
-                  <td className="py-3 pr-4 font-mono text-amber-300">%{Math.round((t.audioFeatures?.energy ?? 0.5) * 100)}</td>
+                  <td className="py-3 pr-4 text-center font-mono text-amber-300">%{Math.round((t.audioFeatures?.energy ?? 0.5) * 100)}</td>
 
                   {/* Popularity */}
-                  <td className="py-3 pr-4 font-mono text-cyan-300">{t.popularity ?? 45}</td>
+                  <td className="py-3 pr-4 text-center font-mono text-cyan-300">{t.popularity ?? 45}</td>
 
                   {/* Action Buttons: Copy Link & Duration */}
-                  <td className="py-3 pr-3 text-right">
+                  <td className="py-3 pr-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <span className="font-mono text-white/60 mr-1">{m}:{s}</span>
 
-                      {/* SVG Copy Link Button */}
                       <button
                         onClick={() => handleCopyTrackLink(t.id, t.name)}
-                        className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-emerald-500/40 transition-all"
+                        className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.1] hover:border-emerald-500/40 transition-all cursor-pointer"
                         title={isTurkish ? "Şarkı Linkini Kopyala" : "Copy Track Link"}
                         data-cursor={isTurkish ? "Kopyala" : "Copy"}
                       >

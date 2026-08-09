@@ -48,85 +48,36 @@ void main() {
 }`;
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string) {
-  const sh = gl.createShader(type)!;
+  const sh = gl.createShader(type);
+  if (!sh) return null;
   gl.shaderSource(sh, src);
   gl.compileShader(sh);
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-    console.error("Shader compile error:", gl.getShaderInfoLog(sh));
     gl.deleteShader(sh);
     return null;
   }
   return sh;
 }
 
-function linkProgram(
-  gl: WebGL2RenderingContext,
-  vs: WebGLShader,
-  fs: WebGLShader
-) {
-  const p = gl.createProgram()!;
+function linkProgram(gl: WebGL2RenderingContext, vs: WebGLShader, fs: WebGLShader) {
+  const p = gl.createProgram();
+  if (!p) return null;
   gl.attachShader(p, vs);
   gl.attachShader(p, fs);
   gl.linkProgram(p);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-    console.error("Program link error:", gl.getProgramInfoLog(p));
     gl.deleteProgram(p);
     return null;
   }
   return p;
 }
 
-const VARIANT_WEIGHTS: Record<string, number> = {
-  Thin: 100,
-  Hairline: 100,
-  ExtraLight: 200,
-  UltraLight: 200,
-  Light: 300,
-  Regular: 400,
-  Normal: 400,
-  Book: 400,
-  Medium: 500,
-  SemiBold: 600,
-  DemiBold: 600,
-  Bold: 700,
-  ExtraBold: 800,
-  UltraBold: 800,
-  Black: 900,
-  Heavy: 900,
-};
-
-function variantToWeight(variant?: string): number {
-  if (!variant) return 700;
-  const base = variant
-    .replace(/\s*Italic\s*/i, "")
-    .trim()
-    .replace(/\s+/g, "");
-  return VARIANT_WEIGHTS[base] ?? 700;
-}
-
-function variantIsItalic(variant?: string): boolean {
-  return !!variant && /italic/i.test(variant);
-}
-
-function toNum(v: unknown, fallback: number): number {
-  if (typeof v === "number" && isFinite(v)) return v;
-  if (typeof v === "string") {
-    const m = parseFloat(v);
-    if (isFinite(m)) return m;
-  }
-  return fallback;
-}
-
-function parseColor(v: unknown): [number, number, number] {
+function parseColor(v: any): [number, number, number] {
   if (typeof v !== "string") return [1, 1, 1];
   const s = v.trim();
   if (s.startsWith("#")) {
     let h = s.slice(1);
-    if (h.length === 3)
-      h = h
-        .split("")
-        .map((c) => c + c)
-        .join("");
+    if (h.length === 3) h = h.split("").map((c) => c + c).join("");
     if (h.length >= 6) {
       const r = parseInt(h.slice(0, 2), 16) / 255;
       const g = parseInt(h.slice(2, 4), 16) / 255;
@@ -136,11 +87,7 @@ function parseColor(v: unknown): [number, number, number] {
   }
   const m = s.match(/rgba?\s*\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
   if (m) {
-    return [
-      parseInt(m[1], 10) / 255,
-      parseInt(m[2], 10) / 255,
-      parseInt(m[3], 10) / 255,
-    ];
+    return [parseInt(m[1], 10) / 255, parseInt(m[2], 10) / 255, parseInt(m[3], 10) / 255];
   }
   return [1, 1, 1];
 }
@@ -158,7 +105,8 @@ function renderTextToCanvas(
   const c = document.createElement("canvas");
   c.width = width;
   c.height = height;
-  const ctx = c.getContext("2d")!;
+  const ctx = c.getContext("2d");
+  if (!ctx) return c;
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = color;
   ctx.textAlign = "center";
@@ -168,39 +116,44 @@ function renderTextToCanvas(
   return c;
 }
 
-export function MeshText(props: any) {
-  const { text, color, font, colorSplit, customColors, force, className } = {
-    ...COMPONENT_DEFAULTS,
-    ...props,
-  };
+export interface MeshTextProps {
+  text?: string;
+  color?: string;
+  fontFamily?: string;
+  fontWeight?: number | string;
+  fontStyle?: string;
+  fontSize?: number;
+  colorSplit?: boolean;
+  customColors?: string[];
+  force?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export function MeshText({
+  text = "EverythingHub",
+  color = "#ffffff",
+  fontFamily = "Outfit, sans-serif",
+  fontWeight = 800,
+  fontStyle = "normal",
+  fontSize = 48,
+  colorSplit = true,
+  customColors = ["#8b5cf6", "#6366f1", "#ec4899"],
+  force = 18,
+  className = "",
+  style,
+}: MeshTextProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const colorSplitRef = useRef<boolean>(!!colorSplit);
   colorSplitRef.current = !!colorSplit;
+
   const customColorsRef = useRef<[number, number, number][]>([]);
-  customColorsRef.current = Array.isArray(customColors)
-    ? customColors.map(parseColor)
-    : [];
-  const forceRef = useRef<number>(
-    typeof force === "number" ? force / 10 : DRAG
-  );
+  customColorsRef.current = Array.isArray(customColors) ? customColors.map(parseColor) : [];
+
+  const forceRef = useRef<number>(typeof force === "number" ? force / 10 : DRAG);
   forceRef.current = typeof force === "number" ? force / 10 : DRAG;
-
-  const fontFamily: string = font?.fontFamily ?? "Inter";
-  const fontVariant: string = font?.variant ?? "Bold";
-  const fontSize: number = toNum(font?.fontSize, 120);
-  const fontWeight: number = toNum(
-    font?.fontWeight,
-    variantToWeight(fontVariant)
-  );
-  const fontStyle: string =
-    typeof font?.fontStyle === "string"
-      ? font.fontStyle
-      : variantIsItalic(fontVariant)
-      ? "italic"
-      : "normal";
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -212,10 +165,9 @@ export function MeshText(props: any) {
       premultipliedAlpha: true,
       antialias: true,
     });
-    if (!gl) {
-      return;
-    }
+    if (!gl) return;
 
+    // Grid geometry
     const vertCount = (GRID_W + 1) * (GRID_H + 1);
     const positions = new Float32Array(vertCount * 2);
     const uvs = new Float32Array(vertCount * 2);
@@ -302,8 +254,9 @@ export function MeshText(props: any) {
     const rebuildTex = async () => {
       const w = Math.max(2, canvas.width);
       const h = Math.max(2, canvas.height);
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
       const realSize = fontSize * dpr;
+
       try {
         if (typeof document !== "undefined") {
           const fontStr = `${fontStyle} ${fontWeight} ${realSize}px ${fontFamily}`;
@@ -314,9 +267,8 @@ export function MeshText(props: any) {
             await (document as any).fonts.ready;
           }
         }
-      } catch {
-        /* ignore */
-      }
+      } catch {}
+
       if (cancelled) return;
       const c2 = renderTextToCanvas(
         String(text ?? ""),
@@ -330,18 +282,11 @@ export function MeshText(props: any) {
       );
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        c2
-      );
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c2);
     };
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
       const rect = wrapper.getBoundingClientRect();
       const w = Math.max(2, Math.round(rect.width * dpr));
       const h = Math.max(2, Math.round(rect.height * dpr));
@@ -352,20 +297,13 @@ export function MeshText(props: any) {
         rebuildTex();
       }
     };
+
     const ro = new ResizeObserver(resize);
     ro.observe(wrapper);
     resize();
     rebuildTex();
 
-    const cursor = {
-      x: 99,
-      y: 99,
-      px: 99,
-      py: 99,
-      vx: 0,
-      vy: 0,
-      inside: false,
-    };
+    const cursor = { x: 99, y: 99, px: 99, py: 99, vx: 0, vy: 0, inside: false };
     const onMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
       const nx = (e.clientX - rect.left) / rect.width;
@@ -387,6 +325,7 @@ export function MeshText(props: any) {
       cursor.vx = 0;
       cursor.vy = 0;
     };
+
     wrapper.addEventListener("pointermove", onMove);
     wrapper.addEventListener("pointerleave", onLeave);
 
@@ -452,18 +391,17 @@ export function MeshText(props: any) {
       gl.uniform1i(uTex, 0);
       gl.uniform1f(uChroma, colorSplitRef.current ? 1.0 : 0.0);
 
-      let cA: [number, number, number] = [0.65, 0.35, 0.98];
-      let cB: [number, number, number] = [0.25, 0.45, 0.95];
+      let cA: [number, number, number] = [0.55, 0.36, 0.96];
+      let cB: [number, number, number] = [0.39, 0.40, 0.95];
       const cols = customColorsRef.current;
       if (cols.length === 1) {
         cA = cols[0];
         cB = cols[0];
       } else if (cols.length > 1) {
         const cycleMs = 400;
-        const index =
-          Math.floor(performance.now() / cycleMs) % cols.length;
-        cA = cols[index];
-        cB = cols[(index + 1) % cols.length];
+        const cIdx = Math.floor(performance.now() / cycleMs) % cols.length;
+        cA = cols[cIdx];
+        cB = cols[(cIdx + 1) % cols.length];
       }
       gl.uniform3f(uColorA, cA[0], cA[1], cA[2]);
       gl.uniform3f(uColorB, cB[0], cB[1], cB[2]);
@@ -499,39 +437,15 @@ export function MeshText(props: any) {
   return (
     <div
       ref={wrapperRef}
-      className={className}
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        userSelect: "none",
-      }}
+      className={`relative w-full overflow-hidden select-none cursor-pointer ${className}`}
+      style={{ minHeight: `${fontSize * 1.3}px`, ...style }}
     >
       <canvas
         ref={canvasRef}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-        }}
+        className="block w-full h-full"
       />
     </div>
   );
 }
-
-const COMPONENT_DEFAULTS = {
-  text: "EVERYTHINGHUB",
-  color: "#ffffff",
-  font: {
-    fontFamily: "Inter",
-    variant: "Bold",
-    fontSize: 90,
-    lineHeight: "1em",
-  },
-  colorSplit: true,
-  customColors: ["#a855f7", "#6366f1", "#ec4899"],
-  force: 18,
-};
 
 export default MeshText;

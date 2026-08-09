@@ -332,33 +332,37 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
           const rawDesc = entity.description || customDescription || "";
           const entityDesc = unescapeHtml(rawDesc);
 
-          // Enrich top 10 tracks with iTunes metadata for real album names
-          const enrichedAlbumMap: Record<string, string> = {};
+          // Enrich top 30 tracks with iTunes metadata for real album names and authentic song artwork
+          const enrichedMetadataMap: Record<string, { albumName?: string; coverUrl?: string }> = {};
           await Promise.all(
-            rawTracks.slice(0, 10).map(async (t: any) => {
-              if (t.title && t.subtitle) {
-                const meta = await fetchItunesAlbumMetadata(t.title, t.subtitle);
-                if (meta?.albumName) {
-                  enrichedAlbumMap[t.title] = meta.albumName;
+            rawTracks.slice(0, 30).map(async (t: any) => {
+              const trackName = t.title || t.name;
+              const artistName = t.subtitle || (Array.isArray(t.artists) ? t.artists[0]?.name : "");
+              if (trackName && artistName) {
+                const meta = await fetchItunesAlbumMetadata(trackName, artistName);
+                if (meta) {
+                  enrichedMetadataMap[trackName] = meta;
                 }
               }
             })
           );
 
           const tracks: SpotifyTrack[] = rawTracks.map((t: any, idx: number) => {
-            const trackTitle = t.title || `Track #${idx + 1}`;
-            const artistName = t.subtitle || "Unknown Artist";
+            const trackTitle = t.title || t.name || `Track #${idx + 1}`;
+            const artistName = t.subtitle || (Array.isArray(t.artists) ? t.artists.map((a: any) => a.name).join(", ") : "Unknown Artist");
             const durMs = t.duration || 180000 + ((idx * 3000) % 90000);
             const trackId = t.uri?.split(":")?.pop() || t.uid || `track-${idx + 1}`;
             const h = strHash(trackTitle + artistName + idx);
-            const albumName = enrichedAlbumMap[trackTitle] || `${trackTitle} (Album)`;
+            const meta = enrichedMetadataMap[trackTitle];
+            const albumName = meta?.albumName || t.album?.name || `${trackTitle} - Single`;
+            const albumCover = meta?.coverUrl || t.coverArt?.sources?.[0]?.url || t.album?.images?.[0]?.url || coverArtUrl;
 
             return {
               id: trackId,
               name: trackTitle,
-              artists: [{ name: artistName }],
+              artists: Array.isArray(t.artists) && t.artists.length > 0 ? t.artists.map((a: any) => ({ name: a.name, id: a.id })) : [{ name: artistName }],
               albumName,
-              albumCover: coverArtUrl,
+              albumCover,
               durationMs: durMs,
               popularity: 45 + (h % 50),
               releaseDate: "2024-01-01",

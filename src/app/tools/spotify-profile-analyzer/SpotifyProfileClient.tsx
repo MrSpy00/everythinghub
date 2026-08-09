@@ -148,10 +148,10 @@ export default function SpotifyProfileClient() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold text-cyan-300 backdrop-blur-xl"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-xs font-semibold text-zinc-300 backdrop-blur-2xl shadow-xl hover:border-indigo-500/40 transition-colors"
         >
-          <UserCheck className="w-4 h-4" />
-          <span>{isTurkish ? "Curator & Discography Studio" : "Curator & Discography Studio"}</span>
+          <UserCheck className="w-4 h-4 text-indigo-400" />
+          <span>{isTurkish ? "Küratör & Diskografi Stüdyosu" : "Curator & Discography Studio"}</span>
         </motion.div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">

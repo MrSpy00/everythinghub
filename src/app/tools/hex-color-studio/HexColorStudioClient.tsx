@@ -422,6 +422,103 @@ export function HexColorStudioClient() {
     return rgbToHex(r, g, b);
   }, [rgb, blendColor, blendRatio]);
 
+  // Multi-Color Palette Mixer State (2 to 6 colors)
+  const [mixPalette, setMixPalette] = useState<Array<{ id: string; hex: string; weight: number }>>([
+    { id: "1", hex: "#6366f1", weight: 50 },
+    { id: "2", hex: "#ec4899", weight: 50 },
+  ]);
+  const [mixAlgorithm, setMixAlgorithm] = useState<"oklch" | "rgb" | "subtractive">("oklch");
+  const [mixSteps, setMixSteps] = useState<number>(5);
+
+  // Multi-Color Blended Result Calculation
+  const multiBlendedHex = useMemo(() => {
+    if (mixPalette.length === 0) return "#000000";
+    const totalWeight = mixPalette.reduce((acc, c) => acc + c.weight, 0) || 1;
+
+    let rAcc = 0;
+    let gAcc = 0;
+    let bAcc = 0;
+
+    mixPalette.forEach((item) => {
+      const cRgb = hexToRgba(item.hex);
+      const w = item.weight / totalWeight;
+
+      if (mixAlgorithm === "rgb") {
+        rAcc += cRgb.r * w;
+        gAcc += cRgb.g * w;
+        bAcc += cRgb.b * w;
+      } else if (mixAlgorithm === "subtractive") {
+        // Subtractive CMY approximation
+        const c = (255 - cRgb.r) * w;
+        const m = (255 - cRgb.g) * w;
+        const y = (255 - cRgb.b) * w;
+        rAcc += c;
+        gAcc += m;
+        bAcc += y;
+      } else {
+        // OKLCH / Linear gamma blending
+        rAcc += Math.pow(cRgb.r / 255, 2.2) * w;
+        gAcc += Math.pow(cRgb.g / 255, 2.2) * w;
+        bAcc += Math.pow(cRgb.b / 255, 2.2) * w;
+      }
+    });
+
+    if (mixAlgorithm === "subtractive") {
+      return rgbToHex(Math.max(0, 255 - rAcc), Math.max(0, 255 - gAcc), Math.max(0, 255 - bAcc));
+    } else if (mixAlgorithm === "oklch") {
+      return rgbToHex(
+        Math.round(Math.pow(rAcc, 1 / 2.2) * 255),
+        Math.round(Math.pow(gAcc, 1 / 2.2) * 255),
+        Math.round(Math.pow(bAcc, 1 / 2.2) * 255)
+      );
+    }
+    return rgbToHex(Math.round(rAcc), Math.round(gAcc), Math.round(bAcc));
+  }, [mixPalette, mixAlgorithm]);
+
+  // Intermediate Gradient Steps between first & last color in palette
+  const blendedGradientSteps = useMemo(() => {
+    if (mixPalette.length < 2) return [];
+    const c1 = hexToRgba(mixPalette[0].hex);
+    const c2 = hexToRgba(mixPalette[mixPalette.length - 1].hex);
+    const steps: string[] = [];
+
+    for (let i = 0; i < mixSteps; i++) {
+      const factor = i / (mixSteps - 1);
+      const r = Math.round(c1.r * (1 - factor) + c2.r * factor);
+      const g = Math.round(c1.g * (1 - factor) + c2.g * factor);
+      const b = Math.round(c1.b * (1 - factor) + c2.b * factor);
+      steps.push(rgbToHex(r, g, b));
+    }
+    return steps;
+  }, [mixPalette, mixSteps]);
+
+  const handleAddMixColor = () => {
+    if (mixPalette.length >= 6) {
+      toast.warning(isTurkish ? "Maksimum 6 renk karıştırılabilir." : "Maximum 6 colors can be mixed.");
+      return;
+    }
+    const colors = ["#10b981", "#f59e0b", "#06b6d4", "#a855f7", "#ef4444", "#3b82f6"];
+    const nextHex = colors[mixPalette.length % colors.length];
+    setMixPalette((prev) => [...prev, { id: String(Date.now()), hex: nextHex, weight: 50 }]);
+    toast.success(isTurkish ? "Karışıma yeni renk eklendi!" : "Added new color to blend!");
+  };
+
+  const handleRemoveMixColor = (id: string) => {
+    if (mixPalette.length <= 2) {
+      toast.warning(isTurkish ? "En az 2 renk gereklidir." : "At least 2 colors required.");
+      return;
+    }
+    setMixPalette((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleUpdateMixColor = (id: string, newHex: string) => {
+    setMixPalette((prev) => prev.map((c) => (c.id === id ? { ...c, hex: newHex } : c)));
+  };
+
+  const handleUpdateMixWeight = (id: string, weight: number) => {
+    setMixPalette((prev) => prev.map((c) => (c.id === id ? { ...c, weight } : c)));
+  };
+
   const handleColorChange = (newHex: string) => {
     setHexInput(newHex);
     if (!colorHistory.includes(newHex)) {
@@ -430,7 +527,9 @@ export function HexColorStudioClient() {
   };
 
   const handleCopy = (text: string, formatName: string) => {
-    navigator.clipboard.writeText(text);
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
     setCopiedFormat(formatName);
     toast.success(`${text} ${isTurkish ? "panoya kopyalandı!" : "copied to clipboard!"}`);
     setTimeout(() => setCopiedFormat(null), 2000);
@@ -449,6 +548,23 @@ export function HexColorStudioClient() {
     }, {} as Record<string, string>);
     const str = `// Tailwind CSS Color Architecture\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n        brand: ${JSON.stringify(configObj, null, 10)}\n      }\n    }\n  }\n};`;
     handleCopy(str, "Tailwind Config");
+  };
+
+  const downloadTailwindJson = () => {
+    const configObj = tailwindScale.reduce((acc, curr) => {
+      acc[curr.step] = curr.hex;
+      return acc;
+    }, {} as Record<string, string>);
+    const blob = new Blob([JSON.stringify({ brandPalette: configObj }, null, 2)], {
+      type: "application/json;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tailwind-palette-${hexInput.replace("#", "")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isTurkish ? "JSON dosyası başarıyla indirildi!" : "JSON file downloaded successfully!");
   };
 
   const exportCssVariables = () => {
@@ -819,17 +935,29 @@ export function HexColorStudioClient() {
 
           {/* Tailwind 50-950 Palette Matrix */}
           <div className="rounded-3xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Layers className="h-4 w-4 text-indigo-400" />
                 <span>{isTurkish ? "Tailwind 50 - 950 Ton Mimarisi" : "Tailwind 50 - 950 Scale Matrix"}</span>
               </h3>
-              <button
-                onClick={exportTailwindConfig}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer"
-              >
-                {isTurkish ? "JSON İndir" : "Export JSON"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={exportTailwindConfig}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+                  title={isTurkish ? "JSON formatını panoya kopyalar" : "Copy JSON to clipboard"}
+                >
+                  <Copy className="h-3.5 w-3.5 text-indigo-400" />
+                  <span>{isTurkish ? "JSON Kopyala" : "Copy JSON"}</span>
+                </button>
+                <button
+                  onClick={downloadTailwindJson}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-xs font-bold text-indigo-300 hover:bg-indigo-500/25 hover:border-indigo-400 transition-all cursor-pointer shadow-lg shadow-indigo-500/10"
+                  title={isTurkish ? "Paleti .json dosyası olarak bilgisayarınıza indirir" : "Downloads palette as .json file"}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>{isTurkish ? "JSON İndir" : "Download JSON"}</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-11 gap-1 sm:gap-1.5">
@@ -963,46 +1091,156 @@ export function HexColorStudioClient() {
             </div>
           </div>
 
-          {/* Color Mixer & Blender */}
-          <div className="rounded-3xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center justify-between">
-              <span className="flex items-center gap-2">
+          {/* Advanced Multi-Color Palette Mixer & Blender Studio */}
+          <div className="rounded-3xl border border-white/10 bg-[#0d0e12]/90 backdrop-blur-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-indigo-400" />
-                {isTurkish ? "Renk Karıştırıcı & Blender" : "Color Mixer & Blender"}
-              </span>
-              <span className="text-xs font-mono font-bold text-indigo-300">%{blendRatio}</span>
-            </h3>
+                <h3 className="text-sm font-bold text-white">
+                  {isTurkish ? "Gelişmiş Çoklu Renk Karıştırıcı & Blender" : "Advanced Multi-Color Palette Mixer & Blender"}
+                </h3>
+              </div>
 
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl border border-white/15 shrink-0" style={{ backgroundColor: hexInput }} />
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={blendRatio}
-                onChange={(e) => setBlendRatio(Number(e.target.value))}
-                className="w-full accent-indigo-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="h-10 w-10 rounded-xl border border-white/15 shrink-0" style={{ backgroundColor: blendColor }} />
+              {/* Blend Algorithm Switcher */}
+              <div className="flex gap-1.5">
+                {[
+                  { id: "oklch", label: "OKLCH (Doğal)" },
+                  { id: "rgb", label: "Linear RGB" },
+                  { id: "subtractive", label: isTurkish ? "Pigment Boya" : "Pigment" },
+                ].map((algo) => (
+                  <button
+                    key={algo.id}
+                    onClick={() => setMixAlgorithm(algo.id as any)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                      mixAlgorithm === algo.id
+                        ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                        : "bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-white"
+                    }`}
+                  >
+                    {algo.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-2xl border border-white/10 bg-white/[0.02]">
-              <div className="flex items-center gap-3">
+            {/* Dynamic Color Palette Inputs with Sliders */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-zinc-400">
+                <span>{isTurkish ? "Karışım Paleti & Ağırlık Oranları" : "Palette Colors & Weight Distribution"}</span>
+                <button
+                  onClick={handleAddMixColor}
+                  className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+                >
+                  + {isTurkish ? "Renk Ekle" : "Add Color"}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {mixPalette.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-2xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-3 shadow-inner"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <input
+                        type="color"
+                        value={item.hex}
+                        onChange={(e) => handleUpdateMixColor(item.id, e.target.value)}
+                        className="h-8 w-8 rounded-lg border border-white/20 bg-transparent cursor-pointer shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <input
+                          type="text"
+                          value={item.hex}
+                          onChange={(e) => handleUpdateMixColor(item.id, e.target.value)}
+                          className="w-20 bg-transparent font-mono text-xs font-bold text-white uppercase focus:outline-none"
+                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="range"
+                            min="1"
+                            max="100"
+                            value={item.weight}
+                            onChange={(e) => handleUpdateMixWeight(item.id, Number(e.target.value))}
+                            className="w-full accent-indigo-500 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                          />
+                          <span className="font-mono text-[10px] text-zinc-400 w-7 text-right">%{item.weight}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {mixPalette.length > 2 && (
+                      <button
+                        onClick={() => handleRemoveMixColor(item.id)}
+                        className="text-zinc-500 hover:text-rose-400 text-xs p-1 cursor-pointer transition-colors"
+                        title={isTurkish ? "Rengi Kaldır" : "Remove Color"}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Gradient Spectrum Preview */}
+            <div className="space-y-2 border-t border-white/10 pt-4">
+              <div className="flex items-center justify-between text-xs text-zinc-400">
+                <span>{isTurkish ? "Geçiş Spektrumu & Ara Tonlar" : "Gradient Transition Steps"}</span>
+                <span className="font-mono text-indigo-400 font-bold">{mixSteps} {isTurkish ? "Adım" : "Steps"}</span>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {blendedGradientSteps.map((stepHex, sIdx) => (
+                  <div
+                    key={sIdx}
+                    onClick={() => handleCopy(stepHex, `Step ${sIdx + 1}`)}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-indigo-500/40 transition-all cursor-pointer group"
+                    title={stepHex}
+                  >
+                    <div
+                      className="h-9 w-full rounded-lg border border-white/10 shadow-sm group-hover:scale-105 transition-transform"
+                      style={{ backgroundColor: stepHex }}
+                    />
+                    <span className="font-mono text-[10px] font-bold text-zinc-300 group-hover:text-white">
+                      {stepHex.toUpperCase()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Final Multi-Blended Result Card */}
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 backdrop-blur-xl">
+              <div className="flex items-center gap-3.5">
                 <div
-                  className="h-8 w-12 rounded-lg border border-white/15 shadow-sm"
-                  style={{ backgroundColor: blendedHex }}
+                  className="h-12 w-16 rounded-xl border border-white/20 shadow-lg shrink-0"
+                  style={{ backgroundColor: multiBlendedHex }}
                 />
                 <div>
-                  <span className="text-[10px] font-semibold text-zinc-400 block">{isTurkish ? "Karışım Sonucu" : "Blended Result"}</span>
-                  <span className="font-mono text-xs font-bold text-white">{blendedHex.toUpperCase()}</span>
+                  <span className="text-[11px] font-semibold text-indigo-300 block">
+                    {isTurkish ? "Çoklu Karışım Sonucu (Ağırlıklı Ortalama)" : "Multi-Blended Final Color"}
+                  </span>
+                  <span className="font-mono text-base font-extrabold text-white">
+                    {multiBlendedHex.toUpperCase()}
+                  </span>
                 </div>
               </div>
-              <button
-                onClick={() => handleCopy(blendedHex, "Blended Result")}
-                className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white transition-all cursor-pointer"
-              >
-                <Copy className="h-3.5 w-3.5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleColorChange(multiBlendedHex)}
+                  className="px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] text-xs font-bold text-zinc-200 hover:text-white transition-all cursor-pointer"
+                >
+                  {isTurkish ? "Ana Renk Yap" : "Set as Base"}
+                </button>
+                <button
+                  onClick={() => handleCopy(multiBlendedHex, "Multi-Blended Result")}
+                  className="p-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30 transition-all cursor-pointer shadow-md"
+                  title={isTurkish ? "HEX Kopyala" : "Copy HEX"}
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

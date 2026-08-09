@@ -208,10 +208,10 @@ export default function SpotifyPlaylistClient() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-xs font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-2xl shadow-lg shadow-emerald-950/20"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-xs font-semibold text-zinc-300 backdrop-blur-2xl shadow-xl hover:border-emerald-500/40 transition-colors"
         >
           <ListMusic className="w-4 h-4 text-emerald-400" />
-          <span>{isTurkish ? "Spotify Studio v1.0 · Sonic DNA & Bot Control" : "Spotify Studio v1.0 · Sonic DNA & Bot Control"}</span>
+          <span>{isTurkish ? "Spotify Stüdyosu v1.0 · Sonic DNA & Bot Denetimi" : "Spotify Studio v1.0 · Sonic DNA & Bot Control"}</span>
         </motion.div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
