@@ -163,3 +163,13 @@ body {
   box-shadow: 0 12px 40px -8px rgba(139, 92, 246, 0.22), 0 0 0 1px rgba(139, 92, 246, 0.3);
   transform: translateY(-3px);
 }
+
+/* ===== Horizontal Scroll Boundaries & Containment ===== */
+[data-horizontal-scroll="true"],
+.overflow-x-auto,
+.overflow-x-scroll {
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+

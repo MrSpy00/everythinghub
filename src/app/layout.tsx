@@ -9,6 +9,7 @@ import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { GlobalHorizontalScrollProvider } from "@/components/shared/GlobalHorizontalScrollProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -321,6 +322,9 @@ export default function RootLayout({
 
           {/* Smooth Intelligent Scroll to Top */}
           <ScrollToTop />
+
+          {/* Global Horizontal Scroll Lock & Wheel Handler */}
+          <GlobalHorizontalScrollProvider />
         </LanguageProvider>
 
         {/* Global Notifications */}

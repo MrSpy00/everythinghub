@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 
 /**
  * Hook to enable smooth horizontal scrolling via mouse wheel (vertical delta)
- * and prevent the main page/window from scrolling vertically while the container is scrolling.
+ * and strictly prevent the main page/window from scrolling vertically while the cursor
+ * is within the container, even if the container reaches its boundary edges.
  */
 export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>() {
   const elRef = useRef<T | null>(null);
@@ -12,22 +13,15 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>() {
     if (!el) return;
 
     const onWheel = (e: WheelEvent) => {
-      // If deltaY is 0 (already horizontal scroll or touchpad horizontal gesture), let browser handle it
-      if (e.deltaY === 0) return;
-
       const hasHorizontalScroll = el.scrollWidth > el.clientWidth;
       if (!hasHorizontalScroll) return;
 
-      const isScrollingLeft = e.deltaY < 0;
-      const isScrollingRight = e.deltaY > 0;
-      const canScrollLeft = el.scrollLeft > 0;
-      const canScrollRight = Math.ceil(el.scrollLeft) < el.scrollWidth - el.clientWidth - 1;
+      // Always prevent global vertical scroll while the mouse is over this container
+      e.preventDefault();
+      e.stopPropagation();
 
-      if ((isScrollingLeft && canScrollLeft) || (isScrollingRight && canScrollRight)) {
-        e.preventDefault();
-        e.stopPropagation();
-        el.scrollLeft += e.deltaY;
-      }
+      const delta = e.deltaY !== 0 ? e.deltaY : e.deltaX;
+      el.scrollLeft += delta;
     };
 
     el.addEventListener("wheel", onWheel, { passive: false });

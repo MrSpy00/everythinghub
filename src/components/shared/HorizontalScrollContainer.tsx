@@ -19,7 +19,8 @@ export function HorizontalScrollContainer({
   return (
     <div
       ref={scrollRef}
-      className={cn("overflow-x-auto select-none", className)}
+      data-horizontal-scroll="true"
+      className={cn("overflow-x-auto overscroll-contain select-none", className)}
       {...props}
     >
       {children}
