@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Heart, ExternalLink, ShieldCheck, Coffee } from "lucide-react";
 import { getTop4QuickAccessTools } from "@/lib/user-analytics";
 import { Tool } from "@/lib/tools-registry";
+import { MeshText } from "@/components/creative/MeshText";
 
 function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -154,6 +155,19 @@ export function Footer() {
               </a>
             </div>
           </div>
+        </div>
+
+        {/* Interactive Mesh Watermark */}
+        <div className="my-6 w-full max-w-4xl mx-auto opacity-40 hover:opacity-100 transition-opacity duration-500 cursor-pointer" title="Hover to interact with Mesh">
+          <MeshText
+            text="EVERYTHINGHUB"
+            fontSize={42}
+            fontWeight={900}
+            fontFamily="Outfit"
+            color="#ffffff"
+            customColors={["#6366f1", "#a855f7", "#ec4899", "#06b6d4"]}
+            force={22}
+          />
         </div>
 
         {/* Bottom Bar */}

@@ -58,7 +58,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-4 sm:mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-zinc-300 backdrop-blur-2xl shadow-xl hover:border-indigo-500/40 transition-colors"
+        className="mb-3 sm:mb-4 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-zinc-300 backdrop-blur-2xl shadow-xl hover:border-indigo-500/40 transition-colors"
       >
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -69,14 +69,21 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         </span>
       </motion.div>
 
-      {/* Main Studio Title */}
+      {/* Main Studio Interactive Mesh Title */}
       <div className="mb-2 max-w-4xl 2xl:max-w-5xl w-full flex flex-col items-center">
-        <h1
-          suppressHydrationWarning
-          className="text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl leading-tight"
-        >
-          {t.studioHeroTitle}
-        </h1>
+        {/* Interactive WebGL Mesh Brand Title */}
+        <div className="w-full max-w-2xl px-2 my-1 cursor-pointer" title="Hover / Move Cursor to Distort Mesh">
+          <MeshText
+            text="EVERYTHINGHUB"
+            fontSize={54}
+            fontWeight={900}
+            fontFamily="Outfit"
+            color="#ffffff"
+            customColors={["#f43f5e", "#06b6d4", "#a855f7", "#10b981"]}
+            force={28}
+            className="w-full"
+          />
+        </div>
 
         {/* Dynamic Kinetic Text Morph & Ambient Diffusion Component */}
         <KineticText />
@@ -118,12 +125,10 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <button
               type="button"
               onClick={scrollToTools}
-              className="relative group/btn inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-white/[0.06] px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-2xl shadow-lg transition-all duration-300 hover:border-indigo-400/80 hover:bg-indigo-500/20 hover:shadow-indigo-500/25 hover:scale-[1.03] active:scale-95 shrink-0 overflow-hidden cursor-pointer"
-              data-cursor={t.explore}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-3 py-1.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all shrink-0 cursor-pointer"
             >
-              <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-              <Compass className="h-4 w-4 text-indigo-300 transition-transform duration-500 group-hover/btn:rotate-180" />
-              <span className="relative z-10">{t.explore}</span>
+              <Compass className="h-3.5 w-3.5" />
+              <span>{t.explore}</span>
             </button>
           </div>
         </NeonBorder>

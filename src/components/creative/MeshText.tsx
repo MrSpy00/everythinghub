@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 
 const GRID_W = 96;
 const GRID_H = 40;
-const DRAG = 1.8;
-const SPRING_K = 0.08;
-const DAMPING = 0.9;
-const DT = 0.1;
-const CHROMA = 0.005;
+const DRAG = 2.4;
+const SPRING_K = 0.09;
+const DAMPING = 0.88;
+const DT = 0.12;
+const CHROMA = 0.012;
 
 const VERT_SRC = `#version 300 es
 in vec2 aPos;
@@ -34,12 +34,12 @@ uniform vec3 uColorB;
 void main() {
     vec4 base = texture(uTex, vUv);
     if (uChroma > 0.0) {
-        float o = uChroma * ${CHROMA.toFixed(5)} * clamp(vMag * 8.0, 0.0, 1.0);
+        float o = uChroma * ${CHROMA.toFixed(5)} * clamp(vMag * 14.0, 0.0, 1.0);
         float aOff = texture(uTex, vUv + vec2(o, 0.0)).a;
         float bOff = texture(uTex, vUv - vec2(o, 0.0)).a;
         vec3 col = base.rgb * base.a;
-        col += uColorA * max(0.0, aOff - base.a);
-        col += uColorB * max(0.0, bOff - base.a);
+        col += uColorA * max(0.0, aOff - base.a) * 1.5;
+        col += uColorB * max(0.0, bOff - base.a) * 1.5;
         float aMax = max(base.a, max(aOff, bOff));
         outColor = vec4(col, aMax);
     } else {
@@ -53,6 +53,7 @@ function compile(gl: WebGL2RenderingContext, type: number, src: string) {
   gl.shaderSource(sh, src);
   gl.compileShader(sh);
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    console.error("Shader compile error:", gl.getShaderInfoLog(sh));
     gl.deleteShader(sh);
     return null;
   }
@@ -66,6 +67,7 @@ function linkProgram(gl: WebGL2RenderingContext, vs: WebGLShader, fs: WebGLShade
   gl.attachShader(p, fs);
   gl.linkProgram(p);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+    console.error("Program link error:", gl.getProgramInfoLog(p));
     gl.deleteProgram(p);
     return null;
   }
@@ -100,18 +102,30 @@ function renderTextToCanvas(
   fontStyle: string,
   fontSize: number,
   width: number,
-  height: number
+  height: number,
+  gradientColors?: string[]
 ): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = width;
   c.height = height;
   const ctx = c.getContext("2d");
   if (!ctx) return c;
+
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = color;
+
+  if (gradientColors && gradientColors.length >= 2) {
+    const grad = ctx.createLinearGradient(width * 0.2, 0, width * 0.8, height);
+    gradientColors.forEach((col, idx) => {
+      grad.addColorStop(idx / (gradientColors.length - 1), col);
+    });
+    ctx.fillStyle = grad;
+  } else {
+    ctx.fillStyle = color;
+  }
+
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}, sans-serif`;
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}, system-ui, sans-serif`;
   ctx.fillText(text, width / 2, height / 2);
   return c;
 }
@@ -119,6 +133,7 @@ function renderTextToCanvas(
 export interface MeshTextProps {
   text?: string;
   color?: string;
+  gradientColors?: string[];
   fontFamily?: string;
   fontWeight?: number | string;
   fontStyle?: string;
@@ -128,23 +143,27 @@ export interface MeshTextProps {
   force?: number;
   className?: string;
   style?: React.CSSProperties;
+  height?: number | string;
 }
 
 export function MeshText({
   text = "EverythingHub",
   color = "#ffffff",
-  fontFamily = "Outfit, sans-serif",
-  fontWeight = 800,
+  gradientColors,
+  fontFamily = "Outfit",
+  fontWeight = 900,
   fontStyle = "normal",
-  fontSize = 48,
+  fontSize = 72,
   colorSplit = true,
-  customColors = ["#8b5cf6", "#6366f1", "#ec4899"],
-  force = 18,
+  customColors = ["#f43f5e", "#06b6d4", "#a855f7", "#10b981"],
+  force = 24,
   className = "",
   style,
+  height,
 }: MeshTextProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [isSupported, setIsSupported] = useState<boolean>(true);
 
   const colorSplitRef = useRef<boolean>(!!colorSplit);
   colorSplitRef.current = !!colorSplit;
@@ -164,13 +183,19 @@ export function MeshText({
       alpha: true,
       premultipliedAlpha: true,
       antialias: true,
+      powerPreference: "high-performance",
     });
-    if (!gl) return;
+
+    if (!gl) {
+      setIsSupported(false);
+      return;
+    }
 
     // Grid geometry
     const vertCount = (GRID_W + 1) * (GRID_H + 1);
     const positions = new Float32Array(vertCount * 2);
     const uvs = new Float32Array(vertCount * 2);
+
     for (let y = 0; y <= GRID_H; y++) {
       for (let x = 0; x <= GRID_W; x++) {
         const i = y * (GRID_W + 1) + x;
@@ -182,6 +207,7 @@ export function MeshText({
         uvs[i * 2 + 1] = v;
       }
     }
+
     const indexCount = GRID_W * GRID_H * 6;
     const indices = new Uint32Array(indexCount);
     let idx = 0;
@@ -206,6 +232,7 @@ export function MeshText({
     const vs = compile(gl, gl.VERTEX_SHADER, VERT_SRC);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG_SRC);
     if (!vs || !fs) return;
+
     const program = linkProgram(gl, vs, fs);
     if (!program) return;
 
@@ -250,8 +277,10 @@ export function MeshText({
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
     let cancelled = false;
+    let isIntersecting = true;
 
     const rebuildTex = async () => {
+      if (cancelled) return;
       const w = Math.max(2, canvas.width);
       const h = Math.max(2, canvas.height);
       const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
@@ -278,7 +307,8 @@ export function MeshText({
         fontStyle,
         realSize,
         w,
-        h
+        h,
+        gradientColors
       );
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
@@ -303,13 +333,26 @@ export function MeshText({
     resize();
     rebuildTex();
 
+    // Intersection observer for zero CPU/GPU overhead when offscreen
+    const io = new IntersectionObserver(
+      (entries) => {
+        isIntersecting = entries[0]?.isIntersecting ?? true;
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(wrapper);
+
+    // Mouse & Touch Tracking
     const cursor = { x: 99, y: 99, px: 99, py: 99, vx: 0, vy: 0, inside: false };
-    const onMove = (e: PointerEvent) => {
+
+    const handlePointerMove = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
-      const nx = (e.clientX - rect.left) / rect.width;
-      const ny = (e.clientY - rect.top) / rect.height;
+      if (!rect.width || !rect.height) return;
+      const nx = (clientX - rect.left) / rect.width;
+      const ny = (clientY - rect.top) / rect.height;
       const x = nx * 2 - 1;
       const y = 1 - ny * 2;
+
       if (!cursor.inside) {
         cursor.px = x;
         cursor.py = y;
@@ -318,6 +361,11 @@ export function MeshText({
       cursor.x = x;
       cursor.y = y;
     };
+
+    const onMove = (e: PointerEvent) => {
+      handlePointerMove(e.clientX, e.clientY);
+    };
+
     const onLeave = () => {
       cursor.inside = false;
       cursor.x = 99;
@@ -326,15 +374,28 @@ export function MeshText({
       cursor.vy = 0;
     };
 
-    wrapper.addEventListener("pointermove", onMove);
-    wrapper.addEventListener("pointerleave", onLeave);
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    wrapper.addEventListener("pointermove", onMove, { passive: true });
+    wrapper.addEventListener("pointerleave", onLeave, { passive: true });
+    wrapper.addEventListener("touchmove", onTouchMove, { passive: true });
+    wrapper.addEventListener("touchend", onLeave, { passive: true });
 
     let rafId = 0;
     const tick = () => {
+      if (!isIntersecting) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
       cursor.vx = cursor.x - cursor.px;
       cursor.vy = cursor.y - cursor.py;
       const vmag = Math.hypot(cursor.vx, cursor.vy);
-      if (vmag > 0.3) {
+      if (vmag > 0.4) {
         cursor.vx = 0;
         cursor.vy = 0;
       }
@@ -351,7 +412,8 @@ export function MeshText({
         const cx = cursor.x - (px + dx);
         const cy = cursor.y - (py + dy);
         const cd = Math.hypot(cx, cy);
-        const proximity = Math.max(0, 1 / (1 + cd / 0.05) - 0.1);
+        // Responsive pull radius
+        const proximity = Math.max(0, 1 / (1 + cd / 0.18) - 0.08);
 
         let vx = vel[i2];
         let vy = vel[i2 + 1];
@@ -391,8 +453,8 @@ export function MeshText({
       gl.uniform1i(uTex, 0);
       gl.uniform1f(uChroma, colorSplitRef.current ? 1.0 : 0.0);
 
-      let cA: [number, number, number] = [0.55, 0.36, 0.96];
-      let cB: [number, number, number] = [0.39, 0.40, 0.95];
+      let cA: [number, number, number] = [0.95, 0.25, 0.65]; // Vibrant Magenta/Pink
+      let cB: [number, number, number] = [0.05, 0.85, 0.75]; // Cyber Cyan
       const cols = customColorsRef.current;
       if (cols.length === 1) {
         cA = cols[0];
@@ -420,8 +482,11 @@ export function MeshText({
       cancelled = true;
       cancelAnimationFrame(rafId);
       ro.disconnect();
+      io.disconnect();
       wrapper.removeEventListener("pointermove", onMove);
       wrapper.removeEventListener("pointerleave", onLeave);
+      wrapper.removeEventListener("touchmove", onTouchMove);
+      wrapper.removeEventListener("touchend", onLeave);
       gl.deleteBuffer(posBuf);
       gl.deleteBuffer(uvBuf);
       gl.deleteBuffer(dispBuf);
@@ -432,18 +497,28 @@ export function MeshText({
       gl.deleteShader(vs);
       gl.deleteShader(fs);
     };
-  }, [text, color, fontFamily, fontWeight, fontStyle, fontSize]);
+  }, [text, color, fontFamily, fontWeight, fontStyle, fontSize, gradientColors]);
+
+  const defaultHeight = typeof height !== "undefined" ? height : `${Math.round(fontSize * 1.35)}px`;
+
+  if (!isSupported) {
+    return (
+      <div
+        className={`relative flex items-center justify-center font-black tracking-tight text-white select-none ${className}`}
+        style={{ fontSize: `${fontSize}px`, minHeight: defaultHeight, ...style }}
+      >
+        {text}
+      </div>
+    );
+  }
 
   return (
     <div
       ref={wrapperRef}
-      className={`relative w-full overflow-hidden select-none cursor-pointer ${className}`}
-      style={{ minHeight: `${fontSize * 1.3}px`, ...style }}
+      className={`relative w-full overflow-hidden select-none cursor-pointer flex items-center justify-center ${className}`}
+      style={{ height: defaultHeight, minHeight: defaultHeight, touchAction: "none", ...style }}
     >
-      <canvas
-        ref={canvasRef}
-        className="block w-full h-full"
-      />
+      <canvas ref={canvasRef} className="block w-full h-full pointer-events-none" />
     </div>
   );
 }
