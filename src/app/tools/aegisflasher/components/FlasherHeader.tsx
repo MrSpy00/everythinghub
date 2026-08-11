@@ -152,7 +152,7 @@ export const FlasherHeader: React.FC<FlasherHeaderProps> = ({
             </div>
 
             {/* Baud Selector */}
-            <div className="flex items-center justify-between gap-2">
+            <div className="relative z-30 flex items-center justify-between gap-2">
               <label className="text-xs text-zinc-400 flex items-center gap-1 shrink-0">
                 <Sliders className="w-3 h-3 text-zinc-500" />
                 {t("speed_label")}

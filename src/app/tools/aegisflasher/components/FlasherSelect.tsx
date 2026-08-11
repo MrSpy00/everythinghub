@@ -71,7 +71,7 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
   };
 
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div ref={containerRef} className={`w-full ${isOpen ? "relative z-50" : "relative z-10"} ${className}`}>
       {/* Trigger Button */}
       <button
         type="button"

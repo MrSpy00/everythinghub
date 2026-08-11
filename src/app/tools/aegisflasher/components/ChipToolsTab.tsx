@@ -110,7 +110,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
                 className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-3 py-2.5 text-xs font-mono text-zinc-100 focus:outline-none focus:border-violet-500"
               />
             </div>
-            <div>
+            <div className="relative z-30">
               <label className="text-[11px] text-zinc-400 block mb-1">{t("tools_read_size")}</label>
               <FlasherSelect
                 options={[

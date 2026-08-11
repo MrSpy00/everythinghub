@@ -238,7 +238,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Top Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         {/* Left Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Baud Rate */}
