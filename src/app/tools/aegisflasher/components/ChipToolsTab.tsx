@@ -12,6 +12,7 @@ import {
 import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
 import { NvsConfigEntry, NvsConfigGenerator } from "@/lib/flasher/nvs-config-generator";
+import { FlasherSelect } from "./FlasherSelect";
 
 interface ChipToolsTabProps {
   status: ConnectionStatus;
@@ -111,21 +112,19 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
             </div>
             <div>
               <label className="text-[11px] text-zinc-400 block mb-1">{t("tools_read_size")}</label>
-              <div className="relative">
-                <select
-                  aria-label={t("tools_read_size")}
-                  value={dumpSizeMb}
-                  onChange={(e) => setDumpSizeMb(Number(e.target.value))}
-                  className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2.5 text-xs font-semibold text-zinc-100 focus:outline-none focus:border-violet-500 cursor-pointer"
-                >
-                  <option value={1} className="bg-zinc-900">1 MB (ESP8266 Mini)</option>
-                  <option value={2} className="bg-zinc-900">2 MB</option>
-                  <option value={4} className="bg-zinc-900">4 MB (ESP32 Standard)</option>
-                  <option value={8} className="bg-zinc-900">8 MB (ESP32-S3 / WROVER)</option>
-                  <option value={16} className="bg-zinc-900">16 MB (Large Flash)</option>
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-              </div>
+              <FlasherSelect
+                options={[
+                  { value: 1, label: "1 MB", subtitle: "ESP8266 Mini" },
+                  { value: 2, label: "2 MB" },
+                  { value: 4, label: "4 MB", subtitle: "ESP32 Standard", badge: "Default" },
+                  { value: 8, label: "8 MB", subtitle: "ESP32-S3 / WROVER" },
+                  { value: 16, label: "16 MB", subtitle: "Large Flash" },
+                ]}
+                value={dumpSizeMb}
+                onChange={(val) => setDumpSizeMb(Number(val))}
+                ariaLabel={t("tools_read_size")}
+                size="md"
+              />
             </div>
           </div>
         </div>

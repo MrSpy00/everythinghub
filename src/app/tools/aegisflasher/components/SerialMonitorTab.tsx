@@ -24,6 +24,7 @@ import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
 import { parseAnsiString, AnsiToken } from "@/lib/flasher/ansi-parser";
 
 import { Language, useTranslation } from "@/lib/flasher/i18n";
+import { FlasherSelect, FlasherSelectOption } from "./FlasherSelect";
 
 interface SerialMonitorTabProps {
   status: ConnectionStatus;
@@ -241,60 +242,60 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
         {/* Left Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Baud Rate */}
-          <div className="relative">
-            <select
-              aria-label="Seri Monitör Aktif Baud Hızı"
+          <div className="min-w-[140px]">
+            <FlasherSelect
+              options={[
+                { value: 9600, label: "9600 baud" },
+                { value: 19200, label: "19200 baud" },
+                { value: 38400, label: "38400 baud" },
+                { value: 57600, label: "57600 baud" },
+                { value: 74880, label: "74880 baud", subtitle: "ESP8266 Boot" },
+                { value: 115200, label: "115200 baud", subtitle: lang === "en" ? "Standard" : "Varsayılan" },
+                { value: 230400, label: "230400 baud" },
+                { value: 460800, label: "460800 baud" },
+                { value: 921600, label: "921600 baud", badge: "Fast" },
+                { value: 1500000, label: "1500000 baud" },
+                { value: 2000000, label: "2000000 baud" },
+              ]}
               value={selectedBaud}
-              onChange={(e) => onBaudChange(Number(e.target.value))}
-              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
-            >
-              <option value={9600}>9600 baud</option>
-              <option value={19200}>19200 baud</option>
-              <option value={38400}>38400 baud</option>
-              <option value={57600}>57600 baud</option>
-              <option value={74880}>74880 baud (ESP8266 Boot)</option>
-              <option value={115200}>115200 baud (Varsayılan)</option>
-              <option value={230400}>230400 baud</option>
-              <option value={460800}>460800 baud</option>
-              <option value={921600}>921600 baud</option>
-              <option value={1500000}>1500000 baud</option>
-              <option value={2000000}>2000000 baud</option>
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              onChange={(val) => onBaudChange(Number(val))}
+              size="sm"
+              ariaLabel="Seri Monitör Aktif Baud Hızı"
+            />
           </div>
 
           {/* Line Ending */}
-          <div className="relative">
-            <select
-              aria-label="Satır Sonu Karakteri Seçimi"
+          <div className="min-w-[160px]">
+            <FlasherSelect
+              options={[
+                { value: "crlf", label: lang === "en" ? "Both NL & CR (\\r\\n)" : "Hem NL hem CR (\\r\\n)" },
+                { value: "lf", label: lang === "en" ? "Only NL (\\n)" : "Yalnızca NL (\\n)" },
+                { value: "cr", label: lang === "en" ? "Only CR (\\r)" : "Yalnızca CR (\\r)" },
+                { value: "none", label: lang === "en" ? "No Line Ending" : "Satır Sonu Yok" },
+              ]}
               value={lineEnding}
-              onChange={(e) => setLineEnding(e.target.value)}
-              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
-            >
-              <option value="crlf">Hem NL hem CR (\r\n)</option>
-              <option value="lf">Yalnızca NL (\n)</option>
-              <option value="cr">Yalnızca CR (\r)</option>
-              <option value="none">Satır Sonu Yok</option>
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              onChange={(val) => setLineEnding(String(val))}
+              size="sm"
+              ariaLabel="Satır Sonu Karakteri Seçimi"
+            />
           </div>
 
           {/* Direction Filter */}
-          <div className="relative">
-            <select
-              aria-label="Log Yönü ve Önem Derecesi Filtresi"
+          <div className="min-w-[140px]">
+            <FlasherSelect
+              options={[
+                { value: "all", label: t("terminal_all_logs") },
+                { value: "rx", label: lang === "en" ? "Incoming (RX)" : "Gelen (RX)" },
+                { value: "tx", label: lang === "en" ? "Outgoing (TX)" : "Giden (TX)" },
+                { value: "err", label: lang === "en" ? "Errors (ERR)" : "Hatalar (ERR)" },
+                { value: "warn", label: lang === "en" ? "Warnings (WARN)" : "Uyarılar (WARN)" },
+                { value: "sys", label: lang === "en" ? "System (SYS)" : "Sistem (SYS)" },
+              ]}
               value={filterSeverity}
-              onChange={(e) => setFilterSeverity(e.target.value)}
-              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
-            >
-              <option value="all">Tüm Loglar</option>
-              <option value="rx">Gelen (RX)</option>
-              <option value="tx">Giden (TX)</option>
-              <option value="err">Hatalar (ERR)</option>
-              <option value="warn">Uyarılar (WARN)</option>
-              <option value="sys">Sistem (SYS)</option>
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              onChange={(val) => setFilterSeverity(String(val))}
+              size="sm"
+              ariaLabel="Log Yönü ve Önem Derecesi Filtresi"
+            />
           </div>
 
           {/* Timestamps Toggle */}

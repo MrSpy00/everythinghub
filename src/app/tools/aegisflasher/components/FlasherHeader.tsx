@@ -19,6 +19,7 @@ import {
 import MeshText from "@/components/creative/MeshText";
 import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
+import { FlasherSelect } from "./FlasherSelect";
 
 interface FlasherHeaderProps {
   status: ConnectionStatus;
@@ -152,27 +153,27 @@ export const FlasherHeader: React.FC<FlasherHeaderProps> = ({
 
             {/* Baud Selector */}
             <div className="flex items-center justify-between gap-2">
-              <label className="text-xs text-zinc-400 flex items-center gap-1">
+              <label className="text-xs text-zinc-400 flex items-center gap-1 shrink-0">
                 <Sliders className="w-3 h-3 text-zinc-500" />
                 {t("speed_label")}
               </label>
-              <div className="relative flex-1 max-w-[170px]">
-                <select
-                  aria-label={t("speed_label")}
+              <div className="flex-1 max-w-[170px]">
+                <FlasherSelect
+                  options={[
+                    { value: 115200, label: "115,200 baud", subtitle: lang === "en" ? "Standard" : "Standart" },
+                    { value: 230400, label: "230,400 baud" },
+                    { value: 460800, label: "460,800 baud", subtitle: lang === "en" ? "Fast" : "Hızlı" },
+                    { value: 921600, label: "921,600 baud", subtitle: lang === "en" ? "Ultra Speed" : "Yüksek Hız", badge: "Fast" },
+                    { value: 1500000, label: "1,500,000 baud", badge: "Max" },
+                    { value: 57600, label: "57,600 baud" },
+                    { value: 9600, label: "9,600 baud", subtitle: lang === "en" ? "Legacy / GPS" : "Eski Kartlar" },
+                  ]}
                   value={selectedBaud}
-                  onChange={(e) => onBaudChange(Number(e.target.value))}
+                  onChange={(val) => onBaudChange(Number(val))}
                   disabled={status === "flashing" || status === "erasing" || status === "reading"}
-                  className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-xl pl-2.5 pr-7 py-1 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
-                >
-                  <option value={115200}>115,200 baud</option>
-                  <option value={230400}>230,400 baud</option>
-                  <option value={460800}>460,800 baud</option>
-                  <option value={921600}>921,600 baud</option>
-                  <option value={1500000}>1,500,000 baud</option>
-                  <option value={57600}>57,600 baud</option>
-                  <option value={9600}>9,600 baud</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-400 pointer-events-none" />
+                  size="sm"
+                  ariaLabel={t("speed_label")}
+                />
               </div>
             </div>
 

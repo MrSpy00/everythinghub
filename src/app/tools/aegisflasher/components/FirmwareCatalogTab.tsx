@@ -18,10 +18,10 @@ import {
   Info,
   Zap,
 } from "lucide-react";
-import { FIRMWARE_CATALOG } from "@/lib/flasher/firmware-catalog";
+import { FIRMWARE_CATALOG, getLocalizedFirmware, getLocalizedBuildDescription } from "@/lib/flasher/firmware-catalog";
 import { ChipFamily, ConnectionStatus, FirmwareProfile, FlashPartitionFile, MicrocontrollerCategory } from "@/lib/flasher/types";
 import { SmartUrlFlasher } from "./SmartUrlFlasher";
-
+import { FlasherSelect, FlasherSelectOption } from "./FlasherSelect";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
 
 interface FirmwareCatalogTabProps {
@@ -47,7 +47,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
   const [selectedBuildIndexes, setSelectedBuildIndexes] = useState<Record<string, number>>({});
 
   const filteredCatalog = useMemo(() => {
-    return FIRMWARE_CATALOG.filter((item) => {
+    return FIRMWARE_CATALOG.map((item) => getLocalizedFirmware(item, lang)).filter((item) => {
       const matchCategory = selectedCategory === "all" || item.category === selectedCategory;
       const matchChip =
         selectedChip === "all" || item.supportedChips.includes(selectedChip as ChipFamily);
@@ -59,7 +59,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
         item.author.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCategory && matchChip && matchSearch;
     });
-  }, [selectedCategory, selectedChip, searchQuery]);
+  }, [selectedCategory, selectedChip, searchQuery, lang]);
 
   const getOffsetBadgeInfo = (offsetVal: number | string) => {
     const num = typeof offsetVal === "number" ? offsetVal : parseInt(offsetVal, 16) || 0;
@@ -115,16 +115,16 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
     { id: "diagnostics", label: t("catalog_diagnostics") },
   ];
 
-  const chipFilters = [
-    { id: "all", label: t("all_chips") },
-    { id: "ESP32", label: "ESP32" },
-    { id: "ESP32-S3", label: "ESP32-S3" },
-    { id: "ESP32-C3", label: "ESP32-C3" },
-    { id: "ESP8266", label: "ESP8266" },
-    { id: "AVR-ATmega328P", label: "Arduino Uno / Nano" },
-    { id: "AVR-ATmega2560", label: "Arduino Mega" },
-    { id: "RP2040", label: "RP2040 (Pico)" },
-    { id: "STM32F103", label: "STM32 BluePill" },
+  const chipFilterOptions: FlasherSelectOption[] = [
+    { value: "all", label: t("all_chips") },
+    { value: "ESP32", label: "ESP32" },
+    { value: "ESP32-S3", label: "ESP32-S3" },
+    { value: "ESP32-C3", label: "ESP32-C3" },
+    { value: "ESP8266", label: "ESP8266" },
+    { value: "AVR-ATmega328P", label: "Arduino Uno / Nano" },
+    { value: "AVR-ATmega2560", label: "Arduino Mega" },
+    { value: "RP2040", label: "RP2040 (Pico)" },
+    { value: "STM32F103", label: "STM32 BluePill" },
   ];
 
   return (
@@ -142,24 +142,15 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
           />
         </div>
 
-        {/* Chip Filter Dropdown */}
-        <div className="flex items-center gap-2">
+        {/* Custom Glassmorphic Chip Filter Dropdown */}
+        <div className="flex items-center gap-2 min-w-[200px]">
           <Filter className="w-4 h-4 text-zinc-400 shrink-0" />
-          <div className="relative">
-            <select
-              aria-label="Mikrokontrolcü Çip Ailesi Filtresi"
-              value={selectedChip}
-              onChange={(e) => setSelectedChip(e.target.value)}
-              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3.5 pr-9 py-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer shadow-inner"
-            >
-              {chipFilters.map((f) => (
-                <option key={f.id} value={f.id} className="bg-zinc-900 text-zinc-200">
-                  {f.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-          </div>
+          <FlasherSelect
+            options={chipFilterOptions}
+            value={selectedChip}
+            onChange={(val) => setSelectedChip(val)}
+            ariaLabel="Mikrokontrolcü Çip Ailesi Filtresi"
+          />
         </div>
       </div>
 
@@ -201,6 +192,19 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
           const activeBuildIdx = selectedBuildIndexes[fw.id] || 0;
           const currentBuild = buildsForVer[activeBuildIdx] || buildsForVer[0];
 
+          const versionSelectOptions: FlasherSelectOption[] = fw.availableVersions.map((v) => ({
+            value: v,
+            label: `v${v}`,
+            badge: v === fw.latestVersion ? (lang === "en" ? "Latest" : "Son Sürüm") : undefined,
+          }));
+
+          const buildSelectOptions: FlasherSelectOption[] = buildsForVer.map((b, idx) => ({
+            value: idx,
+            label: `${b.chip} — ${getLocalizedBuildDescription(b, lang)}`,
+            subtitle: b.minFlashSize ? `Min: ${b.minFlashSize}` : undefined,
+            badge: String(b.chip),
+          }));
+
           return (
             <div
               key={fw.id}
@@ -241,60 +245,42 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                   ))}
                 </div>
 
-                {/* Custom Liquid Glass Dropdowns */}
+                {/* Custom Animated Glassmorphic Dropdowns */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-white/5">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-medium text-zinc-400 flex items-center justify-between">
-                      <span>Sürüm</span>
+                      <span>{t("version_label")}</span>
                       <span className="text-[10px] text-zinc-500 font-mono">v{activeVer}</span>
                     </label>
-                    <div className="relative">
-                      <select
-                        aria-label={`${fw.name} Firmware Sürüm Seçimi`}
-                        value={activeVer}
-                        onChange={(e) => {
-                          setSelectedVersions({ ...selectedVersions, [fw.id]: e.target.value });
-                          setSelectedBuildIndexes({ ...selectedBuildIndexes, [fw.id]: 0 });
-                        }}
-                        className="w-full appearance-none bg-zinc-900/90 hover:bg-zinc-850 border border-white/10 hover:border-violet-500/40 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-100 focus:outline-none focus:border-violet-500 cursor-pointer transition-all pr-8"
-                      >
-                        {fw.availableVersions.map((v) => (
-                          <option key={v} value={v} className="bg-zinc-900 text-zinc-200">
-                            v{v}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                    </div>
+                    <FlasherSelect
+                      options={versionSelectOptions}
+                      value={activeVer}
+                      onChange={(val) => {
+                        setSelectedVersions({ ...selectedVersions, [fw.id]: String(val) });
+                        setSelectedBuildIndexes({ ...selectedBuildIndexes, [fw.id]: 0 });
+                      }}
+                      size="sm"
+                    />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-medium text-zinc-400 flex items-center justify-between">
-                      <span>Hedef Çip</span>
+                      <span>{t("target_model_label")}</span>
                       <span className="text-[10px] text-violet-300 font-mono">
                         {currentBuild?.chip || "Model"}
                       </span>
                     </label>
-                    <div className="relative">
-                      <select
-                        aria-label={`${fw.name} Hedef Kart ve Çip Modeli Seçimi`}
-                        value={activeBuildIdx}
-                        onChange={(e) =>
-                          setSelectedBuildIndexes({
-                            ...selectedBuildIndexes,
-                            [fw.id]: Number(e.target.value),
-                          })
-                        }
-                        className="w-full appearance-none bg-zinc-900/90 hover:bg-zinc-850 border border-white/10 hover:border-violet-500/40 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-100 focus:outline-none focus:border-violet-500 cursor-pointer transition-all pr-8 truncate"
-                      >
-                        {buildsForVer.map((b, idx) => (
-                          <option key={idx} value={idx} className="bg-zinc-900 text-zinc-200">
-                            {b.chip} — {b.description?.slice(0, 24)}...
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                    </div>
+                    <FlasherSelect
+                      options={buildSelectOptions}
+                      value={activeBuildIdx}
+                      onChange={(val) =>
+                        setSelectedBuildIndexes({
+                          ...selectedBuildIndexes,
+                          [fw.id]: Number(val),
+                        })
+                      }
+                      size="sm"
+                    />
                   </div>
                 </div>
 

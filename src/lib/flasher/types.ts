@@ -89,6 +89,7 @@ export interface FirmwareManifestBuild {
   version: string;
   releaseDate?: string;
   description?: string;
+  descriptionEn?: string;
   minFlashSize?: string;
   parts: FirmwareManifestBuildPart[];
 }
@@ -97,12 +98,16 @@ export interface FirmwareProfile {
   id: string;
   name: string;
   tagline: string;
+  taglineEn?: string;
   description: string;
+  descriptionEn?: string;
   longDescription?: string;
+  longDescriptionEn?: string;
   category: MicrocontrollerCategory;
   supportedChips: ChipFamily[];
   stars?: string;
   badge?: string;
+  badgeEn?: string;
   author: string;
   websiteUrl?: string;
   githubUrl?: string;
