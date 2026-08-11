@@ -309,13 +309,13 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${outfit.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#09090b] text-[#fafafa] min-h-screen selection:bg-indigo-500/30 selection:text-white font-sans`}
       >
-        {/* Creative WebGL Ambient Background */}
-        <DottedBackground />
-
-        {/* Studio User Follower Cursor */}
-        <UserCursor name="EverythingHub" color="#8b5cf6" size={26} />
-
         <LanguageProvider>
+          {/* Creative WebGL Ambient Background */}
+          <DottedBackground />
+
+          {/* Studio User Follower Cursor */}
+          <UserCursor name="EverythingHub" color="#8b5cf6" size={26} />
+
           {/* Main Application Container */}
           <div className="relative z-10 flex min-h-screen flex-col">
             <Header />
