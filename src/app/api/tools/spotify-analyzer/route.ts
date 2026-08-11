@@ -3,6 +3,7 @@ import {
   parseSpotifyUrl,
   calculateBotAndSafetyScore,
   classifyDominantMood,
+  formatKeyAndCamelot,
   unescapeHtml,
   DEMO_PLAYLISTS,
   DEMO_PROFILES,
@@ -240,6 +241,26 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
 
           const { score, riskLevel, botFlags, pitchingVerdict, artistDiversityHHI, duplicates } = calculateBotAndSafetyScore(tracks);
 
+          // Calculate dynamic key distribution from track audio features
+          const keyCounts: Record<string, { name: string; camelot: string; count: number }> = {};
+          tracks.forEach((t) => {
+            const k = t.audioFeatures?.key ?? 0;
+            const m = t.audioFeatures?.mode ?? 1;
+            const info = formatKeyAndCamelot(k, m);
+            const keyKey = `${info.name} (${info.camelot})`;
+            if (!keyCounts[keyKey]) {
+              keyCounts[keyKey] = { name: info.name, camelot: info.camelot, count: 0 };
+            }
+            keyCounts[keyKey].count++;
+          });
+          const sortedKeys = Object.values(keyCounts).sort((a, b) => b.count - a.count);
+          const keyDistribution = sortedKeys.slice(0, 5).map((item) => ({
+            keyName: item.name,
+            camelot: item.camelot,
+            count: item.count,
+            percentage: Math.round((item.count / (tracks.length || 1)) * 100),
+          }));
+
           return {
             id: playlistId,
             title,
@@ -272,15 +293,13 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
               avgTempo: Math.round(tracks.reduce((a, b) => a + (b.audioFeatures?.tempo || 120), 0) / (tracks.length || 1)),
               medianTempo,
               avgLoudness: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.loudness || -6), 0) / (tracks.length || 1)).toFixed(1)),
+              isEstimated: true,
             },
             dominantMood: mood,
             topGenres: computedGenres,
-            keyDistribution: [
+            keyDistribution: keyDistribution.length > 0 ? keyDistribution : [
               { keyName: "A Minör", camelot: "8A", count: Math.max(1, Math.round(tracks.length * 0.25)), percentage: 25 },
               { keyName: "C Majör", camelot: "8B", count: Math.max(1, Math.round(tracks.length * 0.22)), percentage: 22 },
-              { keyName: "G Majör", camelot: "9B", count: Math.max(1, Math.round(tracks.length * 0.16)), percentage: 16 },
-              { keyName: "E Minör", camelot: "9A", count: Math.max(1, Math.round(tracks.length * 0.12)), percentage: 12 },
-              { keyName: "Diğer Tonlar", camelot: "Var", count: Math.max(1, Math.round(tracks.length * 0.25)), percentage: 25 },
             ],
             decadeDistribution: [
               { decade: "2020s", count: Math.round(tracks.length * 0.8), percentage: 80 },

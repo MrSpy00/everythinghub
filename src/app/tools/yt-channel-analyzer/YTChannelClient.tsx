@@ -23,6 +23,7 @@ import {
   Play,
   Calendar,
   CheckCircle2,
+  User,
   ChevronDown,
   ChevronUp,
   LayoutGrid,
@@ -418,33 +419,49 @@ export default function YTChannelClient() {
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0e1017] shadow-2xl">
             {/* Banner Artwork */}
             <div className="relative h-48 sm:h-72 w-full bg-zinc-900 overflow-hidden group/banner">
-              <img src={channelData.bannerUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=2560"} alt="Channel Banner" className="w-full h-full object-cover" />
+              {channelData.bannerUrl ? (
+                <img src={channelData.bannerUrl} alt="Channel Banner" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-rose-950/40 via-zinc-900 to-indigo-950/40 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rose-500/10 via-transparent to-transparent" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0e1017] via-[#0e1017]/40 to-black/30" />
-              <button
-                onClick={handleDownloadBanner}
-                className="absolute top-4 right-4 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/60 border border-white/20 text-white text-xs font-bold opacity-0 group-hover/banner:opacity-100 transition-opacity cursor-pointer backdrop-blur-md hover:bg-black/80"
-              >
-                <Download className="w-3.5 h-3.5 text-rose-400" />
-                <span>{isTurkish ? "2560x1440 HD Banner İndir" : "Download HD Banner"}</span>
-              </button>
+              {channelData.bannerUrl && (
+                <button
+                  onClick={handleDownloadBanner}
+                  className="absolute top-4 right-4 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/60 border border-white/20 text-white text-xs font-bold opacity-0 group-hover/banner:opacity-100 transition-opacity cursor-pointer backdrop-blur-md hover:bg-black/80"
+                >
+                  <Download className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{isTurkish ? "2560x1440 HD Banner İndir" : "Download HD Banner"}</span>
+                </button>
+              )}
             </div>
 
             {/* Centered Profile Info Row */}
             <div className="relative px-6 sm:px-10 pb-8 pt-0 flex flex-col items-center text-center -mt-20 sm:-mt-24 space-y-4">
               {/* Avatar */}
               <div className="relative group/avatar shrink-0">
-                <img
-                  src={channelData.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800"}
-                  alt={channelData.title}
-                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0e1017] shadow-2xl ring-4 ring-rose-500/20"
-                />
-                <button
-                  onClick={handleDownloadAvatar}
-                  className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center gap-1 text-white text-xs font-bold transition-opacity cursor-pointer"
-                >
-                  <Download className="w-5 h-5 text-rose-400" />
-                  <span>HD İndir</span>
-                </button>
+                {channelData.avatarUrl ? (
+                  <img
+                    src={channelData.avatarUrl}
+                    alt={channelData.title}
+                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0e1017] shadow-2xl ring-4 ring-rose-500/20"
+                  />
+                ) : (
+                  <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-zinc-800 border-4 border-[#0e1017] shadow-2xl ring-4 ring-rose-500/20 flex items-center justify-center">
+                    <User className="w-16 h-16 text-zinc-500" />
+                  </div>
+                )}
+                {channelData.avatarUrl && (
+                  <button
+                    onClick={handleDownloadAvatar}
+                    className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center gap-1 text-white text-xs font-bold transition-opacity cursor-pointer"
+                  >
+                    <Download className="w-5 h-5 text-rose-400" />
+                    <span>HD İndir</span>
+                  </button>
+                )}
               </div>
 
               {/* Title & Badges */}

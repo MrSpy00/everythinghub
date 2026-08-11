@@ -101,6 +101,7 @@ export interface SpotifyPlaylistAnalysis {
     avgTempo: number;
     medianTempo: number;
     avgLoudness: number;
+    isEstimated?: boolean;
   };
   dominantMood: DominantMood;
   topGenres: { genre: string; count: number; percentage: number }[];

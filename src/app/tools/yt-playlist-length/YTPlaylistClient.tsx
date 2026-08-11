@@ -618,7 +618,7 @@ export function YTPlaylistClient() {
                     className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[var(--hub-text-muted)] hover:border-indigo-500/40 hover:text-white transition-all flex items-center gap-1.5"
                     data-cursor="Örnek"
                   >
-                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300 font-bold">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-bold">
                       {ex.category}
                     </span>
                     <span>{ex.name}</span>

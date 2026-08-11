@@ -184,7 +184,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                               {title}
                             </span>
                             {tool.newBadge && (
-                              <span className="rounded-full bg-emerald-500/20 px-2 py-0.2 text-[9px] font-bold text-emerald-300 border border-emerald-500/30">
+                              <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300 border border-emerald-500/30">
                                 {isTurkish ? "YENİ" : "NEW"}
                               </span>
                             )}
