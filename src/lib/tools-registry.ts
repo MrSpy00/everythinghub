@@ -34,6 +34,7 @@ import {
   Database,
   BookOpen,
   HelpCircle,
+  Cpu,
   type LucideIcon,
 } from "lucide-react";
 
@@ -83,6 +84,37 @@ export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
 };
 
 export const tools: Tool[] = [
+  // 0. aegisFlasher (Featured Flagship)
+  {
+    slug: "aegisflasher",
+    title: "aegisFlasher — Evrensel Web Mikrokontrolcü Flaşlayıcı & Seri Monitör",
+    description:
+      "ESP32, ESP8266, Arduino AVR, Raspberry Pi Pico ve STM32 için sıfır kurulumlu Web Serial firmware flaşlayıcı, 30+ hazır firmware kataloğu, bellek dökümü ve ANSI terminal",
+    icon: Cpu,
+    category: "developer",
+    accentColor: "#8b5cf6",
+    accentClass: "from-violet-500 to-indigo-600",
+    status: "live",
+    tags: [
+      "flasher",
+      "esp32",
+      "esp8266",
+      "arduino",
+      "pico",
+      "stm32",
+      "webserial",
+      "wled",
+      "tasmota",
+      "meshtastic",
+      "marauder",
+      "esptool",
+      "stk500",
+      "terminal",
+      "geliştirici",
+    ],
+    featured: true,
+    newBadge: true,
+  },
   // 1. Zero-Auth API Playground (Featured New)
   {
     slug: "api-playground",

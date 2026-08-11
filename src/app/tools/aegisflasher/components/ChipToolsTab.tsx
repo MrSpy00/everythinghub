@@ -1,0 +1,277 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  Cpu,
+  HardDrive,
+  Download,
+  Trash2,
+  Wifi,
+  Key,
+  Server,
+  Settings,
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  Sliders,
+} from "lucide-react";
+import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
+import { NvsConfigEntry, NvsConfigGenerator } from "@/lib/flasher/nvs-config-generator";
+
+interface ChipToolsTabProps {
+  status: ConnectionStatus;
+  telemetry: ChipTelemetry | null;
+  onReadFlashDump: (offset: number, sizeBytes: number) => void;
+  onEraseChip: () => void;
+  onFlashNvs: (nvsBinary: Uint8Array, offset: number) => void;
+}
+
+export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
+  status,
+  telemetry,
+  onReadFlashDump,
+  onEraseChip,
+  onFlashNvs,
+}) => {
+  // Dump settings
+  const [dumpOffsetHex, setDumpOffsetHex] = useState("0x0");
+  const [dumpSizeMb, setDumpSizeMb] = useState<number>(4);
+
+  // NVS Generator settings
+  const [wifiSsid, setWifiSsid] = useState("");
+  const [wifiPassword, setWifiPassword] = useState("");
+  const [deviceName, setDeviceName] = useState("aegis-device");
+  const [mqttHost, setMqttHost] = useState("");
+  const [mqttPort, setMqttPort] = useState("1883");
+  const [nvsGenerated, setNvsGenerated] = useState(false);
+
+  const handleGenerateAndFlashNvs = () => {
+    const entries: NvsConfigEntry[] = [];
+    if (wifiSsid.trim()) {
+      entries.push({ namespace: "config", key: "wifi_ssid", type: "string", value: wifiSsid.trim() });
+    }
+    if (wifiPassword.trim()) {
+      entries.push({ namespace: "config", key: "wifi_pass", type: "string", value: wifiPassword.trim() });
+    }
+    if (deviceName.trim()) {
+      entries.push({ namespace: "config", key: "dev_name", type: "string", value: deviceName.trim() });
+    }
+    if (mqttHost.trim()) {
+      entries.push({ namespace: "config", key: "mqtt_host", type: "string", value: mqttHost.trim() });
+      entries.push({ namespace: "config", key: "mqtt_port", type: "u16", value: parseInt(mqttPort, 10) || 1883 });
+    }
+
+    if (entries.length === 0) return;
+
+    const nvsBin = NvsConfigGenerator.generateNvsImage(entries, 0x4000);
+    onFlashNvs(nvsBin, 0x9000);
+    setNvsGenerated(true);
+  };
+
+  const handleDownloadNvsBin = () => {
+    const entries: NvsConfigEntry[] = [];
+    if (wifiSsid.trim()) entries.push({ namespace: "config", key: "wifi_ssid", type: "string", value: wifiSsid.trim() });
+    if (wifiPassword.trim()) entries.push({ namespace: "config", key: "wifi_pass", type: "string", value: wifiPassword.trim() });
+    if (deviceName.trim()) entries.push({ namespace: "config", key: "dev_name", type: "string", value: deviceName.trim() });
+
+    const nvsBin = NvsConfigGenerator.generateNvsImage(entries, 0x4000);
+    const blob = new Blob([nvsBin as any], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nvs_wifi_config_0x9000.bin`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+      {/* 1. Flash Backup & Memory Dumper Card */}
+      <div className="flex flex-col justify-between p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl shadow-xl">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-violet-400" />
+              Flash Bellek Yedeği Alma (Memory Dumper)
+            </h3>
+            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/30">
+              .bin Dökümü
+            </span>
+          </div>
+
+          <p className="text-xs text-zinc-300 leading-relaxed">
+            Bağlı mikrokontrolcünün flash belleğini (ROM, firmware, yapılandırmalar) eksiksiz okuyup bilgisayarınıza yedek <code className="text-violet-300">.bin</code> dosyası olarak indirin.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <div>
+              <label className="text-[11px] text-zinc-400 block mb-1">Başlangıç Ofseti:</label>
+              <input
+                type="text"
+                value={dumpOffsetHex}
+                onChange={(e) => setDumpOffsetHex(e.target.value)}
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-zinc-100"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-zinc-400 block mb-1">Okunacak Boyut:</label>
+              <select
+                aria-label="Flash Bellek Okuma Boyutu"
+                value={dumpSizeMb}
+                onChange={(e) => setDumpSizeMb(Number(e.target.value))}
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-100"
+              >
+                <option value={1}>1 MB (ESP8266 Mini)</option>
+                <option value={2}>2 MB</option>
+                <option value={4}>4 MB (ESP32 Standart)</option>
+                <option value={8}>8 MB (ESP32-S3 / WROVER)</option>
+                <option value={16}>16 MB (Geniş Flash)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={() => {
+              const offset = parseInt(dumpOffsetHex, 16) || 0;
+              const sizeBytes = dumpSizeMb * 1024 * 1024;
+              onReadFlashDump(offset, sizeBytes);
+            }}
+            disabled={status !== "connected"}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-violet-600/20 border border-violet-500/40 hover:bg-violet-600/30 hover:border-violet-400 transition-all disabled:opacity-40"
+          >
+            <Download className="w-4 h-4 text-violet-400" />
+            Flash Belleği Oku ve İndir
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Full Flash Erase Card */}
+      <div className="flex flex-col justify-between p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl shadow-xl">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-rose-400" />
+              Tam Flash Silme (Chip Erase)
+            </h3>
+            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/30">
+              Sıfırlama
+            </span>
+          </div>
+
+          <p className="text-xs text-zinc-300 leading-relaxed">
+            Bölüm tablosu çökmüş, açılış döngüsüne (bootloop) girmiş veya temiz bir başlangıç gerektiren çiplerin tüm sektörlerini <code className="text-rose-300">0xFF</code> ile sıfırlar.
+          </p>
+
+          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-200 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <span>
+              Bu işlem geri alınamaz. Kartın içerisindeki tüm firmware, NVS Wi-Fi bilgileri ve dosya sistemleri tamamen silinecektir.
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={onEraseChip}
+            disabled={status !== "connected"}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 transition-all disabled:opacity-40"
+          >
+            <Trash2 className="w-4 h-4" />
+            Tüm Çipi Sil (Erase Flash)
+          </button>
+        </div>
+      </div>
+
+      {/* 3. NVS Key-Value Wi-Fi & Device Config Generator */}
+      <div className="lg:col-span-2 flex flex-col p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl shadow-xl">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
+              <Wifi className="w-5 h-5 text-indigo-400" />
+              NVS Wi-Fi & Yapılandırma Yakıcı (0x9000)
+            </h3>
+            <p className="text-xs text-zinc-400 mt-1">
+              Firmware'i yeniden derlemeden Wi-Fi SSID, şifre ve cihaz parametrelerini doğrudan NVS belleğine yazın.
+            </p>
+          </div>
+          <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
+            NVS Partition (0x9000)
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="text-xs text-zinc-400 block mb-1">Wi-Fi Ağ Adı (SSID):</label>
+            <input
+              type="text"
+              placeholder="Ev Wi-Fi"
+              value={wifiSsid}
+              onChange={(e) => setWifiSsid(e.target.value)}
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-zinc-400 block mb-1">Wi-Fi Şifresi:</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={wifiPassword}
+              onChange={(e) => setWifiPassword(e.target.value)}
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-zinc-400 block mb-1">Cihaz Adı (Hostname):</label>
+            <input
+              type="text"
+              placeholder="aegis-device"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-zinc-400 block mb-1">MQTT Broker (Opsiyonel):</label>
+            <input
+              type="text"
+              placeholder="192.168.1.50"
+              value={mqttHost}
+              onChange={(e) => setMqttHost(e.target.value)}
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-end gap-3 mt-6 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={handleDownloadNvsBin}
+            disabled={!wifiSsid.trim()}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-zinc-300 bg-zinc-900 border border-white/10 hover:text-white hover:bg-zinc-800 transition-all disabled:opacity-40"
+          >
+            <Download className="w-3.5 h-3.5" />
+            NVS .bin Dosyası İndir
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGenerateAndFlashNvs}
+            disabled={!wifiSsid.trim() || status !== "connected"}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600/25 border border-indigo-500/40 hover:bg-indigo-600/40 transition-all disabled:opacity-40"
+          >
+            <Wifi className="w-3.5 h-3.5 text-indigo-300" />
+            Cihaza Yazdır (Flash to 0x9000)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
