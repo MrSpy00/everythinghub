@@ -35,6 +35,7 @@ import { BrowserSupportModal } from "./components/BrowserSupportModal";
 import { WebSerialManager } from "@/lib/flasher/webserial-manager";
 import { EspFlasherEngine } from "@/lib/flasher/esp-flasher-engine";
 import { Stk500FlasherEngine } from "@/lib/flasher/stk500-flasher-engine";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
 import {
   ChipTelemetry,
@@ -59,9 +60,9 @@ export type StudioTab =
   | "drivers";
 
 export const AegisFlasherClient: React.FC = () => {
-  // Localization State
-  const [lang, setLang] = useState<Language>("tr");
-  const t = useTranslation(lang);
+  // Localization State connected to global site Language Context
+  const { lang, setLang } = useLanguage();
+  const t = useTranslation(lang as Language);
 
   // Navigation & Core State
   const [activeTab, setActiveTab] = useState<StudioTab>("catalog");
@@ -86,27 +87,10 @@ export const AegisFlasherClient: React.FC = () => {
 
   const isSerialSupported = WebSerialManager.isSupported();
 
-  // Load language preference
-  useEffect(() => {
-    try {
-      const savedLang = localStorage.getItem("aegis_flasher_lang") as Language;
-      if (savedLang === "tr" || savedLang === "en") {
-        setLang(savedLang);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
   const handleToggleLang = () => {
     const next = lang === "tr" ? "en" : "tr";
-    setLang(next);
-    try {
-      localStorage.setItem("aegis_flasher_lang", next);
-    } catch {
-      // ignore
-    }
-    toast.success(next === "tr" ? "Dil Türkçe olarak ayarlandı." : "Language set to English.");
+    setLang(next as any);
+    toast.success(next === "tr" ? t("lang_set_tr") : t("lang_set_en"));
   };
 
   // Log handler
@@ -603,6 +587,7 @@ export const AegisFlasherClient: React.FC = () => {
       <BrowserSupportModal
         isOpen={showSupportModal}
         onClose={() => setShowSupportModal(false)}
+        lang={lang}
       />
 
       {/* Top Header with Metallic MeshText, Language Switcher & Controls */}

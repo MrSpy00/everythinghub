@@ -177,15 +177,15 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
         <div className="flex flex-col gap-3 p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-              Yazılacak Bölümler ({files.length} Dosya • {(totalBytes / 1024).toFixed(1)} KB)
+              {t("partitions_to_write")} ({files.length} {t("files_count")} • {(totalBytes / 1024).toFixed(1)} KB)
             </span>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1 text-xs text-violet-300 hover:text-violet-200"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-violet-300 hover:text-violet-200 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              Dosya Ekle
+              {t("add_file")}
             </button>
           </div>
 
@@ -195,7 +195,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                 key={file.id}
                 className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-zinc-900/80 border border-white/5 hover:border-violet-500/30 transition-all"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="p-2 rounded-xl bg-zinc-800 text-violet-400 shrink-0">
                     <FileCode className="w-4 h-4" />
                   </div>
@@ -205,15 +205,15 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                     </span>
                     <span className="text-[10px] font-mono text-zinc-400">
                       {file.sizeBytes > 0
-                        ? `${(file.sizeBytes / 1024).toFixed(1)} KB (${file.sizeBytes.toLocaleString()} bayt)`
-                        : "Dosya bekleniyor..."}
+                        ? `${(file.sizeBytes / 1024).toFixed(1)} KB (${file.sizeBytes.toLocaleString()} ${t("bytes_unit")})`
+                        : t("waiting_for_file")}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 self-end sm:self-auto">
+                <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-zinc-400 font-mono">Ofset:</span>
+                    <span className="text-xs text-zinc-400 font-mono">{t("offset_label")}</span>
                     <input
                       type="text"
                       value={file.offsetHex}
@@ -226,7 +226,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                     type="button"
                     onClick={() => onRemoveFile(file.id)}
                     className="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                    title="Kaldır"
+                    title={t("remove_file")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -243,7 +243,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-violet-300 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-ping" />
-              {currentStatusText || "Yazma işlemi devam ediyor..."}
+              {currentStatusText || t("flash_writing_in_progress")}
             </span>
             <span className="font-mono text-sm font-bold text-violet-400">%{progressPercent}</span>
           </div>

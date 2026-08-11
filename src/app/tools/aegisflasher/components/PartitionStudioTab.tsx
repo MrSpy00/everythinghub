@@ -69,7 +69,7 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
           <Layers className="w-4 h-4 text-violet-400" />
-          Hazır Bölüm Şablonu:
+          {t("quick_presets")}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {PARTITION_PRESETS.map((preset) => (
@@ -93,9 +93,9 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
       <div className="p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
-            Görsel Bellek Haritası (Flash Layout)
+            {t("partition_layout_bar")}
           </h4>
-          <span className="text-xs font-mono text-zinc-400">Toplam: 4.0 MB Flash</span>
+          <span className="text-xs font-mono text-zinc-400">{t("partition_total_flash")} 4.0 MB Flash</span>
         </div>
 
         {/* Proportional Memory Bar */}
@@ -145,7 +145,7 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col gap-1.5 text-xs text-rose-200">
           <span className="font-bold flex items-center gap-1.5 text-rose-300">
             <AlertTriangle className="w-4 h-4 text-rose-400" />
-            Bellek Çakışması / Hata Tespit Edildi:
+            {lang === "tr" ? "Bellek Çakışması / Hata Tespit Edildi:" : "Partition Overlap / Conflict Detected:"}
           </span>
           {validation.errors.map((err, i) => (
             <span key={i} className="font-mono ml-5 text-rose-300">
@@ -159,7 +159,7 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
       <div className="p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-            Bölüm Tablosu Satırları ({partitions.length} Alan)
+            {t("tab_partition")} ({partitions.length} {lang === "tr" ? "Bölüm" : "Partitions"})
           </h4>
           <div className="flex items-center gap-2">
             <button
@@ -168,7 +168,7 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-medium text-zinc-200 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] backdrop-blur-xl transition-all"
             >
               <Download className="w-3.5 h-3.5" />
-              CSV İndir
+              {t("partition_csv_download")}
             </button>
             <button
               type="button"
@@ -176,7 +176,7 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-semibold text-white bg-violet-600/25 border border-violet-500/40 hover:bg-violet-600/35 backdrop-blur-xl transition-all"
             >
               <FileCode className="w-3.5 h-3.5 text-violet-300" />
-              Binary (.bin) İndir
+              {t("partition_bin_download")}
             </button>
           </div>
         </div>
@@ -185,12 +185,12 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
           <table className="w-full text-left text-xs font-mono">
             <thead>
               <tr className="border-b border-white/10 text-zinc-400">
-                <th className="pb-2.5 font-semibold">Adı (Name)</th>
-                <th className="pb-2.5 font-semibold">Türü (Type)</th>
-                <th className="pb-2.5 font-semibold">Alt Tür (SubType)</th>
-                <th className="pb-2.5 font-semibold">Başlangıç Ofseti</th>
-                <th className="pb-2.5 font-semibold">Boyut (Size)</th>
-                <th className="pb-2.5 font-semibold text-right">İşlem</th>
+                <th className="pb-2.5 font-semibold">{t("partition_name")}</th>
+                <th className="pb-2.5 font-semibold">{t("partition_type")}</th>
+                <th className="pb-2.5 font-semibold">{t("partition_subtype")}</th>
+                <th className="pb-2.5 font-semibold">{t("partition_offset")}</th>
+                <th className="pb-2.5 font-semibold">{t("partition_size")}</th>
+                <th className="pb-2.5 font-semibold text-right">{t("partition_action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -211,7 +211,7 @@ export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
                       type="button"
                       onClick={() => setPartitions(partitions.filter((p) => p.id !== row.id))}
                       className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
-                      title="Satırı Kaldır"
+                      title={lang === "tr" ? "Satırı Kaldır" : "Remove Row"}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

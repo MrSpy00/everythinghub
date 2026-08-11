@@ -10,14 +10,12 @@ import {
   GitBranch,
   FileCode,
   Sparkles,
-  ArrowRight,
-  HardDrive,
   RefreshCw,
-  Layers,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { FlashPartitionFile } from "@/lib/flasher/types";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 
 interface GitHubReleaseAsset {
   id: number;
@@ -37,11 +35,14 @@ interface GitHubReleaseInfo {
 
 interface SmartUrlFlasherProps {
   onLoadPartition: (partition: FlashPartitionFile) => void;
+  lang?: Language;
 }
 
 export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
   onLoadPartition,
+  lang = "tr",
 }) => {
+  const t = useTranslation(lang);
   const [urlInput, setUrlInput] = useState("");
   const [customOffsetHex, setCustomOffsetHex] = useState("0x0");
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +57,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
 
   // Auto-detect & suggest offset based on binary inspection
   const analyzeBinary = (filename: string, data: Uint8Array) => {
-    let detectedType = "Bilinmeyen Binary (.bin)";
+    let detectedType = lang === "tr" ? "Bilinmeyen Binary (.bin)" : "Generic Binary Image (.bin)";
     let suggestedOffset = 0x0;
     const lowerName = filename.toLowerCase();
 
@@ -74,30 +75,30 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
         data[2] === 0x32 &&
         data[3] === 0x0a)
     ) {
-      detectedType = "UF2 Paket İmajı (RP2040 Pico)";
+      detectedType = lang === "tr" ? "UF2 Paket İmajı (RP2040 Pico)" : "UF2 Firmware Image (RP2040 Pico)";
       suggestedOffset = 0x0;
     }
     // Check ESP ROM magic byte 0xE9
     else if (data.length > 4 && data[0] === 0xe9) {
       const spiMode = data[2];
       const spiSizeFreq = data[3];
-      detectedType = `ESP Bootable ROM Image (SPI Mod: 0x${spiMode.toString(16)}, Flash Opt: 0x${spiSizeFreq.toString(16)})`;
+      detectedType = `ESP Bootable ROM (SPI: 0x${spiMode.toString(16)}, Flash: 0x${spiSizeFreq.toString(16)})`;
 
       if (lowerName.includes("bootloader")) {
         suggestedOffset = lowerName.includes("s3") || lowerName.includes("c3") ? 0x0 : 0x1000;
       } else if (lowerName.includes("partition") || lowerName.includes("part")) {
         suggestedOffset = 0x8000;
       } else if (lowerName.includes("factory") || lowerName.includes("merged") || lowerName.includes("all")) {
-        suggestedOffset = 0x0; // Merged factory image
+        suggestedOffset = 0x0;
       } else {
-        suggestedOffset = 0x10000; // Standard App offset
+        suggestedOffset = 0x10000;
       }
     } else {
       if (lowerName.includes("spiffs") || lowerName.includes("littlefs")) {
-        detectedType = "LittleFS / SPIFFS Dosya Sistemi";
+        detectedType = "LittleFS / SPIFFS Filesystem";
         suggestedOffset = 0x290000;
       } else if (lowerName.includes("factory") || lowerName.includes("full")) {
-        detectedType = "Birleşik Fabrika İmajı (Factory Image)";
+        detectedType = lang === "tr" ? "Birleşik Fabrika İmajı (Factory Image)" : "Unified Factory Image";
         suggestedOffset = 0x0;
       } else {
         suggestedOffset = 0x10000;
@@ -119,7 +120,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
   const handleResolveAndDownload = async () => {
     const rawUrl = urlInput.trim();
     if (!rawUrl) {
-      toast.error("Lütfen geçerli bir URL veya GitHub repo linki girin.");
+      toast.error(lang === "tr" ? "Lütfen geçerli bir URL veya GitHub repo linki girin." : "Enter a valid URL or GitHub repo link.");
       return;
     }
 
@@ -134,11 +135,11 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
         const owner = githubMatch[1];
         const repo = githubMatch[2].replace(/\.git$/, "");
 
-        toast.info(`GitHub Releases taranıyor: ${owner}/${repo}...`);
+        toast.info(lang === "tr" ? `GitHub Releases taranıyor: ${owner}/${repo}...` : `Scanning GitHub Releases: ${owner}/${repo}...`);
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
         const resp = await fetch(apiUrl);
         if (!resp.ok) {
-          throw new Error(`GitHub API ${resp.status} - Release bulunamadı.`);
+          throw new Error(`GitHub API ${resp.status} - Release not found.`);
         }
         const releaseData: GitHubReleaseInfo = await resp.json();
 
@@ -151,37 +152,32 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
             a.name.endsWith(".zip")
         );
 
-        if (fwAssets.length === 0) {
-          toast.warning("Son release'de doğrudan .bin/.hex dosyası bulunamadı, tüm assetler listeleniyor.");
-        }
-
         setGitHubReleases({
           ...releaseData,
           assets: fwAssets.length > 0 ? fwAssets : releaseData.assets,
         });
-        toast.success(`${releaseData.tag_name} için ${fwAssets.length} firmware dosyası bulundu!`);
+        toast.success(lang === "tr" ? `${releaseData.tag_name} için ${fwAssets.length} firmware dosyası bulundu!` : `Found ${fwAssets.length} firmware assets for ${releaseData.tag_name}!`);
         setIsLoading(false);
         return;
       }
 
-      // 2. Direct URL Download (convert github.com/blob to raw if needed)
+      // 2. Direct URL Download
       let targetUrl = rawUrl;
       if (targetUrl.includes("github.com") && targetUrl.includes("/blob/")) {
         targetUrl = targetUrl.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/");
       }
 
-      toast.info("Firmware dosyası indiriliyor...");
+      toast.info(lang === "tr" ? "Firmware dosyası indiriliyor..." : "Downloading firmware binary...");
       let resp: Response;
       try {
         resp = await fetch(targetUrl);
       } catch {
-        // CORS Fallback proxy
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
         resp = await fetch(proxyUrl);
       }
 
       if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status} - Dosya indirilemedi.`);
+        throw new Error(`HTTP ${resp.status}`);
       }
 
       const ab = await resp.arrayBuffer();
@@ -189,9 +185,9 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
       const filename = targetUrl.split("/").pop()?.split("?")[0] || "downloaded_firmware.bin";
 
       analyzeBinary(filename, data);
-      toast.success(`Dosya başarıyla analiz edildi: ${filename} (${(data.length / 1024).toFixed(1)} KB)`);
+      toast.success(lang === "tr" ? `Dosya analiz edildi: ${filename} (${(data.length / 1024).toFixed(1)} KB)` : `Binary analyzed: ${filename} (${(data.length / 1024).toFixed(1)} KB)`);
     } catch (err: any) {
-      toast.error(`URL yükleme hatası: ${err.message || err}`);
+      toast.error(lang === "tr" ? `URL yükleme hatası: ${err.message || err}` : `URL load error: ${err.message || err}`);
     } finally {
       setIsLoading(false);
     }
@@ -199,7 +195,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
 
   const handleDownloadAsset = async (asset: GitHubReleaseAsset) => {
     setIsLoading(true);
-    toast.info(`${asset.name} indiriliyor...`);
+    toast.info(`${asset.name}...`);
     try {
       let resp: Response;
       try {
@@ -214,9 +210,9 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
       const data = new Uint8Array(ab);
 
       analyzeBinary(asset.name, data);
-      toast.success(`${asset.name} indirildi ve analiz edildi!`);
+      toast.success(`${asset.name} ✓`);
     } catch (err: any) {
-      toast.error(`Asset indirme hatası: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -239,7 +235,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
     };
 
     onLoadPartition(partition);
-    toast.success(`'${detectedFileInfo.name}' (${customOffsetHex}) flaşlama listesine eklendi!`);
+    toast.success(lang === "tr" ? `'${detectedFileInfo.name}' (${customOffsetHex}) flaşlama listesine eklendi!` : `'${detectedFileInfo.name}' (${customOffsetHex}) added to flash list!`);
   };
 
   return (
@@ -251,13 +247,13 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
-              Akıllı URL & GitHub Firmware Yükleyici
+              {t("smart_url_title")}
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                Otomatik Analiz
+                {t("smart_url_badge")}
               </span>
             </h4>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Doğrudan .bin linki, GitHub repo adresi veya release URL'si girin; dosyalar otomatik bulunup ayrıştırılır.
+              {t("smart_url_desc")}
             </p>
           </div>
         </div>
@@ -269,7 +265,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <input
             type="text"
-            placeholder="Örn: https://github.com/Aircoookie/WLED veya https://example.com/firmware.bin"
+            placeholder={t("smart_url_placeholder")}
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => {
@@ -293,20 +289,20 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
           ) : (
             <Download className="w-4 h-4 text-violet-400" />
           )}
-          <span>{isLoading ? "Analiz Ediliyor..." : "Çözümle & İndir"}</span>
+          <span>{isLoading ? t("analyzing") : t("resolve_and_download")}</span>
         </button>
       </div>
 
-      {/* GitHub Releases Browser (If GitHub repo URL was resolved) */}
+      {/* GitHub Releases Browser */}
       {gitHubReleases && (
         <div className="flex flex-col gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-white/10 animate-in fade-in">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
               <GitBranch className="w-4 h-4 text-violet-400" />
-              GitHub Son Sürüm: <code className="text-violet-300">{gitHubReleases.tag_name}</code>
+              {t("github_latest_release")} <code className="text-violet-300">{gitHubReleases.tag_name}</code>
             </span>
             <span className="text-[11px] text-zinc-400">
-              {gitHubReleases.assets.length} Firmware Dosyası
+              {gitHubReleases.assets.length} Assets
             </span>
           </div>
 
@@ -321,7 +317,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
                     {asset.name}
                   </span>
                   <span className="text-[10px] font-mono text-zinc-400">
-                    {(asset.size / 1024).toFixed(1)} KB • {asset.download_count} indirme
+                    {(asset.size / 1024).toFixed(1)} KB • {asset.download_count} downloads
                   </span>
                 </div>
                 <button
@@ -330,7 +326,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
                   disabled={isLoading}
                   className="px-3 py-1.5 rounded-xl text-[11px] font-semibold text-violet-300 bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/20 transition-all shrink-0 active:scale-95"
                 >
-                  Seç & Yükle
+                  {lang === "tr" ? "Seç & Yükle" : "Select & Load"}
                 </button>
               </div>
             ))}
@@ -338,7 +334,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
         </div>
       )}
 
-      {/* Binary Inspection Card (When a file is parsed) */}
+      {/* Binary Inspection Card */}
       {detectedFileInfo && (
         <div className="p-4 rounded-2xl bg-zinc-900/70 border border-violet-500/30 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 animate-in fade-in">
           <div className="flex items-start gap-3 min-w-0">
@@ -353,7 +349,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
                 {detectedFileInfo.detectedType}
               </span>
               <span className="text-[10px] font-mono text-zinc-400 mt-0.5">
-                Boyut: {(detectedFileInfo.sizeBytes / 1024).toFixed(1)} KB (
+                {lang === "tr" ? "Boyut" : "Size"}: {(detectedFileInfo.sizeBytes / 1024).toFixed(1)} KB (
                 {(detectedFileInfo.sizeBytes / 1024 / 1024).toFixed(2)} MB)
               </span>
             </div>
@@ -361,7 +357,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-zinc-400 font-mono">Ofset:</span>
+              <span className="text-xs text-zinc-400 font-mono">{t("offset_label")}</span>
               <input
                 type="text"
                 value={customOffsetHex}
@@ -376,7 +372,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600/25 border border-violet-500/40 hover:bg-violet-600/40 transition-all shadow-md active:scale-95"
             >
               <Zap className="w-3.5 h-3.5 text-violet-300" />
-              Flaşlama Tablosuna Ekle
+              {t("add_to_flash_table")}
             </button>
           </div>
         </div>

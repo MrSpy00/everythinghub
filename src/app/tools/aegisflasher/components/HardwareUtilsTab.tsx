@@ -253,11 +253,11 @@ export const HardwareUtilsTab: React.FC<HardwareUtilsTabProps> = ({
             <span className="text-emerald-400 font-bold text-sm">{closestE24} Ω</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-zinc-400">Gerçek Çıkış:</span>
+            <span className="text-zinc-400">{t("hw_actual_vout")}</span>
             <span className="text-zinc-200 font-bold text-sm">{actualVout} V</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-zinc-400">Akım Çekimi:</span>
+            <span className="text-zinc-400">{t("hw_current_draw")}</span>
             <span className="text-indigo-300 font-bold text-sm">{currentMa} mA</span>
           </div>
         </div>
@@ -275,7 +275,9 @@ export const HardwareUtilsTab: React.FC<HardwareUtilsTabProps> = ({
                 {t("i2c_scanner_title")}
               </h4>
               <p className="text-xs text-zinc-400 mt-0.5">
-                50+ popüler sensörün varsayılan I2C Hex adresleri ve pin bağlantı rehberi.
+                {lang === "tr"
+                  ? "50+ popüler sensörün varsayılan I2C Hex adresleri ve pin bağlantı rehberi."
+                  : "Default I2C Hex addresses and pinout connection guide for 50+ sensors."}
               </p>
             </div>
           </div>
@@ -327,10 +329,10 @@ export const HardwareUtilsTab: React.FC<HardwareUtilsTabProps> = ({
           </div>
           <div>
             <h4 className="text-sm md:text-base font-bold text-zinc-100">
-              Özel Manifest & Şirket İçi Katalog İçe Aktarıcı
+              {t("hw_custom_manifest_title")}
             </h4>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Kendi firmanızın veya topluluğunuzun firmware manifest URL'sini ekleyerek özel projelerinizi tek tıkla flaşlayın.
+              {t("hw_custom_manifest_desc")}
             </p>
           </div>
         </div>
@@ -338,7 +340,7 @@ export const HardwareUtilsTab: React.FC<HardwareUtilsTabProps> = ({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mt-1">
           <input
             type="text"
-            placeholder="https://example.com/custom-firmware-manifest.json"
+            placeholder={t("hw_custom_manifest_placeholder")}
             value={customManifestUrl}
             onChange={(e) => setCustomManifestUrl(e.target.value)}
             className="flex-1 bg-zinc-900 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
@@ -350,7 +352,7 @@ export const HardwareUtilsTab: React.FC<HardwareUtilsTabProps> = ({
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-emerald-600/25 border border-emerald-500/40 hover:bg-emerald-600/40 backdrop-blur-xl shadow-lg transition-all active:scale-95 disabled:opacity-40"
           >
             <Plus className="w-4 h-4" />
-            Kataloğu Ekle
+            {t("hw_custom_manifest_add_btn")}
           </button>
         </div>
       </div>

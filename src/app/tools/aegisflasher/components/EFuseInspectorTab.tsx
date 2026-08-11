@@ -11,8 +11,6 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  Info,
-  Key,
 } from "lucide-react";
 import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
@@ -67,7 +65,7 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
             <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
               {t("efuse_title")}
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                Salt-Okunur Güvenli Mod
+                {lang === "tr" ? "Salt-Okunur Güvenli Mod" : "Read-Only Safe Mode"}
               </span>
             </h3>
             <p className="text-xs text-zinc-400 mt-0.5">{t("efuse_desc")}</p>
@@ -98,17 +96,19 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
               {t("efuse_security_score")}
             </span>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-              Geliştirici Modu (Unlocked)
+              {lang === "tr" ? "Geliştirici Modu (Unlocked)" : "Developer Mode (Unlocked)"}
             </span>
           </div>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-black text-zinc-100">Standart</span>
-            <span className="text-xs text-zinc-400 font-mono">/ Açık Geliştirme</span>
+            <span className="text-4xl font-black text-zinc-100">{lang === "tr" ? "Standart" : "Standard"}</span>
+            <span className="text-xs text-zinc-400 font-mono">{lang === "tr" ? "/ Açık Geliştirme" : "/ Open Development"}</span>
           </div>
 
           <p className="text-xs text-zinc-400 leading-relaxed">
-            Çip şu anda fabrika varsayılanı olan açık geliştirme modundadır. Web Serial ile firmware yüklemeye ve JTAG hata ayıklamaya tamamen açıktır.
+            {lang === "tr"
+              ? "Çip şu anda fabrika varsayılanı olan açık geliştirme modundadır. Web Serial ile firmware yüklemeye ve JTAG hata ayıklamaya tamamen açıktır."
+              : "Chip is in factory default open development mode. Fully accessible for Web Serial firmware flashing and JTAG debugging."}
           </p>
         </div>
 
@@ -122,12 +122,14 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-zinc-200">Secure Boot: Pasif (Devre Dışı)</span>
+            <span className="text-sm font-bold text-zinc-200">{lang === "tr" ? "Secure Boot: Pasif (Devre Dışı)" : "Secure Boot: Disabled"}</span>
             <span className="text-[11px] font-mono text-zinc-400">eFuse: ABS_DONE_0 = 0</span>
           </div>
 
           <p className="text-xs text-zinc-400 leading-relaxed">
-            İmzasız ikili dosyaların (WLED, Tasmota vb.) flaşlanabilmesi için varsayılan olarak devre dışıdır.
+            {lang === "tr"
+              ? "İmzasız ikili dosyaların (WLED, Tasmota vb.) flaşlanabilmesi için varsayılan olarak devre dışıdır."
+              : "Disabled by default to allow flashing unsigned open-source binaries (WLED, Tasmota, etc.)."}
           </p>
         </div>
 
@@ -141,12 +143,14 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-zinc-200">Flash Şifreleme: Pasif</span>
+            <span className="text-sm font-bold text-zinc-200">{lang === "tr" ? "Flash Şifreleme: Pasif" : "Flash Encryption: Disabled"}</span>
             <span className="text-[11px] font-mono text-zinc-400">eFuse: FLASH_CRYPT_CNT = 0</span>
           </div>
 
           <p className="text-xs text-zinc-400 leading-relaxed">
-            Flash bellek düz metin (plaintext) olarak okunup yazılabilir. Memory Dump yedeği alınabilir.
+            {lang === "tr"
+              ? "Flash bellek düz metin (plaintext) olarak okunup yazılabilir. Memory Dump yedeği alınabilir."
+              : "Flash memory is readable in plaintext. Memory dumps and backups can be extracted."}
           </p>
         </div>
 
@@ -160,12 +164,14 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-zinc-200">JTAG Portu: Açık (Erişilebilir)</span>
+            <span className="text-sm font-bold text-zinc-200">{lang === "tr" ? "JTAG Portu: Açık (Erişilebilir)" : "JTAG Port: Unlocked (Accessible)"}</span>
             <span className="text-[11px] font-mono text-zinc-400">eFuse: JTAG_DISABLE = 0</span>
           </div>
 
           <p className="text-xs text-zinc-400 leading-relaxed">
-            ESP-Prog ve OpenOCD donanımsal hata ayıklayıcılar GPIO12-15 üzerinden çalışabilir.
+            {lang === "tr"
+              ? "ESP-Prog ve OpenOCD donanımsal hata ayıklayıcılar GPIO12-15 üzerinden çalışabilir."
+              : "Hardware debuggers like ESP-Prog and OpenOCD can interface via GPIO12-15."}
           </p>
         </div>
 
@@ -179,12 +185,14 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-indigo-300">3.3V (Standart VDD_SDIO)</span>
+            <span className="text-sm font-bold text-indigo-300">3.3V (Standard VDD_SDIO)</span>
             <span className="text-[11px] font-mono text-zinc-400">eFuse: XPD_SDIO_REG = 1</span>
           </div>
 
           <p className="text-xs text-zinc-400 leading-relaxed">
-            Flash ve PSRAM entegreleri 3.3V seviyesinde regüle edilir.
+            {lang === "tr"
+              ? "Flash ve PSRAM entegreleri 3.3V seviyesinde regüle edilir."
+              : "Flash and PSRAM ICs are regulated at 3.3V logic level."}
           </p>
         </div>
 
@@ -200,12 +208,14 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-violet-300">{detectedVendor}</span>
             <span className="text-[11px] font-mono text-zinc-400">
-              Kapasite: {telemetry?.flashSize || "4MB"} Quad-SPI
+              {lang === "tr" ? "Kapasite" : "Capacity"}: {telemetry?.flashSize || "4MB"} Quad-SPI
             </span>
           </div>
 
           <p className="text-xs text-zinc-400 leading-relaxed">
-            Çip üzerindeki yüksek hızlı SPI NOR flash bellek üreticisi başarıyla çözümlendi.
+            {lang === "tr"
+              ? "Çip üzerindeki yüksek hızlı SPI NOR flash bellek üreticisi başarıyla çözümlendi."
+              : "High-speed SPI NOR flash manufacturer on the board successfully resolved."}
           </p>
         </div>
       </div>

@@ -2,19 +2,11 @@
 
 import React, { useState } from "react";
 import {
-  Cpu,
   HardDrive,
   Download,
   Trash2,
   Wifi,
-  Key,
-  Server,
-  Settings,
-  Sparkles,
-  CheckCircle2,
   AlertTriangle,
-  RefreshCw,
-  Sliders,
   ChevronDown,
 } from "lucide-react";
 import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
@@ -96,20 +88,20 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
               <HardDrive className="w-5 h-5 text-violet-400" />
-              Flash Bellek Yedeği Alma (Memory Dumper)
+              {t("tools_backup_title")}
             </h3>
             <span className="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/30">
-              .bin Dökümü
+              .bin Dump
             </span>
           </div>
 
           <p className="text-xs text-zinc-300 leading-relaxed">
-            Bağlı mikrokontrolcünün flash belleğini (ROM, firmware, yapılandırmalar) eksiksiz okuyup bilgisayarınıza yedek <code className="text-violet-300">.bin</code> dosyası olarak indirin.
+            {t("tools_backup_desc")}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             <div>
-              <label className="text-[11px] text-zinc-400 block mb-1">Başlangıç Ofseti:</label>
+              <label className="text-[11px] text-zinc-400 block mb-1">{t("tools_start_offset")}</label>
               <input
                 type="text"
                 value={dumpOffsetHex}
@@ -118,19 +110,19 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
               />
             </div>
             <div>
-              <label className="text-[11px] text-zinc-400 block mb-1">Okunacak Boyut:</label>
+              <label className="text-[11px] text-zinc-400 block mb-1">{t("tools_read_size")}</label>
               <div className="relative">
                 <select
-                  aria-label="Flash Bellek Okuma Boyutu"
+                  aria-label={t("tools_read_size")}
                   value={dumpSizeMb}
                   onChange={(e) => setDumpSizeMb(Number(e.target.value))}
                   className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2.5 text-xs font-semibold text-zinc-100 focus:outline-none focus:border-violet-500 cursor-pointer"
                 >
                   <option value={1} className="bg-zinc-900">1 MB (ESP8266 Mini)</option>
                   <option value={2} className="bg-zinc-900">2 MB</option>
-                  <option value={4} className="bg-zinc-900">4 MB (ESP32 Standart)</option>
+                  <option value={4} className="bg-zinc-900">4 MB (ESP32 Standard)</option>
                   <option value={8} className="bg-zinc-900">8 MB (ESP32-S3 / WROVER)</option>
-                  <option value={16} className="bg-zinc-900">16 MB (Geniş Flash)</option>
+                  <option value={16} className="bg-zinc-900">16 MB (Large Flash)</option>
                 </select>
                 <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
               </div>
@@ -150,7 +142,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-white bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 hover:border-violet-400 backdrop-blur-xl shadow-lg transition-all active:scale-95 disabled:opacity-40"
           >
             <Download className="w-4 h-4 text-violet-400" />
-            Flash Belleği Oku ve İndir
+            {t("tools_read_btn")}
           </button>
         </div>
       </div>
@@ -161,21 +153,21 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
               <Trash2 className="w-5 h-5 text-rose-400" />
-              Tam Flash Silme (Chip Erase)
+              {t("tools_erase_title")}
             </h3>
             <span className="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/30">
-              Sıfırlama
+              Reset
             </span>
           </div>
 
           <p className="text-xs text-zinc-300 leading-relaxed">
-            Bölüm tablosu çökmüş, açılış döngüsüne (bootloop) girmiş veya temiz bir başlangıç gerektiren çiplerin tüm sektörlerini <code className="text-rose-300">0xFF</code> ile sıfırlar.
+            {t("tools_erase_desc")}
           </p>
 
           <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-200 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
             <span>
-              Bu işlem geri alınamaz. Kartın içerisindeki tüm firmware, NVS Wi-Fi bilgileri ve dosya sistemleri tamamen silinecektir.
+              {t("tools_erase_warning")}
             </span>
           </div>
         </div>
@@ -188,7 +180,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-rose-300 bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 backdrop-blur-xl transition-all active:scale-95 disabled:opacity-40"
           >
             <Trash2 className="w-4 h-4" />
-            Tüm Çipi Sil (Erase Flash)
+            {t("tools_erase_btn")}
           </button>
         </div>
       </div>
@@ -199,10 +191,10 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
           <div>
             <h3 className="text-sm md:text-base font-bold text-zinc-100 flex items-center gap-2">
               <Wifi className="w-5 h-5 text-indigo-400" />
-              NVS Wi-Fi & Yapılandırma Yakıcı (0x9000)
+              {t("tools_nvs_title")}
             </h3>
             <p className="text-xs text-zinc-400 mt-1">
-              Firmware'i yeniden derlemeden Wi-Fi SSID, şifre ve cihaz parametrelerini doğrudan NVS belleğine yazın.
+              {t("tools_nvs_desc")}
             </p>
           </div>
           <span className="text-[10px] font-mono px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 self-start md:self-auto">
@@ -212,10 +204,10 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Wi-Fi Ağ Adı (SSID):</label>
+            <label className="text-xs text-zinc-400 block mb-1">{t("wifi_ssid")}</label>
             <input
               type="text"
-              placeholder="Ev Wi-Fi"
+              placeholder="Home Wi-Fi"
               value={wifiSsid}
               onChange={(e) => setWifiSsid(e.target.value)}
               className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
@@ -223,7 +215,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
           </div>
 
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Wi-Fi Şifresi:</label>
+            <label className="text-xs text-zinc-400 block mb-1">{t("wifi_password")}</label>
             <input
               type="password"
               placeholder="••••••••"
@@ -234,7 +226,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
           </div>
 
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Cihaz Adı (Hostname):</label>
+            <label className="text-xs text-zinc-400 block mb-1">{t("device_name")}</label>
             <input
               type="text"
               placeholder="aegis-device"
@@ -245,7 +237,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
           </div>
 
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">MQTT Broker (Opsiyonel):</label>
+            <label className="text-xs text-zinc-400 block mb-1">{t("mqtt_broker")}</label>
             <input
               type="text"
               placeholder="192.168.1.50"
@@ -264,7 +256,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 bg-white/[0.04] border border-white/10 hover:text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all disabled:opacity-40"
           >
             <Download className="w-3.5 h-3.5" />
-            NVS .bin Dosyası İndir
+            {t("nvs_download_bin")}
           </button>
 
           <button
@@ -274,7 +266,7 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-indigo-600/25 border border-indigo-500/40 hover:bg-indigo-600/40 backdrop-blur-xl transition-all disabled:opacity-40"
           >
             <Wifi className="w-3.5 h-3.5 text-indigo-300" />
-            Cihaza Yazdır (Flash to 0x9000)
+            {t("nvs_flash_to_chip")}
           </button>
         </div>
       </div>

@@ -65,42 +65,42 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
     const num = typeof offsetVal === "number" ? offsetVal : parseInt(offsetVal, 16) || 0;
     if (num === 0x0) {
       return {
-        label: "0x0 (Birleşik / Factory)",
-        desc: "Bootloader, tablo ve uygulama tek imajda birleştirilmiştir.",
+        label: t("offset_factory_badge"),
+        desc: t("offset_factory_desc"),
         colorClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
       };
     }
     if (num === 0x1000) {
       return {
-        label: "0x1000 (Bootloader)",
-        desc: "ESP32 2. Kademe Bootloader alanı",
+        label: t("offset_bootloader_badge"),
+        desc: t("offset_bootloader_desc"),
         colorClass: "bg-blue-500/15 text-blue-300 border-blue-500/30",
       };
     }
     if (num === 0x8000) {
       return {
-        label: "0x8000 (Bölüm Tablosu)",
-        desc: "ESP-IDF Partition Table",
+        label: t("offset_partition_badge"),
+        desc: t("offset_partition_desc"),
         colorClass: "bg-purple-500/15 text-purple-300 border-purple-500/30",
       };
     }
     if (num === 0x10000) {
       return {
-        label: "0x10000 (Ana Uygulama)",
-        desc: "Kullanıcı Uygulaması (App0 / Factory)",
+        label: t("offset_app_badge"),
+        desc: t("offset_app_desc"),
         colorClass: "bg-violet-500/15 text-violet-300 border-violet-500/30",
       };
     }
     if (num >= 0x200000) {
       return {
-        label: `0x${num.toString(16)} (Dosya Sistemi)`,
-        desc: "LittleFS / SPIFFS Alanı",
+        label: `0x${num.toString(16)} (${t("offset_fs_badge")})`,
+        desc: "LittleFS / SPIFFS",
         colorClass: "bg-amber-500/15 text-amber-300 border-amber-500/30",
       };
     }
     return {
-      label: `0x${num.toString(16)}`,
-      desc: "Özel Ofset",
+      label: `0x${num.toString(16)} (${t("offset_custom_badge")})`,
+      desc: t("offset_custom_badge"),
       colorClass: "bg-zinc-800 text-zinc-300 border-zinc-700",
     };
   };
@@ -190,6 +190,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
             onLoadCustomUrl(part.name, part.offset);
           }
         }}
+        lang={lang}
       />
 
       {/* Firmware Cards Grid */}
@@ -303,7 +304,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                     <div className="flex items-center justify-between text-[11px] font-medium text-zinc-400">
                       <span className="flex items-center gap-1.5">
                         <Layers className="w-3.5 h-3.5 text-violet-400" />
-                        Flash Bölümleri ({currentBuild.parts.length})
+                        {t("flash_sections")} ({currentBuild.parts.length})
                       </span>
                       {currentBuild.minFlashSize && (
                         <span className="font-mono text-[10px] text-emerald-400">
@@ -322,7 +323,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                             title={badgeInfo.desc}
                           >
                             <span className="text-xs text-zinc-200 font-medium truncate flex-1" title={p.name || p.path}>
-                              {p.name || `Parça ${pIdx + 1}`}
+                              {p.name || `Part ${pIdx + 1}`}
                             </span>
                             <span
                               className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border ${badgeInfo.colorClass}`}
@@ -346,7 +347,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-sm"
-                      title="GitHub Kaynak Kodu"
+                      title={t("source_code")}
                     >
                       <GitBranch className="w-4 h-4" />
                     </a>
@@ -357,7 +358,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-sm"
-                      title="Resmi Dokümantasyon"
+                      title={t("official_docs")}
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
@@ -370,7 +371,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 hover:border-violet-400 backdrop-blur-xl shadow-lg transition-all active:scale-95"
                 >
                   <Download className="w-4 h-4 text-violet-300" />
-                  Tek Tıkla Flaşla
+                  {t("one_click_flash")}
                 </button>
               </div>
             </div>

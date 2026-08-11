@@ -3,11 +3,6 @@
 import React, { useState } from "react";
 import {
   Cpu,
-  Zap,
-  Layers,
-  Info,
-  Sliders,
-  Sparkles,
   ShieldAlert,
 } from "lucide-react";
 import { BOARD_PINOUTS } from "@/lib/flasher/pinout-catalog";
@@ -56,7 +51,7 @@ export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
           <Cpu className="w-4 h-4 text-violet-400" />
-          Kart Seçimi:
+          {t("pinout_select_board")}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {BOARD_PINOUTS.map((board) => (
@@ -79,19 +74,19 @@ export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
       {/* Board Summary Specifications */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 p-5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <div className="flex flex-col">
-          <span className="text-[10px] text-zinc-400">Form Faktörü</span>
+          <span className="text-[10px] text-zinc-400">{t("form_factor")}</span>
           <span className="text-xs font-bold text-zinc-200 truncate">{currentBoard.formFactor}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] text-zinc-400">Çalışma Voltajı</span>
+          <span className="text-[10px] text-zinc-400">{t("operating_voltage")}</span>
           <span className="text-xs font-bold text-emerald-400">{currentBoard.operatingVoltage}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] text-zinc-400">Giriş Voltajı (VIN)</span>
+          <span className="text-[10px] text-zinc-400">{t("input_voltage")}</span>
           <span className="text-xs font-mono text-zinc-200">{currentBoard.inputVoltage}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] text-zinc-400">Toplam GPIO</span>
+          <span className="text-[10px] text-zinc-400">{t("total_gpios")}</span>
           <span className="text-xs font-bold text-zinc-100">{currentBoard.totalGpios} Pin</span>
         </div>
         <div className="flex flex-col">
@@ -101,7 +96,7 @@ export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
           </span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] text-zinc-400">Arayüzler</span>
+          <span className="text-[10px] text-zinc-400">{t("interfaces")}</span>
           <span className="text-[11px] text-zinc-300 truncate" title={currentBoard.interfaces.join(", ")}>
             {currentBoard.interfaces.slice(0, 2).join(", ")}
           </span>
@@ -113,7 +108,7 @@ export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
         <div className="p-5 rounded-3xl bg-purple-500/10 border border-purple-500/25 flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
             <ShieldAlert className="w-4 h-4 text-purple-400" />
-            Önemli Bootloader & Strapping Pin Kuralları:
+            {t("pinout_strapping_rules_title")}
           </div>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-purple-200/90 font-mono">
             {currentBoard.strappingInstructions.map((inst, i) => (
@@ -129,14 +124,14 @@ export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
       {/* Interactive Visual Pinout Diagrams */}
       <div className="p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col gap-6">
         <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-          Pinout Diyagramı: {currentBoard.name}
+          {t("pinout_diagram_title")} {currentBoard.name}
         </h4>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Header Pins */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold text-zinc-400 border-b border-white/10 pb-2">
-              Sol Pin Sırası (Left Header)
+              {t("left_header")}
             </span>
             <div className="flex flex-col gap-1.5 font-mono text-xs">
               {leftPins.map((p, idx) => (
@@ -165,7 +160,7 @@ export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
           {/* Right Header Pins */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold text-zinc-400 border-b border-white/10 pb-2">
-              Sağ Pin Sırası (Right Header)
+              {t("right_header")}
             </span>
             <div className="flex flex-col gap-1.5 font-mono text-xs">
               {rightPins.map((p, idx) => (
