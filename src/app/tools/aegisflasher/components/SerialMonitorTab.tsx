@@ -18,6 +18,7 @@ import {
   Pause,
   Play,
   Filter,
+  ChevronDown,
 } from "lucide-react";
 import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
 import { parseAnsiString, AnsiToken } from "@/lib/flasher/ansi-parser";
@@ -98,149 +99,131 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   };
 
   const copyLogs = () => {
-    const fullText = logs
-      .map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`)
-      .join("\n");
-    navigator.clipboard.writeText(fullText);
+    const text = logs.map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`).join("\n");
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const exportLogs = () => {
-    const fullText = logs
-      .map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`)
-      .join("\n");
-    const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
+    const text = logs.map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`).join("\n");
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `aegisFlasher_serial_${selectedBaud}baud_${new Date()
-      .toISOString()
-      .slice(0, 19)
-      .replace(/:/g, "-")}.log`;
+    a.download = `serial_monitor_log_${Date.now()}.log`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  // Filtered Logs list
+  // Convert string to hex view string
+  const formatHex = (str: string, rawBytes?: Uint8Array) => {
+    const bytes = rawBytes || new TextEncoder().encode(str);
+    const hexParts: string[] = [];
+    const asciiParts: string[] = [];
+
+    for (let i = 0; i < bytes.length; i++) {
+      const byte = bytes[i];
+      hexParts.push(byte.toString(16).padStart(2, "0").toUpperCase());
+      asciiParts.push(byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".");
+    }
+
+    return (
+      <span className="flex flex-wrap items-center gap-2 text-zinc-400">
+        <span className="font-mono text-cyan-300 font-bold">{hexParts.join(" ")}</span>
+        <span className="text-zinc-600">|</span>
+        <span className="font-mono text-zinc-300">{asciiParts.join("")}</span>
+      </span>
+    );
+  };
+
+  // Filter logs by search and severity
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       if (filterSeverity !== "all" && log.direction !== filterSeverity) {
         return false;
       }
-      if (
-        searchFilter.trim() &&
-        !log.text.toLowerCase().includes(searchFilter.toLowerCase())
-      ) {
-        return false;
+      if (searchFilter.trim() !== "") {
+        const query = searchFilter.toLowerCase();
+        return (
+          log.text.toLowerCase().includes(query) ||
+          log.direction.toLowerCase().includes(query) ||
+          log.timestamp.includes(query)
+        );
       }
       return true;
     });
   }, [logs, filterSeverity, searchFilter]);
 
-  // Hex dump helper for raw bytes
-  const renderHexLine = (log: SerialLogMessage) => {
-    const textBytes = log.rawBytes || new TextEncoder().encode(log.text);
-    const hexParts: string[] = [];
-    const asciiParts: string[] = [];
-
-    for (let i = 0; i < Math.min(16, textBytes.length); i++) {
-      const b = textBytes[i];
-      hexParts.push(b.toString(16).padStart(2, "0").toUpperCase());
-      asciiParts.push(b >= 32 && b <= 126 ? String.fromCharCode(b) : ".");
-    }
-
+  // Render ANSI tokenized line
+  const renderAnsiContent = (text: string) => {
+    const tokens = parseAnsiString(text);
     return (
-      <div
-        key={log.id}
-        className="flex items-center gap-3 py-0.5 font-mono text-[11px] hover:bg-white/[0.02] px-1 rounded"
-      >
-        {showTimestamps && (
-          <span className="text-[10px] text-zinc-500 shrink-0 select-none">
-            [{log.timestamp}]
-          </span>
-        )}
-        <span className="text-violet-400 shrink-0 w-8 uppercase text-[10px] font-bold">
-          {log.direction}
-        </span>
-        <span className="text-cyan-300 font-mono tracking-wider shrink-0">
-          {hexParts.join(" ").padEnd(48, " ")}
-        </span>
-        <span className="text-zinc-400 font-mono select-none">
-          |{asciiParts.join("")}|
-        </span>
-      </div>
+      <span className="inline">
+        {tokens.map((tok: AnsiToken, i: number) => {
+          const style: React.CSSProperties = {};
+          if (tok.color) style.color = tok.color;
+          if (tok.backgroundColor) style.backgroundColor = tok.backgroundColor;
+          if (tok.bold) style.fontWeight = "bold";
+          if (tok.italic) style.fontStyle = "italic";
+          if (tok.underline) style.textDecoration = "underline";
+          if (tok.dim) style.opacity = 0.65;
+
+          return (
+            <span key={i} style={style}>
+              {tok.text}
+            </span>
+          );
+        })}
+      </span>
     );
   };
 
-  // Render ANSI Rich Text Line
   const renderLogLine = (log: SerialLogMessage) => {
-    if (showHexMode) {
-      return renderHexLine(log);
+    let colorClass = "text-zinc-200";
+    let badgeClass = "bg-zinc-800 text-zinc-400 border-zinc-700";
+
+    switch (log.direction) {
+      case "tx":
+        colorClass = "text-indigo-300 font-medium";
+        badgeClass = "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
+        break;
+      case "rx":
+        colorClass = "text-emerald-300";
+        badgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+        break;
+      case "err":
+        colorClass = "text-rose-400 font-semibold";
+        badgeClass = "bg-rose-500/20 text-rose-300 border-rose-500/40";
+        break;
+      case "warn":
+        colorClass = "text-amber-300";
+        badgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+        break;
+      case "sys":
+        colorClass = "text-violet-300 italic";
+        badgeClass = "bg-violet-500/20 text-violet-300 border-violet-500/30";
+        break;
+      case "success":
+        colorClass = "text-emerald-400 font-bold";
+        badgeClass = "bg-emerald-500/25 text-emerald-300 border-emerald-500/40";
+        break;
     }
 
-    const tokens = parseAnsiString(log.text);
-
     return (
-      <div
-        key={log.id}
-        className="flex items-start gap-2 py-0.5 font-mono text-xs leading-relaxed hover:bg-white/[0.02] px-1 rounded transition-colors"
-      >
+      <div key={log.id} className="flex items-start gap-2 py-0.5 leading-relaxed hover:bg-white/[0.02]">
         {showTimestamps && (
-          <span className="text-[10px] text-zinc-500 select-none font-mono shrink-0 pt-0.5">
-            [{log.timestamp}]
+          <span className="text-[10px] font-mono text-zinc-500 select-none shrink-0 pt-0.5">
+            {log.timestamp}
           </span>
         )}
         <span
-          className={`shrink-0 text-[10px] uppercase font-bold select-none px-1 py-0.5 rounded leading-none ${
-            log.direction === "tx"
-              ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/20"
-              : log.direction === "rx"
-              ? "bg-zinc-800 text-zinc-400"
-              : log.direction === "sys"
-              ? "bg-violet-500/15 text-violet-400 border border-violet-500/20"
-              : log.direction === "err"
-              ? "bg-rose-500/15 text-rose-400 border border-rose-500/20"
-              : log.direction === "warn"
-              ? "bg-amber-500/15 text-amber-400 border border-amber-500/20"
-              : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
-          }`}
+          className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono uppercase font-bold border ${badgeClass} select-none`}
         >
           {log.direction}
         </span>
-
-        <div className="break-all whitespace-pre-wrap flex-1">
-          {tokens.length === 0 ? (
-            <span className="text-zinc-200">{log.text}</span>
-          ) : (
-            tokens.map((tok: AnsiToken, i: number) => {
-              const style: React.CSSProperties = {};
-              if (tok.color) style.color = tok.color;
-              if (tok.backgroundColor) style.backgroundColor = tok.backgroundColor;
-              if (tok.bold) style.fontWeight = 700;
-              if (tok.italic) style.fontStyle = "italic";
-              if (tok.underline) style.textDecoration = "underline";
-
-              let defaultColorClass = "text-zinc-200";
-              if (!tok.color) {
-                if (log.direction === "err") defaultColorClass = "text-rose-400 font-semibold";
-                else if (log.direction === "warn") defaultColorClass = "text-amber-400";
-                else if (log.direction === "success") defaultColorClass = "text-emerald-400 font-semibold";
-                else if (log.direction === "sys") defaultColorClass = "text-violet-400";
-                else if (log.direction === "tx") defaultColorClass = "text-cyan-400";
-              }
-
-              return (
-                <span
-                  key={i}
-                  style={style}
-                  className={!tok.color ? defaultColorClass : undefined}
-                >
-                  {tok.text}
-                </span>
-              );
-            })
-          )}
+        <div className={`flex-1 break-all whitespace-pre-wrap font-mono ${colorClass}`}>
+          {showHexMode ? formatHex(log.text, log.rawBytes) : renderAnsiContent(log.text)}
         </div>
       </div>
     );
@@ -249,17 +232,16 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Top Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         {/* Left Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Baud Rate */}
-          <div className="flex items-center gap-1.5 bg-zinc-900 border border-white/10 rounded-xl px-2.5 py-1 text-xs">
-            <Sliders className="w-3.5 h-3.5 text-zinc-400" />
+          <div className="relative">
             <select
               aria-label="Seri Monitör Aktif Baud Hızı"
               value={selectedBaud}
               onChange={(e) => onBaudChange(Number(e.target.value))}
-              className="bg-transparent text-zinc-200 focus:outline-none text-xs"
+              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
             >
               <option value={9600}>9600 baud</option>
               <option value={19200}>19200 baud</option>
@@ -273,29 +255,32 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
               <option value={1500000}>1500000 baud</option>
               <option value={2000000}>2000000 baud</option>
             </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           </div>
 
           {/* Line Ending */}
-          <select
-            aria-label="Satır Sonu Karakteri Seçimi"
-            value={lineEnding}
-            onChange={(e) => setLineEnding(e.target.value)}
-            className="bg-zinc-900 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-zinc-200 focus:outline-none"
-          >
-            <option value="crlf">Hem NL hem CR (\r\n)</option>
-            <option value="lf">Yalnızca NL (\n)</option>
-            <option value="cr">Yalnızca CR (\r)</option>
-            <option value="none">Satır Sonu Yok</option>
-          </select>
+          <div className="relative">
+            <select
+              aria-label="Satır Sonu Karakteri Seçimi"
+              value={lineEnding}
+              onChange={(e) => setLineEnding(e.target.value)}
+              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
+            >
+              <option value="crlf">Hem NL hem CR (\r\n)</option>
+              <option value="lf">Yalnızca NL (\n)</option>
+              <option value="cr">Yalnızca CR (\r)</option>
+              <option value="none">Satır Sonu Yok</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+          </div>
 
           {/* Direction Filter */}
-          <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl px-2 py-1 text-xs">
-            <Filter className="w-3 h-3 text-zinc-400" />
+          <div className="relative">
             <select
               aria-label="Log Yönü ve Önem Derecesi Filtresi"
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
-              className="bg-transparent text-zinc-200 focus:outline-none text-xs"
+              className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3 pr-8 py-2 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
             >
               <option value="all">Tüm Loglar</option>
               <option value="rx">Gelen (RX)</option>
@@ -304,19 +289,20 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
               <option value="warn">Uyarılar (WARN)</option>
               <option value="sys">Sistem (SYS)</option>
             </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           </div>
 
           {/* Timestamps Toggle */}
           <button
             type="button"
             onClick={() => setShowTimestamps(!showTimestamps)}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all ${
               showTimestamps
-                ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                : "bg-zinc-900 text-zinc-400 border border-white/5"
+                ? "bg-white/[0.1] text-zinc-100 border border-white/20 shadow-md backdrop-blur-xl"
+                : "bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-zinc-200 hover:bg-white/[0.06]"
             }`}
           >
-            <Clock className="w-3 h-3" />
+            <Clock className="w-3.5 h-3.5" />
             Zaman
           </button>
 
@@ -324,13 +310,13 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           <button
             type="button"
             onClick={() => setShowHexMode(!showHexMode)}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all ${
               showHexMode
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                : "bg-zinc-900 text-zinc-400 border border-white/5"
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-md backdrop-blur-xl"
+                : "bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-zinc-200 hover:bg-white/[0.06]"
             }`}
           >
-            <Binary className="w-3 h-3" />
+            <Binary className="w-3.5 h-3.5" />
             HEX Modu
           </button>
 
@@ -338,13 +324,13 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           <button
             type="button"
             onClick={() => setAutoScroll(!autoScroll)}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all ${
               autoScroll
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                : "bg-zinc-900 text-zinc-400 border border-white/5"
+                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md backdrop-blur-xl"
+                : "bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-zinc-200 hover:bg-white/[0.06]"
             }`}
           >
-            {autoScroll ? <ArrowDown className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+            {autoScroll ? <ArrowDown className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
             {autoScroll ? "Oto-Kaydır" : "Durduruldu"}
           </button>
         </div>
@@ -353,17 +339,17 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
         <div className="flex items-center gap-2">
           {/* Quick Search */}
           <div className="relative hidden md:block">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
             <input
               type="text"
               placeholder="Loglarda filtrele..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="bg-zinc-900 border border-white/10 rounded-xl pl-7 pr-2.5 py-1 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none w-36 focus:w-48 transition-all"
+              className="bg-zinc-900 border border-white/10 rounded-2xl pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none w-36 focus:w-48 transition-all"
             />
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-zinc-400 bg-zinc-900/80 px-2.5 py-1 rounded-xl border border-white/5">
+          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-zinc-400 bg-zinc-900/80 px-3 py-1.5 rounded-2xl border border-white/5">
             <span>RX: {(rxBytesCount / 1024).toFixed(1)}KB</span>
             <span>•</span>
             <span>TX: {(txBytesCount / 1024).toFixed(1)}KB</span>
@@ -372,7 +358,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           <button
             type="button"
             onClick={copyLogs}
-            className="p-1.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all"
+            className="p-2 rounded-2xl bg-white/[0.04] border border-white/10 text-zinc-300 hover:text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all shadow-md active:scale-95"
             title="Tüm Logları Kopyala"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -381,7 +367,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           <button
             type="button"
             onClick={exportLogs}
-            className="p-1.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all"
+            className="p-2 rounded-2xl bg-white/[0.04] border border-white/10 text-zinc-300 hover:text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all shadow-md active:scale-95"
             title="Log Dosyasını İndir (.log)"
           >
             <Download className="w-4 h-4" />
@@ -390,7 +376,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           <button
             type="button"
             onClick={onClearLogs}
-            className="p-1.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+            className="p-2 rounded-2xl bg-white/[0.04] border border-white/10 text-zinc-300 hover:text-rose-400 hover:bg-rose-500/10 backdrop-blur-xl transition-all shadow-md active:scale-95"
             title="Terminali Temizle"
           >
             <Trash2 className="w-4 h-4" />
@@ -401,7 +387,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
       {/* Terminal Display Screen */}
       <div
         ref={terminalContainerRef}
-        className="relative w-full h-[460px] rounded-3xl bg-zinc-950/90 border border-white/10 backdrop-blur-3xl p-4 overflow-y-auto font-mono text-xs flex flex-col shadow-inner select-text"
+        className="relative w-full h-[480px] rounded-3xl bg-zinc-950/90 border border-white/10 backdrop-blur-3xl p-5 overflow-y-auto font-mono text-xs flex flex-col shadow-2xl select-text"
       >
         {filteredLogs.length === 0 ? (
           <div className="m-auto flex flex-col items-center justify-center gap-2 text-zinc-500 text-xs">
@@ -421,83 +407,76 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
       </div>
 
       {/* Quick Macro Buttons Bar */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] font-semibold text-zinc-400 mr-1">Hızlı Komutlar:</span>
         <button
           type="button"
           onClick={onHardReset}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all active:scale-95"
         >
           Reset (EN)
         </button>
         <button
           type="button"
           onClick={() => onSendMessage("AT", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
           AT
         </button>
         <button
           type="button"
           onClick={() => onSendMessage("AT+GMR", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
           AT+GMR
         </button>
         <button
           type="button"
           onClick={() => onSendMessage("AT+CWLAP", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
-          AT+CWLAP
+          AT+CWLAP (Wi-Fi Tara)
         </button>
         <button
           type="button"
           onClick={() => onSendMessage("help", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
           help
         </button>
         <button
           type="button"
           onClick={() => onSendMessage("version", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
           version
         </button>
         <button
           type="button"
-          onClick={() => onSendMessage("info", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
-        >
-          info
-        </button>
-        <button
-          type="button"
           onClick={() => onSendMessage("wifi", lineEnding)}
-          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+          className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
           wifi
         </button>
       </div>
 
       {/* Bottom Command Input Bar */}
-      <div className="flex items-center gap-2 p-2 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl">
+      <div className="flex items-center gap-2 p-3 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <input
           type="text"
-          placeholder="Seri porta komut veya veri gönder (Örn: AT, help, wifi setup)..."
+          placeholder="Komut veya veri yazın... (Geçmiş için Yukarı/Aşağı ok, göndermek için Enter)"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 bg-transparent px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-none"
+          className="flex-1 bg-zinc-900 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-violet-500 font-mono"
         />
         <button
           type="button"
           onClick={handleSend}
           disabled={!inputText.trim()}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-violet-600/20 border border-violet-500/40 hover:bg-violet-600/30 hover:border-violet-400 transition-all disabled:opacity-40"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-violet-600/25 border border-violet-500/40 hover:bg-violet-600/40 backdrop-blur-xl shadow-lg transition-all active:scale-95 disabled:opacity-40"
         >
-          <Send className="w-3.5 h-3.5 text-violet-300" />
+          <Send className="w-3.5 h-3.5" />
           Gönder
         </button>
       </div>

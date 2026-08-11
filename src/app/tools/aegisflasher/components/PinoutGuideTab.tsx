@@ -45,7 +45,7 @@ export const PinoutGuideTab: React.FC = () => {
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Board Selector Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-950/60 border border-white/10 backdrop-blur-2xl">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
           <Cpu className="w-4 h-4 text-violet-400" />
           Kart Seçimi:
@@ -56,10 +56,10 @@ export const PinoutGuideTab: React.FC = () => {
               key={board.id}
               type="button"
               onClick={() => setSelectedBoardId(board.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-2xl text-xs font-semibold transition-all ${
                 selectedBoardId === board.id
-                  ? "bg-violet-500/20 text-violet-200 border border-violet-500/40 shadow-sm"
-                  : "bg-zinc-900 text-zinc-400 border border-white/5 hover:text-zinc-200 hover:bg-zinc-800"
+                  ? "bg-white/[0.1] text-zinc-100 border border-white/20 shadow-md backdrop-blur-xl scale-[1.02]"
+                  : "bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-zinc-200 hover:bg-white/[0.06]"
               }`}
             >
               {board.name.split("(")[0]}
@@ -69,10 +69,10 @@ export const PinoutGuideTab: React.FC = () => {
       </div>
 
       {/* Board Summary Specifications */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 p-5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl shadow-xl">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 p-5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <div className="flex flex-col">
           <span className="text-[10px] text-zinc-400">Form Faktörü</span>
-          <span className="text-xs font-bold text-violet-300 truncate">{currentBoard.formFactor}</span>
+          <span className="text-xs font-bold text-zinc-200 truncate">{currentBoard.formFactor}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-[10px] text-zinc-400">Çalışma Voltajı</span>
@@ -102,12 +102,12 @@ export const PinoutGuideTab: React.FC = () => {
 
       {/* Strapping & Bootloader Special Instructions */}
       {currentBoard.strappingInstructions.length > 0 && (
-        <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col gap-2">
+        <div className="p-5 rounded-3xl bg-purple-500/10 border border-purple-500/25 flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
             <ShieldAlert className="w-4 h-4 text-purple-400" />
             Önemli Bootloader & Strapping Pin Kuralları:
           </div>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-purple-200/90 font-mono">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-purple-200/90 font-mono">
             {currentBoard.strappingInstructions.map((inst, i) => (
               <li key={i} className="flex items-start gap-1.5">
                 <span className="text-purple-400">•</span>
@@ -119,7 +119,7 @@ export const PinoutGuideTab: React.FC = () => {
       )}
 
       {/* Interactive Visual Pinout Diagrams */}
-      <div className="p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl shadow-xl flex flex-col gap-6">
+      <div className="p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col gap-6">
         <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
           Pinout Diyagramı: {currentBoard.name}
         </h4>
@@ -134,7 +134,7 @@ export const PinoutGuideTab: React.FC = () => {
               {leftPins.map((p, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/70 border border-white/5 hover:border-violet-500/30 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-900/70 border border-white/5 hover:border-violet-500/30 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <span className="w-6 text-[10px] text-zinc-500 font-bold text-right">{p.pinNumber}</span>
@@ -163,7 +163,7 @@ export const PinoutGuideTab: React.FC = () => {
               {rightPins.map((p, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/70 border border-white/5 hover:border-violet-500/30 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-900/70 border border-white/5 hover:border-violet-500/30 transition-colors"
                 >
                   <div className="flex items-center gap-1.5">
                     <span

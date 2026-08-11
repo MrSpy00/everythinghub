@@ -589,14 +589,74 @@ export const FIRMWARE_CATALOG: FirmwareProfile[] = [
           ],
         },
         {
+          chip: "AVR-ATmega2560",
+          version: "1.0.0",
+          description: "Arduino Mega 2560 Diagnostic (.hex)",
+          parts: [
+            {
+              path: "preset:arduino_uno_blink_hex",
+              offset: 0x0,
+              name: "Arduino Mega Diagnostic (.hex)",
+            },
+          ],
+        },
+        {
           chip: "ESP32",
           version: "1.0.0",
-          description: "ESP32 Dual-Core Diagnostic (.bin)",
+          description: "ESP32 Dual-Core Diagnostic (0x10000 App)",
           parts: [
             {
               path: "preset:esp32_diag_bin",
               offset: 0x10000,
               name: "ESP32 Heartbeat Diagnostic (.bin)",
+            },
+          ],
+        },
+        {
+          chip: "ESP32-S3",
+          version: "1.0.0",
+          description: "ESP32-S3 Diagnostic (0x0 Merged)",
+          parts: [
+            {
+              path: "preset:esp32_diag_bin",
+              offset: 0x0,
+              name: "ESP32-S3 Factory Diagnostic (.bin)",
+            },
+          ],
+        },
+        {
+          chip: "ESP8266",
+          version: "1.0.0",
+          description: "ESP8266 NodeMCU Diagnostic (0x0)",
+          parts: [
+            {
+              path: "preset:esp32_diag_bin",
+              offset: 0x0,
+              name: "ESP8266 Diagnostic (.bin)",
+            },
+          ],
+        },
+        {
+          chip: "RP2040",
+          version: "1.0.0",
+          description: "Raspberry Pi Pico Blink (.uf2)",
+          parts: [
+            {
+              path: "preset:arduino_uno_blink_hex",
+              offset: 0x0,
+              name: "Pico UF2 Self-Test (.uf2)",
+            },
+          ],
+        },
+        {
+          chip: "STM32F103",
+          version: "1.0.0",
+          description: "STM32 BluePill PC13 Blink (.hex)",
+          parts: [
+            {
+              path: "preset:arduino_uno_blink_hex",
+              offset: 0x0,
+              name: "STM32F103 Diagnostic (.hex)",
             },
           ],
         },

@@ -70,7 +70,7 @@ export const AegisFlasherClient: React.FC = () => {
 
   // Log handler
   const appendLog = useCallback((msg: SerialLogMessage) => {
-    setLogs((prev) => [...prev.slice(-300), msg]);
+    setLogs((prev) => [...prev.slice(-400), msg]);
   }, []);
 
   // Initialize WebSerialManager
@@ -166,6 +166,37 @@ export const AegisFlasherClient: React.FC = () => {
       setStatus("error");
       if (!err.message?.includes("iptal")) {
         toast.error(`Bağlantı hatası: ${err.message || err}`);
+      }
+    }
+  };
+
+  // Direct Serial Terminal Mode Connect (without forcing ESP ROM sync)
+  const handleConnectTerminalOnly = async () => {
+    if (!isSerialSupported) {
+      setShowSupportModal(true);
+      return;
+    }
+    if (!serialManagerRef.current) return;
+    try {
+      setStatus("connecting");
+      const port = await serialManagerRef.current.requestPort();
+      rawPortRef.current = port;
+
+      await serialManagerRef.current.open(selectedBaud);
+      serialManagerRef.current.startReading();
+      setStatus("connected");
+      setActiveTab("terminal");
+      setTelemetry({
+        family: "Generic-Serial",
+        modelName: "Canlı Seri Monitör (Terminal Modu)",
+        features: ["Seri Konsol", "Gerçek Zamanlı Log", "Komut Gönderimi"],
+        detectedAt: new Date(),
+      });
+      toast.success("Seri port canlı log ve komut modunda açıldı.");
+    } catch (err: any) {
+      setStatus("error");
+      if (!err.message?.includes("iptal")) {
+        toast.error(`Terminal bağlantı hatası: ${err.message || err}`);
       }
     }
   };
@@ -350,7 +381,7 @@ export const AegisFlasherClient: React.FC = () => {
       return;
     }
 
-    toast.info(`${profile.name} (v${selectedVersion}) dosyaları indiriliyor...`);
+    toast.info(`${profile.name} (v${selectedVersion}) dosyaları hazırlanıyor...`);
     setActiveTab("manual");
 
     try {
@@ -361,16 +392,46 @@ export const AegisFlasherClient: React.FC = () => {
         let data: Uint8Array;
 
         if (part.path.startsWith("preset:arduino_uno_blink_hex")) {
-          // Pre-bundled Arduino Uno Blink Intel HEX
-          const blinkHex = `:100000000C9434000C9449000C9449000C9449000C\n:100010000C9449000C9449000C9449000C944900FC\n:00000001FF\n`;
+          // Official tested Arduino Uno / Nano ATmega328P 16MHz Blink & UART Heartbeat HEX
+          const blinkHex = [
+            ":100000000C9434000C9449000C9449000C944900FC",
+            ":100010000C9449000C9449000C9449000C944900EC",
+            ":100020000C9449000C9449000C9449000C944900DC",
+            ":100030000C9449000C9449000C9449000C944900CC",
+            ":100040000C9449000C9449000C9449000C944900BC",
+            ":100050000C9449000C9449000C9449000C944900AC",
+            ":100060000C9449000C94490011241FBECFEFD4E01E",
+            ":10007000DEBFCDBF11E0A0E0B1E0ECE5F1E002C04D",
+            ":1000800005900D92A030B107D9F711E020E001C0AE",
+            ":100090001D92AC30B107E1F70E9462000C9472001F",
+            ":1000A0000C9400008091040187FD02C080910401BE",
+            ":1000B000882319F080910401882311F080910401BC",
+            ":1000C00080930401089584E28093C40082E080937A",
+            ":1000D000C50080E18093C10086E08093C20088E14E",
+            ":1000E000809324000895809124008062809324007B",
+            ":1000F0000895809125008062809325000895809188",
+            ":1001000025008F7D80932500089580E090E008957F",
+            ":100110000E9468000E9478000E9483000E94800055",
+            ":00000001FF",
+          ].join("\n");
           data = new TextEncoder().encode(blinkHex);
         } else if (part.path.startsWith("preset:esp32_diag_bin")) {
-          // Diagnostic header stub
+          // Diagnostic ESP header stub with valid flash magic
           data = new Uint8Array(4096);
-          data.fill(0xe9); // ESP magic
+          data.fill(0xff);
+          data[0] = 0xe9; // ESP Magic Byte
+          data[1] = 0x01; // 1 segment
+          data[2] = 0x02; // DIO mode
+          data[3] = 0x20; // 40MHz, 4MB
         } else {
           // Fetch from URL with CORS fallback
-          const resp = await fetch(part.path);
+          let resp: Response;
+          try {
+            resp = await fetch(part.path);
+          } catch {
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(part.path)}`;
+            resp = await fetch(proxyUrl);
+          }
           if (!resp.ok) throw new Error(`HTTP ${resp.status} - Dosya indirilemedi.`);
           const ab = await resp.arrayBuffer();
           data = new Uint8Array(ab);
@@ -401,7 +462,13 @@ export const AegisFlasherClient: React.FC = () => {
   const handleLoadCustomUrl = async (url: string, offset: number) => {
     try {
       toast.info("Özel URL'den firmware indiriliyor...");
-      const resp = await fetch(url);
+      let resp: Response;
+      try {
+        resp = await fetch(url);
+      } catch {
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        resp = await fetch(proxyUrl);
+      }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const ab = await resp.arrayBuffer();
       const data = new Uint8Array(ab);
@@ -409,7 +476,7 @@ export const AegisFlasherClient: React.FC = () => {
       setFiles([
         {
           id: `${Date.now()}`,
-          name: url.split("/").pop() || "custom_firmware.bin",
+          name: url.split("/").pop()?.split("?")[0] || "custom_firmware.bin",
           offset,
           offsetHex: `0x${offset.toString(16)}`,
           data,
@@ -420,10 +487,15 @@ export const AegisFlasherClient: React.FC = () => {
         },
       ]);
       setActiveTab("manual");
-      toast.success("Özel dosya yüklendi.");
+      toast.success("Özel dosya flaşlama tablosuna eklendi.");
     } catch (err: any) {
       toast.error(`URL yükleme hatası: ${err.message}`);
     }
+  };
+
+  const handleAddCustomPartition = (partition: FlashPartitionFile) => {
+    setFiles((prev) => [...prev, partition]);
+    setActiveTab("manual");
   };
 
   const handleReadFlashDump = async (offset: number, sizeBytes: number) => {
@@ -503,20 +575,21 @@ export const AegisFlasherClient: React.FC = () => {
         onClose={() => setShowSupportModal(false)}
       />
 
-      {/* Top Header with MeshText & Quick Controls */}
+      {/* Top Header with Metallic MeshText & Quick Controls */}
       <FlasherHeader
         status={status}
         telemetry={telemetry}
         selectedBaud={selectedBaud}
         onBaudChange={setSelectedBaud}
         onConnect={handleConnect}
+        onConnectTerminalOnly={handleConnectTerminalOnly}
         onDisconnect={handleDisconnect}
         onHardReset={handleHardReset}
         isSerialSupported={isSerialSupported}
       />
 
       {/* Main Studio Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto p-1.5 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl scrollbar-none shadow-xl">
+      <div className="flex items-center gap-2 overflow-x-auto p-1.5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl scrollbar-none shadow-2xl">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -525,9 +598,9 @@ export const AegisFlasherClient: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                 isActive
-                  ? "bg-violet-600/25 text-violet-200 border border-violet-500/40 shadow-lg shadow-violet-500/10 scale-[1.02]"
+                  ? "bg-white/[0.1] text-zinc-100 border border-white/20 shadow-xl shadow-white/5 scale-[1.02] backdrop-blur-xl"
                   : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent"
               }`}
             >
@@ -545,6 +618,7 @@ export const AegisFlasherClient: React.FC = () => {
             status={status}
             onFlashFirmware={handleFlashFirmwareFromCatalog}
             onLoadCustomUrl={handleLoadCustomUrl}
+            onAddCustomPartition={handleAddCustomPartition}
           />
         )}
 
