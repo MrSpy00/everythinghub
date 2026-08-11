@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { FlashPartitionFile } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
+import { downloadBinaryWithFallback } from "@/lib/flasher/binary-downloader";
 
 interface GitHubReleaseAsset {
   id: number;
@@ -168,20 +169,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
       }
 
       toast.info(lang === "tr" ? "Firmware dosyası indiriliyor..." : "Downloading firmware binary...");
-      let resp: Response;
-      try {
-        resp = await fetch(targetUrl);
-      } catch {
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-        resp = await fetch(proxyUrl);
-      }
-
-      if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status}`);
-      }
-
-      const ab = await resp.arrayBuffer();
-      const data = new Uint8Array(ab);
+      const data = await downloadBinaryWithFallback(targetUrl);
       const filename = targetUrl.split("/").pop()?.split("?")[0] || "downloaded_firmware.bin";
 
       analyzeBinary(filename, data);
@@ -197,18 +185,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
     setIsLoading(true);
     toast.info(`${asset.name}...`);
     try {
-      let resp: Response;
-      try {
-        resp = await fetch(asset.browser_download_url);
-      } catch {
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(asset.browser_download_url)}`;
-        resp = await fetch(proxyUrl);
-      }
-
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const ab = await resp.arrayBuffer();
-      const data = new Uint8Array(ab);
-
+      const data = await downloadBinaryWithFallback(asset.browser_download_url);
       analyzeBinary(asset.name, data);
       toast.success(`${asset.name} ✓`);
     } catch (err: any) {

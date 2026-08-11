@@ -69,7 +69,28 @@ export class EspFlasherEngine {
 
     try {
       this.log("sys", "ESP ROM bootloader moduna alınıyor ve çip taranıyor...");
-      const chipRomName = await this.esploader.main();
+      let chipRomName = "";
+      try {
+        chipRomName = await this.esploader.main();
+      } catch (firstErr: any) {
+        this.log("warn", `İlk senkronizasyon denemesi başarısız (${firstErr.message || firstErr}). Otomatik DTR/RTS sıfırlaması ile yeniden deneniyor...`);
+        try {
+          if ((this.transport as any)?.setDTR && (this.transport as any)?.setRTS) {
+            await (this.transport as any).setDTR(false);
+            await (this.transport as any).setRTS(true);
+            await new Promise((r) => setTimeout(r, 100));
+            await (this.transport as any).setDTR(true);
+            await (this.transport as any).setRTS(false);
+            await new Promise((r) => setTimeout(r, 100));
+            await (this.transport as any).setDTR(false);
+          }
+          await new Promise((r) => setTimeout(r, 200));
+          chipRomName = await this.esploader.main();
+        } catch (retryErr: any) {
+          throw new Error(`ESP senkronizasyonu başarısız. Lütfen karta BOOT butonuna basılı tutarak bağlanmayı deneyin. (${retryErr.message || retryErr})`);
+        }
+      }
+
       this.log("success", `ESP tespit edildi: ${chipRomName || "ESP32 Ailesi"}`);
 
       // Run stub flasher for high-speed flashing and flash commands
@@ -81,16 +102,23 @@ export class EspFlasherEngine {
         this.log("warn", `Stub yükleme uyarısı (ROM modunda devam edilecek): ${stubErr.message || stubErr}`);
       }
 
-      // Change baud rate for faster transfer if requested
+      // Change baud rate for faster transfer if requested, with safe fallback
       if (flashBaud > initialBaud) {
         try {
           this.log("sys", `Aktarım hızı ${flashBaud} baud'a yükseltiliyor...`);
-          // Note: changeBaud in esptool-js sets internal baud
           (this.esploader as any).baudrate = flashBaud;
           await this.esploader.changeBaud();
           this.log("success", `Hız ${flashBaud} baud olarak ayarlandı.`);
-        } catch {
-          this.log("warn", `Baud yükseltilemedi, ${initialBaud} baud ile devam ediliyor.`);
+        } catch (baudErr: any) {
+          this.log("warn", `Yüksek baud hızı (${flashBaud}) uygulanamadı: ${baudErr.message || baudErr}. 115,200 baud kararlı modda devam ediliyor.`);
+          try {
+            (this.esploader as any).baudrate = initialBaud;
+            if ((this.transport as any)?.baudrate !== undefined) {
+              (this.transport as any).baudrate = initialBaud;
+            }
+          } catch {
+            // ignore
+          }
         }
       }
 

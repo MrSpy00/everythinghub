@@ -320,10 +320,73 @@ export const FIRMWARE_CATALOG: FirmwareProfile[] = [
         {
           chip: "ESP32-S3",
           version: "1.7.0",
-          description: "M5Stack Cardputer (ESP32-S3 with Keyboard & Screen)",
-          descriptionEn: "M5Stack Cardputer (ESP32-S3 with Keyboard & Screen)",
+          description: "M5Stack Cardputer (ESP32-S3 Klavye & Ekran)",
+          descriptionEn: "M5Stack Cardputer (ESP32-S3 Keyboard & Screen)",
+          minFlashSize: "8MB",
           parts: [
-            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_cardputer_v1.7.0.bin", offset: 0x0, name: "Bruce Cardputer Complete Binary" },
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_cardputer_v1.7.0.bin", offset: 0x0, name: "Bruce Cardputer Factory Image" },
+          ],
+        },
+        {
+          chip: "ESP32-S3",
+          version: "1.7.0",
+          description: "LilyGO T-Display S3 (ESP32-S3)",
+          descriptionEn: "LilyGO T-Display S3 (ESP32-S3)",
+          minFlashSize: "8MB",
+          parts: [
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_tdisplays3_v1.7.0.bin", offset: 0x0, name: "Bruce T-Display S3 Binary" },
+          ],
+        },
+        {
+          chip: "ESP32",
+          version: "1.7.0",
+          description: "Cheap Yellow Display CYD (ESP32-2432S028)",
+          descriptionEn: "Cheap Yellow Display CYD (ESP32-2432S028)",
+          minFlashSize: "4MB",
+          parts: [
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_cyd_v1.7.0.bin", offset: 0x0, name: "Bruce CYD Display Binary" },
+          ],
+        },
+        {
+          chip: "ESP32",
+          version: "1.7.0",
+          description: "M5StickC Plus 2 (ESP32)",
+          descriptionEn: "M5StickC Plus 2 (ESP32)",
+          minFlashSize: "4MB",
+          parts: [
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_stickcplus2_v1.7.0.bin", offset: 0x0, name: "Bruce M5StickC Plus2 Binary" },
+          ],
+        },
+        {
+          chip: "ESP32-S3",
+          version: "1.7.0",
+          description: "ESP32-S3 Genel Model (WROOM / DevKit)",
+          descriptionEn: "ESP32-S3 Generic Board (WROOM / DevKit)",
+          minFlashSize: "8MB",
+          parts: [
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_esp32s3_v1.7.0.bin", offset: 0x0, name: "Bruce ESP32-S3 Generic Binary" },
+          ],
+        },
+        {
+          chip: "ESP32",
+          version: "1.7.0",
+          description: "ESP32 Genel WROOM-32 Model",
+          descriptionEn: "ESP32 Generic WROOM-32 Board",
+          minFlashSize: "4MB",
+          parts: [
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.7.0/bruce_esp32_v1.7.0.bin", offset: 0x0, name: "Bruce ESP32 Generic Binary" },
+          ],
+        },
+      ],
+      "1.6.2": [
+        {
+          chip: "ESP32-S3",
+          version: "1.6.2",
+          description: "M5Stack Cardputer (v1.6.2)",
+          descriptionEn: "M5Stack Cardputer (v1.6.2)",
+          minFlashSize: "8MB",
+          parts: [
+            { path: "https://github.com/pr3y/Bruce/releases/download/v1.6.2/bruce_cardputer_v1.6.2.bin", offset: 0x0, name: "Bruce Cardputer Binary v1.6.2" },
           ],
         },
       ],

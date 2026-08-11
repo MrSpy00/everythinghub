@@ -35,6 +35,7 @@ import { BrowserSupportModal } from "./components/BrowserSupportModal";
 import { WebSerialManager } from "@/lib/flasher/webserial-manager";
 import { EspFlasherEngine } from "@/lib/flasher/esp-flasher-engine";
 import { Stk500FlasherEngine } from "@/lib/flasher/stk500-flasher-engine";
+import { downloadBinaryWithFallback } from "@/lib/flasher/binary-downloader";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
 import {
@@ -448,16 +449,7 @@ export const AegisFlasherClient: React.FC = () => {
           data[2] = 0x02;
           data[3] = 0x20;
         } else {
-          let resp: Response;
-          try {
-            resp = await fetch(part.path);
-          } catch {
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(part.path)}`;
-            resp = await fetch(proxyUrl);
-          }
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const ab = await resp.arrayBuffer();
-          data = new Uint8Array(ab);
+          data = await downloadBinaryWithFallback(part.path);
         }
 
         const offsetVal = typeof part.offset === "number" ? part.offset : parseInt(part.offset, 16) || 0;
@@ -484,16 +476,7 @@ export const AegisFlasherClient: React.FC = () => {
 
   const handleLoadCustomUrl = async (url: string, offset: number) => {
     try {
-      let resp: Response;
-      try {
-        resp = await fetch(url);
-      } catch {
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-        resp = await fetch(proxyUrl);
-      }
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const ab = await resp.arrayBuffer();
-      const data = new Uint8Array(ab);
+      const data = await downloadBinaryWithFallback(url);
 
       setFiles([
         {
