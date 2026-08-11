@@ -98,8 +98,8 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
 
       {/* Floating Animated Liquid Glass Popover */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 p-1.5 rounded-2xl bg-zinc-950/95 border border-white/15 backdrop-blur-2xl shadow-2xl max-h-64 overflow-y-auto scrollbar-none animate-in fade-in-0 zoom-in-95 duration-150">
-          <div className="flex flex-col gap-1">
+        <div className="absolute left-0 sm:left-auto right-0 top-full mt-1.5 z-50 p-2 rounded-2xl bg-zinc-950/98 border border-white/15 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] max-h-80 overflow-y-auto scrollbar-none min-w-full sm:min-w-[320px] md:min-w-[380px] max-w-[90vw] animate-in fade-in-0 zoom-in-95 duration-150">
+          <div className="flex flex-col gap-1.5">
             {options.map((opt) => {
               const isSelected = String(opt.value) === String(value);
               const OptIcon = opt.icon;
@@ -112,34 +112,34 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
                     onChange(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left p-2.5 rounded-xl transition-all duration-150 flex items-center justify-between gap-3 group cursor-pointer ${
+                  className={`w-full text-left p-3 rounded-xl transition-all duration-150 flex items-center justify-between gap-3 group cursor-pointer ${
                     isSelected
                       ? "bg-violet-600/20 text-violet-200 border border-violet-500/40 font-bold shadow-md"
                       : "text-zinc-300 hover:text-white hover:bg-white/[0.08] border border-transparent"
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
                     {OptIcon && (
-                      <OptIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-violet-300" : "text-zinc-400"}`} />
+                      <OptIcon className={`w-4 h-4 shrink-0 mt-0.5 ${isSelected ? "text-violet-300" : "text-zinc-400"}`} />
                     )}
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs truncate">{opt.label}</span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-xs font-semibold leading-relaxed break-words">{opt.label}</span>
                       {opt.subtitle && (
-                        <span className="text-[10px] text-zinc-400 font-mono line-clamp-1 opacity-80 group-hover:opacity-100">
+                        <span className="text-[10px] text-zinc-400 font-mono mt-0.5 line-clamp-2 opacity-80 group-hover:opacity-100">
                           {opt.subtitle}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 self-center">
                     {opt.badge && (
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase bg-violet-500/20 text-violet-300 border border-violet-500/30 whitespace-nowrap">
                         {opt.badge}
                       </span>
                     )}
                     {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                      <Check className="w-4 h-4 text-violet-400 shrink-0" />
                     )}
                   </div>
                 </button>

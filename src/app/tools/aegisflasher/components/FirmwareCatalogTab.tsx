@@ -200,8 +200,8 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
 
           const buildSelectOptions: FlasherSelectOption[] = buildsForVer.map((b, idx) => ({
             value: idx,
-            label: `${b.chip} — ${getLocalizedBuildDescription(b, lang)}`,
-            subtitle: b.minFlashSize ? `Min: ${b.minFlashSize}` : undefined,
+            label: getLocalizedBuildDescription(b, lang),
+            subtitle: b.minFlashSize ? `Min Flash: ${b.minFlashSize}` : undefined,
             badge: String(b.chip),
           }));
 

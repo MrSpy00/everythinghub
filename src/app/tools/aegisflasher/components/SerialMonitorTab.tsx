@@ -309,7 +309,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            Zaman
+            {lang === "en" ? "Time" : "Zaman"}
           </button>
 
           {/* Hex View Mode Toggle */}
@@ -323,7 +323,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             }`}
           >
             <Binary className="w-3.5 h-3.5" />
-            HEX Modu
+            {lang === "en" ? "HEX Mode" : "HEX Modu"}
           </button>
 
           {/* Auto Scroll Toggle */}
@@ -337,7 +337,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             }`}
           >
             {autoScroll ? <ArrowDown className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-            {autoScroll ? "Oto-Kaydır" : "Durduruldu"}
+            {autoScroll ? (lang === "en" ? "Auto-Scroll" : "Oto-Kaydır") : (lang === "en" ? "Paused" : "Durduruldu")}
           </button>
         </div>
 
@@ -348,7 +348,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
             <input
               type="text"
-              placeholder="Loglarda filtrele..."
+              placeholder={lang === "en" ? "Filter logs..." : "Loglarda filtrele..."}
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               className="bg-zinc-900 border border-white/10 rounded-2xl pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none w-36 focus:w-48 transition-all"
@@ -365,7 +365,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             type="button"
             onClick={copyLogs}
             className="p-2 rounded-2xl bg-white/[0.04] border border-white/10 text-zinc-300 hover:text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all shadow-md active:scale-95"
-            title="Tüm Logları Kopyala"
+            title={lang === "en" ? "Copy All Logs" : "Tüm Logları Kopyala"}
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -374,7 +374,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             type="button"
             onClick={exportLogs}
             className="p-2 rounded-2xl bg-white/[0.04] border border-white/10 text-zinc-300 hover:text-white hover:bg-white/[0.08] backdrop-blur-xl transition-all shadow-md active:scale-95"
-            title="Log Dosyasını İndir (.log)"
+            title={lang === "en" ? "Download Log File (.log)" : "Log Dosyasını İndir (.log)"}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -383,7 +383,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             type="button"
             onClick={onClearLogs}
             className="p-2 rounded-2xl bg-white/[0.04] border border-white/10 text-zinc-300 hover:text-rose-400 hover:bg-rose-500/10 backdrop-blur-xl transition-all shadow-md active:scale-95"
-            title="Terminali Temizle"
+            title={lang === "en" ? "Clear Terminal" : "Terminali Temizle"}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -400,8 +400,8 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             <Terminal className="w-8 h-8 text-zinc-600 animate-pulse" />
             <span>
               {logs.length === 0
-                ? "Seri monitör hazır. Cihaza bağlanıldığında loglar burada canlı akacaktır."
-                : "Filtre kriterlerine uygun log bulunamadı."}
+                ? (lang === "en" ? "Serial monitor ready. Logs will stream live when connected." : "Seri monitör hazır. Cihaza bağlanıldığında loglar burada canlı akacaktır.")
+                : (lang === "en" ? "No logs matching filter criteria." : "Filtre kriterlerine uygun log bulunamadı.")}
             </span>
           </div>
         ) : (
@@ -414,7 +414,9 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
 
       {/* Quick Macro Buttons Bar */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold text-zinc-400 mr-1">Hızlı Komutlar:</span>
+        <span className="text-[11px] font-semibold text-zinc-400 mr-1">
+          {lang === "en" ? "Quick Commands:" : "Hızlı Komutlar:"}
+        </span>
         <button
           type="button"
           onClick={onHardReset}
@@ -441,7 +443,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           onClick={() => onSendMessage("AT+CWLAP", lineEnding)}
           className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-white/[0.04] border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white backdrop-blur-xl transition-all font-mono active:scale-95"
         >
-          AT+CWLAP (Wi-Fi Tara)
+          {lang === "en" ? "AT+CWLAP (Scan Wi-Fi)" : "AT+CWLAP (Wi-Fi Tara)"}
         </button>
         <button
           type="button"
@@ -470,7 +472,11 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
       <div className="flex items-center gap-2 p-3 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <input
           type="text"
-          placeholder="Komut veya veri yazın... (Geçmiş için Yukarı/Aşağı ok, göndermek için Enter)"
+          placeholder={
+            lang === "en"
+              ? "Type command or data... (Up/Down arrow for history, Enter to send)"
+              : "Komut veya veri yazın... (Geçmiş için Yukarı/Aşağı ok, göndermek için Enter)"
+          }
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -483,7 +489,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold text-white bg-violet-600/25 border border-violet-500/40 hover:bg-violet-600/40 backdrop-blur-xl shadow-lg transition-all active:scale-95 disabled:opacity-40"
         >
           <Send className="w-3.5 h-3.5" />
-          Gönder
+          {lang === "en" ? "Send" : "Gönder"}
         </button>
       </div>
     </div>
