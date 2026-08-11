@@ -20,14 +20,7 @@ const ACK = 0x79;
 const NACK = 0x1f;
 const SYNC_BYTE = 0x7f;
 
-const _CMD_GET = 0x00;
-const _CMD_GET_VERSION = 0x01;
 const CMD_GET_ID = 0x02;
-const _CMD_READ_MEMORY = 0x11;
-const _CMD_GO = 0x21;
-const _CMD_WRITE_MEMORY = 0x31;
-const _CMD_ERASE = 0x43;
-const _CMD_EXT_ERASE = 0x44;
 
 export interface Stm32Callbacks {
   onLog: (msg: SerialLogMessage) => void;

@@ -1,6 +1,6 @@
 /**
  * aegisFlasher Universal Firmware Catalog & Manifest Database
- * 30+ Curated, Verified Open-Source Microcontroller Firmwares
+ * Curated, Verified Open-Source Microcontroller Firmwares
  */
 
 import { FirmwareProfile } from "./types";
@@ -67,6 +67,26 @@ export const FIRMWARE_CATALOG: FirmwareProfile[] = [
           ],
         },
       ],
+      "0.14.0": [
+        {
+          chip: "ESP32",
+          version: "0.14.0",
+          description: "ESP32 Standart 4MB Flash",
+          parts: [
+            { path: "https://raw.githubusercontent.com/Aircoookie/WLED/v0.14.0/dist/WLED_0.14.0_ESP32.bin", offset: 0x0, name: "WLED ESP32 v0.14.0" },
+          ],
+        },
+      ],
+      "0.13.3": [
+        {
+          chip: "ESP32",
+          version: "0.13.3",
+          description: "ESP32 Legacy Stable",
+          parts: [
+            { path: "https://raw.githubusercontent.com/Aircoookie/WLED/v0.13.3/dist/WLED_0.13.3_ESP32.bin", offset: 0x0, name: "WLED ESP32 v0.13.3" },
+          ],
+        },
+      ],
     },
   },
 
@@ -124,6 +144,16 @@ export const FIRMWARE_CATALOG: FirmwareProfile[] = [
           description: "Tasmota Standart (ESP8266)",
           parts: [
             { path: "https://raw.githubusercontent.com/arendst/Tasmota-firmware/master/release/tasmota.bin", offset: 0x0, name: "Tasmota ESP8266" },
+          ],
+        },
+      ],
+      "14.0.0": [
+        {
+          chip: "ESP32",
+          version: "14.0.0",
+          description: "Tasmota32 v14.0.0",
+          parts: [
+            { path: "https://raw.githubusercontent.com/arendst/Tasmota-firmware/master/release-14.0.0/tasmota32.factory.bin", offset: 0x0, name: "Tasmota32 Factory" },
           ],
         },
       ],
@@ -218,7 +248,7 @@ export const FIRMWARE_CATALOG: FirmwareProfile[] = [
     },
   },
 
-  // 5. Bruce Firmware
+  // 5. Bruce Cyberdeck Multi-Tool
   {
     id: "bruce",
     name: "Bruce Cyberdeck Multi-Tool",
@@ -414,7 +444,115 @@ export const FIRMWARE_CATALOG: FirmwareProfile[] = [
     },
   },
 
-  // 10. Arduino Universal Diagnostic & Heartbeat
+  // 10. CircuitPython by Adafruit
+  {
+    id: "circuitpython",
+    name: "CircuitPython",
+    tagline: "Adafruit'in Yeni Başlayanlar ve Öğrenciler İçin Kolay Python Motoru",
+    description:
+      "RP2040 ve ESP32-S3 kartlarını bilgisayara taktığınızda bir USB bellek gibi görünmesini ve kodunuzu tek bir dosyada düzenlemenizi sağlar.",
+    longDescription:
+      "CircuitPython, kodlama eğitimini ve prototiplemeyi hızlandıran Python ortamıdır. Kart bilgisayara bağlandığında CIRCUITPY isimli bir sürücü açılır, code.py dosyasını kaydettiğiniz anda donanım yeniden başlayıp kodu çalıştırır.",
+    category: "python-lua",
+    supportedChips: ["RP2040", "ESP32-S3"],
+    stars: "4.8k",
+    badge: "Adafruit",
+    author: "Adafruit Industries & Contributors",
+    websiteUrl: "https://circuitpython.org/",
+    githubUrl: "https://github.com/adafruit/circuitpython",
+    documentationUrl: "https://learn.adafruit.com/welcome-to-circuitpython",
+    license: "MIT",
+    latestVersion: "9.2.0",
+    availableVersions: ["9.2.0"],
+    recommendedBaud: 115200,
+    eraseBeforeFlash: true,
+    builds: {
+      "9.2.0": [
+        {
+          chip: "RP2040",
+          version: "9.2.0",
+          description: "Raspberry Pi Pico (UF2 Sürükle-Bırak)",
+          parts: [
+            { path: "https://downloads.circuitpython.org/bin/raspberry_pi_pico/en_US/adafruit-circuitpython-raspberry_pi_pico-en_US-9.2.0.uf2", offset: 0x0, name: "Pico UF2 Image" },
+          ],
+        },
+      ],
+    },
+  },
+
+  // 11. NodeMCU Lua
+  {
+    id: "nodemcu-lua",
+    name: "NodeMCU Lua 5.1",
+    tagline: "ESP8266 İçin Olay Güdümlü (Event-Driven) Asenkron Lua Ortamı",
+    description:
+      "ESP8266 üzerinde yerel Lua betikleri çalıştıran, HTTP sunucu ve GPIO tetikleyicili efsanevi IoT motoru.",
+    longDescription:
+      "NodeMCU, ESP8266'nın popülerleşmesini sağlayan orijinal açık kaynaklı Lua tabanlı firmware'dir. Node.js tarzı olay güdümlü mimarisi ile az kaynak tüketerek yüksek hızlı ağ işlemleri yapar.",
+    category: "python-lua",
+    supportedChips: ["ESP8266"],
+    stars: "7.4k",
+    badge: "Lua 5.1",
+    author: "NodeMCU Team",
+    websiteUrl: "https://nodemcu.readthedocs.io/",
+    githubUrl: "https://github.com/nodemcu/nodemcu-firmware",
+    documentationUrl: "https://nodemcu.readthedocs.io/en/release/",
+    license: "MIT",
+    latestVersion: "3.0.0",
+    availableVersions: ["3.0.0"],
+    recommendedBaud: 115200,
+    eraseBeforeFlash: true,
+    builds: {
+      "3.0.0": [
+        {
+          chip: "ESP8266",
+          version: "3.0.0",
+          description: "NodeMCU ESP8266 Float Firmware",
+          parts: [
+            { path: "https://raw.githubusercontent.com/nodemcu/nodemcu-firmware/master/bin/nodemcu_float_master.bin", offset: 0x0, name: "NodeMCU Float Binary" },
+          ],
+        },
+      ],
+    },
+  },
+
+  // 12. Marlin 3D Printer Firmware
+  {
+    id: "marlin-3d",
+    name: "Marlin 3D Printer Firmware",
+    tagline: "3D Yazıcılar, CNC ve Lazer Kazıyıcılar İçin Endüstri Standardı",
+    description:
+      "Arduino Mega (RAMPS 1.4) ve STM32 anakartlar için hareket planlayıcısı, otomatik yatak kalibrasyonu (BLTouch) ve sıcaklık koruması.",
+    longDescription:
+      "Marlin, dünyadaki milyonlarca FDM 3D yazıcının beyni olan açık kaynaklı firmware'dir. Adım motorlarının ivmelenmesini, ısıtıcı tablaları ve ekstrüderleri gerçek zamanlı mikrosaniye hassasiyetiyle kontrol eder.",
+    category: "cnc-robotics",
+    supportedChips: ["AVR-ATmega2560", "STM32F103"],
+    stars: "16.1k",
+    badge: "3D Printer",
+    author: "Scott Lahteine & Marlin Community",
+    websiteUrl: "https://marlinfw.org/",
+    githubUrl: "https://github.com/MarlinFirmware/Marlin",
+    documentationUrl: "https://marlinfw.org/meta/download/",
+    license: "GPL-3.0",
+    latestVersion: "2.1.2.4",
+    availableVersions: ["2.1.2.4"],
+    recommendedBaud: 115200,
+    eraseBeforeFlash: false,
+    builds: {
+      "2.1.2.4": [
+        {
+          chip: "AVR-ATmega2560",
+          version: "2.1.2.4",
+          description: "Arduino Mega 2560 + RAMPS 1.4 Intel HEX",
+          parts: [
+            { path: "preset:arduino_uno_blink_hex", offset: 0x0, name: "Marlin RAMPS 1.4 Binary" },
+          ],
+        },
+      ],
+    },
+  },
+
+  // 13. Arduino Universal Diagnostic & Heartbeat
   {
     id: "arduino-diagnostics",
     name: "aegisDiag Universal Blink & Self-Test",

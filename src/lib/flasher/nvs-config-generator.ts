@@ -42,7 +42,6 @@ export class NvsConfigGenerator {
       // Entry bitmap (32 bytes = 128 entries of 32 bytes each)
       // 00 = Empty/Written, 01 = Written
       if (page === 0) {
-        let _entryIdx = 0;
         let dataOffset = pageStart + 64; // Start of item data after header and bitmap
 
         for (const item of entries) {
@@ -82,8 +81,6 @@ export class NvsConfigGenerator {
             view.setUint32(dataOffset + 24, num, true);
             dataOffset += 32;
           }
-
-          _entryIdx += span;
         }
       }
     }

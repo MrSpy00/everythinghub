@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Terminal,
   Send,
@@ -14,8 +14,13 @@ import {
   Zap,
   Sliders,
   Check,
+  Search,
+  Pause,
+  Play,
+  Filter,
 } from "lucide-react";
 import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
+import { parseAnsiString, AnsiToken } from "@/lib/flasher/ansi-parser";
 
 interface SerialMonitorTabProps {
   status: ConnectionStatus;
@@ -45,11 +50,14 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   const [autoScroll, setAutoScroll] = useState<boolean>(true);
   const [showTimestamps, setShowTimestamps] = useState<boolean>(true);
   const [showHexMode, setShowHexMode] = useState<boolean>(false);
+  const [filterSeverity, setFilterSeverity] = useState<string>("all");
+  const [searchFilter, setSearchFilter] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   const logsEndRef = useRef<HTMLDivElement>(null);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (autoScroll && logsEndRef.current) {
@@ -90,59 +98,150 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   };
 
   const copyLogs = () => {
-    const fullText = logs.map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`).join("\n");
+    const fullText = logs
+      .map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`)
+      .join("\n");
     navigator.clipboard.writeText(fullText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const exportLogs = () => {
-    const fullText = logs.map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`).join("\n");
+    const fullText = logs
+      .map((l) => `[${l.timestamp}] [${l.direction.toUpperCase()}] ${l.text}`)
+      .join("\n");
     const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `aegisFlasher_serial_log_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.log`;
+    a.download = `aegisFlasher_serial_${selectedBaud}baud_${new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/:/g, "-")}.log`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  // ANSI escape sequences styling helper
-  const renderLogLine = (log: SerialLogMessage) => {
-    let colorClass = "text-zinc-200";
-    if (log.direction === "err") colorClass = "text-rose-400 font-semibold";
-    else if (log.direction === "warn") colorClass = "text-amber-400";
-    else if (log.direction === "success") colorClass = "text-emerald-400 font-semibold";
-    else if (log.direction === "sys") colorClass = "text-violet-400";
-    else if (log.direction === "tx") colorClass = "text-cyan-400";
+  // Filtered Logs list
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      if (filterSeverity !== "all" && log.direction !== filterSeverity) {
+        return false;
+      }
+      if (
+        searchFilter.trim() &&
+        !log.text.toLowerCase().includes(searchFilter.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [logs, filterSeverity, searchFilter]);
+
+  // Hex dump helper for raw bytes
+  const renderHexLine = (log: SerialLogMessage) => {
+    const textBytes = log.rawBytes || new TextEncoder().encode(log.text);
+    const hexParts: string[] = [];
+    const asciiParts: string[] = [];
+
+    for (let i = 0; i < Math.min(16, textBytes.length); i++) {
+      const b = textBytes[i];
+      hexParts.push(b.toString(16).padStart(2, "0").toUpperCase());
+      asciiParts.push(b >= 32 && b <= 126 ? String.fromCharCode(b) : ".");
+    }
 
     return (
-      <div key={log.id} className="flex items-start gap-2 py-0.5 font-mono text-xs leading-relaxed hover:bg-white/[0.02] px-1 rounded">
+      <div
+        key={log.id}
+        className="flex items-center gap-3 py-0.5 font-mono text-[11px] hover:bg-white/[0.02] px-1 rounded"
+      >
         {showTimestamps && (
-          <span className="text-[10px] text-zinc-500 select-none font-mono shrink-0">
+          <span className="text-[10px] text-zinc-500 shrink-0 select-none">
+            [{log.timestamp}]
+          </span>
+        )}
+        <span className="text-violet-400 shrink-0 w-8 uppercase text-[10px] font-bold">
+          {log.direction}
+        </span>
+        <span className="text-cyan-300 font-mono tracking-wider shrink-0">
+          {hexParts.join(" ").padEnd(48, " ")}
+        </span>
+        <span className="text-zinc-400 font-mono select-none">
+          |{asciiParts.join("")}|
+        </span>
+      </div>
+    );
+  };
+
+  // Render ANSI Rich Text Line
+  const renderLogLine = (log: SerialLogMessage) => {
+    if (showHexMode) {
+      return renderHexLine(log);
+    }
+
+    const tokens = parseAnsiString(log.text);
+
+    return (
+      <div
+        key={log.id}
+        className="flex items-start gap-2 py-0.5 font-mono text-xs leading-relaxed hover:bg-white/[0.02] px-1 rounded transition-colors"
+      >
+        {showTimestamps && (
+          <span className="text-[10px] text-zinc-500 select-none font-mono shrink-0 pt-0.5">
             [{log.timestamp}]
           </span>
         )}
         <span
-          className={`shrink-0 text-[10px] uppercase font-bold select-none px-1 rounded ${
+          className={`shrink-0 text-[10px] uppercase font-bold select-none px-1 py-0.5 rounded leading-none ${
             log.direction === "tx"
-              ? "bg-cyan-500/15 text-cyan-400"
+              ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/20"
               : log.direction === "rx"
               ? "bg-zinc-800 text-zinc-400"
               : log.direction === "sys"
-              ? "bg-violet-500/15 text-violet-400"
+              ? "bg-violet-500/15 text-violet-400 border border-violet-500/20"
               : log.direction === "err"
-              ? "bg-rose-500/15 text-rose-400"
+              ? "bg-rose-500/15 text-rose-400 border border-rose-500/20"
               : log.direction === "warn"
-              ? "bg-amber-500/15 text-amber-400"
-              : "bg-emerald-500/15 text-emerald-400"
+              ? "bg-amber-500/15 text-amber-400 border border-amber-500/20"
+              : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
           }`}
         >
           {log.direction}
         </span>
-        <span className={`break-all whitespace-pre-wrap flex-1 ${colorClass}`}>
-          {log.text}
-        </span>
+
+        <div className="break-all whitespace-pre-wrap flex-1">
+          {tokens.length === 0 ? (
+            <span className="text-zinc-200">{log.text}</span>
+          ) : (
+            tokens.map((tok: AnsiToken, i: number) => {
+              const style: React.CSSProperties = {};
+              if (tok.color) style.color = tok.color;
+              if (tok.backgroundColor) style.backgroundColor = tok.backgroundColor;
+              if (tok.bold) style.fontWeight = 700;
+              if (tok.italic) style.fontStyle = "italic";
+              if (tok.underline) style.textDecoration = "underline";
+
+              let defaultColorClass = "text-zinc-200";
+              if (!tok.color) {
+                if (log.direction === "err") defaultColorClass = "text-rose-400 font-semibold";
+                else if (log.direction === "warn") defaultColorClass = "text-amber-400";
+                else if (log.direction === "success") defaultColorClass = "text-emerald-400 font-semibold";
+                else if (log.direction === "sys") defaultColorClass = "text-violet-400";
+                else if (log.direction === "tx") defaultColorClass = "text-cyan-400";
+              }
+
+              return (
+                <span
+                  key={i}
+                  style={style}
+                  className={!tok.color ? defaultColorClass : undefined}
+                >
+                  {tok.text}
+                </span>
+              );
+            })
+          )}
+        </div>
       </div>
     );
   };
@@ -189,7 +288,25 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             <option value="none">Satır Sonu Yok</option>
           </select>
 
-          {/* Toggles */}
+          {/* Direction Filter */}
+          <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-xl px-2 py-1 text-xs">
+            <Filter className="w-3 h-3 text-zinc-400" />
+            <select
+              aria-label="Log Yönü ve Önem Derecesi Filtresi"
+              value={filterSeverity}
+              onChange={(e) => setFilterSeverity(e.target.value)}
+              className="bg-transparent text-zinc-200 focus:outline-none text-xs"
+            >
+              <option value="all">Tüm Loglar</option>
+              <option value="rx">Gelen (RX)</option>
+              <option value="tx">Giden (TX)</option>
+              <option value="err">Hatalar (ERR)</option>
+              <option value="warn">Uyarılar (WARN)</option>
+              <option value="sys">Sistem (SYS)</option>
+            </select>
+          </div>
+
+          {/* Timestamps Toggle */}
           <button
             type="button"
             onClick={() => setShowTimestamps(!showTimestamps)}
@@ -203,6 +320,21 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             Zaman
           </button>
 
+          {/* Hex View Mode Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowHexMode(!showHexMode)}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium transition-all ${
+              showHexMode
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                : "bg-zinc-900 text-zinc-400 border border-white/5"
+            }`}
+          >
+            <Binary className="w-3 h-3" />
+            HEX Modu
+          </button>
+
+          {/* Auto Scroll Toggle */}
           <button
             type="button"
             onClick={() => setAutoScroll(!autoScroll)}
@@ -212,13 +344,25 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
                 : "bg-zinc-900 text-zinc-400 border border-white/5"
             }`}
           >
-            <ArrowDown className="w-3 h-3" />
-            Oto-Kaydır
+            {autoScroll ? <ArrowDown className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+            {autoScroll ? "Oto-Kaydır" : "Durduruldu"}
           </button>
         </div>
 
         {/* Right Action Icons & Metrics */}
         <div className="flex items-center gap-2">
+          {/* Quick Search */}
+          <div className="relative hidden md:block">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Loglarda filtrele..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="bg-zinc-900 border border-white/10 rounded-xl pl-7 pr-2.5 py-1 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none w-36 focus:w-48 transition-all"
+            />
+          </div>
+
           <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-zinc-400 bg-zinc-900/80 px-2.5 py-1 rounded-xl border border-white/5">
             <span>RX: {(rxBytesCount / 1024).toFixed(1)}KB</span>
             <span>•</span>
@@ -255,15 +399,22 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
       </div>
 
       {/* Terminal Display Screen */}
-      <div className="relative w-full h-[460px] rounded-3xl bg-zinc-950/90 border border-white/10 backdrop-blur-3xl p-4 overflow-y-auto font-mono text-xs flex flex-col shadow-inner select-text">
-        {logs.length === 0 ? (
+      <div
+        ref={terminalContainerRef}
+        className="relative w-full h-[460px] rounded-3xl bg-zinc-950/90 border border-white/10 backdrop-blur-3xl p-4 overflow-y-auto font-mono text-xs flex flex-col shadow-inner select-text"
+      >
+        {filteredLogs.length === 0 ? (
           <div className="m-auto flex flex-col items-center justify-center gap-2 text-zinc-500 text-xs">
             <Terminal className="w-8 h-8 text-zinc-600 animate-pulse" />
-            <span>Seri monitör hazır. Cihaza bağlanıldığında loglar burada canlı akacaktır.</span>
+            <span>
+              {logs.length === 0
+                ? "Seri monitör hazır. Cihaza bağlanıldığında loglar burada canlı akacaktır."
+                : "Filtre kriterlerine uygun log bulunamadı."}
+            </span>
           </div>
         ) : (
           <div className="flex flex-col">
-            {logs.map(renderLogLine)}
+            {filteredLogs.map(renderLogLine)}
             <div ref={logsEndRef} />
           </div>
         )}
@@ -313,6 +464,20 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
         >
           version
+        </button>
+        <button
+          type="button"
+          onClick={() => onSendMessage("info", lineEnding)}
+          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+        >
+          info
+        </button>
+        <button
+          type="button"
+          onClick={() => onSendMessage("wifi", lineEnding)}
+          className="px-2.5 py-1 rounded-xl text-[11px] font-medium bg-zinc-900 border border-white/10 hover:border-violet-500/40 text-zinc-300 hover:text-white transition-all font-mono"
+        >
+          wifi
         </button>
       </div>
 

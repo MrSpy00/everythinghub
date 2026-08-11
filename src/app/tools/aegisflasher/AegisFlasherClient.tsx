@@ -21,6 +21,7 @@ import { ChipToolsTab } from "./components/ChipToolsTab";
 import { PartitionStudioTab } from "./components/PartitionStudioTab";
 import { PinoutGuideTab } from "./components/PinoutGuideTab";
 import { DriverGuideTab } from "./components/DriverGuideTab";
+import { BrowserSupportModal } from "./components/BrowserSupportModal";
 import { WebSerialManager } from "@/lib/flasher/webserial-manager";
 import { EspFlasherEngine } from "@/lib/flasher/esp-flasher-engine";
 import { Stk500FlasherEngine } from "@/lib/flasher/stk500-flasher-engine";
@@ -52,6 +53,7 @@ export const AegisFlasherClient: React.FC = () => {
   const [logs, setLogs] = useState<SerialLogMessage[]>([]);
   const [rxBytes, setRxBytes] = useState<number>(0);
   const [txBytes, setTxBytes] = useState<number>(0);
+  const [showSupportModal, setShowSupportModal] = useState<boolean>(false);
 
   // Manual Flasher Files & Options
   const [files, setFiles] = useState<FlashPartitionFile[]>([]);
@@ -108,6 +110,10 @@ export const AegisFlasherClient: React.FC = () => {
 
   // Connect to Port & Detect Chip
   const handleConnect = async () => {
+    if (!isSerialSupported) {
+      setShowSupportModal(true);
+      return;
+    }
     if (!serialManagerRef.current) return;
     try {
       setStatus("connecting");
@@ -254,11 +260,21 @@ export const AegisFlasherClient: React.FC = () => {
         { id: "4", name: "firmware.bin", offset: 0x10000, offsetHex: "0x10000", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
       toast.info("ESP32-S3 şablonu uygulandı.");
+    } else if (presetId === "esp8266") {
+      setFiles([
+        { id: "1", name: "firmware.bin", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
+      ]);
+      toast.info("ESP8266 şablonu uygulandı.");
     } else if (presetId === "arduino_hex") {
       setFiles([
         { id: "1", name: "arduino_firmware.hex", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
       toast.info("Arduino Intel HEX (.hex) şablonu uygulandı.");
+    } else if (presetId === "rp2040_uf2") {
+      setFiles([
+        { id: "1", name: "pico_firmware.uf2", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
+      ]);
+      toast.info("RP2040 Pico (.uf2) şablonu uygulandı.");
     }
   };
 
@@ -481,6 +497,12 @@ export const AegisFlasherClient: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">
+      {/* Browser Support Modal */}
+      <BrowserSupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
+
       {/* Top Header with MeshText & Quick Controls */}
       <FlasherHeader
         status={status}

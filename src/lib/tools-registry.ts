@@ -17,7 +17,6 @@ import {
   Music,
   ListMusic,
   UserCheck,
-  Disc3,
   Globe,
   Server,
   Coins,

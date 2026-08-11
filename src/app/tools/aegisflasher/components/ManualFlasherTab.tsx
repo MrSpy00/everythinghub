@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Upload,
   Plus,
@@ -13,6 +13,10 @@ import {
   Layers,
   Settings2,
   HardDrive,
+  Clock,
+  Activity,
+  Cpu,
+  Info,
 } from "lucide-react";
 import { ConnectionStatus, FlashPartitionFile } from "@/lib/flasher/types";
 
@@ -44,6 +48,26 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
   currentStatusText,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  useEffect(() => {
+    let timer: any = null;
+    if (status === "flashing" || status === "erasing" || status === "reading") {
+      if (!startTime) setStartTime(Date.now());
+      timer = setInterval(() => {
+        if (startTime) {
+          setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+        }
+      }, 1000);
+    } else {
+      setStartTime(null);
+      setElapsedSeconds(0);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [status, startTime]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -57,6 +81,15 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
   };
 
   const totalBytes = files.reduce((acc, f) => acc + f.sizeBytes, 0);
+
+  // Speed estimation
+  const bytesWritten = Math.round((totalBytes * progressPercent) / 100);
+  const speedKbps =
+    elapsedSeconds > 0 ? (bytesWritten / 1024 / elapsedSeconds).toFixed(1) : "0.0";
+  const remainingSeconds =
+    progressPercent > 0 && progressPercent < 100 && elapsedSeconds > 0
+      ? Math.max(0, Math.round(((100 - progressPercent) / progressPercent) * elapsedSeconds))
+      : 0;
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -158,7 +191,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {files.map((file, idx) => (
+            {files.map((file) => (
               <div
                 key={file.id}
                 className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl"
@@ -240,21 +273,41 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
         </button>
       </div>
 
-      {/* Progress Bar (When flashing or erasing) */}
+      {/* Progress & Live Telemetry Card (When flashing or erasing) */}
       {(status === "flashing" || status === "erasing" || status === "reading") && (
-        <div className="flex flex-col gap-2 p-5 rounded-3xl bg-zinc-950/80 border border-violet-500/30 backdrop-blur-2xl shadow-2xl">
+        <div className="flex flex-col gap-3 p-5 rounded-3xl bg-zinc-950/80 border border-violet-500/30 backdrop-blur-2xl shadow-2xl">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-violet-300 flex items-center gap-2">
               <Zap className="w-4 h-4 text-violet-400 animate-pulse" />
               {currentStatusText || "İşlem yürütülüyor..."}
             </span>
-            <span className="font-mono font-bold text-white">%{progressPercent}</span>
+            <span className="font-mono font-bold text-white text-sm">%{progressPercent}</span>
           </div>
+
           <div className="w-full h-3 rounded-full bg-zinc-900 border border-white/10 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-violet-500 via-purple-500 to-emerald-400 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-emerald-400 transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
+          </div>
+
+          {/* Telemetry metrics bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-[11px] font-mono text-zinc-400 border-t border-white/5">
+            <div className="flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-violet-400" />
+              <span>Hız: <strong className="text-zinc-200">{speedKbps} KB/s</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Süre: <strong className="text-zinc-200">{elapsedSeconds}s</strong></span>
+              {remainingSeconds > 0 && (
+                <span>(Kalan: <strong className="text-zinc-200">~{remainingSeconds}s</strong>)</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <HardDrive className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Yazılan: <strong className="text-zinc-200">{(bytesWritten / 1024).toFixed(0)} KB</strong> / {(totalBytes / 1024).toFixed(0)} KB</span>
+            </div>
           </div>
         </div>
       )}

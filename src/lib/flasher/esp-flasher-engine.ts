@@ -89,7 +89,7 @@ export class EspFlasherEngine {
           (this.esploader as any).baudrate = flashBaud;
           await this.esploader.changeBaud();
           this.log("success", `Hız ${flashBaud} baud olarak ayarlandı.`);
-        } catch (_baudErr: any) {
+        } catch {
           this.log("warn", `Baud yükseltilemedi, ${initialBaud} baud ile devam ediliyor.`);
         }
       }
@@ -249,7 +249,6 @@ export class EspFlasherEngine {
       compress: options.compress ?? true,
       reportProgress: (fileIndex: number, written: number, fileTotal: number) => {
         const currentFile = validFiles[fileIndex];
-        const _filePercent = Math.round((written / fileTotal) * 100);
         const overallWritten = bytesWrittenSoFar + written;
         const overallPercent = Math.min(100, Math.round((overallWritten / totalBytes) * 100));
 

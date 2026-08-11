@@ -18,7 +18,6 @@ const STK_ENTER_PROGMODE = 0x50;
 const STK_LEAVE_PROGMODE = 0x51;
 const STK_LOAD_ADDRESS = 0x55;
 const STK_PROG_PAGE = 0x64;
-const _STK_READ_PAGE = 0x74;
 const CRC_EOP = 0x20;
 
 export interface IntelHexParsed {
