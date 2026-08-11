@@ -73,6 +73,8 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
       <div className="mb-2 max-w-4xl 2xl:max-w-5xl w-full flex flex-col items-center">
         {/* Interactive WebGL Mesh Brand Title */}
         <div className="w-full max-w-2xl px-2 my-1 cursor-pointer" title="Hover / Move Cursor to Distort Mesh">
+          {/* SR-only h1 for SEO and accessibility */}
+          <h1 style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>EverythingHub — Ücretsiz Dijital Araçlar Stüdyosu</h1>
           <MeshText
             text="EVERYTHINGHUB"
             fontSize={54}

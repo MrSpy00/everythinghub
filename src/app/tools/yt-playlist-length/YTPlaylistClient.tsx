@@ -116,7 +116,8 @@ const ALL_VERIFIED_PLAYLISTS = [
 type CalculationMode = "full" | "range" | "remaining";
 
 export function YTPlaylistClient() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const isTurkish = lang === "tr";
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(t.analyzing);
@@ -738,7 +739,7 @@ export function YTPlaylistClient() {
                 <h3 className="text-lg font-black text-white mt-0.5">{data.title}</h3>
                 {data.channelName && (
                   <p className="text-xs text-[var(--hub-text-muted)] mt-0.5">
-                    Kanal: <span className="text-white font-medium">{data.channelName}</span>
+                    {isTurkish ? 'Kanal:' : 'Channel:'} <span className="text-white font-medium">{data.channelName}</span>
                   </p>
                 )}
               </div>
@@ -786,11 +787,11 @@ export function YTPlaylistClient() {
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
                   {[
-                    { label: "İlk 5 Video", count: 5 },
-                    { label: "İlk 10 Video", count: 10 },
-                    { label: "İlk 25 Video", count: 25 },
-                    { label: "İlk 50 Video", count: 50 },
-                    { label: "Tüm Videolar", count: data.videos.length },
+                    { label: isTurkish ? 'İlk 5' : 'First 5', count: 5 },
+                    { label: isTurkish ? 'İlk 10' : 'First 10', count: 10 },
+                    { label: isTurkish ? 'İlk 25' : 'First 25', count: 25 },
+                    { label: isTurkish ? 'İlk 50' : 'First 50', count: 50 },
+                    { label: isTurkish ? 'Tümü' : 'All', count: data.videos.length },
                   ].map((p) => (
                     <motion.button
                       key={p.label}

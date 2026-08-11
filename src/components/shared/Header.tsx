@@ -225,7 +225,7 @@ export function Header() {
                 {t.tools}
               </Link>
               <Link
-                href="/#categories"
+                href="/#tools"
                 onClick={() => setMenuOpen(false)}
                 className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
               >

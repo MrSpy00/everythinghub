@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -62,8 +63,25 @@ export default function SpotifyPlaylistClient() {
   const [copiedMd, setCopiedMd] = useState(false);
   const [copiedPlaylistLink, setCopiedPlaylistLink] = useState(false);
 
+  const searchParams = useSearchParams();
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     trackToolUsage("spotify-playlist-analyzer");
+  }, []);
+
+  useEffect(() => {
+    const url = searchParams.get('url');
+    if (url) {
+      setInputUrl(url);
+      handleAnalyze(url);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, []);
 
   const handleCopyPlaylistLink = async () => {
@@ -83,13 +101,18 @@ export default function SpotifyPlaylistClient() {
       return;
     }
 
+    setAnalysisData(null);
     setLoading(true);
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
 
     try {
       const res = await fetch("/api/tools/spotify-analyzer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: targetUrl }),
+        signal: abortControllerRef.current.signal,
       });
 
       const json = await res.json();
@@ -98,9 +121,14 @@ export default function SpotifyPlaylistClient() {
         setAnalysisData(json.data);
         toast.success(isTurkish ? "Spotify çalma listesi başarıyla analiz edildi!" : "Spotify playlist analyzed successfully!");
       } else {
-        toast.error(json.error || (isTurkish ? "Çalma listesi getirilemedi." : "Failed to analyze playlist."));
+        if (json.isFallback) {
+          toast.error(isTurkish ? "Playlist analiz edilemedi — gerçek Spotify verisi alınamadı." : "Playlist analysis failed — could not fetch real Spotify data.");
+        } else {
+          toast.error(json.error || (isTurkish ? "Çalma listesi getirilemedi." : "Failed to analyze playlist."));
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === "AbortError") return;
       console.error(err);
       toast.error(isTurkish ? "Ağ hatası oluştu." : "Network error occurred.");
     } finally {
@@ -314,7 +342,7 @@ export default function SpotifyPlaylistClient() {
                   {analysisData.totalTracks} {isTurkish ? "Parça" : "Tracks"}
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-violet-500/15 text-violet-300 border border-violet-500/25">
-                  {formattedDur?.hours}s {formattedDur?.minutes}d
+                  {formattedDur?.hours}{isTurkish ? "s" : "h"} {formattedDur?.minutes}{isTurkish ? "d" : "m"}
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25">
                   {analysisData.followers !== null && analysisData.followers !== undefined
@@ -414,7 +442,7 @@ export default function SpotifyPlaylistClient() {
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <span className="text-xs text-white/50">{isTurkish ? "Toplam Süre" : "Total Duration"}</span>
                     <p className="text-2xl font-black font-mono text-emerald-400">
-                      {formattedDur?.hours}s {formattedDur?.minutes}d
+                      {formattedDur?.hours}{isTurkish ? "s" : "h"} {formattedDur?.minutes}{isTurkish ? "d" : "m"}
                     </p>
                   </div>
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">

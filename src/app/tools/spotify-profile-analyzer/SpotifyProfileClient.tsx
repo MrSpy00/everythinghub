@@ -53,13 +53,16 @@ export default function SpotifyProfileClient() {
     trackToolUsage("spotify-profile-analyzer");
   }, []);
 
-  // Cleanup audio on unmount
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup audio and abort controller on unmount
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      abortControllerRef.current?.abort();
     };
   }, []);
 
@@ -98,13 +101,18 @@ export default function SpotifyProfileClient() {
       return;
     }
 
+    setProfileData(null);
     setLoading(true);
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
 
     try {
       const res = await fetch("/api/tools/spotify-analyzer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: targetUrl, mode: "profile" }),
+        signal: abortControllerRef.current.signal,
       });
 
       const json = await res.json();
@@ -113,9 +121,14 @@ export default function SpotifyProfileClient() {
         setProfileData(json.data);
         toast.success(isTurkish ? "Spotify profili ve diskografisi başarıyla analiz edildi!" : "Spotify profile and discography analyzed successfully!");
       } else {
-        toast.error(json.error || (isTurkish ? "Profil bilgileri getirilemedi." : "Failed to analyze profile."));
+        if (json.isFallback) {
+          toast.error(isTurkish ? "Profil analiz edilemedi — gerçek Spotify verisi alınamadı." : "Profile analysis failed — could not fetch real Spotify data.");
+        } else {
+          toast.error(json.error || (isTurkish ? "Profil bilgileri getirilemedi." : "Failed to analyze profile."));
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === "AbortError") return;
       console.error(err);
       toast.error(isTurkish ? "Ağ hatası oluştu." : "Network error occurred.");
     } finally {
@@ -306,7 +319,7 @@ export default function SpotifyProfileClient() {
                   className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center gap-1 text-white text-xs font-bold transition-opacity cursor-pointer"
                 >
                   <Download className="w-5 h-5 text-indigo-400" />
-                  <span>HD İndir</span>
+                  <span>{isTurkish ? "HD İndir" : "HD Download"}</span>
                 </button>
               </div>
 
@@ -317,7 +330,7 @@ export default function SpotifyProfileClient() {
                   </span>
                   {profileData.popularity && (
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                      Popülerlik: %{profileData.popularity}
+                      {isTurkish ? "Popülerlik" : "Popularity"}: %{profileData.popularity}
                     </span>
                   )}
                 </div>
@@ -483,7 +496,7 @@ export default function SpotifyProfileClient() {
                           <h4 className="font-bold text-white text-sm truncate flex items-center gap-2">
                             <span className={isPlaying ? "text-emerald-400" : "text-white"}>{t.name}</span>
                             {t.explicit && (
-                              <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-rose-500/15 text-rose-300 border border-rose-500/20">
+                              <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/15 text-rose-300 border border-rose-500/20">
                                 EXPLICIT
                               </span>
                             )}

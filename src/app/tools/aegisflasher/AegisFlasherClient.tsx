@@ -94,6 +94,11 @@ export const AegisFlasherClient: React.FC = () => {
     toast.success(next === "tr" ? t("lang_set_tr") : t("lang_set_en"));
   };
 
+  const langRef = useRef(lang);
+  useEffect(() => {
+    langRef.current = lang;
+  }, [lang]);
+
   // Log handler
   const appendLog = useCallback((msg: SerialLogMessage) => {
     setLogs((prev) => [...prev.slice(-500), msg]);
@@ -124,7 +129,7 @@ export const AegisFlasherClient: React.FC = () => {
       setStatus("disconnected");
       setTelemetry(null);
       rawPortRef.current = null;
-      toast.error(lang === "tr" ? "Seri port bağlantısı koptu." : "Serial connection lost.");
+      toast.error(langRef.current === "tr" ? "Seri port bağlantısı koptu." : "Serial connection lost.");
     });
 
     serialManagerRef.current = manager;
@@ -132,7 +137,7 @@ export const AegisFlasherClient: React.FC = () => {
     return () => {
       manager.close();
     };
-  }, [appendLog, lang]);
+  }, [appendLog]);
 
   // Connect to Port & Detect Chip
   const handleConnect = async () => {
@@ -353,8 +358,23 @@ export const AegisFlasherClient: React.FC = () => {
       return;
     }
 
-    // Check if AVR Intel HEX
     const firstFile = validFiles[0];
+
+    if (firstFile.name.toLowerCase().endsWith('.uf2')) {
+      appendLog({ 
+        id: `${Date.now()}`,
+        timestamp: new Date().toLocaleTimeString(),
+        direction: 'sys',
+        text: lang === "tr" 
+          ? 'UF2 dosyaları Web Serial yerine USB kütlük depolama (RPI-RP2 sürücüsü) üzerinden flash edilir. Cihazı BOOTSEL ile başlatın ve UF2 dosyasını RPI-RP2 sürücüsüne kopyalayın.'
+          : 'UF2 files are flashed via USB mass storage (RPI-RP2 drive), not Web Serial. Boot with BOOTSEL held and copy the UF2 file to the RPI-RP2 drive.',
+        rawBytes: new Uint8Array()
+      });
+      toast.info(lang === "tr" ? 'UF2 kılavuzu için seri monitörü kontrol edin.' : 'Check serial monitor for UF2 flashing guide.');
+      return;
+    }
+
+    // Check if AVR Intel HEX
     if (firstFile.name.endsWith(".hex")) {
       try {
         setStatus("flashing");

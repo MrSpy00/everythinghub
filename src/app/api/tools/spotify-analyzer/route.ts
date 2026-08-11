@@ -56,7 +56,7 @@ function parseOgDescription(desc: string) {
 }
 
 // iTunes search for genuine individual track album artwork and collection name
-async function fetchTrackMetadata(trackTitle: string, artistName: string): Promise<{ albumName?: string; coverUrl?: string } | null> {
+async function fetchTrackMetadata(trackTitle: string, artistName: string): Promise<{ albumName?: string; coverUrl?: string; releaseDate?: string } | null> {
   try {
     const q = encodeURIComponent(`${artistName} ${trackTitle}`);
     const res = await fetch(`https://itunes.apple.com/search?term=${q}&entity=song&limit=1`, {
@@ -69,6 +69,7 @@ async function fetchTrackMetadata(trackTitle: string, artistName: string): Promi
         return {
           albumName: item.collectionName || `${trackTitle} - Single`,
           coverUrl: item.artworkUrl100 ? item.artworkUrl100.replace("100x100bb", "600x600bb") : undefined,
+          releaseDate: item.releaseDate,
         };
       }
     }
@@ -142,6 +143,7 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
         if (entity) {
           const title = unescapeHtml(entity.title || entity.name || oembedTitle || "Spotify Playlist");
           const ownerName = unescapeHtml(entity.subtitle || curatorNameFromOg || "Spotify Curator");
+          const ownerId = entity.owner?.id || ownerName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "spotify";
           const coverArtUrl =
             entity.coverArt?.sources?.[0]?.url ||
             oembedCover ||
@@ -171,6 +173,7 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
             const meta = enrichedMetadataList[idx];
             const albumName = meta?.albumName || t.album?.name || `${trackTitle} - Single`;
             const albumCover = meta?.coverUrl || t.coverArt?.sources?.[0]?.url || coverArtUrl;
+            const releaseDate = meta?.releaseDate || "Unknown";
 
             return {
               id: trackId,
@@ -180,7 +183,7 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
               albumCover,
               durationMs: durMs,
               popularity: Math.min(99, Math.max(35, 92 - Math.floor(idx * 1.2) + (h % 9))),
-              releaseDate: "2024-01-01",
+              releaseDate: releaseDate,
               explicit: Boolean(t.isExplicit),
               previewUrl: t.audioPreview?.url || null,
               audioFeatures: {
@@ -203,7 +206,37 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
           const totalDurSec = tracks.reduce((acc, t) => acc + Math.round((t.durationMs || 180000) / 1000), 0);
           const avgEnergy = Number((tracks.reduce((a, b) => a + (b.audioFeatures?.energy || 0.6), 0) / (tracks.length || 1)).toFixed(2));
           const avgValence = Number((tracks.reduce((a, b) => a + (b.audioFeatures?.valence || 0.5), 0) / (tracks.length || 1)).toFixed(2));
-          const mood = classifyDominantMood(avgEnergy, avgValence);
+          const avgDanceability = Number((tracks.reduce((a, b) => a + (b.audioFeatures?.danceability || 0.6), 0) / (tracks.length || 1)).toFixed(2));
+          const avgAcousticness = Number((tracks.reduce((a, b) => a + (b.audioFeatures?.acousticness || 0.3), 0) / (tracks.length || 1)).toFixed(2));
+          const avgInstrumentalness = Number((tracks.reduce((a, b) => a + (b.audioFeatures?.instrumentalness || 0.1), 0) / (tracks.length || 1)).toFixed(2));
+          
+          const mood = classifyDominantMood(avgValence, avgEnergy);
+          
+          const moodColors: Record<string, string> = {
+            party: "#ec4899",
+            workout: "#f97316",
+            melancholic: "#6366f1",
+            focus: "#8b5cf6",
+            chill: "#06b6d4",
+          };
+          const dominantColor = moodColors[mood.tag] || "#10b981";
+
+          const tempos = tracks.map((t) => t.audioFeatures?.tempo || 120).sort((a, b) => a - b);
+          const medianTempo = tempos.length > 0 ? tempos[Math.floor(tempos.length / 2)] : 120;
+
+          const computedGenres = [];
+          if (avgEnergy > 0.7 && avgDanceability > 0.65) {
+            computedGenres.push({ genre: "Dance Pop", count: Math.round(tracks.length * 0.6), percentage: 60 });
+            computedGenres.push({ genre: "Hip-Hop / Trap", count: Math.round(tracks.length * 0.4), percentage: 40 });
+          } else if (avgAcousticness > 0.5) {
+            computedGenres.push({ genre: "Acoustic / Folk", count: Math.round(tracks.length * 0.8), percentage: 80 });
+          } else if (avgInstrumentalness > 0.4) {
+            computedGenres.push({ genre: "Instrumental / Ambient", count: Math.round(tracks.length * 0.7), percentage: 70 });
+          } else if (avgEnergy < 0.4) {
+            computedGenres.push({ genre: "Lo-Fi / Chill", count: Math.round(tracks.length * 0.75), percentage: 75 });
+          } else {
+            computedGenres.push({ genre: "Pop & Mainstream", count: Math.round(tracks.length * 0.9), percentage: 90 });
+          }
 
           const { score, riskLevel, botFlags, pitchingVerdict, artistDiversityHHI, duplicates } = calculateBotAndSafetyScore(tracks);
 
@@ -212,11 +245,11 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
             title,
             description: entityDesc || `${title} · Curated playlist featuring ${ownerName}.`,
             ownerName,
-            ownerId: "spotify",
+            ownerId,
             followers: realFollowers ?? 0,
             isFollowersHidden: realFollowers === null,
             coverArtUrl,
-            dominantColor: "#10b981",
+            dominantColor,
             tracks,
             totalTracks: totalTracksCount,
             totalDurationSeconds: totalDurSec,
@@ -230,22 +263,18 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
             pitchingVerdict,
             audioFeaturesSummary: {
               avgEnergy,
-              avgDanceability: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.danceability || 0.6), 0) / (tracks.length || 1)).toFixed(2)),
+              avgDanceability,
               avgValence,
-              avgAcousticness: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.acousticness || 0.3), 0) / (tracks.length || 1)).toFixed(2)),
-              avgInstrumentalness: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.instrumentalness || 0.1), 0) / (tracks.length || 1)).toFixed(2)),
+              avgAcousticness,
+              avgInstrumentalness,
               avgLiveness: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.liveness || 0.15), 0) / (tracks.length || 1)).toFixed(2)),
               avgSpeechiness: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.speechiness || 0.08), 0) / (tracks.length || 1)).toFixed(2)),
               avgTempo: Math.round(tracks.reduce((a, b) => a + (b.audioFeatures?.tempo || 120), 0) / (tracks.length || 1)),
-              medianTempo: Math.round(tracks.reduce((a, b) => a + (b.audioFeatures?.tempo || 120), 0) / (tracks.length || 1)) - 2,
+              medianTempo,
               avgLoudness: Number((tracks.reduce((a, b) => a + (b.audioFeatures?.loudness || -6), 0) / (tracks.length || 1)).toFixed(1)),
             },
             dominantMood: mood,
-            topGenres: [
-              { genre: "Pop & Mainstream", count: Math.round(tracks.length * 0.45), percentage: 45 },
-              { genre: "Indie / Alternative", count: Math.round(tracks.length * 0.30), percentage: 30 },
-              { genre: "Electronic & Dance", count: Math.round(tracks.length * 0.25), percentage: 25 },
-            ],
+            topGenres: computedGenres,
             keyDistribution: [
               { keyName: "A Minör", camelot: "8A", count: Math.max(1, Math.round(tracks.length * 0.25)), percentage: 25 },
               { keyName: "C Majör", camelot: "8B", count: Math.max(1, Math.round(tracks.length * 0.22)), percentage: 22 },
@@ -257,8 +286,8 @@ async function fetchRealPlaylistData(playlistId: string): Promise<SpotifyPlaylis
               { decade: "2020s", count: Math.round(tracks.length * 0.8), percentage: 80 },
               { decade: "2010s", count: Math.round(tracks.length * 0.2), percentage: 20 },
             ],
-            artistDiversityHHI: 450,
-            duplicates: [],
+            artistDiversityHHI,
+            duplicates,
           };
         }
       }
@@ -284,7 +313,7 @@ async function fetchRealProfileData(queryOrId: string, type: "artist" | "user" =
   let discography: DiscographyItem[] = [];
   let publicPlaylists: PublicPlaylistSummary[] = [];
   let verified = true;
-  let popularity = 80;
+  let popularity = 75;
 
   // 1. Deezer Artist API Resolution (Direct Artist ID, fans, 1000x1000 HD photo, top songs)
   try {
@@ -296,7 +325,14 @@ async function fetchRealProfileData(queryOrId: string, type: "artist" | "user" =
         resolvedName = artist.name;
         resolvedAvatar = artist.picture_xl || artist.picture_big || artist.picture_medium || "";
         resolvedFollowers = artist.nb_fan || 120000;
+        // Estimated monthly listeners based on Deezer fans
         resolvedMonthlyListeners = Math.round((artist.nb_fan || 120000) * 4.2);
+
+        if (artist.rank) {
+          popularity = Math.max(30, Math.min(99, Math.round(100 - (artist.rank / 5000000) * 70)));
+        } else if (artist.nb_fan) {
+          popularity = Math.min(99, Math.round(Math.log10(artist.nb_fan + 1) * 20));
+        }
 
         // Fetch top tracks
         const topRes = await fetch(`https://api.deezer.com/artist/${artist.id}/top?limit=10`);
@@ -382,6 +418,7 @@ async function fetchRealProfileData(queryOrId: string, type: "artist" | "user" =
     bannerUrl: resolvedAvatar,
     followers: resolvedFollowers ?? 500000,
     monthlyListeners: resolvedMonthlyListeners ?? 2100000,
+    isMonthlyListenersEstimated: true,
     isFollowersHidden: false,
     popularity: popularity || 85,
     verified,
@@ -469,11 +506,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      return NextResponse.json({
-        success: true,
-        data: DEMO_PROFILES["the-weeknd"],
-        isFallback: true,
-      });
+      return NextResponse.json({ success: false, error: "Profil analiz edilemedi. URL'yi kontrol edip tekrar deneyin." }, { status: 422 });
     }
 
     // MODE 2: Playlist Analyzer Request
@@ -512,11 +545,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      data: DEMO_PLAYLISTS["global-top-50"],
-      isFallback: true,
-    });
+    return NextResponse.json({ success: false, error: "Playlist analiz edilemedi. URL'yi kontrol edip tekrar deneyin." }, { status: 422 });
   } catch (err: any) {
     console.error("Spotify Analyzer API error:", err);
     return NextResponse.json(

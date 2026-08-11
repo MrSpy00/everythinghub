@@ -54,6 +54,7 @@ export default function YTChannelClient() {
   const [downloadingAvatar, setDownloadingAvatar] = useState(false);
   const [downloadingBanner, setDownloadingBanner] = useState(false);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const [isFallbackData, setIsFallbackData] = useState(false);
 
   // Video Catalog Search & Custom Dropdown Sort
   const [videoSearch, setVideoSearch] = useState("");
@@ -102,6 +103,11 @@ export default function YTChannelClient() {
       const json = await res.json();
 
       if (res.ok && json.success && json.data) {
+        if (json.isFallback === true) {
+          setIsFallbackData(true);
+        } else {
+          setIsFallbackData(false);
+        }
         setChannelData(json.data);
         toast.success(
           isTurkish ? "YouTube kanalı ve tüm videolar başarıyla analiz edildi!" : "YouTube channel and videos analyzed successfully!"
@@ -402,11 +408,17 @@ export default function YTChannelClient() {
       {/* Active Channel Result Layout */}
       {channelData && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {isFallbackData && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300 backdrop-blur-xl">
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <span>{isTurkish ? 'Gerçek kanal verisi alınamadı — demo veri gösteriliyor' : 'Could not fetch real channel data — showing demo data'}</span>
+            </div>
+          )}
           {/* Main Channel Header Card */}
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0e1017] shadow-2xl">
             {/* Banner Artwork */}
             <div className="relative h-48 sm:h-72 w-full bg-zinc-900 overflow-hidden group/banner">
-              <img src={channelData.bannerUrl} alt="Channel Banner" className="w-full h-full object-cover" />
+              <img src={channelData.bannerUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=2560"} alt="Channel Banner" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0e1017] via-[#0e1017]/40 to-black/30" />
               <button
                 onClick={handleDownloadBanner}
@@ -422,7 +434,7 @@ export default function YTChannelClient() {
               {/* Avatar */}
               <div className="relative group/avatar shrink-0">
                 <img
-                  src={channelData.avatarUrl}
+                  src={channelData.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800"}
                   alt={channelData.title}
                   className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0e1017] shadow-2xl ring-4 ring-rose-500/20"
                 />

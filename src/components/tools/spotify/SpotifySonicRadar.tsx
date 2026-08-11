@@ -44,7 +44,7 @@ export function SpotifySonicRadar({ summary, isTurkish = true }: SpotifySonicRad
     { key: "danceability", labelTr: "Dans Edilebilirlik", labelEn: "Danceability", value: s.avgDanceability ?? 0.5, icon: Zap, color: "#10b981" },
     { key: "valence", labelTr: "Pozitiflik / Mood", labelEn: "Valence (Mood)", value: s.avgValence ?? 0.5, icon: Smile, color: "#ec4899" },
     { key: "acousticness", labelTr: "Akustiklik", labelEn: "Acousticness", value: s.avgAcousticness ?? 0.5, icon: Music2, color: "#8b5cf6" },
-    { key: "instrumentalness", labelTr: "Enstrümantallik", labelEn: "Instrumentalness", value: Volume2, valueNum: s.avgInstrumentalness ?? 0.5, color: "#06b6d4" },
+    { key: "instrumentalness", labelTr: "Enstrümantallik", labelEn: "Instrumentalness", value: s.avgInstrumentalness ?? 0.5, icon: Volume2, color: "#06b6d4" },
     { key: "liveness", labelTr: "Canlılık", labelEn: "Liveness", value: s.avgLiveness ?? 0.5, icon: Activity, color: "#3b82f6" },
     { key: "speechiness", labelTr: "Konuşma Oranı", labelEn: "Speechiness", value: s.avgSpeechiness ?? 0.5, icon: Mic, color: "#f43f5e" },
   ];

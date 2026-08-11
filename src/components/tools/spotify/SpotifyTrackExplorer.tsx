@@ -41,6 +41,15 @@ export function SpotifyTrackExplorer({ tracks = [], isTurkish: propIsTurkish }: 
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (audioRef?.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    }
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -71,7 +80,7 @@ export function SpotifyTrackExplorer({ tracks = [], isTurkish: propIsTurkish }: 
     const audio = new Audio(previewUrl);
     audioRef.current = audio;
     audio.volume = 0.6;
-    audio.play();
+    audio.play().catch((err: unknown) => console.warn('Audio playback blocked:', err));
     setPlayingTrackId(trackId);
 
     audio.onended = () => {
@@ -237,8 +246,16 @@ export function SpotifyTrackExplorer({ tracks = [], isTurkish: propIsTurkish }: 
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {filteredTracks.map((t, idx) => {
-              const keyVal = t.audioFeatures?.key ?? 0;
+            {filteredTracks.length === 0 ? (
+              <tr><td colSpan={8} className="py-12 text-center text-zinc-500 text-sm">
+                <div className="flex flex-col items-center gap-2">
+                  <Search className="h-8 w-8 text-zinc-600" />
+                  <span>{isTurkish ? 'Sonuç bulunamadı' : 'No results found'}</span>
+                </div>
+              </td></tr>
+            ) : (
+              filteredTracks.map((t, idx) => {
+                const keyVal = t.audioFeatures?.key ?? 0;
               const modeVal = t.audioFeatures?.mode ?? 1;
               const { camelot } = formatKeyAndCamelot(keyVal, modeVal);
               const durSec = Math.round((t.durationMs || 180000) / 1000);
@@ -298,7 +315,7 @@ export function SpotifyTrackExplorer({ tracks = [], isTurkish: propIsTurkish }: 
                             {t.name}
                           </a>
                           {t.explicit && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-white/10 text-white/70">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/10 text-white/70">
                               E
                             </span>
                           )}
@@ -368,7 +385,8 @@ export function SpotifyTrackExplorer({ tracks = [], isTurkish: propIsTurkish }: 
                   </td>
                 </tr>
               );
-            })}
+            })
+            )}
           </tbody>
         </table>
       </div>

@@ -19,7 +19,8 @@ interface ThumbnailItem {
 }
 
 export function YTThumbnailClient() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const isTurkish = lang === "tr";
   const [url, setUrl] = useState("");
   const [videoId, setVideoId] = useState<string | null>(null);
   const [thumbnails, setThumbnails] = useState<ThumbnailItem[]>([]);
@@ -39,7 +40,7 @@ export function YTThumbnailClient() {
     }
 
     if (!extractedId) {
-      toast.error(t.ytThumbUrlPlaceholder);
+      toast.error(isTurkish ? "Geçerli bir YouTube video URL'si girin" : "Please enter a valid YouTube video URL");
       return;
     }
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import SpotifyPlaylistClient from "./SpotifyPlaylistClient";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
@@ -44,7 +45,9 @@ export default function SpotifyPlaylistAnalyzerPage() {
       fallbackTitle="Spotify Playlist Analizör Yüklenemedi"
       fallbackMessage="Çalma listesi analizi yüklenirken bir hata oluştu. Lütfen tekrar deneyin."
     >
-      <SpotifyPlaylistClient />
+      <Suspense fallback={<div>Yükleniyor...</div>}>
+        <SpotifyPlaylistClient />
+      </Suspense>
     </ErrorBoundary>
   );
 }

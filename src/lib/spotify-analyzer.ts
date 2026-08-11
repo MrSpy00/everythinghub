@@ -135,6 +135,7 @@ export interface SpotifyProfileAnalysis {
   bannerUrl?: string;
   followers: number | null;
   monthlyListeners?: number | null;
+  isMonthlyListenersEstimated?: boolean;
   isFollowersHidden?: boolean;
   privacyNotice?: string;
   popularity?: number;
@@ -297,6 +298,8 @@ export function calculateBotAndSafetyScore(tracks: SpotifyTrack[]): {
         duplicateTrack: t,
         reason: `Birebir ISRC Kopyası (${t.isrc})`,
       });
+      seenIds.add(t.id);
+      seenTitles.set(titleKey, t);
     } else if (seenTitles.has(titleKey)) {
       duplicates.push({
         originalTrack: seenTitles.get(titleKey)!,

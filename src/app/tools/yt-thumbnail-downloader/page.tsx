@@ -35,5 +35,30 @@ export const metadata: Metadata = {
 };
 
 export default function YTThumbnailPage() {
-  return <YTThumbnailClient />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "YouTube Thumbnail Downloader",
+    "url": "https://www.everythinghub.com.tr/tools/yt-thumbnail-downloader",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "All",
+    "browserRequirements": "Requires JavaScript",
+    "description": "YouTube videolarının HD ve 4K kapak resimlerini ücretsiz indirme ve önizleme aracı.",
+    "author": {
+      "@type": "Organization",
+      "name": "aegisSoft / EverythingHub",
+      "url": "https://www.everythinghub.com.tr"
+    }
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <YTThumbnailClient />
+    </>
+  );
 }
+

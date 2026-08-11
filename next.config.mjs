@@ -72,7 +72,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:all*(svg|jpg|png|webp|avif|ico|woff|woff2)",
+        source: "/:path*(.+\\.(?:svg|jpg|png|webp|avif|ico|woff|woff2))",
         headers: [
           {
             key: "Cache-Control",
@@ -83,6 +83,21 @@ const nextConfig = {
       {
         source: "/:path*",
         headers: [
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https: http:",
+              "connect-src 'self' https://*.spotify.com https://api.deezer.com https://itunes.apple.com https://www.youtube.com https://youtube.com https://*.ytimg.com https://*.googlevideo.com https://www.googleapis.com https://vercel.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://corsproxy.io https://api.allorigins.win",
+              "media-src 'self' blob: https://*.scdn.co https://*.spotifycdn.com https://*.dzcdn.net",
+              "worker-src 'self' blob:",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
+          { key: "X-DNS-Prefetch-Control", value: "on" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

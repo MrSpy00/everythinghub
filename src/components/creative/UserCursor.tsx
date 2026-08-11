@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useCallback,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -98,13 +99,11 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   } = props;
 
   // Language context resolution
+  const langContext = useLanguage();
   let isTurkish = true;
-  try {
-    const langContext = useLanguage();
-    if (langContext && langContext.lang === "en") {
-      isTurkish = false;
-    }
-  } catch {}
+  if (langContext && langContext.lang === "en") {
+    isTurkish = false;
+  }
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [hovering, setHovering] = useState(false);
@@ -184,7 +183,7 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   const lastSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   // Intelligent Context-Aware Element Inspection
-  const inspectElement = (target: HTMLElement | null) => {
+  const inspectElement = useCallback((target: HTMLElement | null) => {
     if (!target) return;
 
     // 1. Explicit data-cursor tag
@@ -319,7 +318,7 @@ function DesktopUserCursor(userProps: UserCursorProps) {
     setDynamicLabel(name);
     setIsClickable(false);
     setCursorAccent("#8b5cf6");
-  };
+  }, [isTurkish, name]);
 
   // Attach Pointer Event Listeners
   useEffect(() => {
@@ -604,7 +603,15 @@ export function UserCursor(props: UserCursorProps) {
       const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
       const isTouch = "ontouchstart" in window || window.matchMedia("(pointer: coarse)").matches;
       setIsDesktop(hasFinePointer && !isTouch);
+      if (hasFinePointer) {
+        document.documentElement.classList.add('cursor-hidden');
+      }
     }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.documentElement.classList.remove('cursor-hidden');
+      }
+    };
   }, []);
 
   if (!mounted || !isDesktop) return null;

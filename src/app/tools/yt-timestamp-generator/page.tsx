@@ -35,5 +35,30 @@ export const metadata: Metadata = {
 };
 
 export default function YTTimestampPage() {
-  return <YTTimestampClient />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "YouTube Timestamp Generator",
+    "url": "https://www.everythinghub.com.tr/tools/yt-timestamp-generator",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "All",
+    "browserRequirements": "Requires JavaScript",
+    "description": "YouTube videoları için özel başlama süreli bağlantı ve açıklama zaman damgası listeleri üretici.",
+    "author": {
+      "@type": "Organization",
+      "name": "aegisSoft / EverythingHub",
+      "url": "https://www.everythinghub.com.tr"
+    }
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <YTTimestampClient />
+    </>
+  );
 }
+

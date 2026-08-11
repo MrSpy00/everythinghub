@@ -36,5 +36,30 @@ export const metadata: Metadata = {
 };
 
 export default function YTPlaylistPage() {
-  return <YTPlaylistClient />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "YouTube Playlist Analyzer",
+    "url": "https://www.everythinghub.com.tr/tools/yt-playlist-length",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "All",
+    "browserRequirements": "Requires JavaScript",
+    "description": "YouTube playlist toplam süresini ve farklı izleme hızlarındaki simülasyonları hesaplama aracı.",
+    "author": {
+      "@type": "Organization",
+      "name": "aegisSoft / EverythingHub",
+      "url": "https://www.everythinghub.com.tr"
+    }
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <YTPlaylistClient />
+    </>
+  );
 }
+

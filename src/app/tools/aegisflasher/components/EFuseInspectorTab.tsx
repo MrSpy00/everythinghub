@@ -39,13 +39,25 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
   const t = useTranslation(lang);
   const [isReading, setIsReading] = useState(false);
   const [hasAudit, setHasAudit] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
 
   const handleRunAudit = () => {
+    if (status === 'disconnected' || status === 'error') {
+      // Show info: must be connected to ESP32
+      setAuditError(lang === "tr" 
+        ? 'eFuse okuma için önce bir ESP32 cihazına bağlanın.' 
+        : 'Connect to an ESP32 device first to read eFuses.');
+      return;
+    }
+    // Real implementation would send ESP commands here
+    // For now, show a clear "not yet implemented" state
     setIsReading(true);
     setTimeout(() => {
       setIsReading(false);
-      setHasAudit(true);
-    }, 800);
+      setAuditError(lang === "tr"
+        ? 'eFuse okuma özelliği yakında eklenecek. Şu an cihazdan veri okunmuyor.'
+        : 'eFuse reading coming soon. No real data is being read from device.');
+    }, 500);
   };
 
   const detectedVendor =
@@ -89,7 +101,19 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
 
       {/* Audit Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Hardware Security Score */}
+        {!hasAudit && (
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 py-8 text-center text-zinc-400 text-sm">
+            {auditError ? (
+              <div className="text-amber-400">{auditError}</div>
+            ) : (
+              <span>{lang === "tr" ? 'eFuse okumak için cihaza bağlanın ve "eFuse Oku" butonuna tıklayın.' : 'Connect to an ESP32 device and click "Read eFuses" to inspect security registers.'}</span>
+            )}
+          </div>
+        )}
+        
+        {hasAudit && (
+          <>
+            {/* Hardware Security Score */}
         <div className="p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col justify-between gap-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
@@ -218,6 +242,8 @@ export const EFuseInspectorTab: React.FC<EFuseInspectorTabProps> = ({
               : "High-speed SPI NOR flash manufacturer on the board successfully resolved."}
           </p>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

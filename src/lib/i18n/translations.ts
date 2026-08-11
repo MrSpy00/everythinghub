@@ -348,7 +348,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     scrollToTop: "En Yukarı Dön",
 
     // Hero Section
-    studioTagline: "Studio v1.0 · 14 Aktif Araç · Sınırsız & Ücretsiz",
+    studioTagline: "Studio v1.0 · 41+ Aktif Araç · Sınırsız & Ücretsiz",
     studioHeroTitle: "Dijital Araçların Stüdyosu",
     heroSubtitle: "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
     searchPlaceholder: "Araç veya özellik ara (örn: youtube, playlist, json, gradient)...",
@@ -827,7 +827,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     scrollToTop: "Scroll to Top",
 
     // Hero Section
-    studioTagline: "Studio v1.0 · 14 Active Tools · Unlimited & Free",
+    studioTagline: "Studio v1.0 · 41+ Active Tools · Unlimited & Free",
     studioHeroTitle: "Digital Tools Studio",
     heroSubtitle: "No registration, login, or API keys required; 100% private and browser-processed.",
     searchPlaceholder: "Search tools or features (e.g. youtube, playlist, json, gradient)...",

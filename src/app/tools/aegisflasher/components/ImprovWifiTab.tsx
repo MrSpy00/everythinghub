@@ -119,14 +119,6 @@ export const ImprovWifiTab: React.FC<ImprovWifiTabProps> = ({
       // Fallback mock scan if board is in text mode
       setTimeout(() => {
         setIsScanning(false);
-        if (scannedNetworks.length === 0) {
-          // Provide prompt for custom entry
-          setScannedNetworks([
-            { ssid: "Home_WiFi_5G", rssi: -45, auth: true },
-            { ssid: "Office_Network", rssi: -58, auth: true },
-            { ssid: "IoT_Smart_Hub", rssi: -62, auth: true },
-          ]);
-        }
       }, 3000);
     } catch (err: any) {
       setIsScanning(false);
@@ -226,13 +218,10 @@ export const ImprovWifiTab: React.FC<ImprovWifiTabProps> = ({
             <span className="font-mono text-zinc-500">{scannedNetworks.length} Ağ</span>
           </h4>
 
-          {scannedNetworks.length === 0 ? (
-            <div className="m-auto py-10 flex flex-col items-center justify-center text-center gap-2 text-zinc-500 text-xs">
-              <Wifi className="w-8 h-8 text-zinc-700 animate-pulse" />
-              <span>
-                Wi-Fi ağlarını listelemek için yukarıdaki <strong>'{t("improv_scan_btn")}'</strong>{" "}
-                butonuna basın veya manuel olarak ağ adı girin.
-              </span>
+          {!isScanning && scannedNetworks.length === 0 ? (
+            <div className="py-8 text-center text-zinc-400 text-sm">
+              <p>{lang === "tr" ? 'Ağ bulunamadı.' : 'No networks found.'}</p>
+              <p className="text-zinc-500 text-xs mt-1">{lang === "tr" ? 'SSID\'yi aşağıdan manuel olarak girin.' : 'Enter the SSID manually below.'}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">

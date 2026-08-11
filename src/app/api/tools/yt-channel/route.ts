@@ -44,6 +44,7 @@ async function fetchInnerTubePage(token: string): Promise<{ videos: YTVideoItem[
         },
         continuation: token,
       }),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!itRes.ok) return { videos: [] };
@@ -107,6 +108,7 @@ async function fetchUploadsPlaylistVideos(channelId: string): Promise<YTVideoIte
         "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8",
       },
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) return [];
@@ -217,6 +219,7 @@ async function fetchLatestVideosFromRss(channelId: string): Promise<YTVideoItem[
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
       },
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!rssRes.ok) return [];
@@ -270,7 +273,9 @@ async function resolveChannelUrl(query: string): Promise<string> {
 
   if (parsed.type === "video_url") {
     try {
-      const oembedRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${parsed.target}&format=json`);
+      const oembedRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${parsed.target}&format=json`, {
+        signal: AbortSignal.timeout(8000)
+      });
       if (oembedRes.ok) {
         const data = await oembedRes.json();
         if (data.author_url) return data.author_url;
@@ -295,6 +300,7 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) return null;
@@ -324,8 +330,8 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
 
     let title = unescapeHtml(ogTitle);
     let handle = `@${title.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
-    let avatarUrl = ogImage;
-    let bannerUrl = "";
+    let avatarUrl: string | null = ogImage;
+    let bannerUrl: string | null = "";
     let subscriberCountText = "";
     let videoCountText = "";
     let description = unescapeHtml(ogDesc);
@@ -405,13 +411,13 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
     }
 
     if (!avatarUrl || avatarUrl.includes("unsplash")) {
-      avatarUrl = ogImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800";
+      avatarUrl = ogImage || "";
     } else {
       avatarUrl = avatarUrl.replace(/=s\d+/, "=s900");
     }
 
-    if (!bannerUrl) {
-      bannerUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=2560";
+    if (!bannerUrl || bannerUrl.includes("unsplash")) {
+      bannerUrl = "";
     }
 
     const subsNum = parseSubscribersTextToNum(subscriberCountText) || 1200000;
@@ -446,10 +452,44 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
     const earnings = calculateEarningsProjection(subsNum, vidsNum);
     const totalEstimatedViews = Math.round(subsNum * 145 + vidsNum * 125000);
 
+    const recentVideoCount = allCombinedVideos.filter(v => {
+      if (!v.publishedAt) return false;
+      const d = new Date(v.publishedAt);
+      return !isNaN(d.getTime()) && (Date.now() - d.getTime()) < 90 * 24 * 60 * 60 * 1000;
+    }).length;
+
     const performanceScore = Math.min(
       99,
-      Math.max(70, Math.round(75 + (subsNum > 1000000 ? 15 : 8) + (allCombinedVideos.length > 5 ? 8 : 4)))
+      Math.max(20, Math.round(
+        40 + 
+        (subsNum > 10000000 ? 30 : subsNum > 1000000 ? 20 : subsNum > 100000 ? 12 : subsNum > 10000 ? 6 : 2) + 
+        (recentVideoCount > 5 ? 20 : recentVideoCount > 2 ? 12 : recentVideoCount > 0 ? 6 : 0) + 
+        (vidsNum > 200 ? 9 : vidsNum > 50 ? 6 : vidsNum > 10 ? 3 : 0)
+      ))
     );
+
+    const videoDates = allCombinedVideos
+      .filter(v => v.publishedAt)
+      .map(v => new Date(v.publishedAt).getTime())
+      .filter(t => !isNaN(t))
+      .sort((a, b) => b - a);
+
+    let uploadConsistency = "Inactive" as any;
+    if (videoDates.length >= 2) {
+      const daysBetween: number[] = [];
+      for (let i = 0; i < Math.min(videoDates.length - 1, 10); i++) {
+        daysBetween.push((videoDates[i] - videoDates[i + 1]) / (1000 * 60 * 60 * 24));
+      }
+      const avgDays = daysBetween.reduce((a, b) => a + b, 0) / daysBetween.length;
+      if (avgDays <= 1.5) uploadConsistency = "Daily";
+      else if (avgDays <= 4) uploadConsistency = "Several/Week";
+      else if (avgDays <= 10) uploadConsistency = "Weekly";
+      else if (avgDays <= 20) uploadConsistency = "Bi-Weekly";
+      else if (avgDays <= 40) uploadConsistency = "Monthly";
+      else uploadConsistency = "Occasional";
+    } else if (videoDates.length === 1) {
+      uploadConsistency = "Active";
+    }
 
     return {
       id: channelId,
@@ -465,10 +505,10 @@ async function fetchRealYouTubeChannel(targetUrl: string): Promise<YTChannelAnal
       totalEstimatedViews,
       description: description || `${title} YouTube channel analysis and statistics.`,
       keywords: keywords.length > 0 ? keywords.slice(0, 15) : ["YouTube", "Creator", "Videos", "Studio"],
-      verified: subsNum > 100000,
+      verified: false,
       rssUrl: `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
       country,
-      uploadConsistency: allCombinedVideos.length >= 10 ? "Weekly" : "Active",
+      uploadConsistency,
       performanceScore,
       earnings,
       latestVideos: allCombinedVideos,

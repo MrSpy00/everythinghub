@@ -110,10 +110,6 @@ export const metadata: Metadata = {
   publisher: "aegisSoft",
   alternates: {
     canonical: "https://www.everythinghub.com.tr",
-    languages: {
-      "tr-TR": "https://www.everythinghub.com.tr",
-      "en-US": "https://www.everythinghub.com.tr",
-    },
   },
   manifest: "/manifest.json",
   openGraph: {
@@ -140,6 +136,7 @@ export const metadata: Metadata = {
     description:
       "Kayıt, üyelik veya API anahtarı gerektirmez; tüm işlemler %100 gizli ve tarayıcı taraflı çalışır.",
     creator: "@MrSpy00",
+    site: "@EverythingHub",
     images: ["/opengraph-image"],
   },
   robots: {
@@ -240,6 +237,7 @@ const jsonLdSchema = {
     {
       "@type": "FAQPage",
       "@id": "https://www.everythinghub.com.tr/#faq",
+      "inLanguage": "tr-TR",
       "mainEntity": [
         {
           "@type": "Question",
@@ -297,6 +295,11 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning className="dark">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var l=localStorage.getItem('everythinghub_lang');if(l)document.documentElement.lang=l;}catch(e){}})()`
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}

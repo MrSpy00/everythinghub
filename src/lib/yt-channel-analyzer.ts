@@ -22,8 +22,8 @@ export interface YTChannelAnalysis {
   title: string;
   handle: string;
   customUrl: string;
-  avatarUrl: string;
-  bannerUrl: string;
+  avatarUrl: string | null;
+  bannerUrl: string | null;
   subscriberCountText: string;
   subscriberCountNum: number;
   videoCountText: string;
@@ -273,7 +273,7 @@ export const DEMO_CHANNELS: Record<string, YTChannelAnalysis> = {
         id: "abc123mkbhd",
         title: "Galaxy Z Fold 8 Review: Honeymoon's Over",
         link: "https://www.youtube.com/@mkbhd",
-        thumbnail: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800",
+        thumbnail: "https://i.ytimg.com/vi/abc123mkbhd/maxresdefault.jpg",
         publishedAt: "2026-08-05",
         views: "2.4M",
         descriptionSnippet: "Full in-depth impressions after 2 months of daily driving the new foldable flagship.",
@@ -287,8 +287,8 @@ export const DEMO_CHANNELS: Record<string, YTChannelAnalysis> = {
     title: "Barış Özcan",
     handle: "@BarisOzcan",
     customUrl: "https://www.youtube.com/@BarisOzcan",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800",
-    bannerUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600",
+    avatarUrl: null,
+    bannerUrl: null,
     subscriberCountText: "6.85M abone",
     subscriberCountNum: 6850000,
     videoCountText: "650 video",
@@ -314,7 +314,7 @@ export const DEMO_CHANNELS: Record<string, YTChannelAnalysis> = {
         id: "bo_latest_1",
         title: "Yapay Zekanın Yeni Çağı: İnsan Zihni ile Bütünleşme",
         link: "https://www.youtube.com/@BarisOzcan",
-        thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800",
+        thumbnail: "https://i.ytimg.com/vi/bo_latest_1/maxresdefault.jpg",
         publishedAt: "2026-08-04",
         views: "1.2M",
         descriptionSnippet: "Teknoloji ve insan beyni arasındaki sınırların kalktığı yeni dönem üzerine kapsamlı bir inceleme.",
