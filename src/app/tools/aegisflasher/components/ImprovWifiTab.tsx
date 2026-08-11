@@ -294,6 +294,12 @@ export const ImprovWifiTab: React.FC<ImprovWifiTabProps> = ({
                   placeholder={t("improv_password_placeholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleConnectWifi();
+                    }
+                  }}
                   className="w-full bg-zinc-900 border border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500 font-mono"
                 />
                 <button

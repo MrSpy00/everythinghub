@@ -218,6 +218,11 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                       type="text"
                       value={file.offsetHex}
                       onChange={(e) => onUpdateOffset(file.id, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                        }
+                      }}
                       className="w-24 bg-zinc-950 border border-white/10 rounded-xl px-2 py-1 text-xs text-center font-mono text-violet-300 focus:outline-none focus:border-violet-500"
                     />
                   </div>

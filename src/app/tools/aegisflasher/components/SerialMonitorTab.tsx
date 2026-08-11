@@ -67,8 +67,8 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   const terminalContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (autoScroll && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (autoScroll && terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
     }
   }, [logs, autoScroll]);
 
