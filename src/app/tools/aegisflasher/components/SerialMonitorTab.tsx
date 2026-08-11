@@ -23,6 +23,8 @@ import {
 import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
 import { parseAnsiString, AnsiToken } from "@/lib/flasher/ansi-parser";
 
+import { Language, useTranslation } from "@/lib/flasher/i18n";
+
 interface SerialMonitorTabProps {
   status: ConnectionStatus;
   logs: SerialLogMessage[];
@@ -33,6 +35,7 @@ interface SerialMonitorTabProps {
   onBaudChange: (baud: number) => void;
   rxBytesCount: number;
   txBytesCount: number;
+  lang?: Language;
 }
 
 export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
@@ -45,7 +48,9 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   onBaudChange,
   rxBytesCount,
   txBytesCount,
+  lang = "tr",
 }) => {
+  const t = useTranslation(lang);
   const [inputText, setInputText] = useState("");
   const [lineEnding, setLineEnding] = useState<string>("crlf"); // 'crlf' | 'lf' | 'cr' | 'none'
   const [autoScroll, setAutoScroll] = useState<boolean>(true);

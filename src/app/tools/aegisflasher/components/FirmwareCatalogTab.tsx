@@ -22,41 +22,24 @@ import { FIRMWARE_CATALOG } from "@/lib/flasher/firmware-catalog";
 import { ChipFamily, ConnectionStatus, FirmwareProfile, FlashPartitionFile, MicrocontrollerCategory } from "@/lib/flasher/types";
 import { SmartUrlFlasher } from "./SmartUrlFlasher";
 
+import { Language, useTranslation } from "@/lib/flasher/i18n";
+
 interface FirmwareCatalogTabProps {
   status: ConnectionStatus;
   onFlashFirmware: (profile: FirmwareProfile, selectedVersion: string, buildIndex: number) => void;
   onLoadCustomUrl: (url: string, offset: number) => void;
   onAddCustomPartition?: (partition: FlashPartitionFile) => void;
+  lang?: Language;
 }
-
-const CATEGORY_TABS: { id: MicrocontrollerCategory; label: string }[] = [
-  { id: "all", label: "Tüm Projeler" },
-  { id: "smart-home", label: "Akıllı Ev & Işık" },
-  { id: "security-mesh", label: "Siber Güvenlik & LoRa" },
-  { id: "cnc-robotics", label: "CNC & Robotik" },
-  { id: "solar-energy", label: "Güneş & Telemetri" },
-  { id: "python-lua", label: "Python & Lua" },
-  { id: "diagnostics", label: "Donanım Teşhis" },
-];
-
-const CHIP_FILTERS: { id: string; label: string }[] = [
-  { id: "all", label: "Tüm Çipler" },
-  { id: "ESP32", label: "ESP32" },
-  { id: "ESP32-S3", label: "ESP32-S3" },
-  { id: "ESP32-C3", label: "ESP32-C3" },
-  { id: "ESP8266", label: "ESP8266" },
-  { id: "AVR-ATmega328P", label: "Arduino Uno / Nano" },
-  { id: "AVR-ATmega2560", label: "Arduino Mega" },
-  { id: "RP2040", label: "RP2040 (Pico)" },
-  { id: "STM32F103", label: "STM32 BluePill" },
-];
 
 export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
   status,
   onFlashFirmware,
   onLoadCustomUrl,
   onAddCustomPartition,
+  lang = "tr",
 }) => {
+  const t = useTranslation(lang);
   const [selectedCategory, setSelectedCategory] = useState<MicrocontrollerCategory>("all");
   const [selectedChip, setSelectedChip] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,6 +105,28 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
     };
   };
 
+  const categoryTabs: { id: MicrocontrollerCategory; label: string }[] = [
+    { id: "all", label: t("catalog_all_projects") },
+    { id: "smart-home", label: t("catalog_smart_home") },
+    { id: "security-mesh", label: t("catalog_security_mesh") },
+    { id: "cnc-robotics", label: t("catalog_cnc_robotics") },
+    { id: "solar-energy", label: t("catalog_solar_energy") },
+    { id: "python-lua", label: t("catalog_python_lua") },
+    { id: "diagnostics", label: t("catalog_diagnostics") },
+  ];
+
+  const chipFilters = [
+    { id: "all", label: t("all_chips") },
+    { id: "ESP32", label: "ESP32" },
+    { id: "ESP32-S3", label: "ESP32-S3" },
+    { id: "ESP32-C3", label: "ESP32-C3" },
+    { id: "ESP8266", label: "ESP8266" },
+    { id: "AVR-ATmega328P", label: "Arduino Uno / Nano" },
+    { id: "AVR-ATmega2560", label: "Arduino Mega" },
+    { id: "RP2040", label: "RP2040 (Pico)" },
+    { id: "STM32F103", label: "STM32 BluePill" },
+  ];
+
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Search & Filters Bar */}
@@ -130,7 +135,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <input
             type="text"
-            placeholder="Firmware, çip (ESP32, WLED, Tasmota, LoRa) veya açıklama ara..."
+            placeholder={t("catalog_search_placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-zinc-900/90 border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs md:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
@@ -147,7 +152,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
               onChange={(e) => setSelectedChip(e.target.value)}
               className="appearance-none bg-zinc-900 border border-white/10 rounded-2xl pl-3.5 pr-9 py-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer shadow-inner"
             >
-              {CHIP_FILTERS.map((f) => (
+              {chipFilters.map((f) => (
                 <option key={f.id} value={f.id} className="bg-zinc-900 text-zinc-200">
                   {f.label}
                 </option>
@@ -160,7 +165,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
 
       {/* Category Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {CATEGORY_TABS.map((cat) => (
+        {categoryTabs.map((cat) => (
           <button
             key={cat.id}
             type="button"

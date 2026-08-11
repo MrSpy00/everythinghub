@@ -12,8 +12,16 @@ import {
   Cpu,
 } from "lucide-react";
 import { DRIVER_CATALOG, TROUBLESHOOTING_TIPS } from "@/lib/flasher/driver-catalog";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 
-export const DriverGuideTab: React.FC = () => {
+interface DriverGuideTabProps {
+  lang?: Language;
+}
+
+export const DriverGuideTab: React.FC<DriverGuideTabProps> = ({
+  lang = "tr",
+}) => {
+  const t = useTranslation(lang);
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Introduction Banner */}

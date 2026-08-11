@@ -12,12 +12,22 @@ import {
   HardDrive,
   Radio,
   Sparkles,
+  Activity,
+  Wifi,
+  FileCode,
+  ShieldCheck,
+  Compass,
 } from "lucide-react";
 import { FlasherHeader } from "./components/FlasherHeader";
 import { FirmwareCatalogTab } from "./components/FirmwareCatalogTab";
 import { ManualFlasherTab } from "./components/ManualFlasherTab";
 import { SerialMonitorTab } from "./components/SerialMonitorTab";
+import { SerialPlotterTab } from "./components/SerialPlotterTab";
+import { ImprovWifiTab } from "./components/ImprovWifiTab";
+import { MicroPythonStudioTab } from "./components/MicroPythonStudioTab";
+import { EFuseInspectorTab } from "./components/EFuseInspectorTab";
 import { ChipToolsTab } from "./components/ChipToolsTab";
+import { HardwareUtilsTab } from "./components/HardwareUtilsTab";
 import { PartitionStudioTab } from "./components/PartitionStudioTab";
 import { PinoutGuideTab } from "./components/PinoutGuideTab";
 import { DriverGuideTab } from "./components/DriverGuideTab";
@@ -25,8 +35,7 @@ import { BrowserSupportModal } from "./components/BrowserSupportModal";
 import { WebSerialManager } from "@/lib/flasher/webserial-manager";
 import { EspFlasherEngine } from "@/lib/flasher/esp-flasher-engine";
 import { Stk500FlasherEngine } from "@/lib/flasher/stk500-flasher-engine";
-import { Uf2Engine } from "@/lib/flasher/uf2-flasher-engine";
-import { Stm32FlasherEngine } from "@/lib/flasher/stm32-flasher-engine";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 import {
   ChipTelemetry,
   ConnectionStatus,
@@ -38,14 +47,23 @@ import {
 export type StudioTab =
   | "catalog"
   | "manual"
+  | "plotter"
+  | "improv"
+  | "micropython"
   | "terminal"
   | "tools"
+  | "efuse"
+  | "hardware_utils"
   | "partition"
   | "pinouts"
   | "drivers";
 
 export const AegisFlasherClient: React.FC = () => {
-  // Navigation & State
+  // Localization State
+  const [lang, setLang] = useState<Language>("tr");
+  const t = useTranslation(lang);
+
+  // Navigation & Core State
   const [activeTab, setActiveTab] = useState<StudioTab>("catalog");
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [telemetry, setTelemetry] = useState<ChipTelemetry | null>(null);
@@ -68,9 +86,32 @@ export const AegisFlasherClient: React.FC = () => {
 
   const isSerialSupported = WebSerialManager.isSupported();
 
+  // Load language preference
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem("aegis_flasher_lang") as Language;
+      if (savedLang === "tr" || savedLang === "en") {
+        setLang(savedLang);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleToggleLang = () => {
+    const next = lang === "tr" ? "en" : "tr";
+    setLang(next);
+    try {
+      localStorage.setItem("aegis_flasher_lang", next);
+    } catch {
+      // ignore
+    }
+    toast.success(next === "tr" ? "Dil Türkçe olarak ayarlandı." : "Language set to English.");
+  };
+
   // Log handler
   const appendLog = useCallback((msg: SerialLogMessage) => {
-    setLogs((prev) => [...prev.slice(-400), msg]);
+    setLogs((prev) => [...prev.slice(-500), msg]);
   }, []);
 
   // Initialize WebSerialManager
@@ -98,7 +139,7 @@ export const AegisFlasherClient: React.FC = () => {
       setStatus("disconnected");
       setTelemetry(null);
       rawPortRef.current = null;
-      toast.error("Seri port donanım bağlantısı koptu.");
+      toast.error(lang === "tr" ? "Seri port bağlantısı koptu." : "Serial connection lost.");
     });
 
     serialManagerRef.current = manager;
@@ -106,7 +147,7 @@ export const AegisFlasherClient: React.FC = () => {
     return () => {
       manager.close();
     };
-  }, [appendLog]);
+  }, [appendLog, lang]);
 
   // Connect to Port & Detect Chip
   const handleConnect = async () => {
@@ -121,7 +162,7 @@ export const AegisFlasherClient: React.FC = () => {
       rawPortRef.current = port;
 
       // Try ESP auto-detection first
-      toast.info("Cihaz tespiti ve senkronizasyon başlatılıyor...");
+      toast.info(lang === "tr" ? "Cihaz tespiti başlatılıyor..." : "Device detection in progress...");
       const espEngine = new EspFlasherEngine({
         onLog: appendLog,
         onProgress: (fileIdx, written, total, pct) => {
@@ -141,9 +182,9 @@ export const AegisFlasherClient: React.FC = () => {
         );
         setTelemetry(detectedTelemetry);
         setStatus("connected");
-        toast.success(`ESP Başarıyla Bağlandı: ${detectedTelemetry.modelName}`);
+        toast.success(`ESP: ${detectedTelemetry.modelName}`);
       } catch (espErr: any) {
-        // If not ESP, fallback to open raw serial port for terminal/Arduino
+        // Fallback to open raw serial port for terminal/Arduino/Pico
         appendLog({
           id: `${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -156,11 +197,11 @@ export const AegisFlasherClient: React.FC = () => {
         setStatus("connected");
         setTelemetry({
           family: "Generic-Serial",
-          modelName: "Standart Seri Port Cihazı (Arduino / RP2040 / STM32)",
-          features: ["Seri Terminal", "Veri Akışı"],
+          modelName: "Standart Seri Port (Arduino / Pico / STM32)",
+          features: ["Seri Terminal", "Plotter", "Improv"],
           detectedAt: new Date(),
         });
-        toast.success("Seri port terminal modunda bağlandı.");
+        toast.success(lang === "tr" ? "Seri port başarıyla açıldı." : "Serial port opened.");
       }
     } catch (err: any) {
       setStatus("error");
@@ -170,7 +211,7 @@ export const AegisFlasherClient: React.FC = () => {
     }
   };
 
-  // Direct Serial Terminal Mode Connect (without forcing ESP ROM sync)
+  // Direct Serial Terminal Mode Connect
   const handleConnectTerminalOnly = async () => {
     if (!isSerialSupported) {
       setShowSupportModal(true);
@@ -192,11 +233,11 @@ export const AegisFlasherClient: React.FC = () => {
         features: ["Seri Konsol", "Gerçek Zamanlı Log", "Komut Gönderimi"],
         detectedAt: new Date(),
       });
-      toast.success("Seri port canlı log ve komut modunda açıldı.");
+      toast.success(lang === "tr" ? "Seri port terminal modunda açıldı." : "Terminal connected.");
     } catch (err: any) {
       setStatus("error");
       if (!err.message?.includes("iptal")) {
-        toast.error(`Terminal bağlantı hatası: ${err.message || err}`);
+        toast.error(`Terminal hatası: ${err.message || err}`);
       }
     }
   };
@@ -212,13 +253,13 @@ export const AegisFlasherClient: React.FC = () => {
     rawPortRef.current = null;
     setStatus("disconnected");
     setTelemetry(null);
-    toast.info("Bağlantı kapatıldı.");
+    toast.info(lang === "tr" ? "Bağlantı kapatıldı." : "Disconnected.");
   };
 
   const handleHardReset = async () => {
     if (serialManagerRef.current) {
       await serialManagerRef.current.hardResetEsp();
-      toast.success("Donanımsal reset sinyali gönderildi (EN pin).");
+      toast.success(lang === "tr" ? "Donanımsal reset sinyali gönderildi." : "Hardware reset pulsed.");
     }
   };
 
@@ -240,6 +281,16 @@ export const AegisFlasherClient: React.FC = () => {
       });
     } catch (err: any) {
       toast.error(`Komut gönderilemedi: ${err.message}`);
+    }
+  };
+
+  const handleSendRawBytes = async (bytes: Uint8Array) => {
+    if (!serialManagerRef.current) return;
+    try {
+      await serialManagerRef.current.write(bytes);
+      setTxBytes((b) => b + bytes.length);
+    } catch (err: any) {
+      toast.error(`Veri paketi gönderilemedi: ${err.message}`);
     }
   };
 
@@ -272,7 +323,7 @@ export const AegisFlasherClient: React.FC = () => {
     };
 
     setFiles((prev) => [...prev, newPartition]);
-    toast.success(`Dosya eklendi: ${file.name} (${(data.length / 1024).toFixed(1)} KB)`);
+    toast.success(`${file.name} (${(data.length / 1024).toFixed(1)} KB)`);
   };
 
   const handleApplyPreset = (presetId: string) => {
@@ -282,7 +333,6 @@ export const AegisFlasherClient: React.FC = () => {
         { id: "2", name: "partitions.bin", offset: 0x8000, offsetHex: "0x8000", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
         { id: "3", name: "firmware.bin", offset: 0x10000, offsetHex: "0x10000", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
-      toast.info("ESP32 4MB şablonu uygulandı. Dosyaları seçin.");
     } else if (presetId === "esp32_s3") {
       setFiles([
         { id: "1", name: "bootloader.bin", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
@@ -290,35 +340,31 @@ export const AegisFlasherClient: React.FC = () => {
         { id: "3", name: "boot_app0.bin", offset: 0xe000, offsetHex: "0xe000", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
         { id: "4", name: "firmware.bin", offset: 0x10000, offsetHex: "0x10000", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
-      toast.info("ESP32-S3 şablonu uygulandı.");
     } else if (presetId === "esp8266") {
       setFiles([
         { id: "1", name: "firmware.bin", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
-      toast.info("ESP8266 şablonu uygulandı.");
     } else if (presetId === "arduino_hex") {
       setFiles([
         { id: "1", name: "arduino_firmware.hex", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
-      toast.info("Arduino Intel HEX (.hex) şablonu uygulandı.");
     } else if (presetId === "rp2040_uf2") {
       setFiles([
         { id: "1", name: "pico_firmware.uf2", offset: 0x0, offsetHex: "0x0", data: null, sizeBytes: 0, sourceType: "preset", status: "idle", progressPercent: 0 },
       ]);
-      toast.info("RP2040 Pico (.uf2) şablonu uygulandı.");
     }
   };
 
   // Start Flashing
   const handleStartFlashing = async () => {
     if (!rawPortRef.current) {
-      toast.error("Önce bir seri port seçip bağlanmalısınız.");
+      toast.error(lang === "tr" ? "Önce bir porta bağlanmalısınız." : "Connect to a port first.");
       return;
     }
 
     const validFiles = files.filter((f) => f.data && f.data.length > 0);
     if (validFiles.length === 0) {
-      toast.error("Lütfen önce yüklenecek geçerli bir firmware dosyası seçin.");
+      toast.error(lang === "tr" ? "Geçerli bir firmware dosyası seçin." : "Select a valid firmware file.");
       return;
     }
 
@@ -359,12 +405,12 @@ export const AegisFlasherClient: React.FC = () => {
         await espEngineRef.current.connectAndDetect(rawPortRef.current, 115200, selectedBaud);
       }
 
-      setCurrentStatusText("Bölümler yazılıyor ve CRC doğrulanıyor...");
+      setCurrentStatusText(lang === "tr" ? "Bölümler yazılıyor..." : "Writing partitions...");
       await espEngineRef.current.flashFiles(validFiles, { eraseAll });
-      toast.success("Flaşlama işlemi başarıyla tamamlandı!");
+      toast.success(lang === "tr" ? "Flaşlama tamamlandı!" : "Flashing completed!");
     } catch (err: any) {
       setStatus("error");
-      toast.error(`Flaşlama başarısız: ${err.message || err}`);
+      toast.error(`Flaşlama hatası: ${err.message || err}`);
     }
   };
 
@@ -376,12 +422,8 @@ export const AegisFlasherClient: React.FC = () => {
   ) => {
     const builds = profile.builds[selectedVersion] || profile.builds[profile.latestVersion] || [];
     const build = builds[buildIndex] || builds[0];
-    if (!build) {
-      toast.error("Seçilen sürüm için derleme bulunamadı.");
-      return;
-    }
+    if (!build) return;
 
-    toast.info(`${profile.name} (v${selectedVersion}) dosyaları hazırlanıyor...`);
     setActiveTab("manual");
 
     try {
@@ -392,7 +434,6 @@ export const AegisFlasherClient: React.FC = () => {
         let data: Uint8Array;
 
         if (part.path.startsWith("preset:arduino_uno_blink_hex")) {
-          // Official tested Arduino Uno / Nano ATmega328P 16MHz Blink & UART Heartbeat HEX
           const blinkHex = [
             ":100000000C9434000C9449000C9449000C944900FC",
             ":100010000C9449000C9449000C9449000C944900EC",
@@ -416,15 +457,13 @@ export const AegisFlasherClient: React.FC = () => {
           ].join("\n");
           data = new TextEncoder().encode(blinkHex);
         } else if (part.path.startsWith("preset:esp32_diag_bin")) {
-          // Diagnostic ESP header stub with valid flash magic
           data = new Uint8Array(4096);
           data.fill(0xff);
-          data[0] = 0xe9; // ESP Magic Byte
-          data[1] = 0x01; // 1 segment
-          data[2] = 0x02; // DIO mode
-          data[3] = 0x20; // 40MHz, 4MB
+          data[0] = 0xe9;
+          data[1] = 0x01;
+          data[2] = 0x02;
+          data[3] = 0x20;
         } else {
-          // Fetch from URL with CORS fallback
           let resp: Response;
           try {
             resp = await fetch(part.path);
@@ -432,7 +471,7 @@ export const AegisFlasherClient: React.FC = () => {
             const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(part.path)}`;
             resp = await fetch(proxyUrl);
           }
-          if (!resp.ok) throw new Error(`HTTP ${resp.status} - Dosya indirilemedi.`);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           const ab = await resp.arrayBuffer();
           data = new Uint8Array(ab);
         }
@@ -453,15 +492,14 @@ export const AegisFlasherClient: React.FC = () => {
 
       setFiles(downloadedParts);
       setEraseAll(profile.eraseBeforeFlash ?? false);
-      toast.success(`${profile.name} yazılımı hazırlandı. 'Flaşlamayı Başlat' butonuna basın.`);
+      toast.success(`${profile.name} hazırlandı.`);
     } catch (err: any) {
-      toast.error(`Yazılım indirilemedi: ${err.message}`);
+      toast.error(`İndirme hatası: ${err.message}`);
     }
   };
 
   const handleLoadCustomUrl = async (url: string, offset: number) => {
     try {
-      toast.info("Özel URL'den firmware indiriliyor...");
       let resp: Response;
       try {
         resp = await fetch(url);
@@ -487,57 +525,43 @@ export const AegisFlasherClient: React.FC = () => {
         },
       ]);
       setActiveTab("manual");
-      toast.success("Özel dosya flaşlama tablosuna eklendi.");
+      toast.success("Dosya eklendi.");
     } catch (err: any) {
-      toast.error(`URL yükleme hatası: ${err.message}`);
+      toast.error(`Hata: ${err.message}`);
     }
-  };
-
-  const handleAddCustomPartition = (partition: FlashPartitionFile) => {
-    setFiles((prev) => [...prev, partition]);
-    setActiveTab("manual");
   };
 
   const handleReadFlashDump = async (offset: number, sizeBytes: number) => {
-    if (!espEngineRef.current) {
-      toast.error("ESP cihazı bağlı değil.");
-      return;
-    }
+    if (!espEngineRef.current) return;
     try {
-      setCurrentStatusText("Flash bellek okunuyor...");
+      setCurrentStatusText("Flash okunuyor...");
       const dumpData = await espEngineRef.current.readFlashMemory(offset, sizeBytes);
       const blob = new Blob([dumpData as any], { type: "application/octet-stream" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `esp_flash_dump_0x${offset.toString(16)}_${(sizeBytes / 1024 / 1024).toFixed(0)}MB.bin`;
+      a.download = `esp_flash_dump_0x${offset.toString(16)}.bin`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Flash bellek yedeği indirildi!");
+      toast.success("Yedek indirildi.");
     } catch (err: any) {
-      toast.error(`Dump alma hatası: ${err.message}`);
+      toast.error(`Dump hatası: ${err.message}`);
     }
   };
 
   const handleEraseChip = async () => {
-    if (!espEngineRef.current) {
-      toast.error("ESP cihazı bağlı değil.");
-      return;
-    }
+    if (!espEngineRef.current) return;
     try {
-      setCurrentStatusText("Tüm flash bellek siliniyor...");
+      setCurrentStatusText("Tüm flash siliniyor...");
       await espEngineRef.current.eraseChip();
-      toast.success("Flash bellek başarıyla sıfırlandı!");
+      toast.success("Flash silindi.");
     } catch (err: any) {
       toast.error(`Silme hatası: ${err.message}`);
     }
   };
 
   const handleFlashNvs = async (nvsBinary: Uint8Array, offset: number) => {
-    if (!espEngineRef.current) {
-      toast.error("ESP cihazı bağlı değil.");
-      return;
-    }
+    if (!espEngineRef.current) return;
     try {
       const nvsFile: FlashPartitionFile = {
         id: "nvs_gen",
@@ -551,20 +575,26 @@ export const AegisFlasherClient: React.FC = () => {
         progressPercent: 0,
       };
       await espEngineRef.current.flashFiles([nvsFile], { eraseAll: false });
-      toast.success("Wi-Fi & NVS yapılandırması cihaza yazıldı!");
+      toast.success("NVS yazıldı.");
     } catch (err: any) {
-      toast.error(`NVS yazma hatası: ${err.message}`);
+      toast.error(`NVS hatası: ${err.message}`);
     }
   };
 
-  const tabs: { id: StudioTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "catalog", label: "Firmware Kataloğu", icon: Sparkles },
-    { id: "manual", label: "Özel Flaşlama", icon: Upload },
-    { id: "terminal", label: "Seri Monitör & ANSI Terminal", icon: TerminalIcon },
-    { id: "tools", label: "Çip & Bellek Araçları", icon: HardDrive },
-    { id: "partition", label: "Bölüm Tablosu (Partition Map)", icon: Layers },
-    { id: "pinouts", label: "Pinout & Donanım Rehberi", icon: Cpu },
-    { id: "drivers", label: "Sürücüler & Yardım", icon: HelpCircle },
+  // Studio Tabs Definition
+  const tabs: { id: StudioTab; labelKey: any; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "catalog", labelKey: "tab_catalog", icon: Sparkles },
+    { id: "manual", labelKey: "tab_manual", icon: Upload },
+    { id: "plotter", labelKey: "tab_plotter", icon: Activity },
+    { id: "improv", labelKey: "tab_improv", icon: Wifi },
+    { id: "micropython", labelKey: "tab_micropython", icon: FileCode },
+    { id: "terminal", labelKey: "tab_terminal", icon: TerminalIcon },
+    { id: "tools", labelKey: "tab_tools", icon: HardDrive },
+    { id: "efuse", labelKey: "tab_efuse", icon: ShieldCheck },
+    { id: "hardware_utils", labelKey: "tab_hardware_utils", icon: Compass },
+    { id: "partition", labelKey: "tab_partition", icon: Layers },
+    { id: "pinouts", labelKey: "tab_pinouts", icon: Cpu },
+    { id: "drivers", labelKey: "tab_drivers", icon: HelpCircle },
   ];
 
   return (
@@ -575,7 +605,7 @@ export const AegisFlasherClient: React.FC = () => {
         onClose={() => setShowSupportModal(false)}
       />
 
-      {/* Top Header with Metallic MeshText & Quick Controls */}
+      {/* Top Header with Metallic MeshText, Language Switcher & Controls */}
       <FlasherHeader
         status={status}
         telemetry={telemetry}
@@ -586,10 +616,12 @@ export const AegisFlasherClient: React.FC = () => {
         onDisconnect={handleDisconnect}
         onHardReset={handleHardReset}
         isSerialSupported={isSerialSupported}
+        lang={lang}
+        onToggleLang={handleToggleLang}
       />
 
-      {/* Main Studio Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto p-1.5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl scrollbar-none shadow-2xl">
+      {/* Main Studio Navigation Tabs Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto p-2 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl scrollbar-none shadow-2xl">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -598,14 +630,14 @@ export const AegisFlasherClient: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                 isActive
-                  ? "bg-white/[0.1] text-zinc-100 border border-white/20 shadow-xl shadow-white/5 scale-[1.02] backdrop-blur-xl"
+                  ? "bg-white/[0.1] text-zinc-100 border border-white/20 shadow-xl backdrop-blur-xl scale-[1.02]"
                   : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent"
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? "text-violet-400" : "text-zinc-500"}`} />
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           );
         })}
@@ -618,7 +650,11 @@ export const AegisFlasherClient: React.FC = () => {
             status={status}
             onFlashFirmware={handleFlashFirmwareFromCatalog}
             onLoadCustomUrl={handleLoadCustomUrl}
-            onAddCustomPartition={handleAddCustomPartition}
+            onAddCustomPartition={(part) => {
+              setFiles((prev) => [...prev, part]);
+              setActiveTab("manual");
+            }}
+            lang={lang}
           />
         )}
 
@@ -640,6 +676,33 @@ export const AegisFlasherClient: React.FC = () => {
             onStartFlashing={handleStartFlashing}
             progressPercent={progressPercent}
             currentStatusText={currentStatusText}
+            lang={lang}
+          />
+        )}
+
+        {activeTab === "plotter" && (
+          <SerialPlotterTab
+            status={status}
+            logs={logs}
+            lang={lang}
+          />
+        )}
+
+        {activeTab === "improv" && (
+          <ImprovWifiTab
+            status={status}
+            logs={logs}
+            onSendRawBytes={handleSendRawBytes}
+            lang={lang}
+          />
+        )}
+
+        {activeTab === "micropython" && (
+          <MicroPythonStudioTab
+            status={status}
+            logs={logs}
+            onSendMessage={handleSendMessage}
+            lang={lang}
           />
         )}
 
@@ -654,6 +717,7 @@ export const AegisFlasherClient: React.FC = () => {
             onBaudChange={setSelectedBaud}
             rxBytesCount={rxBytes}
             txBytesCount={txBytes}
+            lang={lang}
           />
         )}
 
@@ -664,14 +728,32 @@ export const AegisFlasherClient: React.FC = () => {
             onReadFlashDump={handleReadFlashDump}
             onEraseChip={handleEraseChip}
             onFlashNvs={handleFlashNvs}
+            lang={lang}
           />
         )}
 
-        {activeTab === "partition" && <PartitionStudioTab />}
+        {activeTab === "efuse" && (
+          <EFuseInspectorTab
+            status={status}
+            telemetry={telemetry}
+            lang={lang}
+          />
+        )}
 
-        {activeTab === "pinouts" && <PinoutGuideTab />}
+        {activeTab === "hardware_utils" && (
+          <HardwareUtilsTab
+            status={status}
+            selectedBaud={selectedBaud}
+            onBaudChange={setSelectedBaud}
+            lang={lang}
+          />
+        )}
 
-        {activeTab === "drivers" && <DriverGuideTab />}
+        {activeTab === "partition" && <PartitionStudioTab lang={lang} />}
+
+        {activeTab === "pinouts" && <PinoutGuideTab lang={lang} />}
+
+        {activeTab === "drivers" && <DriverGuideTab lang={lang} />}
       </div>
     </div>
   );

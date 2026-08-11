@@ -11,8 +11,16 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { BOARD_PINOUTS } from "@/lib/flasher/pinout-catalog";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 
-export const PinoutGuideTab: React.FC = () => {
+interface PinoutGuideTabProps {
+  lang?: Language;
+}
+
+export const PinoutGuideTab: React.FC<PinoutGuideTabProps> = ({
+  lang = "tr",
+}) => {
+  const t = useTranslation(lang);
   const [selectedBoardId, setSelectedBoardId] = useState(BOARD_PINOUTS[0].id);
 
   const currentBoard =

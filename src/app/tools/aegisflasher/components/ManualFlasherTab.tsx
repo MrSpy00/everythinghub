@@ -19,6 +19,7 @@ import {
   Info,
 } from "lucide-react";
 import { ConnectionStatus, FlashPartitionFile } from "@/lib/flasher/types";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 
 interface ManualFlasherTabProps {
   status: ConnectionStatus;
@@ -32,6 +33,7 @@ interface ManualFlasherTabProps {
   onStartFlashing: () => void;
   progressPercent: number;
   currentStatusText: string;
+  lang?: Language;
 }
 
 export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
@@ -46,7 +48,9 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
   onStartFlashing,
   progressPercent,
   currentStatusText,
+  lang = "tr",
 }) => {
+  const t = useTranslation(lang);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -97,7 +101,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
           <Layers className="w-4 h-4 text-violet-400" />
-          Hızlı Bölüm Şablonları:
+          {t("quick_presets")}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -161,11 +165,10 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
           <Upload className="w-6 h-6" />
         </div>
         <h4 className="text-sm font-bold text-zinc-100">
-          Firmware Dosyalarını Sürükleyip Bırakın veya Seçin
+          {t("dropzone_title")}
         </h4>
         <p className="text-xs text-zinc-400 max-w-md mt-1">
-          <code className="text-violet-300">.bin</code>, <code className="text-violet-300">.hex</code> veya{" "}
-          <code className="text-violet-300">.uf2</code> uzantılı dosyalar desteklenir. Otomatik ofset eşleştirmesi yapılır.
+          {t("dropzone_desc")}
         </p>
       </div>
 
@@ -256,23 +259,23 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
           {/* Live Telemetry Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-[11px] font-mono text-zinc-400">
             <div className="flex flex-col">
-              <span>Yazılan Bayt</span>
+              <span>{t("written_bytes")}</span>
               <span className="text-zinc-200 font-bold">
                 {(bytesWritten / 1024).toFixed(1)} / {(totalBytes / 1024).toFixed(1)} KB
               </span>
             </div>
             <div className="flex flex-col">
-              <span>Aktarım Hızı</span>
+              <span>{t("transfer_speed")}</span>
               <span className="text-emerald-400 font-bold">{speedKbps} KB/s</span>
             </div>
             <div className="flex flex-col">
-              <span>Geçen Süre</span>
+              <span>{t("elapsed_time")}</span>
               <span className="text-zinc-200 font-bold">{elapsedSeconds}s</span>
             </div>
             <div className="flex flex-col">
-              <span>Tahmini Kalan (ETA)</span>
+              <span>{t("estimated_eta")}</span>
               <span className="text-indigo-300 font-bold">
-                {remainingSeconds > 0 ? `~${remainingSeconds}s` : "Tamamlanıyor"}
+                {remainingSeconds > 0 ? `~${remainingSeconds}s` : t("completing")}
               </span>
             </div>
           </div>
@@ -290,10 +293,10 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
           />
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-zinc-200">
-              Yazmadan Önce Tüm Flash'ı Sil (Erase Flash)
+              {t("erase_before_flash")}
             </span>
             <span className="text-[10px] text-zinc-500">
-              Temiz kurulum için önerilir. NVS ve önceki ayarlar silinir.
+              {t("erase_before_flash_hint")}
             </span>
           </div>
         </label>
@@ -310,7 +313,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
           className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-xs md:text-sm font-bold text-white bg-violet-600/25 hover:bg-violet-600/40 border border-violet-500/40 hover:border-violet-400 backdrop-blur-2xl shadow-xl shadow-violet-500/10 transition-all active:scale-95 disabled:opacity-40"
         >
           <Zap className="w-4 h-4 text-violet-300" />
-          Flaşlamayı Başlat (Flash Device)
+          {t("start_flashing_btn")}
         </button>
       </div>
     </div>

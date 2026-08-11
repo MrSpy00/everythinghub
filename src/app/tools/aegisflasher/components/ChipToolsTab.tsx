@@ -18,6 +18,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 import { NvsConfigEntry, NvsConfigGenerator } from "@/lib/flasher/nvs-config-generator";
 
 interface ChipToolsTabProps {
@@ -26,6 +27,7 @@ interface ChipToolsTabProps {
   onReadFlashDump: (offset: number, sizeBytes: number) => void;
   onEraseChip: () => void;
   onFlashNvs: (nvsBinary: Uint8Array, offset: number) => void;
+  lang?: Language;
 }
 
 export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
@@ -34,7 +36,9 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
   onReadFlashDump,
   onEraseChip,
   onFlashNvs,
+  lang = "tr",
 }) => {
+  const t = useTranslation(lang);
   // Dump settings
   const [dumpOffsetHex, setDumpOffsetHex] = useState("0x0");
   const [dumpSizeMb, setDumpSizeMb] = useState<number>(4);

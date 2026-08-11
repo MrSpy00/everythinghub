@@ -16,8 +16,16 @@ import {
   PartitionTableEngine,
 } from "@/lib/flasher/partition-table-engine";
 import { PartitionTableEntry } from "@/lib/flasher/types";
+import { Language, useTranslation } from "@/lib/flasher/i18n";
 
-export const PartitionStudioTab: React.FC = () => {
+interface PartitionStudioTabProps {
+  lang?: Language;
+}
+
+export const PartitionStudioTab: React.FC<PartitionStudioTabProps> = ({
+  lang = "tr",
+}) => {
+  const t = useTranslation(lang);
   const [selectedPresetId, setSelectedPresetId] = useState("ota_4mb");
   const [partitions, setPartitions] = useState<PartitionTableEntry[]>(
     PARTITION_PRESETS[1].entries
