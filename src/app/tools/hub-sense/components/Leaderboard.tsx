@@ -12,7 +12,6 @@ import {
   fetchLeaderboard,
   getRankBadge,
   getScoreTier,
-  getLocalLeaderboard,
   type LeaderboardEntry,
   type LeaderboardFilter,
 } from "../games/leaderboard";
@@ -49,7 +48,7 @@ export function Leaderboard({
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<LeaderboardFilter>("all-time");
   const [difficulty, setDifficulty] = useState<DifficultyType>(initialDifficulty);
-  const [source, setSource] = useState<"jsonbin" | "gist" | "local">("local");
+  const [source, setSource] = useState<"global" | "local">("global");
   const [tab, setTab] = useState<"global" | "personal">("global");
   const personalBests = getPersonalBests();
 
@@ -222,7 +221,7 @@ export function Leaderboard({
 
                 {/* Source indicator */}
                 <div className="text-center text-xs text-white/20 py-3">
-                  Kaynak: {source === "jsonbin" ? "Global (JSONbin)" : source === "gist" ? "Global (GitHub)" : "Yerel"}
+                  Kaynak: {source === "global" ? "Küresel (Serverless API)" : "Yerel (Çevrimdışı Bellek)"}
                 </div>
               </div>
             )}

@@ -2,8 +2,6 @@ import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { decodeSharePayload } from "@/app/tools/hub-sense/games/shareEncoder";
 
-export const runtime = "edge";
-
 const ACCENT_COLORS: Record<string, string> = {
   color: "#6366f1",
   sound: "#8b5cf6",
@@ -50,7 +48,6 @@ export async function GET(req: NextRequest) {
   const modeLabel = MODE_LABELS[mode] ?? mode;
 
   return new ImageResponse(
-    /* eslint-disable @next/next/no-img-element */
     <div
       style={{
         width: "1200px",
@@ -59,33 +56,33 @@ export async function GET(req: NextRequest) {
         flexDirection: "column",
         background: "#09090b",
         position: "relative",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "system-ui, -apple-system, sans-serif",
         overflow: "hidden",
       }}
     >
-      {/* Background glow */}
+      {/* Ambient background glow */}
       <div
         style={{
           position: "absolute",
           inset: "0",
-          background: `radial-gradient(ellipse at 50% 50%, ${accentColor}22 0%, transparent 70%)`,
+          background: `radial-gradient(ellipse at 70% 30%, ${accentColor}28 0%, transparent 70%)`,
         }}
       />
 
-      {/* Border */}
+      {/* Frame border */}
       <div
         style={{
           position: "absolute",
-          top: "20px",
-          left: "20px",
-          right: "20px",
-          bottom: "20px",
-          borderRadius: "24px",
+          top: "24px",
+          left: "24px",
+          right: "24px",
+          bottom: "24px",
+          borderRadius: "28px",
           border: `2px solid ${accentColor}44`,
         }}
       />
 
-      {/* Main content */}
+      {/* Main card content */}
       <div
         style={{
           display: "flex",
@@ -94,62 +91,83 @@ export async function GET(req: NextRequest) {
           flex: "1",
         }}
       >
-        {/* Logo row */}
+        {/* Top brand row */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            marginBottom: "32px",
+            marginBottom: "28px",
           }}
         >
-          <span style={{ fontSize: "24px", fontWeight: "700", color: "rgba(255,255,255,0.4)" }}>
-            Hub
+          <span
+            style={{
+              fontSize: "26px",
+              fontWeight: "700",
+              color: "rgba(255,255,255,0.4)",
+            }}
+          >
+            EverythingHub
           </span>
-          <span style={{ fontSize: "24px", fontWeight: "700", color: accentColor }}>
-            Sense
+          <span
+            style={{
+              fontSize: "26px",
+              fontWeight: "700",
+              color: accentColor,
+              marginLeft: "8px",
+            }}
+          >
+            HubSense
           </span>
-          <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.2)", marginLeft: "16px" }}>
+          <span
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "rgba(255,255,255,0.3)",
+              marginLeft: "18px",
+            }}
+          >
             {gameName} · {diffLabel} · {modeLabel}
           </span>
         </div>
 
-        {/* Username */}
+        {/* Player Name */}
         <div
           style={{
-            fontSize: "52px",
-            fontWeight: "700",
-            color: "#fafafa",
-            marginBottom: "8px",
+            fontSize: "48px",
+            fontWeight: "800",
+            color: "#ffffff",
+            marginBottom: "4px",
           }}
         >
           {username}
         </div>
 
-        {/* Score display */}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: "12px" }}>
+        {/* Big Score Counter */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: "14px" }}>
           <span
             style={{
-              fontSize: "150px",
+              fontSize: "140px",
               fontWeight: "900",
               color: accentColor,
               lineHeight: "1",
+              letterSpacing: "-4px",
             }}
           >
             {totalScore.toFixed(1)}
           </span>
           <span
             style={{
-              fontSize: "48px",
+              fontSize: "42px",
+              fontWeight: "700",
               color: "rgba(255,255,255,0.25)",
-              marginBottom: "20px",
             }}
           >
             /50
           </span>
         </div>
 
-        {/* Round bars */}
-        <div style={{ display: "flex", gap: "12px", marginTop: "32px" }}>
+        {/* 5 Rounds Grid */}
+        <div style={{ display: "flex", gap: "14px", marginTop: "28px" }}>
           {roundScores.map((s, i) => (
             <div
               key={i}
@@ -163,7 +181,7 @@ export async function GET(req: NextRequest) {
               <div
                 style={{
                   height: "56px",
-                  borderRadius: "10px",
+                  borderRadius: "12px",
                   background: "rgba(255,255,255,0.05)",
                   position: "relative",
                   overflow: "hidden",
@@ -175,22 +193,22 @@ export async function GET(req: NextRequest) {
                     bottom: "0",
                     left: "0",
                     right: "0",
-                    height: `${Math.max(4, (s / 10) * 56)}px`,
+                    height: `${Math.max(6, (s / 10) * 56)}px`,
                     background: accentColor,
-                    opacity: 0.7 + (s / 10) * 0.3,
+                    opacity: 0.75 + (s / 10) * 0.25,
                     borderRadius: "8px",
                   }}
                 />
               </div>
               <div
                 style={{
-                  fontSize: "18px",
+                  fontSize: "16px",
                   fontWeight: "700",
-                  color: "rgba(255,255,255,0.6)",
+                  color: "rgba(255,255,255,0.7)",
                   textAlign: "center",
                 }}
               >
-                {s.toFixed(1)}
+                R{i + 1}: {s.toFixed(1)}
               </div>
             </div>
           ))}
@@ -202,13 +220,13 @@ export async function GET(req: NextRequest) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          padding: "0 60px 40px",
-          color: "rgba(255,255,255,0.2)",
-          fontSize: "16px",
+          padding: "0 60px 36px",
+          color: "rgba(255,255,255,0.3)",
+          fontSize: "15px",
         }}
       >
-        <span>everythinghub.com.tr</span>
-        <span>HubSense · Duyu Hafızası Arenası</span>
+        <span>www.everythinghub.com.tr/tools/hub-sense</span>
+        <span>Duyu Hafızası & Bilişsel Algı Arenası</span>
       </div>
     </div>,
     {

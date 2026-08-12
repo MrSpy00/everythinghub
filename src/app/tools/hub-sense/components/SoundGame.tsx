@@ -10,8 +10,6 @@ import { motion } from "framer-motion";
 import {
   scoreSound,
   freqToNoteName,
-  freqToERB,
-  erbToFreq,
   type SoundScoreResult,
 } from "../games/soundScoring";
 import { Play, Volume2 } from "lucide-react";
@@ -235,8 +233,10 @@ export function SoundDisplay({ freq, onHide, audioCtx, onInitAudio }: SoundDispl
     }
 
     play();
-    return () => { cancelled = true; };
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [audioCtx, freq, onHide, onInitAudio]);
 
   const BARS = 48;
 

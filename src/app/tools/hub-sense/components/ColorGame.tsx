@@ -6,8 +6,8 @@
  */
 
 import React, { useRef, useEffect, useCallback, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { hsbToHex, hsbToRgb, scoreColor, type ColorScoreResult, type ColorBlindType } from "../games/colorScoring";
+import { motion } from "framer-motion";
+import { hsbToHex, scoreColor, type ColorScoreResult, type ColorBlindType } from "../games/colorScoring";
 import { Eye, EyeOff } from "lucide-react";
 
 interface ColorRound {
@@ -19,7 +19,7 @@ interface ColorRound {
 interface ColorGameProps {
   targetColor: ColorRound;
   onSubmit: (result: ColorScoreResult) => void;
-  difficulty: "easy" | "hard" | "brutal";
+  difficulty?: "easy" | "hard" | "brutal";
   colorBlindMode: ColorBlindType;
   onColorBlindToggle: (mode: ColorBlindType) => void;
   showResult?: boolean;
@@ -28,10 +28,8 @@ interface ColorGameProps {
 export function ColorGame({
   targetColor,
   onSubmit,
-  difficulty,
   colorBlindMode,
   onColorBlindToggle,
-  showResult,
 }: ColorGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hue, setHue] = useState(180);
@@ -253,20 +251,17 @@ interface ColorDisplayProps {
   b: number;
   onHide: () => void;
   revealDurationMs: number;
-  colorBlindMode: ColorBlindType;
+  colorBlindMode?: ColorBlindType;
 }
 
 export function ColorDisplay({
-  h, s, b, onHide, revealDurationMs, colorBlindMode
+  h, s, b, onHide, revealDurationMs
 }: ColorDisplayProps) {
-  const [progress, setProgress] = useState(0);
-
   useEffect(() => {
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const p = elapsed / revealDurationMs;
-      setProgress(Math.min(1, p));
       if (p >= 1) {
         clearInterval(interval);
         onHide();

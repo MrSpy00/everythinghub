@@ -12,10 +12,9 @@ import {
   type ShapeType,
   type ShapeScoreResult,
   drawShape,
-  generateShape,
   scoreShape,
 } from "../games/shapeScoring";
-import { RotateCw, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { RotateCw, ZoomIn, Move } from "lucide-react";
 
 interface ShapeGameProps {
   target: ShapeParams;

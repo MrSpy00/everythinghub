@@ -1,11 +1,10 @@
 /**
- * HubSense — Share Encoder
+ * HubSense — Share Encoder & Canvas Scorecard Generator
  * Encodes game results into shareable URL parameters.
- * Creates score card data for OG image generation and Canvas-based PNG export.
+ * Creates score card data for dynamic OG images and direct high-res PNG downloads.
  */
 
 import type { GameType, DifficultyType, ModeType } from "./seedGenerator";
-import type { LeaderboardEntry } from "./leaderboard";
 
 // ─── Share Payload ─────────────────────────────────────────────────────────────
 export interface SharePayload {
@@ -40,7 +39,7 @@ export function decodeSharePayload(encoded: string): SharePayload | null {
     const json = decodeURIComponent(atob(encoded));
     const data = JSON.parse(json);
     return {
-      username: data.u ?? "???",
+      username: data.u ?? "ANONIM",
       totalScore: data.s ?? 0,
       roundScores: data.r ?? [0, 0, 0, 0, 0],
       gameType: data.g ?? "color",
@@ -98,11 +97,19 @@ export function buildOgImageUrl(payload: SharePayload): string {
 export interface ScoreCardOptions {
   payload: SharePayload;
   accentColor?: string;
-  theme?: "dark" | "glass";
 }
 
+const ACCENT_COLORS: Record<GameType, string> = {
+  color: "#6366f1",
+  sound: "#8b5cf6",
+  time: "#10b981",
+  shape: "#f59e0b",
+  sequence: "#ec4899",
+};
+
 export function generateScoreCardCanvas(options: ScoreCardOptions): HTMLCanvasElement {
-  const { payload, accentColor = "#6366f1" } = options;
+  const { payload } = options;
+  const accentColor = options.accentColor || ACCENT_COLORS[payload.gameType] || "#6366f1";
   const W = 1200;
   const H = 630;
 
@@ -111,78 +118,93 @@ export function generateScoreCardCanvas(options: ScoreCardOptions): HTMLCanvasEl
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // Background
+  // Dark background
   const gradient = ctx.createLinearGradient(0, 0, W, H);
   gradient.addColorStop(0, "#09090b");
-  gradient.addColorStop(1, "#131316");
+  gradient.addColorStop(1, "#121217");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
 
-  // Accent glow
-  const radial = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 500);
-  radial.addColorStop(0, `${accentColor}22`);
+  // Accent radial glow
+  const radial = ctx.createRadialGradient(W * 0.7, H * 0.3, 50, W * 0.7, H * 0.3, 600);
+  radial.addColorStop(0, `${accentColor}25`);
   radial.addColorStop(1, "transparent");
   ctx.fillStyle = radial;
   ctx.fillRect(0, 0, W, H);
 
-  // Border
+  // Border card
   ctx.strokeStyle = `${accentColor}44`;
-  ctx.lineWidth = 2;
-  roundRect(ctx, 20, 20, W - 40, H - 40, 24);
+  ctx.lineWidth = 3;
+  roundRect(ctx, 24, 24, W - 48, H - 48, 28);
   ctx.stroke();
 
-  // Logo/Title
-  ctx.font = "bold 28px system-ui, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.4)";
-  ctx.fillText("HubSense", 60, 80);
+  // Branding
+  ctx.font = "bold 26px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+  ctx.fillText("EverythingHub", 64, 84);
 
-  // Game type pill
+  ctx.fillStyle = accentColor;
+  ctx.fillText("HubSense", 240, 84);
+
+  // Game & Mode Pill
   const gameName = payload.gameType.toUpperCase();
-  ctx.font = "bold 18px system-ui, sans-serif";
+  ctx.font = "bold 16px monospace";
   ctx.fillStyle = accentColor;
-  ctx.fillText(`${gameName} · ${payload.difficulty.toUpperCase()} · ${payload.mode.toUpperCase()}`, 60, 120);
+  ctx.fillText(
+    `${gameName} · ${payload.difficulty.toUpperCase()} · ${payload.mode.toUpperCase()}`,
+    64,
+    130
+  );
 
-  // Username
-  ctx.font = "bold 48px system-ui, sans-serif";
-  ctx.fillStyle = "#fafafa";
-  ctx.fillText(payload.username, 60, 210);
+  // Player Username
+  ctx.font = "bold 44px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(payload.username, 64, 210);
 
-  // Score
-  ctx.font = "bold 140px system-ui, sans-serif";
+  // Huge Score Number
+  ctx.font = "bold 140px system-ui, -apple-system, sans-serif";
   ctx.fillStyle = accentColor;
-  ctx.fillText(payload.totalScore.toFixed(1), 60, 400);
+  const scoreText = payload.totalScore.toFixed(1);
+  ctx.fillText(scoreText, 64, 380);
 
-  ctx.font = "bold 48px system-ui, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.fillText("/50", 260 + payload.totalScore.toString().length * 40, 380);
+  // /50 Total
+  const textWidth = ctx.measureText(scoreText).width;
+  ctx.font = "bold 44px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+  ctx.fillText("/50", 74 + textWidth, 360);
 
-  // Round scores bar
-  const barY = 460;
-  const barW = (W - 120) / 5;
-  payload.roundScores.forEach((s, i) => {
-    const x = 60 + i * barW;
-    const filled = (s / 10) * (barW - 20);
+  // Round Bars Breakdown
+  const barY = 440;
+  const barTotalWidth = W - 128;
+  const barWidth = (barTotalWidth - 4 * 16) / 5;
 
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
-    roundRect(ctx, x, barY, barW - 12, 50, 8);
+  payload.roundScores.forEach((score, idx) => {
+    const x = 64 + idx * (barWidth + 16);
+
+    // Track
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    roundRect(ctx, x, barY, barWidth, 64, 12);
     ctx.fill();
 
-    ctx.fillStyle = `${accentColor}cc`;
-    if (filled > 0) {
-      roundRect(ctx, x, barY, filled, 50, 8);
-      ctx.fill();
-    }
+    // Fill
+    const fillHeight = Math.max(8, (score / 10) * 64);
+    ctx.fillStyle = `${accentColor}dd`;
+    roundRect(ctx, x, barY + (64 - fillHeight), barWidth, fillHeight, 12);
+    ctx.fill();
 
-    ctx.font = "bold 18px system-ui, sans-serif";
-    ctx.fillStyle = "#fff";
-    ctx.fillText(`R${i + 1}: ${s.toFixed(1)}`, x + 8, barY + 30);
+    // Score label
+    ctx.font = "bold 18px monospace";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`R${idx + 1}: ${score.toFixed(1)}`, x + 16, barY + 38);
   });
 
-  // Date
-  const dateStr = payload.dateSeed ?? new Date(payload.timestamp).toLocaleDateString("tr-TR");
-  ctx.font = "16px system-ui, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.fillText(`everythinghub.com.tr · ${dateStr}`, 60, H - 40);
+  // Footer URL & Date
+  const dateStr =
+    payload.dateSeed ??
+    new Date(payload.timestamp).toLocaleDateString("tr-TR");
+  ctx.font = "16px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+  ctx.fillText(`www.everythinghub.com.tr/tools/hub-sense · ${dateStr}`, 64, H - 44);
 
   return canvas;
 }
@@ -208,22 +230,23 @@ function roundRect(
   ctx.closePath();
 }
 
-export function canvasToPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error("Canvas to blob failed"));
-    }, "image/png");
-  });
+// ─── Direct PNG Download ──────────────────────────────────────────────────────
+export async function downloadScoreCardImage(payload: SharePayload): Promise<void> {
+  const canvas = generateScoreCardCanvas({ payload });
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `HubSense_${payload.gameType}_${payload.username}_${payload.totalScore.toFixed(1)}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, "image/png");
 }
 
-// ─── Copy to Clipboard ────────────────────────────────────────────────────────
-export async function copyShareUrl(payload: SharePayload): Promise<void> {
-  const url = buildShareUrl(payload);
-  await navigator.clipboard.writeText(url);
-}
-
-// ─── Share via Web Share API ──────────────────────────────────────────────────
+// ─── Share Via Socials ────────────────────────────────────────────────────────
 export async function nativeShare(payload: SharePayload): Promise<boolean> {
   if (!navigator.share) return false;
 
@@ -234,7 +257,7 @@ export async function nativeShare(payload: SharePayload): Promise<boolean> {
   try {
     await navigator.share({
       title: `HubSense ${gameName} — ${payload.totalScore.toFixed(1)}/50`,
-      text: `${payload.username} olarak HubSense ${gameName} oyununda ${payload.totalScore.toFixed(1)}/50 puan aldım! Senin skorun nedir?`,
+      text: `${payload.username} olarak HubSense ${gameName} oyununda ${payload.totalScore.toFixed(1)}/50 puan aldım! Sen de dene:`,
       url,
     });
     return true;
@@ -243,11 +266,18 @@ export async function nativeShare(payload: SharePayload): Promise<boolean> {
   }
 }
 
-// ─── Twitter/X Share ──────────────────────────────────────────────────────────
 export function buildTwitterShareUrl(payload: SharePayload): string {
   const gameName =
     payload.gameType.charAt(0).toUpperCase() + payload.gameType.slice(1);
   const url = buildShareUrl(payload);
-  const text = `${payload.username} olarak HubSense ${gameName} oyununda ${payload.totalScore.toFixed(1)}/50 puan aldım!\n\n${url}\n\n#HubSense #EverythingHub`;
+  const text = `${payload.username} olarak HubSense ${gameName} duyu hafızası oyununda 50 üzerinden ${payload.totalScore.toFixed(1)} puan aldım! Sen ne kadar hatırlıyorsun?\n\n${url}\n\n#HubSense #EverythingHub`;
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+}
+
+export function buildWhatsAppShareUrl(payload: SharePayload): string {
+  const gameName =
+    payload.gameType.charAt(0).toUpperCase() + payload.gameType.slice(1);
+  const url = buildShareUrl(payload);
+  const text = `HubSense ${gameName} oyununda ${payload.totalScore.toFixed(1)}/50 puan yaptım! Bakalım beni geçebilecek misin:\n${url}`;
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 }
