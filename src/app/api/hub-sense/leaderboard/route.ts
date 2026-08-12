@@ -24,7 +24,7 @@ const memoryLeaderboards: Record<string, StoredEntry[]> = {};
 const rateLimitMap: Map<string, number> = new Map();
 const seenSubmissions: Set<string> = new Set();
 
-const HMAC_KEY_MATERIAL = "HubSense_ScoreGuard_2026_v2_by_aegisSoft";
+const HMAC_KEY_MATERIAL = "HubSense_ScoreGuard_2026_v3_by_aegisSoft";
 
 async function verifyHmac(payload: ScorePayload): Promise<boolean> {
   try {
@@ -125,8 +125,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const computedTotal = payload.roundScores.reduce((a, b) => a + b, 0);
-    if (Math.abs(computedTotal - payload.totalScore) > 0.05) {
+    const computedRawTotal = payload.roundScores.reduce((a, b) => a + b, 0);
+    const computedNormalizedTotal =
+      (computedRawTotal / (payload.roundScores.length * 10)) * 50;
+
+    const isMatch =
+      Math.abs(computedNormalizedTotal - payload.totalScore) <= 0.08 ||
+      Math.abs(computedRawTotal - payload.totalScore) <= 0.08;
+
+    if (!isMatch) {
       return NextResponse.json(
         { success: false, error: "Toplam skor tutarsız" },
         { status: 400 }
@@ -143,7 +150,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Replay & deduplication check
-    const dedupKey = `${payload.username.toUpperCase()}_${payload.gameType}_${payload.seed}`;
+    const dedupKey = `${payload.username.toLowerCase()}_${payload.gameType}_${payload.seed}`;
     if (seenSubmissions.has(dedupKey)) {
       return NextResponse.json(
         { success: false, error: "Bu oturum skoru daha önce kaydedildi." },
@@ -161,7 +168,7 @@ export async function POST(req: NextRequest) {
     }
 
     const newEntry: StoredEntry = {
-      username: payload.username.toUpperCase().trim(),
+      username: payload.username.trim(),
       score: payload.totalScore,
       gameType: payload.gameType,
       difficulty: payload.difficulty,

@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import { HubSenseClient } from "./HubSenseClient";
 
 export const metadata: Metadata = {
-  title: "HubSense — Duyu Hafızası Oyun Arenası | Renk, Ses, Zaman, Şekil",
+  title: "HubSense — Duyu Hafızası Oyun Arenası | Renk, Ses, Zaman, Şekil, Dizi",
   description:
-    "Renkler, sesler, süreler ve şekilleri sandığınızdan çok daha kötü hatırlıyorsunuz. Bilimsel CIELAB/ERB/IoU skorlama ile duyu hafızanızı test edin. Günlük meydan okuma, global skor tablosu ve paylaşım özelliği.",
+    "Renkler, sesler, süreler, şekiller ve harmonik ses dizilerini sandığınızdan çok daha zor hatırlarsınız. Bilimsel CIELAB, ERB ve IoU skorlama ile bilişsel duyu algınızı test edin.",
   keywords: [
     "duyu hafızası oyunu",
     "renk hafızası testi",
     "ses frekansı testi",
     "zaman algısı oyunu",
     "şekil hafızası",
+    "dizi hafızası",
     "HubSense",
     "EverythingHub",
     "aegisSoft",
@@ -32,9 +33,9 @@ export const metadata: Metadata = {
     canonical: "https://www.everythinghub.com.tr/tools/hub-sense",
   },
   openGraph: {
-    title: "HubSense — Duyu Hafızası Oyun Arenası",
+    title: "HubSense — Bilişsel Duyu Hafızası Oyun Arenası",
     description:
-      "Renkler, sesler, süreler ve şekilleri sandığından çok daha kötü hatırlıyorsun. Dene, puanla, paylaş.",
+      "Renk, ses, zaman, şekil ve dizi hafızanızı bilimsel algoritmalarla test edin. Günlük küresel meydan okuma ve anlık skor tablosu.",
     url: "https://www.everythinghub.com.tr/tools/hub-sense",
     siteName: "EverythingHub",
     locale: "tr_TR",
@@ -50,9 +51,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "HubSense — Duyu Hafızası Oyun Arenası",
+    title: "HubSense — Bilişsel Duyu Hafızası Oyun Arenası",
     description:
-      "Renk, ses, zaman ve şekil hafızanı bilimsel olarak test et. EverythingHub'ın ücretsiz oyun arenası.",
+      "Renk, ses, zaman, şekil ve dizi hafızanı bilimsel olarak test et. EverythingHub'ın ücretsiz oyun arenası.",
     images: ["https://www.everythinghub.com.tr/api/hub-sense/og"],
   },
   other: {
@@ -63,6 +64,45 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "HubSense",
+  alternateName: "HubSense Cognitive Perception Arena",
+  url: "https://www.everythinghub.com.tr/tools/hub-sense",
+  applicationCategory: "GameApplication",
+  operatingSystem: "All",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  description:
+    "Scientific cognitive sensory memory and perception benchmark arena testing Color (CIELAB Delta-E), Sound (ERB scale), Time (Weber-Fechner), Shape (IoU), and Sequence working memory.",
+  author: {
+    "@type": "Organization",
+    name: "aegisSoft",
+    url: "https://www.everythinghub.com.tr",
+  },
+  creator: {
+    "@type": "Person",
+    name: "MrSpy00",
+  },
+  sameAs: [
+    "https://everythinghub.com.tr/tools/hub-sense",
+    "https://www.everythinghub.info/tools/hub-sense",
+    "https://everythinghub.info/tools/hub-sense",
+  ],
+};
+
 export default function HubSensePage() {
-  return <HubSenseClient />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HubSenseClient />
+    </>
+  );
 }
