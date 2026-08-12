@@ -6,7 +6,7 @@
  * 100% Client-Side, Zero-Auth Serverless Leaderboard, Offline LocalStorage,
  * Cryptographic Anti-Cheat, High-Res Score Card Generator, and Full Bilingual (TR/EN) i18n.
  * Dynamic Configurable Rounds (3, 5, 10, Custom), Mixed-Case Profanity-Moderated Nicknames,
- * Translucent Liquid Glass Background, and Context-Aware Interactive Cursors.
+ * Translucent Liquid Glass Background, Balanced Responsive Grids, and Context-Aware Cursors.
  */
 
 import React, { useState, useCallback, useEffect, Suspense } from "react";
@@ -89,6 +89,8 @@ import {
   Download,
   MessageCircle,
   Swords,
+  Plus,
+  Minus,
 } from "lucide-react";
 import type { ColorBlindType, ColorScoreResult } from "./games/colorScoring";
 import type { SoundScoreResult } from "./games/soundScoring";
@@ -223,6 +225,14 @@ function HubSenseInner() {
   const [dailyPlayed, setDailyPlayed] = useState<Record<string, boolean>>({});
   const [newRecord, setNewRecord] = useState(false);
 
+  // Computed Active Rounds Count (Always in sync with custom input)
+  const parsedCustom = parseInt(customRoundsInput, 10);
+  const activeRounds = isCustomRounds
+    ? !isNaN(parsedCustom) && parsedCustom >= 1 && parsedCustom <= 20
+      ? parsedCustom
+      : 7
+    : selectedRounds;
+
   // Initialize mute state & username from local storage
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -291,7 +301,7 @@ function HubSenseInner() {
   const config = GAME_CONFIGS[selectedGame];
   const accentColor = config.accent;
   const currentDiscipline = t.disciplines[selectedGame];
-  const totalRoundsCount = session?.totalRounds || selectedRounds;
+  const totalRoundsCount = session?.totalRounds || activeRounds;
 
   // ─── Game Flow ─────────────────────────────────────────────────────────────
   const startGame = useCallback(
@@ -299,14 +309,14 @@ function HubSenseInner() {
       gameType: GameType,
       difficulty: DifficultyType,
       mode: ModeType,
-      rounds = selectedRounds,
+      rounds = activeRounds,
       customSeed?: number
     ) => {
       unlockAudio();
       SoundFX.click();
 
-      const activeRounds = mode === "daily" ? DEFAULT_ROUNDS_COUNT : rounds;
-      const newSession = createGameSession(gameType, difficulty, mode, activeRounds);
+      const roundCount = mode === "daily" ? DEFAULT_ROUNDS_COUNT : rounds;
+      const newSession = createGameSession(gameType, difficulty, mode, roundCount);
       if (customSeed !== undefined) {
         newSession.seed = customSeed;
       }
@@ -329,7 +339,7 @@ function HubSenseInner() {
         setScreen("reveal");
       }
     },
-    [selectedRounds]
+    [activeRounds]
   );
 
   const proceedToReveal = useCallback(() => {
@@ -531,7 +541,7 @@ function HubSenseInner() {
   const tier = sharePayload ? getScoreTier(sharePayload.totalScore) : null;
 
   return (
-    <div className="min-h-screen bg-transparent text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-24 pb-12 px-4 sm:px-6">
+    <div className="min-h-screen bg-transparent text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-20 sm:pt-24 pb-10 sm:pb-12 px-3 sm:px-6">
       {/* Ambient Specular Glow */}
       <div
         className="pointer-events-none fixed inset-0 opacity-20 transition-all duration-700 -z-10"
@@ -547,30 +557,31 @@ function HubSenseInner() {
           {screen === "intro" && (
             <motion.div
               key="intro"
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              className="flex flex-col gap-6 w-full"
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-4 sm:gap-5 w-full"
             >
               {/* Header Card */}
-              <div className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-baseline gap-1">
+              <div className="flex items-center justify-between p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
+                <div className="flex flex-col pr-2">
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tighter inline-flex items-baseline select-none">
                     <span>Hub</span>
                     <span style={{ color: accentColor }}>Sense</span>
                   </h1>
-                  <p className="text-xs sm:text-sm text-white/50 mt-1">
+                  <p className="text-xs sm:text-sm text-white/50 mt-0.5 leading-snug line-clamp-1 sm:line-clamp-none">
                     {t.subtitle}
                   </p>
                 </div>
 
                 {/* Quick Toolbar */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   <button
                     onClick={toggleSound}
                     aria-label={t.soundToggle}
                     data-cursor={t.soundToggle}
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-white/70 shadow-lg"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-white/70 shadow-lg"
                   >
                     {muted ? (
                       <VolumeX className="w-4 h-4 text-rose-400" />
@@ -585,7 +596,7 @@ function HubSenseInner() {
                       setShowInsights(true);
                     }}
                     data-cursor={t.sensoryProfile}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
+                    className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Brain className="w-4 h-4 text-indigo-400" />
                     <span className="hidden sm:inline">{t.sensoryProfile}</span>
@@ -597,7 +608,7 @@ function HubSenseInner() {
                       setShowLeaderboard(true);
                     }}
                     data-cursor={t.scores}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
+                    className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Trophy className="w-4 h-4 text-amber-400" />
                     <span>{t.scores}</span>
@@ -605,20 +616,23 @@ function HubSenseInner() {
                 </div>
               </div>
 
-              {/* Game Selector Grid */}
-              <div className="flex flex-col gap-3">
-                <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+              {/* Game Selector Grid (Balanced 5 Disciplines Responsive Matrix) */}
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
                   {t.selectDiscipline}
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
                   {(
                     Object.entries(GAME_CONFIGS) as [
                       GameType,
                       (typeof GAME_CONFIGS)[GameType]
                     ][]
-                  ).map(([type, cfg]) => {
+                  ).map(([type, cfg], index) => {
                     const isSelected = selectedGame === type;
                     const dInfo = t.disciplines[type];
+                    // Make 5th card span 2 cols on 2-col mobile
+                    const isLastOnMobile = index === 4;
+
                     return (
                       <button
                         key={type}
@@ -627,7 +641,8 @@ function HubSenseInner() {
                           setSelectedGame(type);
                         }}
                         data-cursor={`${dInfo.label} · ${lang === "tr" ? "Seç" : "Select"}`}
-                        className={`flex flex-col gap-2.5 p-4 sm:p-5 rounded-3xl border text-left transition-all relative overflow-hidden backdrop-blur-2xl
+                        className={`flex flex-col justify-between p-3.5 sm:p-4 rounded-3xl border text-left transition-all relative overflow-hidden backdrop-blur-2xl min-h-[110px] sm:min-h-[125px]
+                          ${isLastOnMobile ? "col-span-2 sm:col-span-1" : ""}
                           ${
                             isSelected
                               ? "bg-white/[0.08] border-white/25 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]"
@@ -635,13 +650,13 @@ function HubSenseInner() {
                           }`}
                         style={{
                           boxShadow: isSelected
-                            ? `0 0 30px ${cfg.accent}33`
+                            ? `0 0 25px ${cfg.accent}33`
                             : undefined,
                           borderColor: isSelected ? `${cfg.accent}88` : undefined,
                         }}
                       >
                         <div
-                          className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-md"
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-md mb-2"
                           style={{
                             background: `${cfg.accent}20`,
                             color: cfg.accent,
@@ -651,10 +666,10 @@ function HubSenseInner() {
                           {cfg.icon}
                         </div>
                         <div>
-                          <div className="font-extrabold text-sm sm:text-base text-white">
+                          <div className="font-extrabold text-sm text-white">
                             {dInfo.label}
                           </div>
-                          <div className="text-[11px] text-white/40 leading-snug mt-1 line-clamp-2">
+                          <div className="text-[10px] sm:text-[11px] text-white/45 leading-tight mt-0.5 line-clamp-2">
                             {dInfo.desc}
                           </div>
                         </div>
@@ -665,13 +680,13 @@ function HubSenseInner() {
               </div>
 
               {/* Difficulty & Round Count Matrix */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Difficulty Selector */}
-                <div className="flex flex-col gap-2.5">
-                  <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between gap-2.5">
+                  <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
                     {t.difficultyLevel}
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 sm:gap-2">
                     {(["easy", "hard", "brutal"] as DifficultyType[]).map((diff) => {
                       const isSelected = selectedDifficulty === diff;
                       const color = DIFFICULTY_COLORS[diff];
@@ -683,7 +698,7 @@ function HubSenseInner() {
                             setSelectedDifficulty(diff);
                           }}
                           data-cursor={t.difficulties[diff].label}
-                          className={`flex-1 py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                          className={`flex-1 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
                             ${
                               isSelected
                                 ? "bg-white/[0.08] text-white border-white/25 shadow-lg"
@@ -700,17 +715,17 @@ function HubSenseInner() {
                       );
                     })}
                   </div>
-                  <p className="text-[11px] text-white/40 px-1 line-clamp-1">
+                  <p className="text-[11px] text-white/40 leading-tight line-clamp-1">
                     {t.difficulties[selectedDifficulty].desc}
                   </p>
                 </div>
 
                 {/* Round Count Selector */}
-                <div className="flex flex-col gap-2.5">
-                  <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between gap-2.5">
+                  <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
                     {t.roundsTitle}
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 sm:gap-2">
                     {[3, 5, 10].map((r) => {
                       const isSelected = !isCustomRounds && selectedRounds === r;
                       return (
@@ -722,7 +737,7 @@ function HubSenseInner() {
                             setSelectedRounds(r);
                           }}
                           data-cursor={`${r} ${t.roundCounter}`}
-                          className={`flex-1 py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                          className={`flex-1 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
                             ${
                               isSelected
                                 ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-lg"
@@ -738,9 +753,16 @@ function HubSenseInner() {
                       onClick={() => {
                         SoundFX.click();
                         setIsCustomRounds(true);
+                        const parsed = parseInt(customRoundsInput, 10);
+                        if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) {
+                          setSelectedRounds(parsed);
+                        } else {
+                          setCustomRoundsInput("7");
+                          setSelectedRounds(7);
+                        }
                       }}
                       data-cursor={t.roundCustom}
-                      className={`flex-1 py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                      className={`flex-1 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
                         ${
                           isCustomRounds
                             ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-lg"
@@ -751,49 +773,88 @@ function HubSenseInner() {
                     </button>
                   </div>
 
-                  {/* Custom Round Input */}
-                  {isCustomRounds && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={customRoundsInput}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCustomRoundsInput(val);
-                          const parsed = parseInt(val, 10);
-                          if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) {
-                            setSelectedRounds(parsed);
-                          }
+                  {/* Custom Round Stepper */}
+                  {isCustomRounds ? (
+                    <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-2xl bg-white/[0.03] border border-white/10">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          SoundFX.click();
+                          const current = parseInt(customRoundsInput, 10) || 7;
+                          const next = Math.max(1, current - 1);
+                          setCustomRoundsInput(String(next));
+                          setSelectedRounds(next);
                         }}
-                        placeholder={t.customRoundsPlaceholder}
-                        className="flex-1 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-mono text-white text-center focus:outline-none focus:border-indigo-500"
-                      />
-                      <span className="text-[10px] text-white/40 font-mono">(1 - 20)</span>
+                        className="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all shadow-sm"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={customRoundsInput}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCustomRoundsInput(val);
+                            const parsed = parseInt(val, 10);
+                            if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) {
+                              setSelectedRounds(parsed);
+                            }
+                          }}
+                          className="w-12 bg-transparent text-sm font-mono font-black text-indigo-300 text-center focus:outline-none"
+                        />
+                        <span className="text-[11px] text-white/40 font-mono font-bold">
+                          {t.roundCounter}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          SoundFX.click();
+                          const current = parseInt(customRoundsInput, 10) || 7;
+                          const next = Math.min(20, current + 1);
+                          setCustomRoundsInput(String(next));
+                          setSelectedRounds(next);
+                        }}
+                        className="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
                     </div>
+                  ) : (
+                    <p className="text-[11px] text-white/40 leading-tight line-clamp-1">
+                      {selectedRounds === 3
+                        ? t.roundFast
+                        : selectedRounds === 5
+                        ? t.roundStandard
+                        : t.roundMarathon}
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-3 pt-2">
+              <div className="flex flex-col gap-2.5 pt-1">
                 {/* Daily Challenge Button */}
                 <button
                   onClick={() => startGame(selectedGame, selectedDifficulty, "daily")}
                   data-cursor={t.dailyChallenge}
-                  className="flex items-center justify-between px-5 py-4 rounded-3xl border
+                  className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 rounded-3xl border
                     bg-white/[0.03] border-white/10 hover:bg-white/[0.06] backdrop-blur-2xl transition-all group shadow-xl"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-amber-400" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center shrink-0">
+                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                     </div>
                     <div className="text-left">
-                      <div className="font-extrabold text-sm text-white">
+                      <div className="font-extrabold text-xs sm:text-sm text-white">
                         {t.dailyChallenge}
                       </div>
-                      <div className="text-xs text-white/40 font-mono">
+                      <div className="text-[11px] sm:text-xs text-white/40 font-mono">
                         {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
                       </div>
                     </div>
@@ -801,21 +862,21 @@ function HubSenseInner() {
                   <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/80 transition-colors" />
                 </button>
 
-                {/* Solo Play CTA */}
+                {/* Solo Play CTA (Synchronized with active round count) */}
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => startGame(selectedGame, selectedDifficulty, "solo", selectedRounds)}
-                  data-cursor={t.startSoloGame(selectedRounds)}
-                  className="w-full py-4 sm:py-5 rounded-3xl font-black text-base sm:text-lg tracking-wider
+                  onClick={() => startGame(selectedGame, selectedDifficulty, "solo", activeRounds)}
+                  data-cursor={t.startSoloGame(activeRounds)}
+                  className="w-full py-4 sm:py-4.5 rounded-3xl font-black text-sm sm:text-base tracking-wider
                     text-white border transition-all shadow-2xl uppercase backdrop-blur-xl"
                   style={{
                     background: `${accentColor}25`,
                     borderColor: `${accentColor}66`,
-                    boxShadow: `0 0 40px ${accentColor}30`,
+                    boxShadow: `0 0 35px ${accentColor}30`,
                   }}
                 >
-                  {t.startSoloGame(selectedRounds)}
+                  {t.startSoloGame(activeRounds)}
                 </motion.button>
               </div>
             </motion.div>
