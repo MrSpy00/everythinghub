@@ -277,7 +277,7 @@ export async function searchCities(query: string): Promise<Array<{ name: string;
 export async function fetchAllCountries(): Promise<CountryData[]> {
   try {
     const url = "https://raw.githubusercontent.com/mledoze/countries/master/countries.json";
-    const res = await fetch(url, { next: { revalidate: 86400 } });
+    const res = await fetch(url);
     if (!res.ok) throw new Error("Dataset alınamadı");
     const rawList = await res.json();
 

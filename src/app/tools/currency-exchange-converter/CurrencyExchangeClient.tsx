@@ -112,91 +112,71 @@ export function CurrencyExchangeClient() {
 
   const fetchRates = useCallback(async () => {
     setLoading(true);
-    const loadedRates: RatesMap = { USD: 1 };
+    let loadedRates: RatesMap = { USD: 1 };
+    let success = false;
 
-    // 1. Frankfurter ECB Official Rates
+    // 1. Try Primary Server API Route (Cached, Resilient, Multi-Provider)
     try {
-      const res = await fetch("https://api.frankfurter.app/latest?from=USD");
-      if (res.ok) {
-        const data = await res.json();
-        Object.assign(loadedRates, data.rates);
-      }
-    } catch {
-      try {
-        const fallbackRes = await fetch("https://open.er-api.com/v6/latest/USD");
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json();
-          Object.assign(loadedRates, fallbackData.rates);
+      const serverRes = await fetch("/api/tools/currency");
+      if (serverRes.ok) {
+        const serverJson = await serverRes.json();
+        if (serverJson.rates && Object.keys(serverJson.rates).length > 5) {
+          loadedRates = serverJson.rates;
+          success = true;
         }
-      } catch {}
-    }
-
-    // Default USD/TRY if missing from API
-    if (!loadedRates.TRY) loadedRates.TRY = 47.7;
-    if (!loadedRates.EUR) loadedRates.EUR = 0.92;
-    if (!loadedRates.GBP) loadedRates.GBP = 0.78;
-
-    // 2. Gold & Precious Metals Rates (from CoinGecko PAXG / XAUT which track 1 troy oz of Gold exactly)
-    let ounceGoldUsd = 4388;
-    let ounceSilverUsd = 38.5;
-    let ouncePlatUsd = 1020;
-    let ouncePallUsd = 1050;
-
-    try {
-      const goldRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=pax-gold,tether-gold&vs_currencies=usd");
-      if (goldRes.ok) {
-        const goldJson = await goldRes.json();
-        const oz = goldJson["pax-gold"]?.usd || goldJson["tether-gold"]?.usd;
-        if (oz && oz > 1000) ounceGoldUsd = oz;
       }
     } catch {}
 
-    // 1 Troy Ounce = 31.1034768 grams
-    const gramGoldUsd = ounceGoldUsd / 31.1034768;
-    const gramSilverUsd = ounceSilverUsd / 31.1034768;
-
-    // Relative to USD base (1 unit of currency in USD)
-    loadedRates["XAU"] = 1 / ounceGoldUsd;
-    loadedRates["GRAM_ALTIN"] = 1 / gramGoldUsd;
-    loadedRates["CEYREK"] = 1 / (gramGoldUsd * 1.63);
-    loadedRates["YARIM"] = 1 / (gramGoldUsd * 3.26);
-    loadedRates["TAM"] = 1 / (gramGoldUsd * 6.52);
-    loadedRates["ATA"] = 1 / (gramGoldUsd * 6.61);
-
-    loadedRates["XAG"] = 1 / ounceSilverUsd;
-    loadedRates["GRAM_GUMUS"] = 1 / gramSilverUsd;
-    loadedRates["XPT"] = 1 / ouncePlatUsd;
-    loadedRates["XPD"] = 1 / ouncePallUsd;
-
-    // 3. Resilient Crypto Rates (CoinGecko Primary -> Binance Secondary Fallback)
-    try {
-      const cgRes = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=40&page=1&sparkline=false");
-      if (cgRes.ok) {
-        const cgData = await cgRes.json();
-        (cgData || []).forEach((c: any) => {
-          const sym = (c.symbol || "").toUpperCase();
-          const price = parseFloat(c.current_price);
-          if (sym && price > 0) {
-            loadedRates[sym] = 1 / price;
-          }
-        });
-      } else {
-        throw new Error("CoinGecko rate limit or error");
-      }
-    } catch {
+    // 2. Direct Fallback if Server API is Unavailable
+    if (!success) {
       try {
-        const binanceRes = await fetch("https://api.binance.com/api/v3/ticker/24hr");
-        if (binanceRes.ok) {
-          const binanceList = await binanceRes.json();
-          binanceList.forEach((item: any) => {
-            if (item.symbol.endsWith("USDT")) {
-              const sym = item.symbol.replace("USDT", "");
-              const price = parseFloat(item.lastPrice);
-              if (price > 0) loadedRates[sym] = 1 / price;
-            }
-          });
+        const res = await fetch("https://api.frankfurter.app/latest?from=USD");
+        if (res.ok) {
+          const data = await res.json();
+          Object.assign(loadedRates, data.rates);
+        }
+      } catch {
+        try {
+          const fallbackRes = await fetch("https://open.er-api.com/v6/latest/USD");
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            Object.assign(loadedRates, fallbackData.rates);
+          }
+        } catch {}
+      }
+
+      if (!loadedRates.TRY) loadedRates.TRY = 47.85;
+      if (!loadedRates.EUR) loadedRates.EUR = 0.925;
+      if (!loadedRates.GBP) loadedRates.GBP = 0.782;
+
+      let ounceGoldUsd = 2750;
+      let ounceSilverUsd = 32.5;
+      let ouncePlatUsd = 980;
+      let ouncePallUsd = 1020;
+
+      try {
+        const goldRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=pax-gold,tether-gold&vs_currencies=usd");
+        if (goldRes.ok) {
+          const goldJson = await goldRes.json();
+          const oz = goldJson["pax-gold"]?.usd || goldJson["tether-gold"]?.usd;
+          if (oz && oz > 1000) ounceGoldUsd = oz;
         }
       } catch {}
+
+      const gramGoldUsd = ounceGoldUsd / 31.1034768;
+      const gramSilverUsd = ounceSilverUsd / 31.1034768;
+
+      loadedRates["XAU"] = 1 / ounceGoldUsd;
+      loadedRates["GRAM_ALTIN"] = 1 / gramGoldUsd;
+      loadedRates["CEYREK"] = 1 / (gramGoldUsd * 1.63);
+      loadedRates["YARIM"] = 1 / (gramGoldUsd * 3.26);
+      loadedRates["TAM"] = 1 / (gramGoldUsd * 6.52);
+      loadedRates["ATA"] = 1 / (gramGoldUsd * 6.61);
+
+      loadedRates["XAG"] = 1 / ounceSilverUsd;
+      loadedRates["GRAM_GUMUS"] = 1 / gramSilverUsd;
+      loadedRates["XPT"] = 1 / ouncePlatUsd;
+      loadedRates["XPD"] = 1 / ouncePallUsd;
     }
 
     setRates(loadedRates);

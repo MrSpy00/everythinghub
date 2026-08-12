@@ -111,7 +111,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.everythinghub.com.tr",
   },
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     locale: "tr_TR",

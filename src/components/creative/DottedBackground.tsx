@@ -300,13 +300,23 @@ export function DottedBackground({
     const container = containerRef.current;
     if (!container || typeof window === "undefined") return;
 
-    const renderer = new Renderer({
-      dpr: Math.min(window.devicePixelRatio || 1, 1.5),
-      alpha: true,
-      premultipliedAlpha: false,
-      powerPreference: "low-power",
-    });
-    const gl = renderer.gl;
+    let renderer: any = null;
+    let gl: any = null;
+
+    try {
+      renderer = new Renderer({
+        dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+        alpha: true,
+        premultipliedAlpha: false,
+        powerPreference: "low-power",
+      });
+      gl = renderer.gl;
+      if (!gl) return;
+    } catch (err) {
+      console.warn("WebGL initialization skipped or not supported:", err);
+      return;
+    }
+
     const canvas = gl.canvas;
     canvas.style.display = "block";
     canvas.style.width = "100%";

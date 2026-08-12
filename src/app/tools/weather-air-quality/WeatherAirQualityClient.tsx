@@ -112,9 +112,32 @@ export function WeatherAirQualityClient() {
 
     let resolved = false;
 
-    // Fast IP-based geo fallback function
+    // Fast IP-based geo fallback function (internal server API first, then external)
     const fallbackToIP = async () => {
       if (resolved) return;
+
+      // 1. Primary Internal Server IP & Geo Resolver (Zero-CORS, Fast)
+      try {
+        const diagRes = await fetch("/api/diagnostics/ip", { signal: AbortSignal.timeout(2500) });
+        if (diagRes.ok) {
+          const diagData = await diagRes.json();
+          if (diagData.city) {
+            // Geocode the city via Open-Meteo geocoding API
+            const searchResults = await searchCities(diagData.city);
+            if (searchResults && searchResults.length > 0) {
+              const matched = searchResults[0];
+              resolved = true;
+              toast.dismiss(toastId);
+              setGeoDetecting(false);
+              loadWeather(matched.latitude, matched.longitude, matched.name, matched.country_code || diagData.country || "TR");
+              toast.success(isTurkish ? `${matched.name} konumu yüklendi!` : `${matched.name} location loaded!`);
+              return true;
+            }
+          }
+        }
+      } catch {}
+
+      // 2. Secondary IP fallback via ipapi.co
       try {
         const ipRes = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
         if (ipRes.ok) {
@@ -131,7 +154,7 @@ export function WeatherAirQualityClient() {
         }
       } catch {}
 
-      // Secondary IP geolocation fallback via VatComply
+      // 3. Tertiary IP geolocation fallback via VatComply
       try {
         const vatRes = await fetch("https://api.vatcomply.com/geolocate", { signal: AbortSignal.timeout(3000) });
         if (vatRes.ok) {
