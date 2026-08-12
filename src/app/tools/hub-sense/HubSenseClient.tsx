@@ -4,13 +4,15 @@
  * HubSense — Cognitive Sensory Memory Game Arena (Creative Studio Edition)
  * Orchestrates Color, Sound, Time, Shape, and Harmonic Sequence perception games.
  * 100% Client-Side, Zero-Auth Serverless Leaderboard, Offline LocalStorage,
- * Cryptographic Anti-Cheat, and High-Res Score Card Generator.
+ * Cryptographic Anti-Cheat, High-Res Score Card Generator, and Full Bilingual (TR/EN) i18n.
  */
 
 import React, { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { hubSenseTranslations } from "./i18n/hubSenseI18n";
 
 // Game Engines & Scoring
 import { generateFrequency } from "./games/soundScoring";
@@ -115,69 +117,42 @@ interface RoundData {
 export const GAME_CONFIGS: Record<
   GameType,
   {
-    label: string;
     icon: React.ReactNode;
-    description: string;
     accent: string;
     revealDuration: Record<DifficultyType, number>;
   }
 > = {
   color: {
-    label: "Renk",
     icon: <Palette className="w-5 h-5" />,
-    description: "5 tonu incele, 3 eksenli renk matrisinden yeniden oluştur. CIELAB Delta-E standardı.",
     accent: "#6366f1",
     revealDuration: { easy: 3000, hard: 2000, brutal: 1200 },
   },
   sound: {
-    label: "Ses",
     icon: <Volume2 className="w-5 h-5" />,
-    description: "5 frekansı dinle, perdeyi bellekten yeniden sentezle. ERB psikokustik modeli.",
     accent: "#8b5cf6",
     revealDuration: { easy: 2000, hard: 1500, brutal: 1200 },
   },
   time: {
-    label: "Zaman",
     icon: <Clock className="w-5 h-5" />,
-    description: "5 süreyi gözlemle, butonu basılı tutarak tam sürede bırak. Weber-Fechner yasası.",
     accent: "#10b981",
     revealDuration: { easy: 0, hard: 0, brutal: 0 },
   },
   shape: {
-    label: "Şekil",
     icon: <Shapes className="w-5 h-5" />,
-    description: "5 şekli gör, boyut/rotasyon/pozisyonu yeniden kurgula. IoU çakışma puanlama.",
     accent: "#f59e0b",
     revealDuration: { easy: 3000, hard: 2000, brutal: 1200 },
   },
   sequence: {
-    label: "Dizi",
     icon: <Zap className="w-5 h-5" />,
-    description: "Artan harmonik ses-ışık zincirini eksiksiz tekrarla. Dual working memory.",
     accent: "#ec4899",
     revealDuration: { easy: 2000, hard: 1500, brutal: 1000 },
   },
 };
 
-const DIFFICULTY_CONFIG: Record<
-  DifficultyType,
-  { label: string; description: string; color: string }
-> = {
-  easy: {
-    label: "Kolay",
-    description: "Daha uzun görme süresi, toleranslı kontrol",
-    color: "#10b981",
-  },
-  hard: {
-    label: "Zor",
-    description: "Kısa odaklanma süresi, hassas eşikler",
-    color: "#f59e0b",
-  },
-  brutal: {
-    label: "Vahşi",
-    description: "Anlık refleks, sıfır tolerans, maksimum hassasiyet",
-    color: "#ef4444",
-  },
+const DIFFICULTY_COLORS: Record<DifficultyType, string> = {
+  easy: "#10b981",
+  hard: "#f59e0b",
+  brutal: "#ef4444",
 };
 
 function generateRoundStimulus(
@@ -216,6 +191,8 @@ function extractScore(result: AnyRoundResult): number {
 // ─── Inner Client Wrapped in Suspense ─────────────────────────────────────────
 function HubSenseInner() {
   const searchParams = useSearchParams();
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
 
   const [screen, setScreen] = useState<GameScreen>("intro");
   const [selectedGame, setSelectedGame] = useState<GameType>("color");
@@ -280,12 +257,12 @@ function HubSenseInner() {
     if (challengeParam) {
       const parsed = parseChallengeUrl(challengeParam);
       if (parsed) {
-        toast.info("Meydan okuma oturumu yüklendi!");
+        toast.info(t.toasts.challengeLoaded);
         setSelectedGame(parsed.gameType);
         setSelectedDifficulty(parsed.difficulty);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, t.toasts.challengeLoaded]);
 
   // Audio Context unlocker
   const initAudio = useCallback(async () => {
@@ -307,6 +284,7 @@ function HubSenseInner() {
   const totalScore = roundResults.reduce((sum, r) => sum + extractScore(r.result), 0);
   const config = GAME_CONFIGS[selectedGame];
   const accentColor = config.accent;
+  const currentDiscipline = t.disciplines[selectedGame];
 
   // ─── Game Flow ─────────────────────────────────────────────────────────────
   const startGame = useCallback(
@@ -425,7 +403,7 @@ function HubSenseInner() {
 
     const validation = validateUsername(username);
     if (!validation.valid) {
-      setUsernameError(validation.error ?? "Geçersiz kullanıcı adı");
+      setUsernameError(validation.error ?? t.toasts.invalidUsername);
       triggerHaptic(50);
       return;
     }
@@ -433,18 +411,18 @@ function HubSenseInner() {
 
     const rateCheck = checkRateLimit();
     if (!rateCheck.allowed) {
-      toast.error(rateCheck.reason ?? "Çok hızlı gönderim");
+      toast.error(t.toasts.rateLimit);
       return;
     }
 
     const scores = sharePayload.roundScores;
     if (!validateScoreBounds(scores)) {
-      toast.error("Geçersiz tur skorları");
+      toast.error(t.toasts.invalidScores);
       return;
     }
 
     if (isReplay(session.gameType, session.seed, username)) {
-      toast.error("Bu oyun skorunu zaten kaydettin!");
+      toast.error(t.toasts.alreadySubmitted);
       return;
     }
 
@@ -463,9 +441,7 @@ function HubSenseInner() {
       const { success, error, rank } = await submitScore(payload);
       if (success) {
         toast.success(
-          rank
-            ? `Skor kaydedildi! Küresel Sıralaman: #${rank}`
-            : "Skor başarıyla kaydedildi!"
+          rank ? t.toasts.scoreSavedRank(rank) : t.toasts.scoreSaved
         );
         recordSubmission();
         recordSeed(session.gameType, session.seed, username);
@@ -479,30 +455,30 @@ function HubSenseInner() {
 
         setShowLeaderboard(true);
       } else {
-        toast.error(error ?? "Skor kaydedilemedi");
+        toast.error(error ?? t.toasts.submitError);
       }
     } catch {
-      toast.error("Skor gönderilirken bir hata oluştu");
+      toast.error(t.toasts.submitError);
     } finally {
       setIsSubmitting(false);
     }
-  }, [sharePayload, session, username, selectedDifficulty, selectedMode, dailyPlayed]);
+  }, [sharePayload, session, username, selectedDifficulty, selectedMode, dailyPlayed, t.toasts]);
 
   const handleCopyShare = useCallback(async () => {
     if (!sharePayload) return;
     SoundFX.click();
     const url = buildShareUrl({ ...sharePayload, username: username || "ANONIM" });
     await navigator.clipboard.writeText(url);
-    toast.success("Paylaşım linki panoya kopyalandı!");
-  }, [sharePayload, username]);
+    toast.success(t.toasts.scoreCopied);
+  }, [sharePayload, username, t.toasts.scoreCopied]);
 
   const handleCopyChallenge = useCallback(async () => {
     if (!session) return;
     SoundFX.click();
     const url = buildChallengeUrl(session.gameType, selectedDifficulty, session.seed);
     await navigator.clipboard.writeText(url);
-    toast.success("Aynı oyun meydan okuma linki kopyalandı!");
-  }, [session, selectedDifficulty]);
+    toast.success(t.toasts.challengeCopied);
+  }, [session, selectedDifficulty, t.toasts.challengeCopied]);
 
   const handleNativeShare = useCallback(async () => {
     if (!sharePayload) return;
@@ -515,10 +491,10 @@ function HubSenseInner() {
   const handleDownloadPng = useCallback(async () => {
     if (!sharePayload) return;
     SoundFX.click();
-    toast.info("Skor kartı görseli oluşturuluyor...");
+    toast.info(t.toasts.pngGenerating);
     await downloadScoreCardImage({ ...sharePayload, username: username || "ANONIM" });
-    toast.success("Skor kartı PNG olarak indirildi!");
-  }, [sharePayload, username]);
+    toast.success(t.toasts.pngDownloaded);
+  }, [sharePayload, username, t.toasts]);
 
   const resetToIntro = useCallback(() => {
     SoundFX.click();
@@ -540,14 +516,14 @@ function HubSenseInner() {
 
   return (
     <div
-      className="min-h-screen bg-[#09090b] text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-24 pb-12 px-4 sm:px-6"
+      className="min-h-screen bg-transparent text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-24 pb-12 px-4 sm:px-6"
       data-no-custom-cursor="true"
     >
-      {/* Dynamic Ambient Background Glow */}
+      {/* Ambient Liquid Specular Glow (Subtle and non-intrusive) */}
       <div
-        className="pointer-events-none fixed inset-0 opacity-20 transition-all duration-700"
+        className="pointer-events-none fixed inset-0 opacity-25 transition-all duration-700 -z-10"
         style={{
-          background: `radial-gradient(ellipse at 50% 40%, ${accentColor}33 0%, transparent 70%)`,
+          background: `radial-gradient(circle at 50% 30%, ${accentColor}25 0%, transparent 65%)`,
         }}
       />
 
@@ -564,14 +540,14 @@ function HubSenseInner() {
               className="flex flex-col gap-6 w-full"
             >
               {/* Header Card */}
-              <div className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-2xl">
+              <div className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
                 <div>
                   <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-baseline gap-1">
                     <span>Hub</span>
                     <span style={{ color: accentColor }}>Sense</span>
                   </h1>
                   <p className="text-xs sm:text-sm text-white/50 mt-1">
-                    Bilişsel Duyu Hafızası & Algı Test Arenası
+                    {t.subtitle}
                   </p>
                 </div>
 
@@ -579,7 +555,7 @@ function HubSenseInner() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={toggleSound}
-                    aria-label="Ses Aç/Kapat"
+                    aria-label={t.soundToggle}
                     className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/[0.04] border border-white/10 hover:bg-white/10 transition-colors text-white/70 shadow-lg"
                   >
                     {muted ? (
@@ -597,7 +573,7 @@ function HubSenseInner() {
                     className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/10 transition-colors text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Brain className="w-4 h-4 text-indigo-400" />
-                    <span className="hidden sm:inline">Duyu Profili</span>
+                    <span className="hidden sm:inline">{t.sensoryProfile}</span>
                   </button>
 
                   <button
@@ -608,15 +584,15 @@ function HubSenseInner() {
                     className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/10 transition-colors text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Trophy className="w-4 h-4 text-amber-400" />
-                    <span>Skorlar</span>
+                    <span>{t.scores}</span>
                   </button>
                 </div>
               </div>
 
               {/* Game Selector Grid */}
               <div className="flex flex-col gap-3">
-                <p className="text-[11px] font-extrabold text-white/30 uppercase tracking-widest px-1">
-                  Duyu Disiplini Seç
+                <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+                  {t.selectDiscipline}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {(
@@ -626,6 +602,7 @@ function HubSenseInner() {
                     ][]
                   ).map(([type, cfg]) => {
                     const isSelected = selectedGame === type;
+                    const dInfo = t.disciplines[type];
                     return (
                       <button
                         key={type}
@@ -633,11 +610,11 @@ function HubSenseInner() {
                           SoundFX.click();
                           setSelectedGame(type);
                         }}
-                        className={`flex flex-col gap-2.5 p-4 sm:p-5 rounded-3xl border text-left transition-all relative overflow-hidden group
+                        className={`flex flex-col gap-2.5 p-4 sm:p-5 rounded-3xl border text-left transition-all relative overflow-hidden backdrop-blur-2xl
                           ${
                             isSelected
-                              ? "bg-white/[0.08] border-white/25 shadow-2xl"
-                              : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05]"
+                              ? "bg-white/[0.08] border-white/25 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]"
+                              : "bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06] hover:border-white/15"
                           }`}
                         style={{
                           boxShadow: isSelected
@@ -647,7 +624,7 @@ function HubSenseInner() {
                         }}
                       >
                         <div
-                          className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                          className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-md"
                           style={{
                             background: `${cfg.accent}20`,
                             color: cfg.accent,
@@ -658,10 +635,10 @@ function HubSenseInner() {
                         </div>
                         <div>
                           <div className="font-extrabold text-sm sm:text-base text-white">
-                            {cfg.label}
+                            {dInfo.label}
                           </div>
                           <div className="text-[11px] text-white/40 leading-snug mt-1 line-clamp-2">
-                            {cfg.description}
+                            {dInfo.desc}
                           </div>
                         </div>
                       </button>
@@ -672,17 +649,13 @@ function HubSenseInner() {
 
               {/* Difficulty Selector */}
               <div className="flex flex-col gap-2.5">
-                <p className="text-[11px] font-extrabold text-white/30 uppercase tracking-widest px-1">
-                  Zorluk Derecesi
+                <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+                  {t.difficultyLevel}
                 </p>
                 <div className="flex gap-2">
-                  {(
-                    Object.entries(DIFFICULTY_CONFIG) as [
-                      DifficultyType,
-                      (typeof DIFFICULTY_CONFIG)[DifficultyType]
-                    ][]
-                  ).map(([diff, dcfg]) => {
+                  {(["easy", "hard", "brutal"] as DifficultyType[]).map((diff) => {
                     const isSelected = selectedDifficulty === diff;
+                    const color = DIFFICULTY_COLORS[diff];
                     return (
                       <button
                         key={diff}
@@ -690,25 +663,25 @@ function HubSenseInner() {
                           SoundFX.click();
                           setSelectedDifficulty(diff);
                         }}
-                        className={`flex-1 py-3.5 rounded-2xl font-extrabold text-xs sm:text-sm border transition-all
+                        className={`flex-1 py-3.5 rounded-2xl font-extrabold text-xs sm:text-sm border transition-all backdrop-blur-xl
                           ${
                             isSelected
                               ? "bg-white/[0.08] text-white border-white/25 shadow-lg"
-                              : "border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.03]"
+                              : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
                           }`}
                         style={{
-                          borderColor: isSelected ? `${dcfg.color}77` : undefined,
-                          color: isSelected ? dcfg.color : undefined,
-                          boxShadow: isSelected ? `0 0 20px ${dcfg.color}25` : undefined,
+                          borderColor: isSelected ? `${color}77` : undefined,
+                          color: isSelected ? color : undefined,
+                          boxShadow: isSelected ? `0 0 20px ${color}25` : undefined,
                         }}
                       >
-                        {dcfg.label}
+                        {t.difficulties[diff].label}
                       </button>
                     );
                   })}
                 </div>
                 <p className="text-xs text-white/40 px-1">
-                  {DIFFICULTY_CONFIG[selectedDifficulty].description}
+                  {t.difficulties[selectedDifficulty].desc}
                 </p>
               </div>
 
@@ -718,7 +691,7 @@ function HubSenseInner() {
                 <button
                   onClick={() => startGame(selectedGame, selectedDifficulty, "daily")}
                   className="flex items-center justify-between px-5 py-4 rounded-3xl border
-                    bg-white/[0.03] border-white/10 hover:bg-white/[0.06] transition-all group shadow-xl"
+                    bg-white/[0.03] border-white/10 hover:bg-white/[0.06] backdrop-blur-2xl transition-all group shadow-xl"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="w-10 h-10 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
@@ -726,10 +699,10 @@ function HubSenseInner() {
                     </div>
                     <div className="text-left">
                       <div className="font-extrabold text-sm text-white">
-                        Günlük Meydan Okuma
+                        {t.dailyChallenge}
                       </div>
                       <div className="text-xs text-white/40 font-mono">
-                        {getTodayUTCString()} · Yenileniyor: {dailyCountdown}
+                        {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
                       </div>
                     </div>
                   </div>
@@ -742,14 +715,14 @@ function HubSenseInner() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => startGame(selectedGame, selectedDifficulty, "solo")}
                   className="w-full py-4 sm:py-5 rounded-3xl font-black text-base sm:text-lg tracking-wider
-                    text-white border transition-all shadow-2xl uppercase"
+                    text-white border transition-all shadow-2xl uppercase backdrop-blur-xl"
                   style={{
                     background: `${accentColor}25`,
                     borderColor: `${accentColor}66`,
                     boxShadow: `0 0 40px ${accentColor}30`,
                   }}
                 >
-                  Oyuna Başla (5 Tur)
+                  {t.startSoloGame}
                 </motion.button>
               </div>
             </motion.div>
@@ -762,44 +735,43 @@ function HubSenseInner() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-2xl text-center gap-6"
+              className="flex flex-col items-center justify-center p-8 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] text-center gap-6"
             >
               <div>
                 <div className="text-xs font-black text-amber-400 uppercase tracking-widest mb-2">
-                  Günlük Küresel Mücadele
+                  {t.dailyChallengeBadge}
                 </div>
                 <div className="text-4xl sm:text-5xl font-black text-white mb-3">
-                  {config.label} Disiplini
+                  {currentDiscipline.label}
                 </div>
                 <p className="text-white/60 text-sm max-w-sm mx-auto leading-relaxed">
-                  Dünya genelinde herkes bugün aynı 5 uyaran dizisini çözüyor.
-                  Tek bir resmi deneme hakkın var!
+                  {t.dailyChallengeDesc}
                 </p>
               </div>
 
               <div className="px-4 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs text-white/60 font-mono">
-                {getTodayUTCString()} · Kalan Süre: {dailyCountdown}
+                {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
               </div>
 
               <div className="flex flex-col gap-3 w-full max-w-xs">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={proceedToReveal}
-                  className="w-full py-4 rounded-2xl font-extrabold text-base text-white border shadow-2xl"
+                  className="w-full py-4 rounded-2xl font-extrabold text-base text-white border shadow-2xl backdrop-blur-xl"
                   style={{
                     background: `${accentColor}30`,
                     borderColor: `${accentColor}70`,
                     boxShadow: `0 0 35px ${accentColor}40`,
                   }}
                 >
-                  Hazırım, Başla
+                  {t.dailyReadyPrompt}
                 </motion.button>
 
                 <button
                   onClick={resetToIntro}
                   className="text-white/40 text-xs hover:text-white/70 transition-colors py-2"
                 >
-                  Geri Dön
+                  {t.goBack}
                 </button>
               </div>
             </motion.div>
@@ -930,11 +902,11 @@ function HubSenseInner() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-2xl gap-6 text-center"
+              className="flex flex-col items-center justify-center p-8 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] gap-6 text-center"
             >
               <div>
                 <div className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">
-                  Tur {currentRound + 1} Sonucu
+                  {t.roundCounter} {currentRound + 1} {t.roundResult.title}
                 </div>
                 <motion.div
                   initial={{ scale: 0.6, opacity: 0 }}
@@ -945,7 +917,7 @@ function HubSenseInner() {
                 >
                   {extractScore(roundResults[roundResults.length - 1].result).toFixed(1)}
                 </motion.div>
-                <div className="text-white/30 text-sm mt-1">/ 10.0 Puan</div>
+                <div className="text-white/30 text-sm mt-1">{t.roundResult.outOf}</div>
               </div>
 
               {/* Side-by-side / Detailed Comparison */}
@@ -958,21 +930,23 @@ function HubSenseInner() {
               </div>
 
               <div className="text-center text-xs text-white/50 font-mono">
-                Toplam: {totalScore.toFixed(1)} / {(currentRound + 1) * 10}.0
+                {t.roundResult.cumulative}: {totalScore.toFixed(1)} / {(currentRound + 1) * 10}.0
               </div>
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleNextRound}
-                className="w-full py-4 rounded-2xl font-extrabold text-base text-white border transition-all shadow-xl"
+                className="w-full py-4 rounded-2xl font-extrabold text-base text-white border transition-all shadow-xl backdrop-blur-xl"
                 style={{
                   background: `${accentColor}25`,
                   borderColor: `${accentColor}66`,
                   boxShadow: `0 0 30px ${accentColor}30`,
                 }}
               >
-                {currentRound + 1 < ROUNDS_COUNT ? "Sonraki Tura Geç" : "Final Sonuçları Gör"}
+                {currentRound + 1 < ROUNDS_COUNT
+                  ? t.roundResult.nextRound
+                  : t.roundResult.viewFinals}
               </motion.button>
             </motion.div>
           )}
@@ -984,20 +958,20 @@ function HubSenseInner() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col p-6 sm:p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-2xl gap-6"
+              className="flex flex-col p-6 sm:p-8 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] gap-6"
             >
               {/* Header Close */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-amber-400" />
                   <span className="font-extrabold text-sm text-white">
-                    Oyun Tamamlandı
+                    {t.totalResult.title}
                   </span>
                 </div>
                 <button
                   onClick={resetToIntro}
-                  aria-label="Menüye Dön"
-                  className="w-9 h-9 flex items-center justify-center rounded-2xl bg-white/[0.05] hover:bg-white/10 border border-white/10"
+                  aria-label={t.totalResult.menuReturn}
+                  className="w-9 h-9 flex items-center justify-center rounded-2xl bg-white/[0.05] hover:bg-white/15 border border-white/10"
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
@@ -1014,7 +988,7 @@ function HubSenseInner() {
                       border: `1px solid ${accentColor}55`,
                     }}
                   >
-                    Yeni Kişisel Rekor!
+                    {t.totalResult.newPersonalBest}
                   </div>
                 )}
 
@@ -1035,7 +1009,9 @@ function HubSenseInner() {
                     >
                       {sharePayload.totalScore.toFixed(1)}
                     </motion.div>
-                    <div className="text-white/30 text-lg mt-0.5">/ 50.0</div>
+                    <div className="text-white/30 text-lg mt-0.5">
+                      {t.totalResult.outOfFifty}
+                    </div>
                     <p className="text-white/60 text-xs sm:text-sm mt-3 max-w-sm">
                       {tier.message}
                     </p>
@@ -1073,12 +1049,12 @@ function HubSenseInner() {
               {/* Username Submission */}
               <div className="flex flex-col gap-2 p-5 rounded-3xl bg-white/[0.02] border border-white/[0.08]">
                 <label className="text-xs font-bold text-white/60">
-                  Liderlik Tablosuna İsim Yaz
+                  {t.totalResult.leaderboardLabel}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="RUMUZ (3-20 KARAKTER)"
+                    placeholder={t.totalResult.nicknamePlaceholder}
                     maxLength={20}
                     value={username}
                     onChange={(e) => {
@@ -1099,7 +1075,9 @@ function HubSenseInner() {
                       borderColor: `${accentColor}55`,
                     }}
                   >
-                    {isSubmitting ? "Kaydediliyor..." : "Skoru Gönder"}
+                    {isSubmitting
+                      ? t.totalResult.submitting
+                      : t.totalResult.submitScore}
                   </motion.button>
                 </div>
                 {usernameError && (
@@ -1110,7 +1088,7 @@ function HubSenseInner() {
               {/* Social Share Grid */}
               <div className="flex flex-col gap-2.5">
                 <p className="text-[11px] font-bold text-white/30 text-center uppercase tracking-widest">
-                  Skorunu Paylaş & Meydan Oku
+                  {t.totalResult.shareHeader}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
@@ -1119,7 +1097,7 @@ function HubSenseInner() {
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
                     <Copy className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Skor Linki</span>
+                    <span>{t.totalResult.scoreLink}</span>
                   </button>
 
                   <button
@@ -1128,7 +1106,7 @@ function HubSenseInner() {
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
                     <Swords className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Meydan Oku</span>
+                    <span>{t.totalResult.challengeFriend}</span>
                   </button>
 
                   <button
@@ -1137,7 +1115,7 @@ function HubSenseInner() {
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
                     <Download className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>PNG İndir</span>
+                    <span>{t.totalResult.downloadPng}</span>
                   </button>
 
                   <a
@@ -1153,7 +1131,7 @@ function HubSenseInner() {
                     <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
-                    <span>X / Tweet</span>
+                    <span>{t.totalResult.twitterShare}</span>
                   </a>
 
                   <a
@@ -1167,7 +1145,7 @@ function HubSenseInner() {
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>WhatsApp</span>
+                    <span>{t.totalResult.whatsAppShare}</span>
                   </a>
 
                   <button
@@ -1176,7 +1154,7 @@ function HubSenseInner() {
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
                     <Zap className="w-3.5 h-3.5 text-pink-400" />
-                    <span>Paylaş</span>
+                    <span>{t.totalResult.nativeShare}</span>
                   </button>
                 </div>
               </div>
@@ -1227,7 +1205,7 @@ export function HubSenseClient() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#09090b] flex items-center justify-center text-white/40 font-mono text-sm">
+        <div className="min-h-screen bg-transparent flex items-center justify-center text-white/40 font-mono text-sm">
           HubSense Yükleniyor...
         </div>
       }
@@ -1247,13 +1225,16 @@ function RoundResultDetails({
   gameType: GameType;
   accentColor: string;
 }) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const rows: { label: string; value: string }[] = [];
 
   if (gameType === "color") {
     const r = result as ColorScoreResult;
     return (
       <div
-        className="rounded-3xl border p-5 flex flex-col gap-4"
+        className="rounded-3xl border p-5 flex flex-col gap-4 shadow-xl"
         style={{ borderColor: `${accentColor}33`, background: `${accentColor}0a` }}
       >
         {/* Side by side color boxes */}
@@ -1263,7 +1244,9 @@ function RoundResultDetails({
               className="w-full h-16 rounded-2xl shadow-lg border border-white/20"
               style={{ background: r.targetHex }}
             />
-            <span className="text-[11px] font-bold text-white/60">Hedef Renk</span>
+            <span className="text-[11px] font-bold text-white/60">
+              {t.roundResult.targetColor}
+            </span>
             <span className="text-xs font-mono text-white/90">{r.targetHex.toUpperCase()}</span>
           </div>
 
@@ -1274,17 +1257,19 @@ function RoundResultDetails({
               className="w-full h-16 rounded-2xl shadow-lg border border-white/20"
               style={{ background: r.guessHex }}
             />
-            <span className="text-[11px] font-bold text-white/60">Tahminin</span>
+            <span className="text-[11px] font-bold text-white/60">
+              {t.roundResult.yourGuess}
+            </span>
             <span className="text-xs font-mono text-white/90">{r.guessHex.toUpperCase()}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-between text-xs pt-2 border-t border-white/10">
-          <span className="text-white/40">CIELAB Delta-E 2000 Farkı</span>
+          <span className="text-white/40">{t.roundResult.deltaE}</span>
           <span className="font-mono font-bold text-indigo-300">ΔE {r.deltaE.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-white/40">Algı Doğruluk Oranı</span>
+          <span className="text-white/40">{t.roundResult.accuracy}</span>
           <span className="font-mono font-bold text-white/90">%{r.percentAccuracy}</span>
         </div>
       </div>
@@ -1294,53 +1279,53 @@ function RoundResultDetails({
   if (gameType === "sound") {
     const r = result as SoundScoreResult;
     rows.push(
-      { label: "Perde Sapması", value: `${r.centDiff.toFixed(0)} sent` },
-      { label: "Hedef Frekans", value: `${Math.round(r.targetFreq)}Hz (${r.targetNote})` },
-      { label: "Tahmin Frekans", value: `${Math.round(r.guessFreq)}Hz (${r.guessNote})` },
-      { label: "Algı Doğruluğu", value: `%${r.percentAccuracy}` }
+      { label: t.roundResult.pitchDev, value: `${r.centDiff.toFixed(0)} sent` },
+      { label: t.roundResult.targetFreq, value: `${Math.round(r.targetFreq)}Hz (${r.targetNote})` },
+      { label: t.roundResult.guessFreq, value: `${Math.round(r.guessFreq)}Hz (${r.guessNote})` },
+      { label: t.roundResult.accuracy, value: `%${r.percentAccuracy}` }
     );
   } else if (gameType === "time") {
     const r = result as TimeScoreResult;
     rows.push(
-      { label: "Hedef Süre", value: `${r.targetMs}ms` },
-      { label: "Tahmin Süre", value: `${r.guessMs}ms` },
+      { label: t.roundResult.targetDuration, value: `${r.targetMs}ms` },
+      { label: t.roundResult.guessDuration, value: `${r.guessMs}ms` },
       {
-        label: "Hata Payı",
+        label: t.roundResult.errorMargin,
         value: `${r.absoluteErrorMs}ms (%${(r.relativeError * 100).toFixed(1)})`,
       },
       {
-        label: "Zamanlama",
+        label: t.roundResult.timing,
         value:
           r.earlyOrLate === "perfect"
-            ? "Kusursuz!"
+            ? t.roundResult.timingPerfect
             : r.earlyOrLate === "early"
-            ? "Erken Bıraktın"
-            : "Geç Bıraktın",
+            ? t.roundResult.timingEarly
+            : t.roundResult.timingLate,
       }
     );
   } else if (gameType === "shape") {
     const r = result as ShapeScoreResult;
     rows.push(
-      { label: "IoU Çakışma", value: `%${(r.iou * 100).toFixed(1)}` },
-      { label: "Döndürme Sapması", value: `${r.rotationError.toFixed(1)}°` },
-      { label: "Ölçek Sapması", value: `%${(r.scaleError * 100).toFixed(1)}` },
-      { label: "Pozisyon Sapması", value: `%${(r.positionError * 100).toFixed(1)}` }
+      { label: t.roundResult.iouOverlap, value: `%${(r.iou * 100).toFixed(1)}` },
+      { label: t.roundResult.rotationDev, value: `${r.rotationError.toFixed(1)}°` },
+      { label: t.roundResult.scaleDev, value: `%${(r.scaleError * 100).toFixed(1)}` },
+      { label: t.roundResult.positionDev, value: `%${(r.positionError * 100).toFixed(1)}` }
     );
   } else if (gameType === "sequence") {
     const r = result as SequenceScoreResult;
     rows.push(
-      { label: "Doğru Sıralı Adım", value: `${r.matchedCount} / ${r.totalSteps}` },
-      { label: "Zincir Doğruluğu", value: `%${r.percentAccuracy}` },
+      { label: t.roundResult.matchedSteps, value: `${r.matchedCount} / ${r.totalSteps}` },
+      { label: t.roundResult.chainAccuracy, value: `%${r.percentAccuracy}` },
       {
-        label: "Bellek Durumu",
-        value: r.isPerfect ? "Kusursuz Zincir" : "Kısmi Eşleşme",
+        label: t.roundResult.memoryState,
+        value: r.isPerfect ? t.roundResult.chainPerfect : t.roundResult.chainPartial,
       }
     );
   }
 
   return (
     <div
-      className="rounded-3xl border p-5 flex flex-col gap-2.5"
+      className="rounded-3xl border p-5 flex flex-col gap-2.5 shadow-xl"
       style={{ borderColor: `${accentColor}33`, background: `${accentColor}0a` }}
     >
       {rows.map(({ label, value }) => (

@@ -182,15 +182,18 @@ function DesktopUserCursor(userProps: UserCursorProps) {
 
   const lastSampleRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
+  const [suppressPill, setSuppressPill] = useState(false);
+
   // Intelligent Context-Aware Element Inspection
   const inspectElement = useCallback((target: HTMLElement | null) => {
     if (!target) return;
 
-    // 0. Disable custom follower cursor over precision game zones
-    if (target.closest("[data-no-custom-cursor], .hubsense-game-arena, .hubsense-slider-area")) {
-      setHovering(false);
+    // 0. Suppress follower pill over precision game zones, sliders, and canvases (keeps arrow visible!)
+    if (target.closest("[data-no-custom-cursor], .hubsense-game-arena, .hubsense-slider-area, input[type='range'], canvas")) {
+      setSuppressPill(true);
       return;
     }
+    setSuppressPill(false);
 
     // 1. Explicit data-cursor tag
     const customCursor = target.closest("[data-cursor]")?.getAttribute("data-cursor");
@@ -555,7 +558,7 @@ function DesktopUserCursor(userProps: UserCursorProps) {
         </motion.div>
 
         {/* Layer 2: Trailing Context Pill */}
-        {showLabel && (
+        {showLabel && !suppressPill && (
           <motion.div
             className={classNames?.label}
             style={{

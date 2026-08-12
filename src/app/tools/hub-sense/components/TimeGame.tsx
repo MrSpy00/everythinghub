@@ -3,7 +3,7 @@
 /**
  * HubSense — Time Game Component (Studio Chrono Edition)
  * Precision temporal perception analyzer with high-speed 60fps clock,
- * radial SVG progress meter, tactile press & hold, and Weber-Fechner relative scoring.
+ * radial SVG progress meter, tactile press & hold, and full bilingual (TR/EN) support.
  */
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { scoreTime, type TimeScoreResult, formatMs } from "../games/timeScoring";
 import { SoundFX, triggerHaptic } from "../games/soundEffects";
 import { Clock, Sparkles } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { hubSenseTranslations } from "../i18n/hubSenseI18n";
 
 interface TimeGameProps {
   targetMs: number;
@@ -25,6 +27,9 @@ export function TimeGame({
   roundNumber = 1,
   totalRounds = 5,
 }: TimeGameProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [phase, setPhase] = useState<"ready" | "holding" | "done">("ready");
   const [holdMs, setHoldMs] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -68,10 +73,10 @@ export function TimeGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 30%, #064e3b 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 30%, rgba(6,78,59,0.7) 0%, rgba(9,9,11,0.85) 80%)",
       }}
       data-no-custom-cursor="true"
     >
@@ -81,8 +86,8 @@ export function TimeGame({
           {roundNumber} / {totalRounds}
         </div>
 
-        <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold">
-          Weber-Fechner Modeli
+        <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold shadow-lg">
+          {t.time.modelName}
         </div>
       </div>
 
@@ -150,10 +155,10 @@ export function TimeGame({
                   >
                     <Clock className="w-6 h-6 text-emerald-400 mb-1" />
                     <span className="text-sm font-extrabold tracking-wider text-white">
-                      BASILI TUT
+                      {t.time.holdButton}
                     </span>
                     <span className="text-[10px] text-white/40 mt-0.5">
-                      ve doğru anda bırak
+                      {t.time.holdInstruction}
                     </span>
                   </motion.div>
                 )}
@@ -170,7 +175,7 @@ export function TimeGame({
                       {formatMs(holdMs)}
                     </span>
                     <span className="text-[11px] font-bold text-emerald-400/80 animate-pulse mt-1">
-                      SÜRE DOLUNCA BIRAK
+                      {t.time.releasePrompt}
                     </span>
                   </motion.div>
                 )}
@@ -186,7 +191,7 @@ export function TimeGame({
                       {formatMs(holdMs)}
                     </span>
                     <span className="text-[10px] text-white/50 mt-1">
-                      Puan Hesaplanıyor...
+                      {t.time.calculating}
                     </span>
                   </motion.div>
                 )}
@@ -195,15 +200,15 @@ export function TimeGame({
           </div>
         </div>
 
-        <p className="text-white/60 text-xs text-center max-w-xs">
-          Hedef süreyi zihninde canlandır, butona basılı tut ve süre tamamlandığında parmağını kaldır.
+        <p className="text-white/60 text-xs text-center max-w-xs leading-relaxed">
+          {t.time.weberLawDesc}
         </p>
       </div>
 
       {/* Bottom Bar */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-          HubSense · Zaman Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.time.label}
         </div>
       </div>
     </div>
@@ -224,6 +229,9 @@ export function TimeDisplay({
   roundNumber = 1,
   totalRounds = 5,
 }: TimeDisplayProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -242,10 +250,10 @@ export function TimeDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 40%, #064e3b 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 40%, rgba(6,78,59,0.8) 0%, rgba(9,9,11,0.9) 80%)",
       }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -260,10 +268,10 @@ export function TimeDisplay({
 
         <div className="text-right">
           <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
-            Süre
+            {t.disciplines.time.label}
           </div>
           <div className="text-xs sm:text-sm font-medium text-emerald-300">
-            Süreyi hisset ve aklında tut
+            {t.time.revealSubtitle}
           </div>
         </div>
       </div>
@@ -281,14 +289,14 @@ export function TimeDisplay({
           <Sparkles className="w-10 h-10 text-emerald-300" />
         </motion.div>
         <p className="text-emerald-300 text-sm font-bold mt-6 tracking-wide drop-shadow">
-          Işık sönene kadar süreyi hisset...
+          {t.time.revealPrompt}
         </p>
       </div>
 
       {/* Bottom Progress */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
-          HubSense · Zaman Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.time.label}
         </div>
       </div>
 

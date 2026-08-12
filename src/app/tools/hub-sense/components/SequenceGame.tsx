@@ -3,7 +3,7 @@
 /**
  * HubSense — Sequence Game Component (Studio Matrix Edition)
  * 4-Pad Harmonic Working Memory Matrix with multi-sensory feedback,
- * tactile audio-visual pads, progressive sequence lengths, and instant evaluation.
+ * tactile audio-visual pads, and full bilingual (TR/EN) support.
  */
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -16,6 +16,8 @@ import {
 } from "../games/sequenceScoring";
 import { SoundFX, playSynthesizedTone } from "../games/soundEffects";
 import { RotateCcw, Check } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { hubSenseTranslations } from "../i18n/hubSenseI18n";
 
 interface SequenceGameProps {
   targetSequence: number[];
@@ -30,6 +32,9 @@ export function SequenceGame({
   roundNumber = 1,
   totalRounds = 5,
 }: SequenceGameProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [playerSequence, setPlayerSequence] = useState<number[]>([]);
   const [activePad, setActivePad] = useState<number | null>(null);
 
@@ -73,12 +78,19 @@ export function SequenceGame({
     onSubmit(result);
   };
 
+  const nodeLabels = [
+    t.sequence.nodes.c4,
+    t.sequence.nodes.e4,
+    t.sequence.nodes.g4,
+    t.sequence.nodes.c5,
+  ];
+
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 30%, #500724 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 30%, rgba(80,7,36,0.7) 0%, rgba(9,9,11,0.85) 80%)",
       }}
       data-no-custom-cursor="true"
     >
@@ -89,7 +101,7 @@ export function SequenceGame({
         </div>
 
         {/* Input step dots */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg">
           {targetSequence.map((_, i) => {
             const hasInput = i < playerSequence.length;
             const enteredNode = hasInput ? SEQUENCE_NODES[playerSequence[i]] : null;
@@ -116,7 +128,7 @@ export function SequenceGame({
       {/* Main 2x2 Pad Matrix */}
       <div className="flex flex-col items-center justify-center my-auto">
         <div className="grid grid-cols-2 gap-3.5 w-full max-w-[320px] sm:max-w-[360px] aspect-square">
-          {SEQUENCE_NODES.map((node) => {
+          {SEQUENCE_NODES.map((node, idx) => {
             const isActive = activePad === node.id;
             return (
               <motion.button
@@ -143,7 +155,7 @@ export function SequenceGame({
                   {node.label[0]}
                 </div>
                 <span className="font-extrabold text-sm sm:text-base tracking-wide text-white">
-                  {node.label}
+                  {nodeLabels[idx] || node.label}
                 </span>
                 <span className="text-[11px] text-white/50 font-mono mt-0.5">
                   {node.note} · {Math.round(node.freq)}Hz
@@ -157,18 +169,18 @@ export function SequenceGame({
           <button
             onClick={handleClear}
             disabled={playerSequence.length === 0}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-xs text-white/70 disabled:opacity-30 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-xs text-white/70 disabled:opacity-30 transition-colors shadow-sm"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Sıfırla</span>
+            <span>{t.sequence.reset}</span>
           </button>
         </div>
       </div>
 
       {/* Bottom Bar */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-          HubSense · Dizi Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.sequence.label}
         </div>
 
         <motion.button
@@ -181,7 +193,7 @@ export function SequenceGame({
             boxShadow:
               "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(236,72,153,0.4)",
           }}
-          title="Diziyi Onayla"
+          title={t.sequence.confirm}
         >
           <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
         </motion.button>
@@ -206,6 +218,9 @@ export function SequenceDisplay({
   roundNumber = 1,
   totalRounds = 5,
 }: SequenceDisplayProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [highlightedStep, setHighlightedStep] = useState<number | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
 
@@ -234,12 +249,19 @@ export function SequenceDisplay({
     return () => clearTimeout(timeoutId);
   }, [stepIndex, sequence, onHide, speedMs]);
 
+  const nodeLabels = [
+    t.sequence.nodes.c4,
+    t.sequence.nodes.e4,
+    t.sequence.nodes.g4,
+    t.sequence.nodes.c5,
+  ];
+
   return (
     <motion.div
-      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 40%, #500724 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 40%, rgba(80,7,36,0.8) 0%, rgba(9,9,11,0.9) 80%)",
       }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -257,7 +279,7 @@ export function SequenceDisplay({
             {stepIndex + 1} / {sequence.length}
           </div>
           <div className="text-xs sm:text-sm font-medium text-pink-200">
-            Sırayı ve sesleri dinle
+            {t.sequence.revealSubtitle}
           </div>
         </div>
       </div>
@@ -265,7 +287,7 @@ export function SequenceDisplay({
       {/* Center 2x2 Glowing Stimulus Grid */}
       <div className="flex flex-col items-center justify-center my-auto">
         <div className="grid grid-cols-2 gap-4 w-full max-w-[300px] sm:max-w-[340px] aspect-square pointer-events-none">
-          {SEQUENCE_NODES.map((node) => {
+          {SEQUENCE_NODES.map((node, idx) => {
             const isGlowing = highlightedStep === node.id;
             return (
               <motion.div
@@ -288,7 +310,9 @@ export function SequenceDisplay({
                 >
                   {node.label[0]}
                 </div>
-                <span className="font-extrabold text-sm text-white">{node.label}</span>
+                <span className="font-extrabold text-sm text-white">
+                  {nodeLabels[idx] || node.label}
+                </span>
               </motion.div>
             );
           })}
@@ -297,8 +321,8 @@ export function SequenceDisplay({
 
       {/* Bottom Bar */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
-          HubSense · Dizi Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.sequence.label}
         </div>
       </div>
     </motion.div>

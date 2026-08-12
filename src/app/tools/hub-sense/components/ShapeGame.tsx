@@ -3,7 +3,7 @@
 /**
  * HubSense — Shape Game Component (Studio Geometry Edition)
  * Reconstruct geometric shapes with real-time vector matrix calculations,
- * position dragging, scale tuning, rotation angle selector, and IoU intersection scoring.
+ * position dragging, scale tuning, rotation angle selector, and full bilingual (TR/EN) support.
  */
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
@@ -17,6 +17,8 @@ import {
 } from "../games/shapeScoring";
 import { SoundFX } from "../games/soundEffects";
 import { RotateCw, ZoomIn, Move, Check } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { hubSenseTranslations } from "../i18n/hubSenseI18n";
 
 interface ShapeGameProps {
   target: ShapeParams;
@@ -25,13 +27,13 @@ interface ShapeGameProps {
   totalRounds?: number;
 }
 
-const SHAPE_TYPES: { type: ShapeType; label: string }[] = [
-  { type: "circle", label: "Daire" },
-  { type: "triangle", label: "Üçgen" },
-  { type: "square", label: "Kare" },
-  { type: "pentagon", label: "Beşgen" },
-  { type: "hexagon", label: "Altıgen" },
-  { type: "star", label: "Yıldız" },
+const ALL_SHAPE_TYPES: ShapeType[] = [
+  "circle",
+  "triangle",
+  "square",
+  "pentagon",
+  "hexagon",
+  "star",
 ];
 
 export function ShapeGame({
@@ -40,6 +42,9 @@ export function ShapeGame({
   roundNumber = 1,
   totalRounds = 5,
 }: ShapeGameProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [params, setParams] = useState<ShapeParams>({
     type: "circle",
@@ -92,10 +97,10 @@ export function ShapeGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 30%, #451a03 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 30%, rgba(69,26,3,0.7) 0%, rgba(9,9,11,0.85) 80%)",
       }}
       data-no-custom-cursor="true"
     >
@@ -106,7 +111,7 @@ export function ShapeGame({
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none">
-          {SHAPE_TYPES.map(({ type, label }) => (
+          {ALL_SHAPE_TYPES.map((type) => (
             <button
               key={type}
               onClick={() => {
@@ -120,7 +125,7 @@ export function ShapeGame({
                     : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80"
                 }`}
             >
-              {label}
+              {t.shape.types[type]}
             </button>
           ))}
         </div>
@@ -129,7 +134,7 @@ export function ShapeGame({
       {/* Main Canvas Area */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-auto">
         {/* Interactive Vector Canvas */}
-        <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black/40">
+        <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border border-white/15 shadow-2xl bg-black/40">
           <canvas
             ref={canvasRef}
             width={400}
@@ -146,9 +151,9 @@ export function ShapeGame({
             onPointerUp={() => setIsDraggingPos(false)}
             onPointerCancel={() => setIsDraggingPos(false)}
           />
-          <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/60 text-[10px] text-white/40 flex items-center gap-1">
+          <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/60 text-[10px] text-white/40 flex items-center gap-1 shadow">
             <Move className="w-3 h-3 text-amber-400" />
-            <span>Sürükle: Konum</span>
+            <span>{t.shape.dragPosition}</span>
           </div>
         </div>
 
@@ -159,7 +164,7 @@ export function ShapeGame({
             <div className="flex items-center justify-between text-xs text-white/70">
               <div className="flex items-center gap-1.5">
                 <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
-                <span>Boyut (Ölçek)</span>
+                <span>{t.shape.scaleLabel}</span>
               </div>
               <span className="font-mono text-amber-300 font-bold">
                 {(params.scale * 100).toFixed(0)}%
@@ -186,7 +191,7 @@ export function ShapeGame({
             <div className="flex items-center justify-between text-xs text-white/70">
               <div className="flex items-center gap-1.5">
                 <RotateCw className="w-3.5 h-3.5 text-amber-400" />
-                <span>Döndürme Açısı</span>
+                <span>{t.shape.rotationLabel}</span>
               </div>
               <span className="font-mono text-amber-300 font-bold">
                 {Math.round(params.rotation)}°
@@ -212,8 +217,8 @@ export function ShapeGame({
 
       {/* Bottom Bar & Floating Submit */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-          HubSense · Şekil Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.shape.label}
         </div>
 
         <motion.button
@@ -225,7 +230,7 @@ export function ShapeGame({
             boxShadow:
               "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(245,158,11,0.4)",
           }}
-          title="Şekli Onayla"
+          title={t.shape.confirm}
         >
           <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
         </motion.button>
@@ -250,6 +255,9 @@ export function ShapeDisplay({
   roundNumber = 1,
   totalRounds = 5,
 }: ShapeDisplayProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [timeLeft, setTimeLeft] = useState(durationMs / 1000);
 
@@ -277,10 +285,10 @@ export function ShapeDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 40%, #451a03 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 40%, rgba(69,26,3,0.8) 0%, rgba(9,9,11,0.9) 80%)",
       }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -298,7 +306,7 @@ export function ShapeDisplay({
             {timeLeft.toFixed(2)}
           </div>
           <div className="text-xs sm:text-sm font-medium text-amber-300">
-            Geometriyi aklında tut
+            {t.shape.revealSubtitle}
           </div>
         </div>
       </div>
@@ -312,14 +320,14 @@ export function ShapeDisplay({
           className="w-56 h-56 sm:w-64 sm:h-64 rounded-3xl border border-white/10 bg-black/40 shadow-2xl"
         />
         <p className="text-amber-300 text-sm font-bold mt-4 tracking-wide drop-shadow">
-          Türü, açıyı ve boyutu incele...
+          {t.shape.revealPrompt}
         </p>
       </div>
 
       {/* Bottom Progress */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
-          HubSense · Şekil Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.shape.label}
         </div>
       </div>
 

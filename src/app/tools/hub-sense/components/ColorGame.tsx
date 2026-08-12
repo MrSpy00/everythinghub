@@ -4,6 +4,7 @@
  * HubSense — Color Game Component (Dialed.gg Inspired Studio Edition)
  * 3-Channel Precision Controller: Hue spectrum, Saturation gradient, Brightness gradient.
  * 100% GPU-accelerated CSS rendering, 60fps instant drag, touch gestures & fine steppers.
+ * Full bilingual (TR/EN) support with useLanguage().
  */
 
 import React, { useRef, useEffect, useCallback, useState } from "react";
@@ -18,6 +19,8 @@ import {
 } from "../games/colorScoring";
 import { SoundFX } from "../games/soundEffects";
 import { Eye, Check, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { hubSenseTranslations } from "../i18n/hubSenseI18n";
 
 interface ColorRound {
   h: number; // 0-360
@@ -43,6 +46,9 @@ export function ColorGame({
   roundNumber = 1,
   totalRounds = 5,
 }: ColorGameProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [hue, setHue] = useState(180);
   const [sat, setSat] = useState(50);
   const [bright, setBright] = useState(50);
@@ -136,18 +142,18 @@ export function ColorGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex"
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex"
       style={{ background: displayHex }}
       data-no-custom-cursor="true"
     >
       {/* ─── LEFT PANEL: 3 Vertical Sliders (Hue, Saturation, Brightness) ─── */}
-      <div className="hubsense-slider-area relative z-10 w-28 sm:w-36 h-full bg-black/40 backdrop-blur-2xl border-r border-white/15 p-2 sm:p-3 flex gap-2 sm:gap-3 items-stretch">
+      <div className="hubsense-slider-area relative z-10 w-28 sm:w-36 h-full bg-black/40 backdrop-blur-2xl border-r border-white/15 p-2 sm:p-3 flex gap-2 sm:gap-3 items-stretch shadow-2xl">
         {/* 1. HUE SLIDER */}
         <div className="flex-1 flex flex-col items-center justify-between">
           <button
             onClick={() => setHue((h) => (h - 5 + 360) % 360)}
             className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mb-1"
-            title="Ton Azalt"
+            title={t.color.hueDec}
           >
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
@@ -178,7 +184,7 @@ export function ColorGame({
           <button
             onClick={() => setHue((h) => (h + 5) % 360)}
             className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mt-1"
-            title="Ton Artır"
+            title={t.color.hueInc}
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -186,7 +192,7 @@ export function ColorGame({
           <div className="text-[10px] font-mono font-bold text-white/80 mt-1">
             {hue}°
           </div>
-          <div className="text-[9px] uppercase font-bold text-white/40">Ton</div>
+          <div className="text-[9px] uppercase font-bold text-white/40">{t.color.hue}</div>
         </div>
 
         {/* 2. SATURATION SLIDER */}
@@ -194,7 +200,7 @@ export function ColorGame({
           <button
             onClick={() => setSat((s) => Math.min(100, s + 5))}
             className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mb-1"
-            title="Doygunluk Artır"
+            title={t.color.satInc}
           >
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
@@ -224,7 +230,7 @@ export function ColorGame({
           <button
             onClick={() => setSat((s) => Math.max(0, s - 5))}
             className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mt-1"
-            title="Doygunluk Azalt"
+            title={t.color.satDec}
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -232,7 +238,7 @@ export function ColorGame({
           <div className="text-[10px] font-mono font-bold text-white/80 mt-1">
             %{sat}
           </div>
-          <div className="text-[9px] uppercase font-bold text-white/40">Doygun</div>
+          <div className="text-[9px] uppercase font-bold text-white/40">{t.color.saturation}</div>
         </div>
 
         {/* 3. BRIGHTNESS SLIDER */}
@@ -240,7 +246,7 @@ export function ColorGame({
           <button
             onClick={() => setBright((b) => Math.min(100, b + 5))}
             className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mb-1"
-            title="Parlaklık Artır"
+            title={t.color.brightInc}
           >
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
@@ -270,7 +276,7 @@ export function ColorGame({
           <button
             onClick={() => setBright((b) => Math.max(0, b - 5))}
             className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mt-1"
-            title="Parlaklık Azalt"
+            title={t.color.brightDec}
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -278,7 +284,7 @@ export function ColorGame({
           <div className="text-[10px] font-mono font-bold text-white/80 mt-1">
             %{bright}
           </div>
-          <div className="text-[9px] uppercase font-bold text-white/40">Parlak</div>
+          <div className="text-[9px] uppercase font-bold text-white/40">{t.color.brightness}</div>
         </div>
       </div>
 
@@ -307,7 +313,7 @@ export function ColorGame({
             >
               <Eye className="w-3.5 h-3.5 text-indigo-300" />
               <span className="capitalize text-[11px]">
-                {colorBlindMode === "none" ? "Normal" : colorBlindMode}
+                {t.color.colorBlindModes[colorBlindMode]}
               </span>
             </button>
 
@@ -319,15 +325,15 @@ export function ColorGame({
 
         {/* Center Subtitle or Prompt */}
         <div className="text-center my-auto pointer-events-none">
-          <div className="inline-block px-5 py-2 rounded-2xl bg-black/25 backdrop-blur-md border border-white/10 text-white/80 text-xs sm:text-sm font-medium shadow-xl">
-            Sol çubuklardan Ton, Doygunluk ve Parlaklığı ayarlayın
+          <div className="inline-block px-5 py-2 rounded-2xl bg-black/30 backdrop-blur-md border border-white/15 text-white/90 text-xs sm:text-sm font-medium shadow-xl">
+            {t.color.instruction}
           </div>
         </div>
 
         {/* Bottom Actions Bar */}
         <div className="flex items-center justify-between">
-          <div className="text-[11px] font-mono text-white/50 bg-black/25 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
-            HubSense · Renk Disiplini
+          <div className="text-[11px] font-mono text-white/60 bg-black/30 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+            {t.watermark} · {t.disciplines.color.label}
           </div>
 
           {/* Floating Confirm / Submit Button (Dialed.gg Target Style) */}
@@ -339,7 +345,7 @@ export function ColorGame({
             style={{
               boxShadow: "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(255,255,255,0.4)",
             }}
-            title="Bu Rengi Seç ve Onayla"
+            title={t.color.confirm}
           >
             <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
           </motion.button>
@@ -371,6 +377,9 @@ export function ColorDisplay({
   roundNumber = 1,
   totalRounds = 5,
 }: ColorDisplayProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [timeLeft, setTimeLeft] = useState(revealDurationMs / 1000);
   const rawHex = hsbToHex(h, s, b);
 
@@ -400,7 +409,7 @@ export function ColorDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none"
       style={{ background: displayHex }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -413,13 +422,13 @@ export function ColorDisplay({
           {roundNumber} / {totalRounds}
         </div>
 
-        {/* Large Countdown (Dialed.gg Exact Typography) */}
+        {/* Large Countdown */}
         <div className="text-right">
           <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
             {timeLeft.toFixed(2)}
           </div>
           <div className="text-xs sm:text-sm font-medium text-white/80 drop-shadow">
-            Hatırlamak için kalan süre
+            {t.color.revealSubtitle}
           </div>
         </div>
       </div>
@@ -434,14 +443,14 @@ export function ColorDisplay({
           <Sparkles className="w-8 h-8 text-white/90" />
         </motion.div>
         <p className="text-white/90 text-sm font-bold mt-4 tracking-wide drop-shadow-md">
-          Bu tonu aklında tut...
+          {t.color.revealPrompt}
         </p>
       </div>
 
       {/* Bottom Bar: Watermark (Left) & Progress Bar (Bottom) */}
       <div className="flex items-center justify-between">
         <div className="text-xs font-mono text-white/60 bg-black/20 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
-          HubSense · Renk Disiplini
+          {t.watermark} · {t.disciplines.color.label}
         </div>
       </div>
 

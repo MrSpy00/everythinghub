@@ -3,7 +3,7 @@
 /**
  * HubSense — Sound Game Component (Studio Synthesizer Edition)
  * High-precision psychoacoustic tone synthesizer with logarithmic slider,
- * real-time harmonic waveform visualizer, musical note mapping, and fine-tune steppers.
+ * real-time harmonic waveform visualizer, and full bilingual (TR/EN) support.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -15,6 +15,8 @@ import {
 } from "../games/soundScoring";
 import { SoundFX } from "../games/soundEffects";
 import { Play, Square, Check } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { hubSenseTranslations } from "../i18n/hubSenseI18n";
 
 const MIN_FREQ = 80;
 const MAX_FREQ = 2000;
@@ -48,6 +50,9 @@ export function SoundGame({
   roundNumber = 1,
   totalRounds = 5,
 }: SoundGameProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [sliderVal, setSliderVal] = useState(0.5);
   const [isPlaying, setIsPlaying] = useState(false);
   const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,10 +145,10 @@ export function SoundGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 30%, #1e1b4b 0%, #09090b 85%)",
+          "radial-gradient(ellipse at 50% 30%, rgba(30,27,75,0.7) 0%, rgba(9,9,11,0.85) 85%)",
       }}
       data-no-custom-cursor="true"
     >
@@ -154,7 +159,7 @@ export function SoundGame({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold">
+          <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold shadow-lg">
             {noteName}
           </div>
         </div>
@@ -173,13 +178,13 @@ export function SoundGame({
             <span className="text-2xl sm:text-3xl text-indigo-400 font-normal">Hz</span>
           </div>
           <div className="text-xs text-white/40 font-mono mt-1">
-            ERB Psikokustik Ölçeği · {noteName}
+            {t.sound.erbScale} · {noteName}
           </div>
         </motion.div>
 
         {/* Waveform Visualizer & Play Button */}
         <div className="w-full relative mb-6">
-          <div className="flex items-center justify-center gap-1 h-20 px-4 rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
+          <div className="flex items-center justify-center gap-1 h-20 px-4 rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden shadow-inner">
             {barHeights.map((h, i) => (
               <motion.div
                 key={i}
@@ -205,12 +210,12 @@ export function SoundGame({
               {isPlaying ? (
                 <>
                   <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>Durdur</span>
+                  <span>{t.sound.stopTone}</span>
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Sesi Dinle</span>
+                  <span>{t.sound.playTone}</span>
                 </>
               )}
             </button>
@@ -230,7 +235,7 @@ export function SoundGame({
               setSliderVal(v);
               playTone(sliderValToFreq(v), 300);
             }}
-            className="w-full h-3 rounded-full appearance-none cursor-pointer touch-none"
+            className="w-full h-3 rounded-full appearance-none cursor-pointer touch-none shadow-inner"
             style={{
               background: `linear-gradient(to right, #6366f1 0%, #a855f7 ${sliderVal * 100}%, rgba(255,255,255,0.1) ${sliderVal * 100}%)`,
             }}
@@ -241,32 +246,32 @@ export function SoundGame({
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleNudge(-10)}
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 -10Hz
               </button>
               <button
                 onClick={() => handleNudge(-1)}
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 -1Hz
               </button>
             </div>
 
-            <div className="text-[10px] text-white/30 font-mono">
-              80Hz — 2000Hz
+            <div className="text-[10px] text-white/40 font-mono">
+              {t.sound.freqRange}
             </div>
 
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleNudge(+1)}
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 +1Hz
               </button>
               <button
                 onClick={() => handleNudge(+10)}
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 +10Hz
               </button>
@@ -277,8 +282,8 @@ export function SoundGame({
 
       {/* Bottom Bar & Floating Submit Button */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-          HubSense · Ses Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.sound.label}
         </div>
 
         <motion.button
@@ -290,7 +295,7 @@ export function SoundGame({
             boxShadow:
               "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(99,102,241,0.4)",
           }}
-          title="Frekansı Onayla"
+          title={t.sound.confirm}
         >
           <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
         </motion.button>
@@ -319,6 +324,9 @@ export function SoundDisplay({
   totalRounds = 5,
   durationMs = 2000,
 }: SoundDisplayProps) {
+  const { lang } = useLanguage();
+  const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
+
   const [playing, setPlaying] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationMs / 1000);
 
@@ -369,10 +377,10 @@ export function SoundDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 40%, #2e1065 0%, #09090b 80%)",
+          "radial-gradient(ellipse at 50% 40%, rgba(46,16,101,0.8) 0%, rgba(9,9,11,0.9) 80%)",
       }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -390,7 +398,7 @@ export function SoundDisplay({
             {timeLeft.toFixed(2)}
           </div>
           <div className="text-xs sm:text-sm font-medium text-white/70">
-            Perdeyi aklında tut
+            {t.sound.revealSubtitle}
           </div>
         </div>
       </div>
@@ -399,8 +407,8 @@ export function SoundDisplay({
       <div className="flex flex-col items-center justify-center my-auto">
         <div className="flex items-center justify-center gap-1 h-32 w-full max-w-md">
           {Array.from({ length: BARS }).map((_, i) => {
-            const t = i / BARS;
-            const wave = Math.abs(Math.sin(t * Math.PI * 6 + Date.now() / 300));
+            const tr = i / BARS;
+            const wave = Math.abs(Math.sin(tr * Math.PI * 6 + Date.now() / 300));
             return (
               <motion.div
                 key={i}
@@ -421,14 +429,14 @@ export function SoundDisplay({
           })}
         </div>
         <p className="text-indigo-300 text-sm font-bold mt-6 tracking-wide drop-shadow">
-          {playing ? "Dikkatle dinle..." : ""}
+          {playing ? t.sound.revealPrompt : ""}
         </p>
       </div>
 
       {/* Bottom Bar & Progress */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
-          HubSense · Ses Disiplini
+        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          {t.watermark} · {t.disciplines.sound.label}
         </div>
       </div>
 
