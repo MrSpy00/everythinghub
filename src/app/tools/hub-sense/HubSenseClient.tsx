@@ -5,6 +5,8 @@
  * Orchestrates Color, Sound, Time, Shape, and Harmonic Sequence perception games.
  * 100% Client-Side, Zero-Auth Serverless Leaderboard, Offline LocalStorage,
  * Cryptographic Anti-Cheat, High-Res Score Card Generator, and Full Bilingual (TR/EN) i18n.
+ * Dynamic Configurable Rounds (3, 5, 10, Custom), Mixed-Case Profanity-Moderated Nicknames,
+ * Translucent Liquid Glass Background, and Context-Aware Interactive Cursors.
  */
 
 import React, { useState, useCallback, useEffect, Suspense } from "react";
@@ -24,7 +26,7 @@ import {
   getTodayUTCString,
   getMsUntilNextUTCMidnight,
   formatCountdown,
-  ROUNDS_COUNT,
+  DEFAULT_ROUNDS_COUNT,
   type GameType,
   type DifficultyType,
   type ModeType,
@@ -70,7 +72,7 @@ import { Leaderboard } from "./components/Leaderboard";
 import { SensoryInsights } from "./components/SensoryInsights";
 import { SharedScoreModal } from "./components/SharedScoreModal";
 
-// Icons (SVG vector icons only — Strict Zero Emoji rule)
+// Icons
 import {
   Palette,
   Volume2,
@@ -198,6 +200,10 @@ function HubSenseInner() {
   const [selectedGame, setSelectedGame] = useState<GameType>("color");
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyType>("easy");
   const [selectedMode, setSelectedMode] = useState<ModeType>("solo");
+  const [selectedRounds, setSelectedRounds] = useState<number>(DEFAULT_ROUNDS_COUNT);
+  const [isCustomRounds, setIsCustomRounds] = useState<boolean>(false);
+  const [customRoundsInput, setCustomRoundsInput] = useState<string>("7");
+
   const [session, setSession] = useState<GameSession | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
   const [roundResults, setRoundResults] = useState<RoundData[]>([]);
@@ -285,14 +291,22 @@ function HubSenseInner() {
   const config = GAME_CONFIGS[selectedGame];
   const accentColor = config.accent;
   const currentDiscipline = t.disciplines[selectedGame];
+  const totalRoundsCount = session?.totalRounds || selectedRounds;
 
   // ─── Game Flow ─────────────────────────────────────────────────────────────
   const startGame = useCallback(
-    (gameType: GameType, difficulty: DifficultyType, mode: ModeType, customSeed?: number) => {
+    (
+      gameType: GameType,
+      difficulty: DifficultyType,
+      mode: ModeType,
+      rounds = selectedRounds,
+      customSeed?: number
+    ) => {
       unlockAudio();
       SoundFX.click();
 
-      const newSession = createGameSession(gameType, difficulty, mode);
+      const activeRounds = mode === "daily" ? DEFAULT_ROUNDS_COUNT : rounds;
+      const newSession = createGameSession(gameType, difficulty, mode, activeRounds);
       if (customSeed !== undefined) {
         newSession.seed = customSeed;
       }
@@ -315,7 +329,7 @@ function HubSenseInner() {
         setScreen("reveal");
       }
     },
-    []
+    [selectedRounds]
   );
 
   const proceedToReveal = useCallback(() => {
@@ -342,7 +356,7 @@ function HubSenseInner() {
       }
 
       // Preload next stimulus
-      if (session && currentRound + 1 < ROUNDS_COUNT) {
+      if (session && currentRound + 1 < session.totalRounds) {
         const nextStimulus = generateRoundStimulus(
           session.gameType,
           session.seed,
@@ -360,10 +374,12 @@ function HubSenseInner() {
     if (!session) return;
     const nextRound = currentRound + 1;
 
-    if (nextRound >= ROUNDS_COUNT) {
+    if (nextRound >= session.totalRounds) {
       // Complete game
       const allScores = [...roundResults.map((r) => extractScore(r.result))];
-      const total = allScores.reduce((a, b) => a + b, 0);
+      // Normalize total score to 50 scale if rounds differ from 5
+      const rawTotal = allScores.reduce((a, b) => a + b, 0);
+      const total = (rawTotal / (session.totalRounds * 10)) * 50;
 
       const { isNewRecord: recordAchieved } = updatePersonalBest(
         session.gameType,
@@ -445,7 +461,7 @@ function HubSenseInner() {
         );
         recordSubmission();
         recordSeed(session.gameType, session.seed, username);
-        localStorage.setItem("hubsense_username", username.toUpperCase().trim());
+        localStorage.setItem("hubsense_username", username.trim());
 
         if (selectedMode === "daily" && session.dateSeed) {
           const updated = { ...dailyPlayed, [session.dateSeed]: true };
@@ -515,13 +531,10 @@ function HubSenseInner() {
   const tier = sharePayload ? getScoreTier(sharePayload.totalScore) : null;
 
   return (
-    <div
-      className="min-h-screen bg-transparent text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-24 pb-12 px-4 sm:px-6"
-      data-no-custom-cursor="true"
-    >
-      {/* Ambient Liquid Specular Glow (Subtle and non-intrusive) */}
+    <div className="min-h-screen bg-transparent text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-24 pb-12 px-4 sm:px-6">
+      {/* Ambient Specular Glow */}
       <div
-        className="pointer-events-none fixed inset-0 opacity-25 transition-all duration-700 -z-10"
+        className="pointer-events-none fixed inset-0 opacity-20 transition-all duration-700 -z-10"
         style={{
           background: `radial-gradient(circle at 50% 30%, ${accentColor}25 0%, transparent 65%)`,
         }}
@@ -540,7 +553,7 @@ function HubSenseInner() {
               className="flex flex-col gap-6 w-full"
             >
               {/* Header Card */}
-              <div className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
+              <div className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
                 <div>
                   <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-baseline gap-1">
                     <span>Hub</span>
@@ -556,7 +569,8 @@ function HubSenseInner() {
                   <button
                     onClick={toggleSound}
                     aria-label={t.soundToggle}
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/[0.04] border border-white/10 hover:bg-white/10 transition-colors text-white/70 shadow-lg"
+                    data-cursor={t.soundToggle}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-white/70 shadow-lg"
                   >
                     {muted ? (
                       <VolumeX className="w-4 h-4 text-rose-400" />
@@ -570,7 +584,8 @@ function HubSenseInner() {
                       SoundFX.click();
                       setShowInsights(true);
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/10 transition-colors text-xs font-bold text-white/80 shadow-lg"
+                    data-cursor={t.sensoryProfile}
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Brain className="w-4 h-4 text-indigo-400" />
                     <span className="hidden sm:inline">{t.sensoryProfile}</span>
@@ -581,7 +596,8 @@ function HubSenseInner() {
                       SoundFX.click();
                       setShowLeaderboard(true);
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/10 transition-colors text-xs font-bold text-white/80 shadow-lg"
+                    data-cursor={t.scores}
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Trophy className="w-4 h-4 text-amber-400" />
                     <span>{t.scores}</span>
@@ -610,6 +626,7 @@ function HubSenseInner() {
                           SoundFX.click();
                           setSelectedGame(type);
                         }}
+                        data-cursor={`${dInfo.label} · ${lang === "tr" ? "Seç" : "Select"}`}
                         className={`flex flex-col gap-2.5 p-4 sm:p-5 rounded-3xl border text-left transition-all relative overflow-hidden backdrop-blur-2xl
                           ${
                             isSelected
@@ -647,42 +664,116 @@ function HubSenseInner() {
                 </div>
               </div>
 
-              {/* Difficulty Selector */}
-              <div className="flex flex-col gap-2.5">
-                <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
-                  {t.difficultyLevel}
-                </p>
-                <div className="flex gap-2">
-                  {(["easy", "hard", "brutal"] as DifficultyType[]).map((diff) => {
-                    const isSelected = selectedDifficulty === diff;
-                    const color = DIFFICULTY_COLORS[diff];
-                    return (
-                      <button
-                        key={diff}
-                        onClick={() => {
-                          SoundFX.click();
-                          setSelectedDifficulty(diff);
-                        }}
-                        className={`flex-1 py-3.5 rounded-2xl font-extrabold text-xs sm:text-sm border transition-all backdrop-blur-xl
-                          ${
-                            isSelected
-                              ? "bg-white/[0.08] text-white border-white/25 shadow-lg"
-                              : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
-                          }`}
-                        style={{
-                          borderColor: isSelected ? `${color}77` : undefined,
-                          color: isSelected ? color : undefined,
-                          boxShadow: isSelected ? `0 0 20px ${color}25` : undefined,
-                        }}
-                      >
-                        {t.difficulties[diff].label}
-                      </button>
-                    );
-                  })}
+              {/* Difficulty & Round Count Matrix */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Difficulty Selector */}
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+                    {t.difficultyLevel}
+                  </p>
+                  <div className="flex gap-2">
+                    {(["easy", "hard", "brutal"] as DifficultyType[]).map((diff) => {
+                      const isSelected = selectedDifficulty === diff;
+                      const color = DIFFICULTY_COLORS[diff];
+                      return (
+                        <button
+                          key={diff}
+                          onClick={() => {
+                            SoundFX.click();
+                            setSelectedDifficulty(diff);
+                          }}
+                          data-cursor={t.difficulties[diff].label}
+                          className={`flex-1 py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                            ${
+                              isSelected
+                                ? "bg-white/[0.08] text-white border-white/25 shadow-lg"
+                                : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                            }`}
+                          style={{
+                            borderColor: isSelected ? `${color}77` : undefined,
+                            color: isSelected ? color : undefined,
+                            boxShadow: isSelected ? `0 0 20px ${color}25` : undefined,
+                          }}
+                        >
+                          {t.difficulties[diff].label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-white/40 px-1 line-clamp-1">
+                    {t.difficulties[selectedDifficulty].desc}
+                  </p>
                 </div>
-                <p className="text-xs text-white/40 px-1">
-                  {t.difficulties[selectedDifficulty].desc}
-                </p>
+
+                {/* Round Count Selector */}
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
+                    {t.roundsTitle}
+                  </p>
+                  <div className="flex gap-2">
+                    {[3, 5, 10].map((r) => {
+                      const isSelected = !isCustomRounds && selectedRounds === r;
+                      return (
+                        <button
+                          key={r}
+                          onClick={() => {
+                            SoundFX.click();
+                            setIsCustomRounds(false);
+                            setSelectedRounds(r);
+                          }}
+                          data-cursor={`${r} ${t.roundCounter}`}
+                          className={`flex-1 py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                            ${
+                              isSelected
+                                ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-lg"
+                                : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                            }`}
+                        >
+                          {r} {t.roundCounter}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      onClick={() => {
+                        SoundFX.click();
+                        setIsCustomRounds(true);
+                      }}
+                      data-cursor={t.roundCustom}
+                      className={`flex-1 py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                        ${
+                          isCustomRounds
+                            ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-lg"
+                            : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                        }`}
+                    >
+                      {t.roundCustom}
+                    </button>
+                  </div>
+
+                  {/* Custom Round Input */}
+                  {isCustomRounds && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={customRoundsInput}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomRoundsInput(val);
+                          const parsed = parseInt(val, 10);
+                          if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) {
+                            setSelectedRounds(parsed);
+                          }
+                        }}
+                        placeholder={t.customRoundsPlaceholder}
+                        className="flex-1 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-mono text-white text-center focus:outline-none focus:border-indigo-500"
+                      />
+                      <span className="text-[10px] text-white/40 font-mono">(1 - 20)</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -690,6 +781,7 @@ function HubSenseInner() {
                 {/* Daily Challenge Button */}
                 <button
                   onClick={() => startGame(selectedGame, selectedDifficulty, "daily")}
+                  data-cursor={t.dailyChallenge}
                   className="flex items-center justify-between px-5 py-4 rounded-3xl border
                     bg-white/[0.03] border-white/10 hover:bg-white/[0.06] backdrop-blur-2xl transition-all group shadow-xl"
                 >
@@ -713,7 +805,8 @@ function HubSenseInner() {
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => startGame(selectedGame, selectedDifficulty, "solo")}
+                  onClick={() => startGame(selectedGame, selectedDifficulty, "solo", selectedRounds)}
+                  data-cursor={t.startSoloGame(selectedRounds)}
                   className="w-full py-4 sm:py-5 rounded-3xl font-black text-base sm:text-lg tracking-wider
                     text-white border transition-all shadow-2xl uppercase backdrop-blur-xl"
                   style={{
@@ -722,7 +815,7 @@ function HubSenseInner() {
                     boxShadow: `0 0 40px ${accentColor}30`,
                   }}
                 >
-                  {t.startSoloGame}
+                  {t.startSoloGame(selectedRounds)}
                 </motion.button>
               </div>
             </motion.div>
@@ -757,6 +850,7 @@ function HubSenseInner() {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={proceedToReveal}
+                  data-cursor={t.dailyReadyPrompt}
                   className="w-full py-4 rounded-2xl font-extrabold text-base text-white border shadow-2xl backdrop-blur-xl"
                   style={{
                     background: `${accentColor}30`,
@@ -769,6 +863,7 @@ function HubSenseInner() {
 
                 <button
                   onClick={resetToIntro}
+                  data-cursor={t.goBack}
                   className="text-white/40 text-xs hover:text-white/70 transition-colors py-2"
                 >
                   {t.goBack}
@@ -790,7 +885,7 @@ function HubSenseInner() {
                   onHide={handleRevealComplete}
                   colorBlindMode={colorBlindMode}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "sound" && soundStimulus && (
@@ -802,7 +897,7 @@ function HubSenseInner() {
                   audioCtx={audioCtx}
                   onInitAudio={initAudio}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "time" && timeStimulus && (
@@ -811,7 +906,7 @@ function HubSenseInner() {
                   targetMs={timeStimulus.targetMs}
                   onHide={handleRevealComplete}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "shape" && shapeStimulus && (
@@ -821,7 +916,7 @@ function HubSenseInner() {
                   durationMs={config.revealDuration[selectedDifficulty]}
                   onHide={handleRevealComplete}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "sequence" && sequenceStimulus && (
@@ -831,7 +926,7 @@ function HubSenseInner() {
                   onHide={handleRevealComplete}
                   speedMs={selectedDifficulty === "brutal" ? 500 : 700}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
             </div>
@@ -855,7 +950,7 @@ function HubSenseInner() {
                   colorBlindMode={colorBlindMode}
                   onColorBlindToggle={setColorBlindMode}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "sound" && soundStimulus && (
@@ -865,7 +960,7 @@ function HubSenseInner() {
                   audioCtx={audioCtx}
                   onInitAudio={initAudio}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "time" && timeStimulus && (
@@ -873,7 +968,7 @@ function HubSenseInner() {
                   targetMs={timeStimulus.targetMs}
                   onSubmit={handleRoundSubmit as (r: TimeScoreResult) => void}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "shape" && shapeStimulus && (
@@ -881,7 +976,7 @@ function HubSenseInner() {
                   target={shapeStimulus}
                   onSubmit={handleRoundSubmit as (r: ShapeScoreResult) => void}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
               {session.gameType === "sequence" && sequenceStimulus && (
@@ -889,7 +984,7 @@ function HubSenseInner() {
                   targetSequence={sequenceStimulus.seq}
                   onSubmit={handleRoundSubmit as (r: SequenceScoreResult) => void}
                   roundNumber={currentRound + 1}
-                  totalRounds={ROUNDS_COUNT}
+                  totalRounds={totalRoundsCount}
                 />
               )}
             </motion.div>
@@ -937,6 +1032,7 @@ function HubSenseInner() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleNextRound}
+                data-cursor={currentRound + 1 < totalRoundsCount ? t.roundResult.nextRound : t.roundResult.viewFinals}
                 className="w-full py-4 rounded-2xl font-extrabold text-base text-white border transition-all shadow-xl backdrop-blur-xl"
                 style={{
                   background: `${accentColor}25`,
@@ -944,7 +1040,7 @@ function HubSenseInner() {
                   boxShadow: `0 0 30px ${accentColor}30`,
                 }}
               >
-                {currentRound + 1 < ROUNDS_COUNT
+                {currentRound + 1 < totalRoundsCount
                   ? t.roundResult.nextRound
                   : t.roundResult.viewFinals}
               </motion.button>
@@ -971,6 +1067,7 @@ function HubSenseInner() {
                 <button
                   onClick={resetToIntro}
                   aria-label={t.totalResult.menuReturn}
+                  data-cursor={t.totalResult.menuReturn}
                   className="w-9 h-9 flex items-center justify-center rounded-2xl bg-white/[0.05] hover:bg-white/15 border border-white/10"
                 >
                   <X className="w-4 h-4 text-white/60" />
@@ -1020,7 +1117,12 @@ function HubSenseInner() {
               </div>
 
               {/* Round by Round Bars */}
-              <div className="grid grid-cols-5 gap-2">
+              <div
+                className="grid gap-2"
+                style={{
+                  gridTemplateColumns: `repeat(${sharePayload.roundScores.length}, minmax(0, 1fr))`,
+                }}
+              >
                 {sharePayload.roundScores.map((s, i) => (
                   <div key={i} className="flex flex-col items-center gap-1.5">
                     <div
@@ -1046,7 +1148,7 @@ function HubSenseInner() {
                 ))}
               </div>
 
-              {/* Username Submission */}
+              {/* Username Submission (Flexible mixed-case, smart profanity filter) */}
               <div className="flex flex-col gap-2 p-5 rounded-3xl bg-white/[0.02] border border-white/[0.08]">
                 <label className="text-xs font-bold text-white/60">
                   {t.totalResult.leaderboardLabel}
@@ -1058,17 +1160,18 @@ function HubSenseInner() {
                     maxLength={20}
                     value={username}
                     onChange={(e) => {
-                      setUsername(e.target.value.toUpperCase());
+                      setUsername(e.target.value);
                       setUsernameError("");
                     }}
                     className="flex-1 px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/10
                       text-white placeholder-white/25 text-xs focus:outline-none focus:border-white/30
-                      font-mono uppercase tracking-wider"
+                      font-mono tracking-wider"
                   />
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     onClick={handleScoreSubmit}
                     disabled={isSubmitting || !username.trim()}
+                    data-cursor={t.totalResult.submitScore}
                     className="px-5 py-3.5 rounded-2xl font-bold text-xs text-white border transition-all disabled:opacity-30"
                     style={{
                       background: `${accentColor}25`,
@@ -1093,6 +1196,7 @@ function HubSenseInner() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
                     onClick={handleCopyShare}
+                    data-cursor={t.totalResult.scoreLink}
                     className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
@@ -1102,6 +1206,7 @@ function HubSenseInner() {
 
                   <button
                     onClick={handleCopyChallenge}
+                    data-cursor={t.totalResult.challengeFriend}
                     className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
@@ -1111,6 +1216,7 @@ function HubSenseInner() {
 
                   <button
                     onClick={handleDownloadPng}
+                    data-cursor={t.totalResult.downloadPng}
                     className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
@@ -1125,6 +1231,7 @@ function HubSenseInner() {
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-cursor={t.totalResult.twitterShare}
                     className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
@@ -1141,6 +1248,7 @@ function HubSenseInner() {
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-cursor={t.totalResult.whatsAppShare}
                     className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >
@@ -1150,6 +1258,7 @@ function HubSenseInner() {
 
                   <button
                     onClick={handleNativeShare}
+                    data-cursor={t.totalResult.nativeShare}
                     className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
                       bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
                   >

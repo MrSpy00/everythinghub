@@ -17,7 +17,13 @@ export interface HubSenseDictionary {
   dailyChallengeDesc: string;
   dailyRefreshesIn: string;
   dailyReadyPrompt: string;
-  startSoloGame: string;
+  startSoloGame: (rounds: number) => string;
+  roundsTitle: string;
+  roundFast: string;
+  roundStandard: string;
+  roundMarathon: string;
+  roundCustom: string;
+  customRoundsPlaceholder: string;
   goBack: string;
   roundCounter: string;
   watermark: string;
@@ -255,7 +261,13 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
     dailyChallengeDesc: "Dünya genelinde herkes bugün aynı 5 uyaran dizisini çözüyor. Tek bir resmi deneme hakkın var!",
     dailyRefreshesIn: "Yenileniyor",
     dailyReadyPrompt: "Hazırım, Başla",
-    startSoloGame: "Oyuna Başla (5 Tur)",
+    startSoloGame: (rounds) => `Oyuna Başla (${rounds} Tur)`,
+    roundsTitle: "Tur Sayısı",
+    roundFast: "3 Tur (Hızlı)",
+    roundStandard: "5 Tur (Standart)",
+    roundMarathon: "10 Tur (Maraton)",
+    roundCustom: "Özel",
+    customRoundsPlaceholder: "Tur sayısı (1-20)",
     goBack: "Geri Dön",
     roundCounter: "Tur",
     watermark: "HubSense",
@@ -508,7 +520,13 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
     dailyChallengeDesc: "Everyone worldwide solves the exact same 5 stimuli today. You get one official attempt!",
     dailyRefreshesIn: "Refreshes in",
     dailyReadyPrompt: "I'm Ready, Start",
-    startSoloGame: "Start Game (5 Rounds)",
+    startSoloGame: (rounds) => `Start Game (${rounds} Rounds)`,
+    roundsTitle: "Number of Rounds",
+    roundFast: "3 Rounds (Quick)",
+    roundStandard: "5 Rounds (Standard)",
+    roundMarathon: "10 Rounds (Marathon)",
+    roundCustom: "Custom",
+    customRoundsPlaceholder: "Round count (1-20)",
     goBack: "Go Back",
     roundCounter: "Round",
     watermark: "HubSense",

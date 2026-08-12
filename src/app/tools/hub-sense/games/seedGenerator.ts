@@ -1,18 +1,13 @@
 /**
- * HubSense — Deterministic Seed Generator
+ * HubSense — Deterministic Seed & Session Generator
  * Generates reproducible game seeds from date (for Daily challenges)
- * or from random (for Solo play).
- *
- * Daily: All players worldwide see the same stimuli.
- * Solo: Fresh randomness each game.
+ * or from random (for Solo play). Supports dynamic customizable round counts.
  */
 
 // ─── Date-based seed (Daily Challenge) ───────────────────────────────────────
 export function getDailySeed(date?: Date): number {
   const d = date ?? new Date();
-  // Use UTC date to normalize across timezones
   const utcDate = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
-  // Simple DJB2-like hash of the date string
   let hash = 5381;
   for (let i = 0; i < utcDate.length; i++) {
     hash = ((hash << 5) + hash + utcDate.charCodeAt(i)) >>> 0;
@@ -45,10 +40,9 @@ export function getTodayUTCString(): string {
 
 export function getNextUTCMidnight(): Date {
   const now = new Date();
-  const nextMidnight = new Date(
+  return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
   );
-  return nextMidnight;
 }
 
 export function getMsUntilNextUTCMidnight(): number {
@@ -56,7 +50,7 @@ export function getMsUntilNextUTCMidnight(): number {
 }
 
 export function formatCountdown(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
@@ -64,9 +58,9 @@ export function formatCountdown(ms: number): string {
 }
 
 // ─── Round Configs ────────────────────────────────────────────────────────────
-export const ROUNDS_COUNT = 5;
+export const DEFAULT_ROUNDS_COUNT = 5;
+export const ROUND_OPTIONS = [3, 5, 10] as const;
 export const MAX_SCORE_PER_ROUND = 10;
-export const MAX_TOTAL_SCORE = ROUNDS_COUNT * MAX_SCORE_PER_ROUND; // 50
 
 export type GameType = "color" | "sound" | "time" | "shape" | "sequence";
 export type DifficultyType = "easy" | "hard" | "brutal";
@@ -79,12 +73,14 @@ export interface GameSession {
   seed: number;
   dateSeed?: string; // for daily
   startedAt: number;
+  totalRounds: number;
 }
 
 export function createGameSession(
   gameType: GameType,
   difficulty: DifficultyType,
-  mode: ModeType
+  mode: ModeType,
+  totalRounds = DEFAULT_ROUNDS_COUNT
 ): GameSession {
   const isDaily = mode === "daily";
   const seed = isDaily ? getDailySeed() : getRandomSeed();
@@ -97,5 +93,6 @@ export function createGameSession(
     seed,
     dateSeed,
     startedAt: Date.now(),
+    totalRounds: isDaily ? DEFAULT_ROUNDS_COUNT : Math.max(1, Math.min(20, totalRounds)),
   };
 }

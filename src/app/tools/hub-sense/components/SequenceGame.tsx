@@ -135,6 +135,7 @@ export function SequenceGame({
                 key={node.id}
                 whileTap={{ scale: 0.93 }}
                 onClick={() => handlePadPress(node)}
+                data-cursor={`${nodeLabels[idx] || node.label} · ${node.note} (${Math.round(node.freq)}Hz)`}
                 className="relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-3xl border-2 transition-all text-white overflow-hidden shadow-xl"
                 style={{
                   background: isActive
@@ -169,6 +170,7 @@ export function SequenceGame({
           <button
             onClick={handleClear}
             disabled={playerSequence.length === 0}
+            data-cursor={t.sequence.reset}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-xs text-white/70 disabled:opacity-30 transition-colors shadow-sm"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -188,6 +190,7 @@ export function SequenceGame({
           whileTap={{ scale: 0.94 }}
           onClick={handleForceSubmit}
           disabled={playerSequence.length === 0}
+          data-cursor={t.sequence.confirm}
           className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all disabled:opacity-30 group"
           style={{
             boxShadow:

@@ -188,21 +188,22 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   const inspectElement = useCallback((target: HTMLElement | null) => {
     if (!target) return;
 
-    // 0. Suppress follower pill over precision game zones, sliders, and canvases (keeps arrow visible!)
-    if (target.closest("[data-no-custom-cursor], .hubsense-game-arena, .hubsense-slider-area, input[type='range'], canvas")) {
-      setSuppressPill(true);
-      return;
-    }
-    setSuppressPill(false);
-
-    // 1. Explicit data-cursor tag
+    // 1. Explicit data-cursor tag (Highest Priority Context)
     const customCursor = target.closest("[data-cursor]")?.getAttribute("data-cursor");
     if (customCursor) {
+      setSuppressPill(false);
       setDynamicLabel(customCursor);
       setIsClickable(true);
       setCursorAccent("#6366f1");
       return;
     }
+
+    // 2. Suppress follower pill over unlabelled precision game canvases / sliders
+    if (target.closest("[data-no-custom-cursor], .hubsense-game-arena, .hubsense-slider-area, input[type='range'], canvas")) {
+      setSuppressPill(true);
+      return;
+    }
+    setSuppressPill(false);
 
     // 2. Logo / Home Link Detection
     const homeLink = target.closest("a[href='/'], Link[href='/'], .brand-logo, [data-home]");

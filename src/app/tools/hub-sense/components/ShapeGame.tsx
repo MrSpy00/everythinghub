@@ -176,6 +176,7 @@ export function ShapeGame({
               max={1.6}
               step={0.01}
               value={params.scale}
+              data-cursor={`${t.shape.scaleLabel} · %${(params.scale * 100).toFixed(0)}`}
               onChange={(e) =>
                 setParams((p) => ({ ...p, scale: parseFloat(e.target.value) }))
               }
@@ -203,6 +204,7 @@ export function ShapeGame({
               max={360}
               step={1}
               value={params.rotation}
+              data-cursor={`${t.shape.rotationLabel} · ${Math.round(params.rotation)}°`}
               onChange={(e) =>
                 setParams((p) => ({ ...p, rotation: parseFloat(e.target.value) }))
               }
@@ -225,6 +227,7 @@ export function ShapeGame({
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}
           onClick={handleSubmit}
+          data-cursor={t.shape.confirm}
           className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
           style={{
             boxShadow:

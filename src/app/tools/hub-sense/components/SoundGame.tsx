@@ -205,6 +205,7 @@ export function SoundGame({
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <button
               onClick={togglePlay}
+              data-cursor={isPlaying ? t.sound.stopTone : t.sound.playTone}
               className="pointer-events-auto px-5 py-2.5 rounded-full bg-indigo-500/80 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-2xl backdrop-blur-md border border-white/20 transition-transform hover:scale-105 active:scale-95"
             >
               {isPlaying ? (
@@ -230,6 +231,7 @@ export function SoundGame({
             max={1}
             step={0.0005}
             value={sliderVal}
+            data-cursor={`${Math.round(currentFreq)} Hz · ${t.sound.erbScale}`}
             onChange={(e) => {
               const v = parseFloat(e.target.value);
               setSliderVal(v);
@@ -246,12 +248,14 @@ export function SoundGame({
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleNudge(-10)}
+                data-cursor="-10 Hz"
                 className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 -10Hz
               </button>
               <button
                 onClick={() => handleNudge(-1)}
+                data-cursor="-1 Hz"
                 className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 -1Hz
@@ -265,12 +269,14 @@ export function SoundGame({
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleNudge(+1)}
+                data-cursor="+1 Hz"
                 className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 +1Hz
               </button>
               <button
                 onClick={() => handleNudge(+10)}
+                data-cursor="+10 Hz"
                 className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
               >
                 +10Hz
@@ -290,6 +296,7 @@ export function SoundGame({
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}
           onClick={handleSubmit}
+          data-cursor={t.sound.confirm}
           className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
           style={{
             boxShadow:

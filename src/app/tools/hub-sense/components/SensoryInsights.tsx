@@ -82,12 +82,12 @@ export function SensoryInsights({ onClose }: SensoryInsightsProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Liquid Glass Backdrop Blur */}
+      {/* Translucent Liquid Glass Backdrop (WebGL dots visible!) */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/75 backdrop-blur-2xl"
+        className="absolute inset-0 bg-black/40 backdrop-blur-md"
         onClick={onClose}
       />
 
@@ -97,7 +97,7 @@ export function SensoryInsights({ onClose }: SensoryInsightsProps) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.94, opacity: 0, y: 16 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative z-10 w-full max-w-2xl max-h-[85vh] rounded-3xl bg-zinc-950/80 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden"
+        className="relative z-10 w-full max-w-2xl max-h-[85vh] rounded-3xl bg-zinc-950/55 border border-white/20 backdrop-blur-3xl shadow-[0_25px_70px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-white/[0.02]">

@@ -1,30 +1,88 @@
 /**
- * HubSense — Anti-Cheat & Security System
+ * HubSense — Anti-Cheat, Security & Content Moderation System
  * 
- * Tier 1: Client-side validation (score bounds, rate limit, replay detection)
- * Tier 2: HMAC-SHA256 cryptographic signature (WebCrypto API)
- * Tier 3: Score obfuscation in localStorage (base64 + XOR cipher)
- * 
- * Leaderboard submissions are signed and verified. Manual edits of localStorage
- * will invalidate signatures, preventing fake score injection.
+ * Tier 1: Multilingual Smart Profanity / Toxicity / Leetspeak Normalizer
+ * Tier 2: Flexible Mixed-Case Nickname Validation (Alphanumeric, _, -, .)
+ * Tier 3: Client-side validation (dynamic rounds, score bounds, rate limit, replay detection)
+ * Tier 4: HMAC-SHA256 cryptographic signature (WebCrypto API)
+ * Tier 5: Score obfuscation in localStorage (base64 + XOR cipher)
  */
 
 import type { GameType, DifficultyType, ModeType } from "./seedGenerator";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const RATE_LIMIT_MS = 45_000; // 45s between submissions
-const MAX_SUBMISSIONS_PER_SESSION = 10;
+const RATE_LIMIT_MS = 25_000; // 25s between submissions
+const MAX_SUBMISSIONS_PER_SESSION = 15;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 20;
 const USERNAME_REGEX = /^[a-zA-Z0-9_\-\.]+$/;
+
 const RESERVED_WORDS = new Set([
   "admin", "root", "hubsense", "system", "mod", "moderator",
   "staff", "bot", "null", "undefined", "test", "hack", "cheat",
   "everythinghub", "aegissoft"
 ]);
 
-// XOR key for obfuscation (not security, just friction against casual tampering)
-const XOR_KEY = "HubSense_2026_Aegis_Salt_v1";
+// ─── Smart Multilingual Toxicity & Profanity Filter ───────────────────────────
+const BANNED_PATTERNS = [
+  // Turkish profanities & slurs
+  "orospu", "pic", "sik", "yarrak", "amk", "aq", "got", "ibne", "pezevenk",
+  "kahpe", "kancik", "yarram", "siktir", "dalyarak", "amcik", "tasak",
+  "gavat", "bok", "gotlek", "pust", "fahise", "oc", "sokuk", "yarrag",
+  // English profanities & slurs
+  "fuck", "shit", "bitch", "cunt", "asshole", "dick", "pussy", "nigger",
+  "nigga", "faggot", "bastard", "cock", "slut", "whore", "nazi", "hitler",
+  "retard", "fck", "b1tch", "d1ck", "cnt", "penis", "vagina", "porn"
+];
+
+function normalizeLeetspeak(input: string): string {
+  let str = input.toLowerCase();
+
+  // Character translations
+  const charMap: Record<string, string> = {
+    "@": "a",
+    "4": "a",
+    "8": "b",
+    "3": "e",
+    "€": "e",
+    "1": "i",
+    "!": "i",
+    "|": "i",
+    "0": "o",
+    "5": "s",
+    "$": "s",
+    "7": "t",
+    "+": "t",
+    "9": "g",
+    "ü": "u",
+    "ö": "o",
+    "ı": "i",
+    "ş": "s",
+    "ç": "c",
+    "ğ": "g",
+  };
+
+  str = str.split("").map((c) => charMap[c] || c).join("");
+
+  // Remove non-alphanumeric separators for continuous check
+  const lettersOnly = str.replace(/[^a-z0-9]/g, "");
+
+  // Collapse consecutive identical characters (e.g., "fuuuuck" -> "fuck")
+  const collapsed = lettersOnly.replace(/(.)\1+/g, "$1");
+
+  return `${lettersOnly} ${collapsed}`;
+}
+
+export function containsProfanity(rawUsername: string): boolean {
+  const normalized = normalizeLeetspeak(rawUsername);
+  return BANNED_PATTERNS.some((badWord) => {
+    // Exact or substring match in normalized strings
+    return normalized.includes(badWord);
+  });
+}
+
+// XOR key for obfuscation
+const XOR_KEY = "HubSense_2026_Aegis_Salt_v2";
 
 function xorCipher(str: string): string {
   let result = "";
@@ -51,8 +109,7 @@ export function deobfuscate<T>(encoded: string): T | null {
 }
 
 // ─── HMAC Signature ───────────────────────────────────────────────────────────
-// Derived key material from game logic (not a real secret — just makes tampering harder)
-const HMAC_KEY_MATERIAL = "HubSense_ScoreGuard_2026_v2_by_aegisSoft";
+const HMAC_KEY_MATERIAL = "HubSense_ScoreGuard_2026_v3_by_aegisSoft";
 
 async function getHmacKey(): Promise<CryptoKey> {
   const enc = new TextEncoder();
@@ -109,7 +166,7 @@ export async function buildScorePayload(
   const timestamp = Date.now();
 
   const payload: ScorePayload = {
-    username: username.toUpperCase().trim(),
+    username: username.trim(),
     totalScore,
     gameType,
     difficulty,
@@ -119,7 +176,7 @@ export async function buildScorePayload(
     timestamp,
     roundScores: roundScores.map((s) => parseFloat(s.toFixed(2))),
     signature: "",
-    clientVersion: "1.0.0",
+    clientVersion: "2.0.0",
   };
 
   payload.signature = await signScore(payload);
@@ -133,7 +190,7 @@ export interface UsernameValidation {
 }
 
 export function validateUsername(username: string): UsernameValidation {
-  const trimmed = username.trim().toLowerCase();
+  const trimmed = username.trim();
 
   if (trimmed.length < USERNAME_MIN_LENGTH) {
     return { valid: false, error: `En az ${USERNAME_MIN_LENGTH} karakter gerekli` };
@@ -144,75 +201,59 @@ export function validateUsername(username: string): UsernameValidation {
   if (!USERNAME_REGEX.test(trimmed)) {
     return { valid: false, error: "Sadece harf, rakam, _, - ve . kullanılabilir" };
   }
-  if (RESERVED_WORDS.has(trimmed)) {
+  if (RESERVED_WORDS.has(trimmed.toLowerCase())) {
     return { valid: false, error: "Bu kullanıcı adı rezerve edilmiştir" };
+  }
+  if (containsProfanity(trimmed)) {
+    return { valid: false, error: "Uygunsuz veya hakaret içeren rumuzlar kullanılamaz" };
   }
 
   return { valid: true };
 }
 
-// ─── Score Bounds Validation ──────────────────────────────────────────────────
+// ─── Dynamic Score Bounds Validation (1 to 20 rounds) ──────────────────────────
 export function validateScoreBounds(roundScores: number[]): boolean {
-  if (roundScores.length !== 5) return false;
-  return roundScores.every((s) => s >= 0 && s <= 10.01); // small float tolerance
+  if (roundScores.length < 1 || roundScores.length > 20) return false;
+  return roundScores.every((s) => s >= 0 && s <= 10.05);
 }
 
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
-const RATE_LIMIT_KEY = "hubsense_rate_limit";
-const SESSION_SUBMIT_KEY = "hubsense_session_submits";
-
-interface RateLimitData {
-  lastSubmitTime: number;
-  sessionCount: number;
-  bannedUntil?: number;
-}
-
-function getRateLimitData(): RateLimitData {
-  const raw = localStorage.getItem(RATE_LIMIT_KEY);
-  if (!raw) return { lastSubmitTime: 0, sessionCount: 0 };
-  return deobfuscate<RateLimitData>(raw) ?? { lastSubmitTime: 0, sessionCount: 0 };
-}
-
-function setRateLimitData(data: RateLimitData): void {
-  localStorage.setItem(RATE_LIMIT_KEY, obfuscate(data));
-}
-
-export interface RateLimitCheck {
+export interface RateLimitStatus {
   allowed: boolean;
-  msUntilAllowed?: number;
+  remainingMs?: number;
   reason?: string;
 }
 
-export function checkRateLimit(): RateLimitCheck {
+const SUBMISSION_TIMESTAMPS_KEY = "hubsense_submit_ts";
+const LAST_SUBMIT_KEY = "hubsense_last_submit";
+
+export function checkRateLimit(): RateLimitStatus {
   if (typeof window === "undefined") return { allowed: true };
 
-  const data = getRateLimitData();
   const now = Date.now();
-
-  // Temp ban check
-  if (data.bannedUntil && now < data.bannedUntil) {
-    return {
-      allowed: false,
-      msUntilAllowed: data.bannedUntil - now,
-      reason: "Çok fazla gönderim. Biraz bekleyin.",
-    };
+  const lastSubmitStr = localStorage.getItem(LAST_SUBMIT_KEY);
+  if (lastSubmitStr) {
+    const lastSubmit = parseInt(lastSubmitStr, 10);
+    const elapsed = now - lastSubmit;
+    if (elapsed < RATE_LIMIT_MS) {
+      const remainingMs = RATE_LIMIT_MS - elapsed;
+      return {
+        allowed: false,
+        remainingMs,
+        reason: `Lütfen ${Math.ceil(remainingMs / 1000)} saniye bekleyin`,
+      };
+    }
   }
 
-  // Session limit
-  const sessionSubmits = parseInt(sessionStorage.getItem(SESSION_SUBMIT_KEY) ?? "0");
-  if (sessionSubmits >= MAX_SUBMISSIONS_PER_SESSION) {
-    return {
-      allowed: false,
-      reason: "Bu oturumda maksimum gönderim sayısına ulaşıldı.",
-    };
-  }
+  // Session flood check
+  const rawTimestamps = sessionStorage.getItem(SUBMISSION_TIMESTAMPS_KEY);
+  const timestamps: number[] = rawTimestamps ? JSON.parse(rawTimestamps) : [];
+  const recent = timestamps.filter((t) => now - t < 300_000); // last 5 min
 
-  // Rate limit
-  if (now - data.lastSubmitTime < RATE_LIMIT_MS) {
+  if (recent.length >= MAX_SUBMISSIONS_PER_SESSION) {
     return {
       allowed: false,
-      msUntilAllowed: RATE_LIMIT_MS - (now - data.lastSubmitTime),
-      reason: "Çok hızlı gönderim.",
+      reason: "Oturum başına maksimum skor gönderim limitine ulaşıldı",
     };
   }
 
@@ -221,115 +262,85 @@ export function checkRateLimit(): RateLimitCheck {
 
 export function recordSubmission(): void {
   if (typeof window === "undefined") return;
+  const now = Date.now();
+  localStorage.setItem(LAST_SUBMIT_KEY, now.toString());
 
-  const data = getRateLimitData();
-  const sessionSubmits = parseInt(sessionStorage.getItem(SESSION_SUBMIT_KEY) ?? "0");
-
-  // Apply temp ban if suspicious (e.g., many submits in short time)
-  const updatedData: RateLimitData = {
-    lastSubmitTime: Date.now(),
-    sessionCount: data.sessionCount + 1,
-  };
-
-  if (data.sessionCount >= 8) {
-    updatedData.bannedUntil = Date.now() + 5 * 60 * 1000; // 5-min temp ban
-  }
-
-  setRateLimitData(updatedData);
-  sessionStorage.setItem(SESSION_SUBMIT_KEY, String(sessionSubmits + 1));
+  const rawTimestamps = sessionStorage.getItem(SUBMISSION_TIMESTAMPS_KEY);
+  const timestamps: number[] = rawTimestamps ? JSON.parse(rawTimestamps) : [];
+  timestamps.push(now);
+  sessionStorage.setItem(SUBMISSION_TIMESTAMPS_KEY, JSON.stringify(timestamps.slice(-20)));
 }
 
-// ─── Replay Detection ─────────────────────────────────────────────────────────
-const REPLAY_STORE_KEY = "hubsense_seen_seeds";
+// ─── Replay Protection ────────────────────────────────────────────────────────
+const RECORDED_SEEDS_KEY = "hubsense_played_seeds";
 
-interface ReplayStore {
-  seen: Array<{ game: GameType; seed: number; username: string; ts: number }>;
+export function recordSeed(gameType: GameType, seed: number, username: string): void {
+  if (typeof window === "undefined") return;
+  const key = `${RECORDED_SEEDS_KEY}_${gameType}`;
+  const raw = localStorage.getItem(key);
+  const seeds: string[] = raw ? JSON.parse(raw) : [];
+  const entry = `${seed}_${username.trim().toLowerCase()}`;
+  if (!seeds.includes(entry)) {
+    seeds.push(entry);
+    localStorage.setItem(key, JSON.stringify(seeds.slice(-50)));
+  }
 }
 
 export function isReplay(gameType: GameType, seed: number, username: string): boolean {
   if (typeof window === "undefined") return false;
-
-  const raw = localStorage.getItem(REPLAY_STORE_KEY);
+  const key = `${RECORDED_SEEDS_KEY}_${gameType}`;
+  const raw = localStorage.getItem(key);
   if (!raw) return false;
-
-  const store = deobfuscate<ReplayStore>(raw);
-  if (!store) return false;
-
-  // Check if same game+seed+username combination already submitted
-  return store.seen.some(
-    (e) => e.game === gameType && e.seed === seed && e.username.toLowerCase() === username.toLowerCase()
-  );
+  const seeds: string[] = JSON.parse(raw);
+  const entry = `${seed}_${username.trim().toLowerCase()}`;
+  return seeds.includes(entry);
 }
 
-export function recordSeed(gameType: GameType, seed: number, username: string): void {
-  if (typeof window === "undefined") return;
-
-  const raw = localStorage.getItem(REPLAY_STORE_KEY);
-  const store: ReplayStore = raw ? (deobfuscate<ReplayStore>(raw) ?? { seen: [] }) : { seen: [] };
-
-  store.seen.push({ game: gameType, seed, username, ts: Date.now() });
-
-  // Keep only last 200 entries
-  if (store.seen.length > 200) {
-    store.seen = store.seen.slice(-200);
-  }
-
-  localStorage.setItem(REPLAY_STORE_KEY, obfuscate(store));
-}
-
-// ─── Local Personal Bests Storage ─────────────────────────────────────────────
-const PERSONAL_BESTS_KEY = "hubsense_personal_bests";
+// ─── Personal Best Tracker ────────────────────────────────────────────────────
+const PB_STORAGE_KEY = "hubsense_pb";
 
 export interface PersonalBest {
   score: number;
-  difficulty: DifficultyType;
-  timestamp: number;
+  date: string;
   roundScores: number[];
 }
 
-type PersonalBestsMap = Record<GameType, Record<DifficultyType, PersonalBest | null>>;
+export type PersonalBestStore = {
+  [game in GameType]?: {
+    [diff in DifficultyType]?: PersonalBest;
+  };
+};
 
-function emptyPBMap(): PersonalBestsMap {
-  const games: GameType[] = ["color", "sound", "time", "shape", "sequence"];
-  const difficulties: DifficultyType[] = ["easy", "hard", "brutal"];
-  const map = {} as PersonalBestsMap;
-  for (const g of games) {
-    map[g] = {} as Record<DifficultyType, PersonalBest | null>;
-    for (const d of difficulties) {
-      map[g][d] = null;
-    }
-  }
-  return map;
-}
-
-export function getPersonalBests(): PersonalBestsMap {
-  if (typeof window === "undefined") return emptyPBMap();
-  const raw = localStorage.getItem(PERSONAL_BESTS_KEY);
-  if (!raw) return emptyPBMap();
-  return deobfuscate<PersonalBestsMap>(raw) ?? emptyPBMap();
+export function getPersonalBests(): PersonalBestStore {
+  if (typeof window === "undefined") return {};
+  const raw = localStorage.getItem(PB_STORAGE_KEY);
+  if (!raw) return {};
+  return deobfuscate<PersonalBestStore>(raw) || {};
 }
 
 export function updatePersonalBest(
   gameType: GameType,
   difficulty: DifficultyType,
   roundScores: number[]
-): { isNewRecord: boolean; previous: PersonalBest | null } {
-  const bests = getPersonalBests();
-  const totalScore = roundScores.reduce((a, b) => a + b, 0);
-  const current = bests[gameType][difficulty];
+): { isNewRecord: boolean; previousBest: number } {
+  if (typeof window === "undefined") return { isNewRecord: false, previousBest: 0 };
 
-  if (!current || totalScore > current.score) {
-    bests[gameType][difficulty] = {
-      score: totalScore,
-      difficulty,
-      timestamp: Date.now(),
+  const store = getPersonalBests();
+  const current = store[gameType]?.[difficulty]?.score || 0;
+  const newScore = parseFloat(
+    roundScores.reduce((a, b) => a + b, 0).toFixed(2)
+  );
+
+  if (newScore > current) {
+    if (!store[gameType]) store[gameType] = {};
+    store[gameType]![difficulty] = {
+      score: newScore,
+      date: new Date().toISOString(),
       roundScores,
     };
-    if (typeof window !== "undefined") {
-      localStorage.setItem(PERSONAL_BESTS_KEY, obfuscate(bests));
-    }
-    return { isNewRecord: true, previous: current };
+    localStorage.setItem(PB_STORAGE_KEY, obfuscate(store));
+    return { isNewRecord: true, previousBest: current };
   }
 
-  return { isNewRecord: false, previous: current };
+  return { isNewRecord: false, previousBest: current };
 }

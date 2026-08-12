@@ -131,6 +131,7 @@ export function TimeGame({
               onPointerUp={endHold}
               onPointerCancel={endHold}
               disabled={phase === "done"}
+              data-cursor={phase === "ready" ? t.time.holdButton : phase === "holding" ? t.time.releasePrompt : formatMs(holdMs)}
               className="w-40 h-40 sm:w-44 sm:h-44 rounded-full flex flex-col items-center justify-center text-center p-4 border-2 transition-all shadow-2xl select-none touch-none"
               style={{
                 background:
