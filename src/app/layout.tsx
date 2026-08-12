@@ -214,6 +214,7 @@ const jsonLdSchema = {
       "@type": "SiteNavigationElement",
       "@id": "https://www.everythinghub.com.tr/#navigation",
       "name": [
+        "HubSense Duyu Hafızası Arenası",
         "YouTube Playlist Analizörü",
         "Spotify Playlist Analizörü",
         "QR Kod Stüdyosu Pro",
@@ -224,6 +225,7 @@ const jsonLdSchema = {
         "JWT Debugger Studio"
       ],
       "url": [
+        "https://www.everythinghub.com.tr/tools/hub-sense",
         "https://www.everythinghub.com.tr/tools/yt-playlist-length",
         "https://www.everythinghub.com.tr/tools/spotify-playlist-analyzer",
         "https://www.everythinghub.com.tr/tools/qr-code-studio",

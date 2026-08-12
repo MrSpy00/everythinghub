@@ -73,9 +73,8 @@ export async function GET(req: NextRequest) {
         "Cache-Control": "private, max-age=3600",
       },
     });
-  } catch (err: any) {
-    console.error("Flasher Proxy Error:", err);
-    return new NextResponse(`Failed to fetch upstream binary: ${err.message || err}`, { status: 502 });
+  } catch {
+    return new NextResponse("Failed to fetch upstream binary. Please check target URL.", { status: 502 });
   }
 }
 
