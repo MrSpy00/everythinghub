@@ -50,7 +50,16 @@ export function generateTargetTime(
   difficulty: "easy" | "hard" | "brutal"
 ): number {
   const cfg = TIME_CONFIGS[difficulty];
-  const pseudo = (Math.sin(seed * 12345 + roundIndex * 67891 + 11111) * 0.5 + 0.5);
+  const roundSeed = (seed ^ ((roundIndex + 1) * 0x7feb352d) ^ 0xa431be45) >>> 0;
+  let s = roundSeed;
+  const rng = () => {
+    s = (s + 0x9e3779b9) >>> 0;
+    let z = s;
+    z = Math.imul(z ^ (z >>> 16), 0x85ebca6b);
+    z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35);
+    return ((z ^ (z >>> 16)) >>> 0) / 4294967296;
+  };
+  const pseudo = rng();
   return Math.round(cfg.minMs + pseudo * (cfg.maxMs - cfg.minMs));
 }
 

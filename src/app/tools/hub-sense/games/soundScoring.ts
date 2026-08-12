@@ -99,8 +99,16 @@ export function generateFrequency(
   difficulty: "easy" | "hard" | "brutal"
 ): number {
   const config = SOUND_CONFIGS[difficulty];
-  // Use seed + round to get deterministic but varied frequencies
-  const pseudo = Math.sin(seed * 9301 + roundIndex * 49297 + 233995) * 0.5 + 0.5;
+  const roundSeed = (seed ^ ((roundIndex + 1) * 0x7feb352d) ^ 0xb9e248a1) >>> 0;
+  let s = roundSeed;
+  const rng = () => {
+    s = (s + 0x9e3779b9) >>> 0;
+    let z = s;
+    z = Math.imul(z ^ (z >>> 16), 0x85ebca6b);
+    z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35);
+    return ((z ^ (z >>> 16)) >>> 0) / 4294967296;
+  };
+  const pseudo = rng();
   // Map to frequency range with logarithmic distribution (sounds natural)
   const logMin = Math.log(config.minFreq);
   const logMax = Math.log(config.maxFreq);

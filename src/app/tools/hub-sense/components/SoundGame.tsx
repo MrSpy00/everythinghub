@@ -3,7 +3,8 @@
 /**
  * HubSense — Sound Game Component (Studio Synthesizer Edition)
  * High-precision psychoacoustic tone synthesizer with logarithmic slider,
- * real-time harmonic waveform visualizer, and full bilingual (TR/EN) support.
+ * real-time continuous pitch gliding (zero stutter), harmonic waveform visualizer,
+ * and full bilingual (TR/EN) support.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -57,28 +58,52 @@ export function SoundGame({
   const [isPlaying, setIsPlaying] = useState(false);
   const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeOscRef = useRef<OscillatorNode | null>(null);
+  const activeGainRef = useRef<GainNode | null>(null);
 
   const currentFreq = sliderValToFreq(sliderVal);
   const noteName = freqToNoteName(currentFreq);
 
   const stopTone = useCallback(() => {
-    if (activeOscRef.current) {
+    if (activeGainRef.current && audioCtx && audioCtx.state === "running") {
+      try {
+        activeGainRef.current.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.04);
+        setTimeout(() => {
+          if (activeOscRef.current) {
+            try {
+              activeOscRef.current.stop();
+              activeOscRef.current.disconnect();
+            } catch {}
+            activeOscRef.current = null;
+          }
+          activeGainRef.current = null;
+        }, 50);
+      } catch {
+        if (activeOscRef.current) {
+          try {
+            activeOscRef.current.stop();
+            activeOscRef.current.disconnect();
+          } catch {}
+          activeOscRef.current = null;
+        }
+        activeGainRef.current = null;
+      }
+    } else if (activeOscRef.current) {
       try {
         activeOscRef.current.stop();
         activeOscRef.current.disconnect();
       } catch {}
       activeOscRef.current = null;
+      activeGainRef.current = null;
     }
     setIsPlaying(false);
     if (playTimeoutRef.current) {
       clearTimeout(playTimeoutRef.current);
       playTimeoutRef.current = null;
     }
-  }, []);
+  }, [audioCtx]);
 
-  const playTone = useCallback(
-    async (freq: number, duration = 1200) => {
-      stopTone();
+  const startContinuousTone = useCallback(
+    async (freq: number) => {
       let ctx = audioCtx;
       if (!ctx || ctx.state === "closed") {
         ctx = await onInitAudio();
@@ -87,37 +112,41 @@ export function SoundGame({
         await ctx.resume();
       }
 
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      if (activeOscRef.current && activeGainRef.current) {
+        activeOscRef.current.frequency.setTargetAtTime(freq, ctx.currentTime, 0.015);
+        return;
+      }
 
-      osc.type = "sine";
-      osc.frequency.value = freq;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.04);
-      gain.gain.setValueAtTime(0.4, ctx.currentTime + duration / 1000 - 0.06);
-      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration / 1000);
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.03);
 
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + duration / 1000);
-      activeOscRef.current = osc;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
 
-      setIsPlaying(true);
-      playTimeoutRef.current = setTimeout(() => {
-        setIsPlaying(false);
-        activeOscRef.current = null;
-      }, duration);
+        activeOscRef.current = osc;
+        activeGainRef.current = gain;
+        setIsPlaying(true);
+      } catch {}
     },
-    [audioCtx, onInitAudio, stopTone]
+    [audioCtx, onInitAudio]
   );
 
   const togglePlay = () => {
     if (isPlaying) {
       stopTone();
     } else {
-      playTone(currentFreq, 1400);
+      startContinuousTone(currentFreq);
+      if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+      playTimeoutRef.current = setTimeout(() => {
+        stopTone();
+      }, 1500);
     }
   };
 
@@ -125,7 +154,11 @@ export function SoundGame({
     SoundFX.click();
     const nextFreq = Math.max(MIN_FREQ, Math.min(MAX_FREQ, currentFreq + deltaHz));
     setSliderVal(freqToSliderVal(nextFreq));
-    playTone(nextFreq, 500);
+    startContinuousTone(nextFreq);
+    if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+    playTimeoutRef.current = setTimeout(() => {
+      stopTone();
+    }, 700);
   };
 
   const handleSubmit = () => {
@@ -134,6 +167,13 @@ export function SoundGame({
     const result = scoreSound(targetFreq, currentFreq);
     onSubmit(result);
   };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      stopTone();
+    };
+  }, [stopTone]);
 
   // 36-band waveform bars
   const BARS = 36;
@@ -182,21 +222,21 @@ export function SoundGame({
           </div>
         </motion.div>
 
-        {/* Waveform Visualizer & Play Button */}
-        <div className="w-full relative mb-6">
-          <div className="flex items-center justify-center gap-1 h-20 px-4 rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden shadow-inner">
+        {/* Dynamic Spectrum Waveform Visualizer & Play Trigger */}
+        <div className="relative w-full h-24 sm:h-28 rounded-2xl bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center p-3 mb-6 shadow-inner">
+          {/* Animated Waveform Bars */}
+          <div className="flex items-end justify-center gap-1 sm:gap-1.5 w-full h-full">
             {barHeights.map((h, i) => (
               <motion.div
                 key={i}
-                className="rounded-full"
+                animate={{ height: `${h * 100}%` }}
+                transition={{ duration: 0.06 }}
+                className="flex-1 rounded-full"
                 style={{
-                  width: `${100 / BARS - 0.4}%`,
                   background: isPlaying
-                    ? "linear-gradient(to top, #6366f1, #a855f7)"
-                    : "rgba(255,255,255,0.15)",
+                    ? `linear-gradient(to top, #6366f1, #a855f7)`
+                    : "rgba(255,255,255,0.1)",
                 }}
-                animate={{ height: `${Math.max(6, h * 68)}px` }}
-                transition={{ duration: 0.08, ease: "easeOut" }}
               />
             ))}
           </div>
@@ -235,7 +275,13 @@ export function SoundGame({
             onChange={(e) => {
               const v = parseFloat(e.target.value);
               setSliderVal(v);
-              playTone(sliderValToFreq(v), 300);
+              startContinuousTone(sliderValToFreq(v));
+            }}
+            onPointerUp={() => {
+              if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+              playTimeoutRef.current = setTimeout(() => {
+                stopTone();
+              }, 1000);
             }}
             className="w-full h-3 rounded-full appearance-none cursor-pointer touch-none shadow-inner"
             style={{
@@ -249,14 +295,14 @@ export function SoundGame({
               <button
                 onClick={() => handleNudge(-10)}
                 data-cursor="-10 Hz"
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm transition-transform active:scale-95"
               >
                 -10Hz
               </button>
               <button
                 onClick={() => handleNudge(-1)}
                 data-cursor="-1 Hz"
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm transition-transform active:scale-95"
               >
                 -1Hz
               </button>
@@ -270,14 +316,14 @@ export function SoundGame({
               <button
                 onClick={() => handleNudge(+1)}
                 data-cursor="+1 Hz"
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm transition-transform active:scale-95"
               >
                 +1Hz
               </button>
               <button
                 onClick={() => handleNudge(+10)}
                 data-cursor="+10 Hz"
-                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70 shadow-sm transition-transform active:scale-95"
               >
                 +10Hz
               </button>
@@ -319,7 +365,6 @@ interface SoundDisplayProps {
   onInitAudio: () => Promise<AudioContext>;
   roundNumber?: number;
   totalRounds?: number;
-  durationMs?: number;
 }
 
 export function SoundDisplay({
@@ -329,132 +374,99 @@ export function SoundDisplay({
   onInitAudio,
   roundNumber = 1,
   totalRounds = 5,
-  durationMs = 2000,
 }: SoundDisplayProps) {
   const { lang } = useLanguage();
   const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
 
-  const [playing, setPlaying] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(durationMs / 1000);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function play() {
-      let ctx = audioCtx;
-      if (!ctx || ctx.state === "closed") ctx = await onInitAudio();
-      if (ctx.state === "suspended") await ctx.resume();
-
-      const duration = durationMs / 1000;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
-      gain.gain.setValueAtTime(0.5, ctx.currentTime + duration - 0.1);
-      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + duration);
-
-      setPlaying(true);
-      const startTime = Date.now();
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, (durationMs - elapsed) / 1000);
-        setTimeLeft(remaining);
-        if (remaining <= 0) {
-          clearInterval(interval);
-          if (!cancelled) {
-            setPlaying(false);
-            onHide();
-          }
-        }
-      }, 16);
+  const playStimulus = useCallback(async () => {
+    let ctx = audioCtx;
+    if (!ctx || ctx.state === "closed") {
+      ctx = await onInitAudio();
+    }
+    if (ctx.state === "suspended") {
+      await ctx.resume();
     }
 
-    play();
-    return () => {
-      cancelled = true;
-    };
-  }, [audioCtx, durationMs, freq, onHide, onInitAudio]);
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-  const BARS = 48;
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + 1.2);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.3);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.3);
+
+      setIsPlaying(true);
+
+      setTimeout(() => {
+        setIsPlaying(false);
+        setTimeout(onHide, 400);
+      }, 1300);
+    } catch {
+      onHide();
+    }
+  }, [audioCtx, onInitAudio, freq, onHide]);
+
+  useEffect(() => {
+    const timer = setTimeout(playStimulus, 400);
+    return () => clearTimeout(timer);
+  }, [playStimulus]);
 
   return (
-    <motion.div
-      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
+    <div
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 40%, rgba(46,16,101,0.8) 0%, rgba(9,9,11,0.9) 80%)",
+          "radial-gradient(ellipse at 50% 30%, rgba(30,27,75,0.85) 0%, rgba(9,9,11,0.95) 85%)",
       }}
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.25 }}
+      data-no-custom-cursor="true"
     >
-      {/* Top Header: Round (Left) & Countdown (Right) */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
           {roundNumber} / {totalRounds}
         </div>
-
-        <div className="text-right">
-          <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
-            {timeLeft.toFixed(2)}
-          </div>
-          <div className="text-xs sm:text-sm font-medium text-white/70">
-            {t.sound.revealSubtitle}
-          </div>
+        <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold shadow-lg">
+          {t.sound.revealSubtitle}
         </div>
       </div>
 
-      {/* Center Harmonic Visualizer */}
       <div className="flex flex-col items-center justify-center my-auto">
-        <div className="flex items-center justify-center gap-1 h-32 w-full max-w-md">
-          {Array.from({ length: BARS }).map((_, i) => {
-            const tr = i / BARS;
-            const wave = Math.abs(Math.sin(tr * Math.PI * 6 + Date.now() / 300));
-            return (
-              <motion.div
-                key={i}
-                className="rounded-full bg-indigo-400"
-                style={{ width: `${100 / BARS - 0.5}%` }}
-                animate={{
-                  height: playing ? `${12 + wave * 110}px` : "6px",
-                  opacity: playing ? 0.6 + wave * 0.4 : 0.2,
-                }}
-                transition={{
-                  duration: 0.1,
-                  repeat: playing ? Infinity : 0,
-                  repeatType: "mirror",
-                  delay: (i / BARS) * 0.2,
-                }}
-              />
-            );
-          })}
-        </div>
-        <p className="text-indigo-300 text-sm font-bold mt-6 tracking-wide drop-shadow">
-          {playing ? t.sound.revealPrompt : ""}
+        <motion.div
+          animate={{ scale: isPlaying ? [1, 1.15, 1] : 1 }}
+          transition={{ repeat: isPlaying ? Infinity : 0, duration: 0.8 }}
+          className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.4)] mb-6"
+        >
+          <Play className="w-10 h-10 text-indigo-300 fill-indigo-300" />
+        </motion.div>
+
+        <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight text-center">
+          {isPlaying ? t.sound.revealPrompt : t.sound.revealSubtitle}
+        </h3>
+        <p className="text-xs text-white/50 mt-1 font-mono">
+          {isPlaying ? t.sound.revealPrompt : t.sound.revealSubtitle}
         </p>
       </div>
 
-      {/* Bottom Bar & Progress */}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+        <div className="text-xs font-mono text-white/50">
           {t.watermark} · {t.disciplines.sound.label}
         </div>
+        <button
+          onClick={playStimulus}
+          className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all active:scale-95"
+        >
+          {t.sound.playTone}
+        </button>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/40">
-        <motion.div
-          className="h-full bg-indigo-500"
-          initial={{ width: "100%" }}
-          animate={{ width: "0%" }}
-          transition={{ duration: durationMs / 1000, ease: "linear" }}
-        />
-      </div>
-    </motion.div>
+    </div>
   );
 }

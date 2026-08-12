@@ -91,6 +91,8 @@ import {
   Swords,
   Plus,
   Minus,
+  User,
+  ArrowLeft,
 } from "lucide-react";
 import type { ColorBlindType, ColorScoreResult } from "./games/colorScoring";
 import type { SoundScoreResult } from "./games/soundScoring";
@@ -102,7 +104,6 @@ type GameScreen =
   | "intro"
   | "reveal"
   | "guess"
-  | "round-result"
   | "total-result"
   | "daily-intro";
 
@@ -165,16 +166,28 @@ function generateRoundStimulus(
   roundIndex: number,
   difficulty: DifficultyType
 ): object {
-  const rng = (o: number) =>
-    Math.sin(seed * 9301.5 + roundIndex * 49297.3 + o) * 0.5 + 0.5;
+  const roundSeed = (seed ^ ((roundIndex + 1) * 0x85ebca6b) ^ 0x61a84f35) >>> 0;
+  let s = roundSeed;
+  const rng = () => {
+    s = (s + 0x9e3779b9) >>> 0;
+    let z = s;
+    z = Math.imul(z ^ (z >>> 16), 0x85ebca6b);
+    z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35);
+    return ((z ^ (z >>> 16)) >>> 0) / 4294967296;
+  };
 
   switch (gameType) {
-    case "color":
+    case "color": {
+      // Golden ratio hue stepping to guarantee rich color diversity across consecutive rounds
+      const baseHue = ((seed % 360) + roundIndex * 137.5 + rng() * 45) % 360;
+      const sVal = Math.round(35 + rng() * 65);
+      const bVal = Math.round(40 + rng() * 55);
       return {
-        h: Math.round(rng(1) * 360),
-        s: Math.round(30 + rng(2) * 70),
-        b: Math.round(40 + rng(3) * 55),
+        h: Math.round(baseHue),
+        s: sVal,
+        b: bVal,
       };
+    }
     case "sound":
       return { freq: generateFrequency(seed, roundIndex, difficulty) };
     case "time":
@@ -224,6 +237,7 @@ function HubSenseInner() {
   const [muted, setMuted] = useState(false);
   const [dailyPlayed, setDailyPlayed] = useState<Record<string, boolean>>({});
   const [newRecord, setNewRecord] = useState(false);
+  const [hudToast, setHudToast] = useState<{ score: number; text: string } | null>(null);
 
   // Computed Active Rounds Count (Always in sync with custom input)
   const parsedCustom = parseInt(customRoundsInput, 10);
@@ -249,6 +263,19 @@ function HubSenseInner() {
       }
     }
   }, []);
+
+  // Browser History & In-Game Back Button Handling
+  useEffect(() => {
+    const handlePopState = () => {
+      if (screen !== "intro") {
+        setScreen("intro");
+        setSession(null);
+        setRoundResults([]);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [screen]);
 
   // Daily countdown timer
   useEffect(() => {
@@ -296,8 +323,6 @@ function HubSenseInner() {
     }
   };
 
-  // Total score
-  const totalScore = roundResults.reduce((sum, r) => sum + extractScore(r.result), 0);
   const config = GAME_CONFIGS[selectedGame];
   const accentColor = config.accent;
   const currentDiscipline = t.disciplines[selectedGame];
@@ -314,6 +339,10 @@ function HubSenseInner() {
     ) => {
       unlockAudio();
       SoundFX.click();
+
+      if (typeof window !== "undefined") {
+        window.history.pushState({ hubsense: "play" }, "");
+      }
 
       const roundCount = mode === "daily" ? DEFAULT_ROUNDS_COUNT : rounds;
       const newSession = createGameSession(gameType, difficulty, mode, roundCount);
@@ -351,78 +380,70 @@ function HubSenseInner() {
     setScreen("guess");
   }, []);
 
+  // Direct seamless flow without intermediate blocking screen
   const handleRoundSubmit = useCallback(
     (result: AnyRoundResult) => {
+      if (!session) return;
+      const score = extractScore(result);
       const newRound: RoundData = { roundIndex: currentRound, result };
       const newResults = [...roundResults, newRound];
       setRoundResults(newResults);
-      setScreen("round-result");
 
-      const score = extractScore(result);
       if (score >= 7.5) {
         SoundFX.successRound();
       } else if (score < 4) {
         SoundFX.failRound();
       }
 
-      // Preload next stimulus
-      if (session && currentRound + 1 < session.totalRounds) {
+      // Flash satisfying HUD score toast
+      setHudToast({
+        score,
+        text: `+${score.toFixed(1)} ${lang === "tr" ? "Puan" : "Pts"}`,
+      });
+      setTimeout(() => setHudToast(null), 1000);
+
+      const nextRoundIndex = currentRound + 1;
+      if (nextRoundIndex < session.totalRounds) {
+        // Direct transition to next round reveal
+        setCurrentRound(nextRoundIndex);
         const nextStimulus = generateRoundStimulus(
           session.gameType,
           session.seed,
-          currentRound + 1,
+          nextRoundIndex,
           selectedDifficulty
         );
-        setTimeout(() => setCurrentStimulus(nextStimulus), 300);
+        setCurrentStimulus(nextStimulus);
+        setScreen("reveal");
+      } else {
+        // Complete game -> Total Result Screen
+        const allScores = newResults.map((r) => extractScore(r.result));
+        const rawTotal = allScores.reduce((a, b) => a + b, 0);
+        const total = (rawTotal / (session.totalRounds * 10)) * 50;
+
+        const { isNewRecord: recordAchieved } = updatePersonalBest(
+          session.gameType,
+          selectedDifficulty,
+          allScores
+        );
+        setNewRecord(recordAchieved);
+        SoundFX.gameComplete();
+
+        const payload: SharePayload = {
+          username: username || "ANONIM",
+          totalScore: total,
+          roundScores: allScores,
+          gameType: session.gameType,
+          difficulty: selectedDifficulty,
+          mode: selectedMode,
+          dateSeed: session.dateSeed,
+          timestamp: Date.now(),
+        };
+        setSharePayload(payload);
+        setScreen("total-result");
       }
     },
-    [currentRound, roundResults, session, selectedDifficulty]
+    [currentRound, roundResults, session, selectedDifficulty, selectedMode, username, lang]
   );
-
-  const handleNextRound = useCallback(() => {
-    SoundFX.click();
-    if (!session) return;
-    const nextRound = currentRound + 1;
-
-    if (nextRound >= session.totalRounds) {
-      // Complete game
-      const allScores = [...roundResults.map((r) => extractScore(r.result))];
-      // Normalize total score to 50 scale if rounds differ from 5
-      const rawTotal = allScores.reduce((a, b) => a + b, 0);
-      const total = (rawTotal / (session.totalRounds * 10)) * 50;
-
-      const { isNewRecord: recordAchieved } = updatePersonalBest(
-        session.gameType,
-        selectedDifficulty,
-        allScores
-      );
-      setNewRecord(recordAchieved);
-      SoundFX.gameComplete();
-
-      const payload: SharePayload = {
-        username: username || "ANONIM",
-        totalScore: total,
-        roundScores: allScores,
-        gameType: session.gameType,
-        difficulty: selectedDifficulty,
-        mode: selectedMode,
-        dateSeed: session.dateSeed,
-        timestamp: Date.now(),
-      };
-      setSharePayload(payload);
-      setScreen("total-result");
-    } else {
-      setCurrentRound(nextRound);
-      const nextStimulus = generateRoundStimulus(
-        session.gameType,
-        session.seed,
-        nextRound,
-        selectedDifficulty
-      );
-      setCurrentStimulus(nextStimulus);
-      setScreen("reveal");
-    }
-  }, [currentRound, roundResults, session, selectedDifficulty, selectedMode, username]);
 
   const handleScoreSubmit = useCallback(async () => {
     if (!sharePayload || !session) return;
@@ -541,7 +562,7 @@ function HubSenseInner() {
   const tier = sharePayload ? getScoreTier(sharePayload.totalScore) : null;
 
   return (
-    <div className="min-h-screen bg-transparent text-white relative overflow-x-hidden flex flex-col font-sans select-none pt-20 sm:pt-24 pb-10 sm:pb-12 px-3 sm:px-6">
+    <div className="min-h-[calc(100vh-4.5rem)] bg-transparent text-white relative overflow-x-hidden flex flex-col justify-center items-center font-sans select-none py-4 sm:py-6 px-3 sm:px-6">
       {/* Ambient Specular Glow */}
       <div
         className="pointer-events-none fixed inset-0 opacity-20 transition-all duration-700 -z-10"
@@ -550,8 +571,27 @@ function HubSenseInner() {
         }}
       />
 
-      {/* Main Container (Expands to max-w-4xl on intro for generous breathing room) */}
-      <div className={`w-full ${screen === "intro" ? "max-w-4xl" : "max-w-2xl"} mx-auto flex-1 flex flex-col justify-center transition-all duration-300`}>
+      {/* Floating HUD Score Toast */}
+      <AnimatePresence>
+        {hudToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -15, scale: 0.9 }}
+            className="fixed top-20 z-50 px-4 py-2 rounded-full bg-zinc-950/90 border border-white/20 backdrop-blur-2xl shadow-2xl flex items-center gap-2 text-sm font-black font-mono"
+            style={{
+              color: hudToast.score >= 7.5 ? "#10b981" : hudToast.score >= 4 ? "#f59e0b" : "#f43f5e",
+              boxShadow: `0 0 25px ${hudToast.score >= 7.5 ? "#10b98144" : "#f43f5e44"}`,
+            }}
+          >
+            <Zap className="w-4 h-4" />
+            <span>{hudToast.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Container */}
+      <div className={`w-full ${screen === "intro" ? "max-w-4xl" : "max-w-3xl"} mx-auto flex flex-col justify-center transition-all duration-300`}>
         <AnimatePresence mode="wait">
           {/* ─── 1. INTRO SCREEN ──────────────────────────────────────────────── */}
           {screen === "intro" && (
@@ -561,7 +601,7 @@ function HubSenseInner() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col gap-4 sm:gap-5 w-full"
+              className="flex flex-col gap-3.5 sm:gap-4.5 w-full"
             >
               {/* Header Card */}
               <div className="flex items-center justify-between p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
@@ -575,8 +615,28 @@ function HubSenseInner() {
                   </p>
                 </div>
 
-                {/* Quick Toolbar */}
+                {/* Quick Toolbar & Global Nickname Pill */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {/* Interactive Global Nickname Pill */}
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/25 transition-all shadow-lg"
+                    data-cursor={lang === "tr" ? "Rumuzunu Belirle" : "Set Nickname"}
+                  >
+                    <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => {
+                        const val = e.target.value.slice(0, 20);
+                        setUsername(val);
+                        localStorage.setItem("hubsense_username", val.trim());
+                      }}
+                      placeholder={lang === "tr" ? "Rumuzun" : "Nickname"}
+                      className="bg-transparent text-xs font-bold text-white outline-none w-20 sm:w-24 placeholder:text-white/30"
+                      maxLength={20}
+                    />
+                  </div>
+
                   <button
                     onClick={toggleSound}
                     aria-label={t.soundToggle}
@@ -703,17 +763,27 @@ function HubSenseInner() {
                 </div>
               </div>
 
-              {/* Difficulty & Round Count Matrix */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {/* Difficulty Selector */}
-                <div className="p-3.5 sm:p-4 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between gap-2.5">
-                  <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
-                    {t.difficultyLevel}
-                  </p>
-                  <div className="flex gap-1.5 sm:gap-2">
+              {/* Difficulty & Rounds Controls Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+                {/* 1. Difficulty Selector */}
+                <div className="flex flex-col gap-2 p-4 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-2xl">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
+                      {t.difficultyLevel}
+                    </p>
+                    <span
+                      className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full"
+                      style={{
+                        background: `${DIFFICULTY_COLORS[selectedDifficulty]}22`,
+                        color: DIFFICULTY_COLORS[selectedDifficulty],
+                      }}
+                    >
+                      {t.difficulties[selectedDifficulty].label}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
                     {(["easy", "hard", "brutal"] as DifficultyType[]).map((diff) => {
-                      const isSelected = selectedDifficulty === diff;
-                      const color = DIFFICULTY_COLORS[diff];
+                      const isSel = selectedDifficulty === diff;
                       return (
                         <button
                           key={diff}
@@ -722,16 +792,15 @@ function HubSenseInner() {
                             setSelectedDifficulty(diff);
                           }}
                           data-cursor={t.difficulties[diff].label}
-                          className={`flex-1 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                          className={`py-2 rounded-2xl text-xs font-bold transition-all border
                             ${
-                              isSelected
-                                ? "bg-white/[0.08] text-white border-white/25 shadow-lg"
-                                : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                              isSel
+                                ? "bg-white/15 text-white border-white/30 shadow-md"
+                                : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
                             }`}
                           style={{
-                            borderColor: isSelected ? `${color}77` : undefined,
-                            color: isSelected ? color : undefined,
-                            boxShadow: isSelected ? `0 0 20px ${color}25` : undefined,
+                            borderColor: isSel ? DIFFICULTY_COLORS[diff] : undefined,
+                            color: isSel ? DIFFICULTY_COLORS[diff] : undefined,
                           }}
                         >
                           {t.difficulties[diff].label}
@@ -739,36 +808,44 @@ function HubSenseInner() {
                       );
                     })}
                   </div>
-                  <p className="text-[11px] text-white/40 leading-tight line-clamp-1">
+                  <p className="text-[11px] text-white/40 mt-0.5">
                     {t.difficulties[selectedDifficulty].desc}
                   </p>
                 </div>
 
-                {/* Round Count Selector */}
-                <div className="p-3.5 sm:p-4 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between gap-2.5">
-                  <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
-                    {t.roundsTitle}
-                  </p>
-                  <div className="flex gap-1.5 sm:gap-2">
-                    {[3, 5, 10].map((r) => {
-                      const isSelected = !isCustomRounds && selectedRounds === r;
+                {/* 2. Round Count Selector (3, 5, 10, or Custom) */}
+                <div className="flex flex-col gap-2 p-4 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-2xl">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
+                      {t.roundsTitle}
+                    </p>
+                    <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
+                      {isCustomRounds
+                        ? `${activeRounds} ${t.roundCounter} (${t.roundCustom})`
+                        : `${activeRounds} ${t.roundCounter}`}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {([3, 5, 10] as const).map((count) => {
+                      const isSel = !isCustomRounds && selectedRounds === count;
                       return (
                         <button
-                          key={r}
+                          key={count}
                           onClick={() => {
                             SoundFX.click();
                             setIsCustomRounds(false);
-                            setSelectedRounds(r);
+                            setSelectedRounds(count);
                           }}
-                          data-cursor={`${r} ${t.roundCounter}`}
-                          className={`flex-1 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                          data-cursor={`${count} ${t.roundCounter}`}
+                          className={`py-2 rounded-2xl text-xs font-bold transition-all border
                             ${
-                              isSelected
-                                ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-lg"
-                                : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                              isSel
+                                ? "bg-white/15 text-white border-indigo-400/50 shadow-md text-indigo-300"
+                                : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
                             }`}
                         >
-                          {r} {t.roundCounter}
+                          {count} {t.roundCounter}
                         </button>
                       );
                     })}
@@ -777,44 +854,35 @@ function HubSenseInner() {
                       onClick={() => {
                         SoundFX.click();
                         setIsCustomRounds(true);
-                        const parsed = parseInt(customRoundsInput, 10);
-                        if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) {
-                          setSelectedRounds(parsed);
-                        } else {
-                          setCustomRoundsInput("7");
-                          setSelectedRounds(7);
-                        }
                       }}
                       data-cursor={t.roundCustom}
-                      className={`flex-1 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs border transition-all backdrop-blur-xl
+                      className={`py-2 rounded-2xl text-xs font-bold transition-all border
                         ${
                           isCustomRounds
-                            ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-lg"
-                            : "bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                            ? "bg-white/15 text-white border-indigo-400/50 shadow-md text-indigo-300"
+                            : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
                         }`}
                     >
                       {t.roundCustom}
                     </button>
                   </div>
 
-                  {/* Custom Round Stepper */}
+                  {/* Custom Round Input & Stepper */}
                   {isCustomRounds ? (
-                    <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-2xl bg-white/[0.03] border border-white/10">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          SoundFX.click();
-                          const current = parseInt(customRoundsInput, 10) || 7;
-                          const next = Math.max(1, current - 1);
-                          setCustomRoundsInput(String(next));
-                          setSelectedRounds(next);
-                        }}
-                        className="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all shadow-sm"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-
+                    <div className="flex items-center justify-between gap-2 mt-1 px-1">
                       <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            SoundFX.click();
+                            const current = activeRounds;
+                            const next = Math.max(1, current - 1);
+                            setCustomRoundsInput(String(next));
+                          }}
+                          data-cursor="-1 Tur"
+                          className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
                         <input
                           type="number"
                           min={1}
@@ -823,143 +891,148 @@ function HubSenseInner() {
                           onChange={(e) => {
                             const val = e.target.value;
                             setCustomRoundsInput(val);
-                            const parsed = parseInt(val, 10);
-                            if (!isNaN(parsed) && parsed >= 1 && parsed <= 20) {
-                              setSelectedRounds(parsed);
-                            }
                           }}
-                          className="w-12 bg-transparent text-sm font-mono font-black text-indigo-300 text-center focus:outline-none"
+                          className="w-14 h-7 text-center font-mono font-bold text-xs bg-white/[0.05] border border-white/15 rounded-xl text-white outline-none focus:border-indigo-400"
                         />
-                        <span className="text-[11px] text-white/40 font-mono font-bold">
-                          {t.roundCounter}
-                        </span>
+                        <button
+                          onClick={() => {
+                            SoundFX.click();
+                            const current = activeRounds;
+                            const next = Math.min(20, current + 1);
+                            setCustomRoundsInput(String(next));
+                          }}
+                          data-cursor="+1 Tur"
+                          className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          SoundFX.click();
-                          const current = parseInt(customRoundsInput, 10) || 7;
-                          const next = Math.min(20, current + 1);
-                          setCustomRoundsInput(String(next));
-                          setSelectedRounds(next);
-                        }}
-                        className="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all shadow-sm"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
+                      <span className="text-[10px] text-white/40 font-mono">
+                        1 — 20 {t.roundCounter}
+                      </span>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-white/40 leading-tight line-clamp-1">
+                    <p className="text-[11px] text-white/40 mt-0.5">
                       {selectedRounds === 3
                         ? t.roundFast
-                        : selectedRounds === 5
-                        ? t.roundStandard
-                        : t.roundMarathon}
+                        : selectedRounds === 10
+                        ? t.roundMarathon
+                        : t.roundStandard}
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2.5 pt-1">
-                {/* Daily Challenge Button */}
-                <button
-                  onClick={() => startGame(selectedGame, selectedDifficulty, "daily")}
-                  data-cursor={t.dailyChallenge}
-                  className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 rounded-3xl border
-                    bg-white/[0.03] border-white/10 hover:bg-white/[0.06] backdrop-blur-2xl transition-all group shadow-xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center shrink-0">
-                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+              {/* Daily Challenge Banner Card */}
+              <button
+                onClick={() => startGame(selectedGame, selectedDifficulty, "daily")}
+                data-cursor={t.dailyChallenge}
+                className="flex items-center justify-between p-4 rounded-3xl bg-amber-500/[0.04] border border-amber-500/20 hover:bg-amber-500/[0.08] hover:border-amber-500/40 transition-all text-left shadow-lg backdrop-blur-2xl group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-extrabold text-sm text-white flex items-center gap-2">
+                      <span>{t.dailyChallenge}</span>
+                      {dailyPlayed[getTodayUTCString()] && (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          {lang === "tr" ? "Tamamlandı" : "Completed"}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-left">
-                      <div className="font-extrabold text-xs sm:text-sm text-white">
-                        {t.dailyChallenge}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-white/40 font-mono">
-                        {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
-                      </div>
+                    <div className="text-xs text-white/50 mt-0.5 font-mono">
+                      {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/80 transition-colors" />
-                </button>
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/40 group-hover:translate-x-1 transition-transform" />
+              </button>
 
-                {/* Solo Play CTA (Synchronized with active round count) */}
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => startGame(selectedGame, selectedDifficulty, "solo", activeRounds)}
-                  data-cursor={t.startSoloGame(activeRounds)}
-                  className="w-full py-4 sm:py-4.5 rounded-3xl font-black text-sm sm:text-base tracking-wider
-                    text-white border transition-all shadow-2xl uppercase backdrop-blur-xl"
-                  style={{
-                    background: `${accentColor}25`,
-                    borderColor: `${accentColor}66`,
-                    boxShadow: `0 0 35px ${accentColor}30`,
-                  }}
-                >
-                  {t.startSoloGame(activeRounds)}
-                </motion.button>
-              </div>
+              {/* Main Primary Action CTA Button */}
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => startGame(selectedGame, selectedDifficulty, "solo", activeRounds)}
+                data-cursor={t.startSoloGame(activeRounds)}
+                className="w-full py-4 sm:py-4.5 rounded-3xl font-black text-sm sm:text-base tracking-wide uppercase transition-all shadow-[0_10px_35px_rgba(0,0,0,0.5)] border backdrop-blur-2xl text-white"
+                style={{
+                  background: `${accentColor}25`,
+                  borderColor: `${accentColor}66`,
+                  boxShadow: `0 0 35px ${accentColor}30`,
+                }}
+              >
+                {t.startSoloGame(activeRounds)}
+              </motion.button>
             </motion.div>
           )}
 
-          {/* ─── 2. DAILY CHALLENGE INTRO ────────────────────────────────────── */}
-          {screen === "daily-intro" && (
+          {/* ─── 2. DAILY CHALLENGE INTRO SCREEN ──────────────────────────────── */}
+          {screen === "daily-intro" && session && (
             <motion.div
               key="daily-intro"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center p-8 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] text-center gap-6"
             >
+              <div className="w-16 h-16 rounded-3xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-xl">
+                <Calendar className="w-8 h-8" />
+              </div>
               <div>
-                <div className="text-xs font-black text-amber-400 uppercase tracking-widest mb-2">
-                  {t.dailyChallengeBadge}
-                </div>
-                <div className="text-4xl sm:text-5xl font-black text-white mb-3">
-                  {currentDiscipline.label}
-                </div>
-                <p className="text-white/60 text-sm max-w-sm mx-auto leading-relaxed">
+                <h2 className="text-2xl font-black tracking-tight text-white">
+                  {t.dailyChallenge}
+                </h2>
+                <p className="text-sm text-white/60 mt-1 font-mono">
+                  {session.dateSeed} · {currentDiscipline.label} (
+                  {t.difficulties[selectedDifficulty].label})
+                </p>
+                <p className="text-xs text-white/40 mt-3 max-w-sm">
                   {t.dailyChallengeDesc}
                 </p>
               </div>
 
-              <div className="px-4 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs text-white/60 font-mono">
-                {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
-              </div>
-
-              <div className="flex flex-col gap-3 w-full max-w-xs">
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={proceedToReveal}
-                  data-cursor={t.dailyReadyPrompt}
-                  className="w-full py-4 rounded-2xl font-extrabold text-base text-white border shadow-2xl backdrop-blur-xl"
-                  style={{
-                    background: `${accentColor}30`,
-                    borderColor: `${accentColor}70`,
-                    boxShadow: `0 0 35px ${accentColor}40`,
-                  }}
-                >
-                  {t.dailyReadyPrompt}
-                </motion.button>
-
+              <div className="flex gap-3 w-full">
                 <button
                   onClick={resetToIntro}
                   data-cursor={t.goBack}
-                  className="text-white/40 text-xs hover:text-white/70 transition-colors py-2"
+                  className="flex-1 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all"
                 >
                   {t.goBack}
                 </button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={proceedToReveal}
+                  data-cursor={t.dailyReadyPrompt}
+                  className="flex-2 py-3 rounded-2xl bg-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-xl transition-all"
+                >
+                  {t.dailyReadyPrompt}
+                </motion.button>
               </div>
             </motion.div>
           )}
 
           {/* ─── 3. STIMULUS REVEAL PHASE ────────────────────────────────────── */}
           {screen === "reveal" && session && currentStimulus && (
-            <div key="reveal" className="w-full">
+            <div className="w-full flex flex-col gap-3">
+              {/* In-Game Top Bar with Exit */}
+              <div className="flex items-center justify-between px-1">
+                <button
+                  onClick={resetToIntro}
+                  data-cursor={lang === "tr" ? "Menüye Dön" : "Return to Menu"}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/15 hover:bg-white/15 text-xs font-bold text-white/80 transition-all backdrop-blur-xl"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>{lang === "tr" ? "Menü" : "Menu"}</span>
+                </button>
+
+                <div className="text-xs font-mono font-bold text-white/60 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10">
+                  {t.disciplines[session.gameType].label} · {currentRound + 1} / {totalRoundsCount}
+                </div>
+              </div>
+
               {session.gameType === "color" && colorStimulus && (
                 <ColorDisplay
                   key={`color-reveal-${currentRound}`}
@@ -968,7 +1041,6 @@ function HubSenseInner() {
                   b={colorStimulus.b}
                   revealDurationMs={config.revealDuration[selectedDifficulty]}
                   onHide={handleRevealComplete}
-                  colorBlindMode={colorBlindMode}
                   roundNumber={currentRound + 1}
                   totalRounds={totalRoundsCount}
                 />
@@ -977,7 +1049,6 @@ function HubSenseInner() {
                 <SoundDisplay
                   key={`sound-reveal-${currentRound}`}
                   freq={soundStimulus.freq}
-                  durationMs={config.revealDuration[selectedDifficulty]}
                   onHide={handleRevealComplete}
                   audioCtx={audioCtx}
                   onInitAudio={initAudio}
@@ -1024,8 +1095,24 @@ function HubSenseInner() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              className="w-full flex flex-col gap-4"
+              className="w-full flex flex-col gap-3"
             >
+              {/* In-Game Top Bar with Exit */}
+              <div className="flex items-center justify-between px-1">
+                <button
+                  onClick={resetToIntro}
+                  data-cursor={lang === "tr" ? "Menüye Dön" : "Return to Menu"}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/15 hover:bg-white/15 text-xs font-bold text-white/80 transition-all backdrop-blur-xl"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>{lang === "tr" ? "Menü" : "Menu"}</span>
+                </button>
+
+                <div className="text-xs font-mono font-bold text-white/60 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10">
+                  {t.disciplines[session.gameType].label} · {currentRound + 1} / {totalRoundsCount}
+                </div>
+              </div>
+
               {/* Game Arena Body */}
               {session.gameType === "color" && colorStimulus && (
                 <ColorGame
@@ -1075,64 +1162,7 @@ function HubSenseInner() {
             </motion.div>
           )}
 
-          {/* ─── 5. ROUND RESULT SCREEN ──────────────────────────────────────── */}
-          {screen === "round-result" && roundResults.length > 0 && (
-            <motion.div
-              key={`round-result-${currentRound}`}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-8 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] gap-6 text-center"
-            >
-              <div>
-                <div className="text-white/40 text-xs font-mono uppercase tracking-wider mb-2">
-                  {t.roundCounter} {currentRound + 1} {t.roundResult.title}
-                </div>
-                <motion.div
-                  initial={{ scale: 0.6, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 16 }}
-                  className="text-7xl sm:text-8xl font-black font-mono tracking-tight"
-                  style={{ color: accentColor }}
-                >
-                  {extractScore(roundResults[roundResults.length - 1].result).toFixed(1)}
-                </motion.div>
-                <div className="text-white/30 text-sm mt-1">{t.roundResult.outOf}</div>
-              </div>
-
-              {/* Side-by-side / Detailed Comparison */}
-              <div className="w-full">
-                <RoundResultDetails
-                  result={roundResults[roundResults.length - 1].result}
-                  gameType={session?.gameType ?? "color"}
-                  accentColor={accentColor}
-                />
-              </div>
-
-              <div className="text-center text-xs text-white/50 font-mono">
-                {t.roundResult.cumulative}: {totalScore.toFixed(1)} / {(currentRound + 1) * 10}.0
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleNextRound}
-                data-cursor={currentRound + 1 < totalRoundsCount ? t.roundResult.nextRound : t.roundResult.viewFinals}
-                className="w-full py-4 rounded-2xl font-extrabold text-base text-white border transition-all shadow-xl backdrop-blur-xl"
-                style={{
-                  background: `${accentColor}25`,
-                  borderColor: `${accentColor}66`,
-                  boxShadow: `0 0 30px ${accentColor}30`,
-                }}
-              >
-                {currentRound + 1 < totalRoundsCount
-                  ? t.roundResult.nextRound
-                  : t.roundResult.viewFinals}
-              </motion.button>
-            </motion.div>
-          )}
-
-          {/* ─── 6. FINAL TOTAL RESULTS SCREEN ────────────────────────────────── */}
+          {/* ─── 5. FINAL TOTAL RESULTS SCREEN (Comprehensive Breakdown) ───────── */}
           {screen === "total-result" && sharePayload && (
             <motion.div
               key="total-result"
@@ -1182,170 +1212,133 @@ function HubSenseInner() {
                     >
                       {tier.label}
                     </div>
-                    <motion.div
-                      initial={{ scale: 0.7 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 180 }}
-                      className="text-8xl sm:text-9xl font-black font-mono tracking-tighter"
-                      style={{ color: tier.color }}
-                    >
-                      {sharePayload.totalScore.toFixed(1)}
-                    </motion.div>
-                    <div className="text-white/30 text-lg mt-0.5">
-                      {t.totalResult.outOfFifty}
-                    </div>
-                    <p className="text-white/60 text-xs sm:text-sm mt-3 max-w-sm">
+                    <div className="text-xs text-white/50 mb-3 max-w-xs">
                       {tier.message}
-                    </p>
+                    </div>
                   </>
                 )}
+
+                <div
+                  className="text-7xl sm:text-8xl font-black font-mono tracking-tight my-1"
+                  style={{ color: accentColor }}
+                >
+                  {sharePayload.totalScore.toFixed(1)}
+                </div>
+                <div className="text-white/30 text-sm font-mono">
+                  {t.totalResult.outOfFifty}
+                </div>
               </div>
 
-              {/* Round by Round Bars */}
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: `repeat(${sharePayload.roundScores.length}, minmax(0, 1fr))`,
-                }}
-              >
-                {sharePayload.roundScores.map((s, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1.5">
+              {/* All Individual Rounds Review Cards */}
+              <div className="flex flex-col gap-3">
+                <div className="text-xs font-bold uppercase tracking-wider text-white/50 px-1">
+                  {lang === "tr" ? "Tur Detayları & İnceleme" : "Round Details & Review"}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {roundResults.map((r, i) => (
                     <div
-                      className="w-full rounded-2xl flex items-end justify-center overflow-hidden"
-                      style={{ height: 60, background: "rgba(255,255,255,0.03)" }}
+                      key={i}
+                      className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col gap-2"
                     >
-                      <motion.div
-                        className="w-full rounded-xl"
-                        style={{
-                          background: accentColor,
-                          opacity: 0.75 + (s / 10) * 0.25,
-                        }}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${(s / 10) * 52 + 4}px` }}
-                        transition={{ delay: i * 0.08, type: "spring" }}
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono font-bold text-white/60">
+                          {t.roundCounter} {i + 1}
+                        </span>
+                        <span className="font-mono font-black text-indigo-300">
+                          {extractScore(r.result).toFixed(1)} / 10.0
+                        </span>
+                      </div>
+                      <RoundResultDetails
+                        result={r.result}
+                        gameType={session?.gameType ?? "color"}
+                        accentColor={accentColor}
                       />
                     </div>
-                    <span className="text-xs font-bold text-white/70 font-mono">
-                      {s.toFixed(1)}
-                    </span>
-                    <span className="text-[10px] text-white/30">R{i + 1}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              {/* Username Submission (Flexible mixed-case, smart profanity filter) */}
-              <div className="flex flex-col gap-2 p-5 rounded-3xl bg-white/[0.02] border border-white/[0.08]">
-                <label className="text-xs font-bold text-white/60">
-                  {t.totalResult.leaderboardLabel}
-                </label>
+              {/* Nickname & Submit Row */}
+              <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder={t.totalResult.nicknamePlaceholder}
-                    maxLength={20}
                     value={username}
                     onChange={(e) => {
-                      setUsername(e.target.value);
+                      setUsername(e.target.value.slice(0, 20));
                       setUsernameError("");
                     }}
-                    className="flex-1 px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/10
-                      text-white placeholder-white/25 text-xs focus:outline-none focus:border-white/30
-                      font-mono tracking-wider"
+                    placeholder={t.totalResult.nicknamePlaceholder}
+                    className="flex-1 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/15 text-sm font-bold text-white placeholder:text-white/30 outline-none focus:border-indigo-400 transition-all font-mono"
+                    maxLength={20}
                   />
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
+                  <button
                     onClick={handleScoreSubmit}
-                    disabled={isSubmitting || !username.trim()}
+                    disabled={isSubmitting}
                     data-cursor={t.totalResult.submitScore}
-                    className="px-5 py-3.5 rounded-2xl font-bold text-xs text-white border transition-all disabled:opacity-30"
-                    style={{
-                      background: `${accentColor}25`,
-                      borderColor: `${accentColor}55`,
-                    }}
+                    className="px-6 py-3 rounded-2xl bg-white text-zinc-950 font-extrabold text-xs uppercase tracking-wider hover:bg-zinc-100 disabled:opacity-50 transition-all shadow-xl active:scale-95 shrink-0"
                   >
-                    {isSubmitting
-                      ? t.totalResult.submitting
-                      : t.totalResult.submitScore}
-                  </motion.button>
+                    {isSubmitting ? "..." : t.totalResult.submitScore}
+                  </button>
                 </div>
                 {usernameError && (
-                  <p className="text-xs text-rose-400 mt-1">{usernameError}</p>
+                  <p className="text-xs text-rose-400 px-1">{usernameError}</p>
                 )}
               </div>
 
-              {/* Social Share Grid */}
-              <div className="flex flex-col gap-2.5">
-                <p className="text-[11px] font-bold text-white/30 text-center uppercase tracking-widest">
-                  {t.totalResult.shareHeader}
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {/* Share & Actions Row */}
+              <div className="flex flex-col gap-2.5 pt-2 border-t border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     onClick={handleCopyShare}
                     data-cursor={t.totalResult.scoreLink}
-                    className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
-                      bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
+                    className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all shadow-md active:scale-95"
                   >
                     <Copy className="w-3.5 h-3.5 text-indigo-400" />
                     <span>{t.totalResult.scoreLink}</span>
                   </button>
-
                   <button
                     onClick={handleCopyChallenge}
                     data-cursor={t.totalResult.challengeFriend}
-                    className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
-                      bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
+                    className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all shadow-md active:scale-95"
                   >
                     <Swords className="w-3.5 h-3.5 text-amber-400" />
                     <span>{t.totalResult.challengeFriend}</span>
                   </button>
-
                   <button
                     onClick={handleDownloadPng}
                     data-cursor={t.totalResult.downloadPng}
-                    className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
-                      bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
+                    className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all shadow-md active:scale-95"
                   >
                     <Download className="w-3.5 h-3.5 text-emerald-400" />
                     <span>{t.totalResult.downloadPng}</span>
                   </button>
+                </div>
 
+                <div className="grid grid-cols-3 gap-2">
                   <a
-                    href={buildTwitterShareUrl({
-                      ...sharePayload,
-                      username: username || "ANONIM",
-                    })}
+                    href={buildTwitterShareUrl(sharePayload)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    data-cursor={t.totalResult.twitterShare}
-                    className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
-                      bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
+                    data-cursor="Twitter (X)"
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all"
                   >
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                    <span>{t.totalResult.twitterShare}</span>
+                    <span>Twitter (X)</span>
                   </a>
-
                   <a
-                    href={buildWhatsAppShareUrl({
-                      ...sharePayload,
-                      username: username || "ANONIM",
-                    })}
+                    href={buildWhatsAppShareUrl(sharePayload)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    data-cursor={t.totalResult.whatsAppShare}
-                    className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
-                      bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
+                    data-cursor="WhatsApp"
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all"
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{t.totalResult.whatsAppShare}</span>
+                    <span>WhatsApp</span>
                   </a>
-
                   <button
                     onClick={handleNativeShare}
                     data-cursor={t.totalResult.nativeShare}
-                    className="flex items-center justify-center gap-1.5 py-3.5 rounded-2xl
-                      bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors text-xs text-white/80"
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all"
                   >
                     <Zap className="w-3.5 h-3.5 text-pink-400" />
                     <span>{t.totalResult.nativeShare}</span>
@@ -1428,41 +1421,41 @@ function RoundResultDetails({
     const r = result as ColorScoreResult;
     return (
       <div
-        className="rounded-3xl border p-5 flex flex-col gap-4 shadow-xl"
+        className="rounded-2xl border p-3 flex flex-col gap-2.5 shadow-md"
         style={{ borderColor: `${accentColor}33`, background: `${accentColor}0a` }}
       >
         {/* Side by side color boxes */}
-        <div className="flex items-center gap-3 justify-center">
-          <div className="flex-1 flex flex-col items-center gap-1.5">
+        <div className="flex items-center gap-2.5 justify-center">
+          <div className="flex-1 flex flex-col items-center gap-1">
             <div
-              className="w-full h-16 rounded-2xl shadow-lg border border-white/20"
+              className="w-full h-12 rounded-xl shadow-md border border-white/20"
               style={{ background: r.targetHex }}
             />
-            <span className="text-[11px] font-bold text-white/60">
+            <span className="text-[10px] font-bold text-white/60">
               {t.roundResult.targetColor}
             </span>
-            <span className="text-xs font-mono text-white/90">{r.targetHex.toUpperCase()}</span>
+            <span className="text-[11px] font-mono text-white/90">{r.targetHex.toUpperCase()}</span>
           </div>
 
-          <div className="text-white/30 text-xs font-bold font-mono">VS</div>
+          <div className="text-white/30 text-[10px] font-bold font-mono">VS</div>
 
-          <div className="flex-1 flex flex-col items-center gap-1.5">
+          <div className="flex-1 flex flex-col items-center gap-1">
             <div
-              className="w-full h-16 rounded-2xl shadow-lg border border-white/20"
+              className="w-full h-12 rounded-xl shadow-md border border-white/20"
               style={{ background: r.guessHex }}
             />
-            <span className="text-[11px] font-bold text-white/60">
+            <span className="text-[10px] font-bold text-white/60">
               {t.roundResult.yourGuess}
             </span>
-            <span className="text-xs font-mono text-white/90">{r.guessHex.toUpperCase()}</span>
+            <span className="text-[11px] font-mono text-white/90">{r.guessHex.toUpperCase()}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs pt-2 border-t border-white/10">
+        <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-white/10">
           <span className="text-white/40">{t.roundResult.deltaE}</span>
           <span className="font-mono font-bold text-indigo-300">ΔE {r.deltaE.toFixed(2)}</span>
         </div>
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between text-[11px]">
           <span className="text-white/40">{t.roundResult.accuracy}</span>
           <span className="font-mono font-bold text-white/90">%{r.percentAccuracy}</span>
         </div>
@@ -1519,11 +1512,11 @@ function RoundResultDetails({
 
   return (
     <div
-      className="rounded-3xl border p-5 flex flex-col gap-2.5 shadow-xl"
+      className="rounded-2xl border p-3 flex flex-col gap-1.5 shadow-md"
       style={{ borderColor: `${accentColor}33`, background: `${accentColor}0a` }}
     >
       {rows.map(({ label, value }) => (
-        <div key={label} className="flex items-center justify-between text-xs">
+        <div key={label} className="flex items-center justify-between text-[11px]">
           <span className="text-white/40">{label}</span>
           <span className="font-mono font-semibold text-white/90">{value}</span>
         </div>

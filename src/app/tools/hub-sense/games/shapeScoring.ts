@@ -183,22 +183,29 @@ export function generateShape(
   roundIndex: number,
   difficulty: "easy" | "hard" | "brutal"
 ): ShapeParams {
-  const rng = (offset: number) =>
-    (Math.sin(seed * 1234.5 + roundIndex * 567.8 + offset) * 0.5 + 0.5);
+  const roundSeed = (seed ^ ((roundIndex + 1) * 0x85ebca6b) ^ 0x3d21f8a9) >>> 0;
+  let s = roundSeed;
+  const rng = () => {
+    s = (s + 0x9e3779b9) >>> 0;
+    let z = s;
+    z = Math.imul(z ^ (z >>> 16), 0x85ebca6b);
+    z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35);
+    return ((z ^ (z >>> 16)) >>> 0) / 4294967296;
+  };
 
-  const shapeIndex = Math.floor(rng(0) * SHAPES.length);
+  const shapeIndex = Math.floor(rng() * SHAPES.length);
   const type = SHAPES[shapeIndex];
 
   const posRange = difficulty === "easy" ? 0.2 : difficulty === "hard" ? 0.3 : 0.4;
-  const x = 0.5 + (rng(1) - 0.5) * posRange;
-  const y = 0.5 + (rng(2) - 0.5) * posRange;
+  const x = 0.5 + (rng() - 0.5) * posRange;
+  const y = 0.5 + (rng() - 0.5) * posRange;
 
   const scaleMin = difficulty === "easy" ? 0.5 : difficulty === "hard" ? 0.4 : 0.3;
   const scaleMax = difficulty === "easy" ? 1.0 : difficulty === "hard" ? 1.2 : 1.5;
-  const scale = scaleMin + rng(3) * (scaleMax - scaleMin);
+  const scale = scaleMin + rng() * (scaleMax - scaleMin);
 
   const rotMax = difficulty === "easy" ? 90 : difficulty === "hard" ? 180 : 360;
-  const rotation = rng(4) * rotMax;
+  const rotation = Math.round(rng() * rotMax);
 
   return { type, x, y, scale, rotation };
 }

@@ -7,6 +7,8 @@
  * Score: 0-10 based on correct prefix sequence matches.
  */
 
+import { createRNG } from "./seedGenerator";
+
 export interface SequenceNode {
   id: number;
   label: string;
@@ -69,11 +71,14 @@ export function generateSequence(
   const baseLength = 3 + roundIndex; // 3 to 7
   const length = difficulty === "brutal" ? baseLength + 1 : baseLength;
   const seq: number[] = [];
+  const rng = createRNG((seed ^ ((roundIndex + 1) * 0x9e3779b9) ^ 0x5bd1e995) >>> 0);
 
   for (let i = 0; i < length; i++) {
-    const pseudo =
-      Math.sin(seed * 3456.7 + roundIndex * 8901.2 + (i + 1) * 1234.5) * 0.5 + 0.5;
-    const nodeIndex = Math.floor(pseudo * 4) % 4;
+    let nodeIndex = Math.floor(rng() * 4);
+    // Prevent 3x consecutive repeats of the same pad
+    if (i >= 2 && nodeIndex === seq[i - 1] && nodeIndex === seq[i - 2]) {
+      nodeIndex = (nodeIndex + 1 + Math.floor(rng() * 3)) % 4;
+    }
     seq.push(nodeIndex);
   }
 
@@ -98,7 +103,6 @@ export function scoreSequence(
   const rawFraction = totalSteps > 0 ? matchedCount / totalSteps : 0;
   const score = parseFloat((rawFraction * 10).toFixed(2));
   const percentAccuracy = parseFloat((rawFraction * 100).toFixed(1));
-  const isPerfect = matchedCount === totalSteps && guessSequence.length === totalSteps;
 
   return {
     score,
@@ -107,6 +111,6 @@ export function scoreSequence(
     matchedCount,
     totalSteps,
     percentAccuracy,
-    isPerfect,
+    isPerfect: matchedCount === totalSteps && guessSequence.length === totalSteps,
   };
 }
