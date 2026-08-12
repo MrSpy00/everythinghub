@@ -60,15 +60,15 @@ export const PUBLIC_APIS_CATALOG: PublicAPIItem[] = [
 
   // 2. Crypto & Web3
   {
-    id: "coincap-assets",
-    name: "CoinCap Crypto Top Assets",
+    id: "coingecko-top-coins",
+    name: "CoinGecko Top Crypto Markets",
     category: "crypto",
-    description: "En popüler 100 kripto paranın canlı fiyatı, piyasa değeri ve 24s hacmi.",
+    description: "En popüler kripto paraların canlı dolar fiyatı, piyasa değeri ve 24s hacmi.",
     method: "GET",
-    endpoint: "https://api.coincap.io/v2/assets?limit=10",
+    endpoint: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false",
     cors: true,
     https: true,
-    docsUrl: "https://docs.coincap.io/",
+    docsUrl: "https://www.coingecko.com/en/api/documentation",
     badgeColor: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30",
   },
   {

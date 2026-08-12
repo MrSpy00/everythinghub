@@ -91,7 +91,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: http:",
-              "connect-src 'self' https://*.spotify.com https://api.deezer.com https://itunes.apple.com https://www.youtube.com https://youtube.com https://*.ytimg.com https://*.googlevideo.com https://www.googleapis.com https://vercel.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://corsproxy.io https://api.allorigins.win",
+              "connect-src 'self' https://*.spotify.com https://api.deezer.com https://itunes.apple.com https://www.youtube.com https://youtube.com https://*.ytimg.com https://*.googlevideo.com https://www.googleapis.com https://vercel.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://corsproxy.io https://api.allorigins.win https://api.frankfurter.app https://api.frankfurter.dev https://open.er-api.com https://api.coingecko.com https://api.binance.com https://cloudflare-dns.com https://dns.google https://1.1.1.1 https://api.ipify.org https://api64.ipify.org https://api.vatcomply.com https://ipapi.co https://ip-api.com https://openlibrary.org https://raw.githubusercontent.com https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://api.dictionaryapi.dev https://api.datamuse.com https://opentdb.com https://api.sunrise-sunset.org https://api.github.com",
               "media-src 'self' blob: https://*.scdn.co https://*.spotifycdn.com https://*.dzcdn.net",
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",

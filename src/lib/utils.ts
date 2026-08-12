@@ -65,9 +65,10 @@ export function parseYouTubeUrl(url: string): { type: "playlist" | "video" | "ch
 }
 
 export function copyToClipboard(text: string): Promise<boolean> {
-  if (navigator.clipboard) {
+  if (typeof window !== "undefined" && navigator?.clipboard) {
     return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
   }
+  if (typeof document === "undefined") return Promise.resolve(false);
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.style.position = "fixed";

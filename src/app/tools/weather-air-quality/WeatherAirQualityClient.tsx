@@ -130,6 +130,24 @@ export function WeatherAirQualityClient() {
           }
         }
       } catch {}
+
+      // Secondary IP geolocation fallback via VatComply
+      try {
+        const vatRes = await fetch("https://api.vatcomply.com/geolocate", { signal: AbortSignal.timeout(3000) });
+        if (vatRes.ok) {
+          const vatData = await vatRes.json();
+          if (vatData.latitude && vatData.longitude) {
+            resolved = true;
+            toast.dismiss(toastId);
+            setGeoDetecting(false);
+            const city = vatData.city || vatData.name || "Konumunuz";
+            loadWeather(vatData.latitude, vatData.longitude, city, vatData.country_code || "TR");
+            toast.success(isTurkish ? `${city} konumu yüklendi!` : `${city} location loaded!`);
+            return true;
+          }
+        }
+      } catch {}
+
       return false;
     };
 

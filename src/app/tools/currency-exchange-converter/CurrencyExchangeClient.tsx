@@ -131,16 +131,16 @@ export function CurrencyExchangeClient() {
       } catch {}
     }
 
-    // Default USD/TRY if missing
-    if (!loadedRates.TRY) loadedRates.TRY = 38.5;
+    // Default USD/TRY if missing from API
+    if (!loadedRates.TRY) loadedRates.TRY = 47.7;
     if (!loadedRates.EUR) loadedRates.EUR = 0.92;
     if (!loadedRates.GBP) loadedRates.GBP = 0.78;
 
     // 2. Gold & Precious Metals Rates (from CoinGecko PAXG / XAUT which track 1 troy oz of Gold exactly)
-    let ounceGoldUsd = 2420;
-    let ounceSilverUsd = 29.5;
-    let ouncePlatUsd = 980;
-    let ouncePallUsd = 960;
+    let ounceGoldUsd = 4388;
+    let ounceSilverUsd = 38.5;
+    let ouncePlatUsd = 1020;
+    let ouncePallUsd = 1050;
 
     try {
       const goldRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=pax-gold,tether-gold&vs_currencies=usd");
@@ -156,7 +156,6 @@ export function CurrencyExchangeClient() {
     const gramSilverUsd = ounceSilverUsd / 31.1034768;
 
     // Relative to USD base (1 unit of currency in USD)
-    // Rate in loadedRates represents: How many units of X equal 1 USD -> rate = 1 / price_in_usd
     loadedRates["XAU"] = 1 / ounceGoldUsd;
     loadedRates["GRAM_ALTIN"] = 1 / gramGoldUsd;
     loadedRates["CEYREK"] = 1 / (gramGoldUsd * 1.63);
@@ -169,17 +168,20 @@ export function CurrencyExchangeClient() {
     loadedRates["XPT"] = 1 / ouncePlatUsd;
     loadedRates["XPD"] = 1 / ouncePallUsd;
 
-    // 3. Crypto Rates
+    // 3. Resilient Crypto Rates (CoinGecko Primary -> Binance Secondary Fallback)
     try {
-      const cryptoRes = await fetch("https://api.coincap.io/v2/assets?limit=40");
-      if (cryptoRes.ok) {
-        const cryptoJson = await cryptoRes.json();
-        (cryptoJson.data || []).forEach((c: any) => {
-          const price = parseFloat(c.priceUsd);
-          if (price > 0) {
-            loadedRates[c.symbol] = 1 / price;
+      const cgRes = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=40&page=1&sparkline=false");
+      if (cgRes.ok) {
+        const cgData = await cgRes.json();
+        (cgData || []).forEach((c: any) => {
+          const sym = (c.symbol || "").toUpperCase();
+          const price = parseFloat(c.current_price);
+          if (sym && price > 0) {
+            loadedRates[sym] = 1 / price;
           }
         });
+      } else {
+        throw new Error("CoinGecko rate limit or error");
       }
     } catch {
       try {

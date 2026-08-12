@@ -1,6 +1,18 @@
 /**
  * EverythingHub Zero-Auth API Clients
  * 100% Free, Public, Zero-Auth & Resilient Open Data Services
+ *
+ * API Status (2026-08):
+ * ✅ Open-Meteo (weather)        - Working
+ * ✅ Frankfurter (ECB forex)     - Working
+ * ✅ open.er-api.com (forex)     - Working (fallback)
+ * ✅ CoinGecko (crypto & metals) - Working (replaces dead CoinCap)
+ * ✅ Binance (crypto fallback)   - Working
+ * ❌ CoinCap (api.coincap.io)    - DEAD (DNS failure, removed)
+ * ✅ OpenLibrary                 - Working
+ * ✅ Free Dictionary API         - Working
+ * ✅ Datamuse                    - Working
+ * ✅ Open Trivia DB              - Working
  */
 
 export interface WeatherData {
@@ -331,33 +343,46 @@ export async function fetchAllCountries(): Promise<CountryData[]> {
 }
 
 /**
- * CoinCap Public Crypto Assets API
+ * CoinGecko & Binance Resilient Crypto Assets API Client
  */
 export async function fetchTopCryptos(limit = 50): Promise<CryptoAsset[]> {
   try {
-    const res = await fetch(`https://api.coincap.io/v2/assets?limit=${limit}`);
-    if (!res.ok) throw new Error("CoinCap API başarısız");
-    const json = await res.json();
-    return json.data || [];
+    const cgRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false`);
+    if (!cgRes.ok) throw new Error("CoinGecko API request failed");
+    const data = await cgRes.json();
+    return (data || []).map((coin: any, idx: number) => ({
+      id: coin.id,
+      rank: String(coin.market_cap_rank || idx + 1),
+      symbol: (coin.symbol || "").toUpperCase(),
+      name: coin.name || coin.symbol,
+      priceUsd: String(coin.current_price ?? 0),
+      changePercent24Hr: String(coin.price_change_percentage_24h ?? 0),
+      marketCapUsd: String(coin.market_cap ?? 0),
+      volumeUsd24Hr: String(coin.total_volume ?? 0),
+    }));
   } catch (err) {
     // Fallback to Binance Ticker
-    const binanceRes = await fetch("https://api.binance.com/api/v3/ticker/24hr");
-    if (!binanceRes.ok) return [];
-    const list = await binanceRes.json();
-    const usdtPairs = (list || [])
-      .filter((item: any) => item.symbol.endsWith("USDT"))
-      .slice(0, limit)
-      .map((item: any, idx: number) => ({
-        id: item.symbol.toLowerCase(),
-        rank: String(idx + 1),
-        symbol: item.symbol.replace("USDT", ""),
-        name: item.symbol.replace("USDT", ""),
-        priceUsd: item.lastPrice,
-        changePercent24Hr: item.priceChangePercent,
-        marketCapUsd: String(parseFloat(item.quoteVolume) * parseFloat(item.lastPrice)),
-        volumeUsd24Hr: item.quoteVolume,
-      }));
-    return usdtPairs;
+    try {
+      const binanceRes = await fetch("https://api.binance.com/api/v3/ticker/24hr");
+      if (!binanceRes.ok) return [];
+      const list = await binanceRes.json();
+      const usdtPairs = (list || [])
+        .filter((item: any) => item.symbol.endsWith("USDT"))
+        .slice(0, limit)
+        .map((item: any, idx: number) => ({
+          id: item.symbol.toLowerCase(),
+          rank: String(idx + 1),
+          symbol: item.symbol.replace("USDT", ""),
+          name: item.symbol.replace("USDT", ""),
+          priceUsd: item.lastPrice,
+          changePercent24Hr: item.priceChangePercent,
+          marketCapUsd: String(parseFloat(item.quoteVolume) * parseFloat(item.lastPrice)),
+          volumeUsd24Hr: item.quoteVolume,
+        }));
+      return usdtPairs;
+    } catch {
+      return [];
+    }
   }
 }
 
@@ -426,11 +451,21 @@ export async function fetchTriviaQuestions(amount = 10, category = "", difficult
   const data = await res.json();
   
   return (data.results || []).map((q: any) => {
-    // Decode HTML entities
+    // Decode HTML entities safely without DOM dependency
     const decodeHtml = (html: string) => {
-      const txt = document.createElement("textarea");
-      txt.innerHTML = html;
-      return txt.value;
+      if (!html) return "";
+      return html
+        .replace(/&quot;/g, '"')
+        .replace(/&#039;/g, "'")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&deg;/g, "°")
+        .replace(/&eacute;/g, "é")
+        .replace(/&rsquo;/g, "’")
+        .replace(/&lsquo;/g, "‘")
+        .replace(/&ndash;/g, "–")
+        .replace(/&mdash;/g, "—");
     };
 
     const question = decodeHtml(q.question);
