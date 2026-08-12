@@ -1,14 +1,23 @@
 "use client";
 
 /**
- * HubSense — Color Game Component
- * HSB 2D color picker with CIELAB Delta-E scoring
+ * HubSense — Color Game Component (Dialed.gg Inspired Studio Edition)
+ * 3-Channel Precision Controller: Hue spectrum, Saturation gradient, Brightness gradient.
+ * 100% GPU-accelerated CSS rendering, 60fps instant drag, touch gestures & fine steppers.
  */
 
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { motion } from "framer-motion";
-import { hsbToHex, scoreColor, type ColorScoreResult, type ColorBlindType } from "../games/colorScoring";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  hsbToHex,
+  hsbToRgb,
+  scoreColor,
+  simulateColorBlindness,
+  type ColorScoreResult,
+  type ColorBlindType,
+} from "../games/colorScoring";
+import { SoundFX } from "../games/soundEffects";
+import { Eye, Check, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 
 interface ColorRound {
   h: number; // 0-360
@@ -22,7 +31,8 @@ interface ColorGameProps {
   difficulty?: "easy" | "hard" | "brutal";
   colorBlindMode: ColorBlindType;
   onColorBlindToggle: (mode: ColorBlindType) => void;
-  showResult?: boolean;
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
 export function ColorGame({
@@ -30,221 +40,316 @@ export function ColorGame({
   onSubmit,
   colorBlindMode,
   onColorBlindToggle,
+  roundNumber = 1,
+  totalRounds = 5,
 }: ColorGameProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hue, setHue] = useState(180);
   const [sat, setSat] = useState(50);
   const [bright, setBright] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isHueDragging, setIsHueDragging] = useState(false);
 
-  const currentHex = hsbToHex(hue, sat, bright);
+  const hueTrackRef = useRef<HTMLDivElement>(null);
+  const satTrackRef = useRef<HTMLDivElement>(null);
+  const brightTrackRef = useRef<HTMLDivElement>(null);
 
-  // Draw 2D SB (Saturation-Brightness) picker canvas
-  const drawPicker = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    const W = canvas.width;
-    const H = canvas.height;
+  const [activeDrag, setActiveDrag] = useState<"hue" | "sat" | "bright" | null>(null);
 
-    // White → color gradient (horizontal, saturation)
-    const colorGrad = ctx.createLinearGradient(0, 0, W, 0);
-    colorGrad.addColorStop(0, "white");
-    colorGrad.addColorStop(1, hsbToHex(hue, 100, 100));
-    ctx.fillStyle = colorGrad;
-    ctx.fillRect(0, 0, W, H);
+  // Compute live colors
+  const rawHex = hsbToHex(hue, sat, bright);
+  const [r, g, b] = hsbToRgb(hue, sat, bright);
+  const displayRgb =
+    colorBlindMode !== "none"
+      ? simulateColorBlindness(r, g, b, colorBlindMode)
+      : [r, g, b];
+  const displayHex =
+    colorBlindMode !== "none"
+      ? `#${displayRgb.map((c) => c.toString(16).padStart(2, "0")).join("")}`
+      : rawHex;
 
-    // Transparent → black gradient (vertical, brightness)
-    const blackGrad = ctx.createLinearGradient(0, 0, 0, H);
-    blackGrad.addColorStop(0, "transparent");
-    blackGrad.addColorStop(1, "black");
-    ctx.fillStyle = blackGrad;
-    ctx.fillRect(0, 0, W, H);
-  }, [hue]);
+  // Gradients for channel sliders
+  const satTopHex = hsbToHex(hue, 100, bright);
+  const satBottomHex = hsbToHex(hue, 0, bright);
+  const brightTopHex = hsbToHex(hue, sat, 100);
+  const brightBottomHex = "#000000";
 
+  // Drag Math Handlers
+  const handleHueMove = useCallback((clientY: number) => {
+    if (!hueTrackRef.current) return;
+    const rect = hueTrackRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    const newHue = Math.round(ratio * 360);
+    setHue(newHue);
+  }, []);
+
+  const handleSatMove = useCallback((clientY: number) => {
+    if (!satTrackRef.current) return;
+    const rect = satTrackRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    const newSat = Math.round((1 - ratio) * 100);
+    setSat(newSat);
+  }, []);
+
+  const handleBrightMove = useCallback((clientY: number) => {
+    if (!brightTrackRef.current) return;
+    const rect = brightTrackRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    const newBright = Math.round((1 - ratio) * 100);
+    setBright(newBright);
+  }, []);
+
+  // Global Pointer Listeners for smooth continuous drag
   useEffect(() => {
-    drawPicker();
-  }, [drawPicker]);
+    if (!activeDrag) return;
 
-  // Handle canvas interaction
-  const handleCanvasEvent = useCallback(
-    (clientX: number, clientY: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.max(0, Math.min(canvas.width, ((clientX - rect.left) / rect.width) * canvas.width));
-      const y = Math.max(0, Math.min(canvas.height, ((clientY - rect.top) / rect.height) * canvas.height));
+    const onPointerMove = (e: PointerEvent) => {
+      if (activeDrag === "hue") handleHueMove(e.clientY);
+      else if (activeDrag === "sat") handleSatMove(e.clientY);
+      else if (activeDrag === "bright") handleBrightMove(e.clientY);
+    };
 
-      const newSat = Math.round((x / canvas.width) * 100);
-      const newBright = Math.round(100 - (y / canvas.height) * 100);
-      setSat(newSat);
-      setBright(newBright);
-    },
-    []
-  );
+    const onPointerUp = () => {
+      setActiveDrag(null);
+    };
 
-  // Marker position on canvas
-  const markerX = `${sat}%`;
-  const markerY = `${100 - bright}%`;
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [activeDrag, handleHueMove, handleSatMove, handleBrightMove]);
+
+  const handleSubmit = useCallback(() => {
+    SoundFX.click();
+    const result = scoreColor(
+      targetColor.h,
+      targetColor.s,
+      targetColor.b,
+      hue,
+      sat,
+      bright
+    );
+    onSubmit(result);
+  }, [targetColor, hue, sat, bright, onSubmit]);
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-md mx-auto select-none">
-      {/* Color Preview */}
-      <motion.div
-        className="relative rounded-2xl overflow-hidden"
-        style={{ height: 80, background: currentHex }}
-        animate={{ background: currentHex }}
-        transition={{ duration: 0.1 }}
-      >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white/60 text-sm font-mono font-bold tracking-widest mix-blend-difference">
-            {currentHex.toUpperCase()}
-          </span>
-        </div>
-      </motion.div>
-
-      {/* 2D SB Picker */}
-      <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
-        <canvas
-          ref={canvasRef}
-          width={400}
-          height={300}
-          className="w-full h-full cursor-crosshair touch-none"
-          onMouseDown={(e) => {
-            setIsDragging(true);
-            handleCanvasEvent(e.clientX, e.clientY);
-          }}
-          onMouseMove={(e) => {
-            if (isDragging) handleCanvasEvent(e.clientX, e.clientY);
-          }}
-          onMouseUp={() => setIsDragging(false)}
-          onMouseLeave={() => setIsDragging(false)}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-            handleCanvasEvent(e.touches[0].clientX, e.touches[0].clientY);
-          }}
-          onTouchMove={(e) => {
-            e.preventDefault();
-            if (isDragging) handleCanvasEvent(e.touches[0].clientX, e.touches[0].clientY);
-          }}
-          onTouchEnd={() => setIsDragging(false)}
-        />
-
-        {/* Crosshair marker */}
-        <div
-          className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ left: markerX, top: markerY }}
-        >
-          <div className="w-full h-full rounded-full border-2 border-white shadow-lg"
-            style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.5)" }} />
-        </div>
-      </div>
-
-      {/* Hue Slider */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-white/50 font-mono">Ton (Hue)</span>
-          <span className="text-xs text-white/70 font-mono">{Math.round(hue)}°</span>
-        </div>
-        <div
-          className="relative h-5 rounded-full overflow-hidden cursor-pointer"
-          style={{
-            background:
-              "linear-gradient(to right, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff0000)",
-          }}
-          onMouseDown={(e) => {
-            setIsHueDragging(true);
-            const rect = e.currentTarget.getBoundingClientRect();
-            setHue(Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360)));
-          }}
-          onMouseMove={(e) => {
-            if (!isHueDragging) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            setHue(Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360)));
-          }}
-          onMouseUp={() => setIsHueDragging(false)}
-          onMouseLeave={() => setIsHueDragging(false)}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            setIsHueDragging(true);
-            const rect = e.currentTarget.getBoundingClientRect();
-            setHue(Math.max(0, Math.min(360, ((e.touches[0].clientX - rect.left) / rect.width) * 360)));
-          }}
-          onTouchMove={(e) => {
-            e.preventDefault();
-            if (!isHueDragging) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            setHue(Math.max(0, Math.min(360, ((e.touches[0].clientX - rect.left) / rect.width) * 360)));
-          }}
-          onTouchEnd={() => setIsHueDragging(false)}
-        >
-          {/* Thumb */}
-          <div
-            className="absolute top-0 w-5 h-5 -translate-x-1/2 rounded-full border-2 border-white shadow-md pointer-events-none"
-            style={{
-              left: `${(hue / 360) * 100}%`,
-              background: hsbToHex(hue, 100, 100),
-              boxShadow: "0 0 0 1px rgba(0,0,0,0.5)",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Color-blindness toggle */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() =>
-            onColorBlindToggle(colorBlindMode === "none" ? "deuteranopia" : "none")
-          }
-          className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 transition-colors"
-        >
-          {colorBlindMode !== "none" ? (
-            <Eye className="w-3.5 h-3.5" />
-          ) : (
-            <EyeOff className="w-3.5 h-3.5" />
-          )}
-          {colorBlindMode !== "none" ? "Renk körlüğü modu: Açık" : "Renk körlüğü modu"}
-        </button>
-        {colorBlindMode !== "none" && (
-          <select
-            className="text-xs bg-white/5 border border-white/10 rounded px-2 py-1 text-white/70"
-            value={colorBlindMode}
-            onChange={(e) => onColorBlindToggle(e.target.value as ColorBlindType)}
+    <div
+      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex"
+      style={{ background: displayHex }}
+      data-no-custom-cursor="true"
+    >
+      {/* ─── LEFT PANEL: 3 Vertical Sliders (Hue, Saturation, Brightness) ─── */}
+      <div className="hubsense-slider-area relative z-10 w-28 sm:w-36 h-full bg-black/40 backdrop-blur-2xl border-r border-white/15 p-2 sm:p-3 flex gap-2 sm:gap-3 items-stretch">
+        {/* 1. HUE SLIDER */}
+        <div className="flex-1 flex flex-col items-center justify-between">
+          <button
+            onClick={() => setHue((h) => (h - 5 + 360) % 360)}
+            className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mb-1"
+            title="Ton Azalt"
           >
-            <option value="protanopia">Protanopia (Kırmızı-Yeşil)</option>
-            <option value="deuteranopia">Deuteranopia (Yeşil-Kırmızı)</option>
-            <option value="tritanopia">Tritanopia (Mavi-Sarı)</option>
-          </select>
-        )}
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+
+          <div
+            ref={hueTrackRef}
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              setActiveDrag("hue");
+              handleHueMove(e.clientY);
+            }}
+            className="relative flex-1 w-full rounded-2xl cursor-ns-resize touch-none shadow-inner"
+            style={{
+              background:
+                "linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)",
+            }}
+          >
+            {/* Draggable Thumb */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white bg-white/30 backdrop-blur-md shadow-2xl transition-transform hover:scale-110 pointer-events-none"
+              style={{
+                top: `${(hue / 360) * 100}%`,
+                boxShadow: "0 4px 15px rgba(0,0,0,0.6)",
+              }}
+            />
+          </div>
+
+          <button
+            onClick={() => setHue((h) => (h + 5) % 360)}
+            className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mt-1"
+            title="Ton Artır"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="text-[10px] font-mono font-bold text-white/80 mt-1">
+            {hue}°
+          </div>
+          <div className="text-[9px] uppercase font-bold text-white/40">Ton</div>
+        </div>
+
+        {/* 2. SATURATION SLIDER */}
+        <div className="flex-1 flex flex-col items-center justify-between">
+          <button
+            onClick={() => setSat((s) => Math.min(100, s + 5))}
+            className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mb-1"
+            title="Doygunluk Artır"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+
+          <div
+            ref={satTrackRef}
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              setActiveDrag("sat");
+              handleSatMove(e.clientY);
+            }}
+            className="relative flex-1 w-full rounded-2xl cursor-ns-resize touch-none shadow-inner"
+            style={{
+              background: `linear-gradient(to bottom, ${satTopHex} 0%, ${satBottomHex} 100%)`,
+            }}
+          >
+            {/* Draggable Thumb */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white bg-white/30 backdrop-blur-md shadow-2xl transition-transform hover:scale-110 pointer-events-none"
+              style={{
+                top: `${(1 - sat / 100) * 100}%`,
+                boxShadow: "0 4px 15px rgba(0,0,0,0.6)",
+              }}
+            />
+          </div>
+
+          <button
+            onClick={() => setSat((s) => Math.max(0, s - 5))}
+            className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mt-1"
+            title="Doygunluk Azalt"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="text-[10px] font-mono font-bold text-white/80 mt-1">
+            %{sat}
+          </div>
+          <div className="text-[9px] uppercase font-bold text-white/40">Doygun</div>
+        </div>
+
+        {/* 3. BRIGHTNESS SLIDER */}
+        <div className="flex-1 flex flex-col items-center justify-between">
+          <button
+            onClick={() => setBright((b) => Math.min(100, b + 5))}
+            className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mb-1"
+            title="Parlaklık Artır"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+
+          <div
+            ref={brightTrackRef}
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              setActiveDrag("bright");
+              handleBrightMove(e.clientY);
+            }}
+            className="relative flex-1 w-full rounded-2xl cursor-ns-resize touch-none shadow-inner"
+            style={{
+              background: `linear-gradient(to bottom, ${brightTopHex} 0%, ${brightBottomHex} 100%)`,
+            }}
+          >
+            {/* Draggable Thumb */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white bg-white/30 backdrop-blur-md shadow-2xl transition-transform hover:scale-110 pointer-events-none"
+              style={{
+                top: `${(1 - bright / 100) * 100}%`,
+                boxShadow: "0 4px 15px rgba(0,0,0,0.6)",
+              }}
+            />
+          </div>
+
+          <button
+            onClick={() => setBright((b) => Math.max(0, b - 5))}
+            className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-xs mt-1"
+            title="Parlaklık Azalt"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="text-[10px] font-mono font-bold text-white/80 mt-1">
+            %{bright}
+          </div>
+          <div className="text-[9px] uppercase font-bold text-white/40">Parlak</div>
+        </div>
       </div>
 
-      {/* Submit Button */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={() => {
-          const result = scoreColor(
-            targetColor.h, targetColor.s, targetColor.b,
-            hue, sat, bright
-          );
-          onSubmit(result);
-        }}
-        className="w-full py-4 rounded-2xl font-bold text-base tracking-wide transition-all
-          bg-white/[0.06] border border-white/10 text-white backdrop-blur-xl
-          hover:bg-white/[0.1] hover:border-white/20 active:scale-95"
-        style={{
-          boxShadow: `0 0 20px ${currentHex}33`,
-          borderColor: `${currentHex}44`,
-        }}
-      >
-        Bu rengi seç
-      </motion.button>
+      {/* ─── RIGHT PANEL: Live Color Canvas & Info Bar ─── */}
+      <div className="relative flex-1 h-full flex flex-col justify-between p-6 sm:p-8">
+        {/* Top Info Bar */}
+        <div className="flex items-center justify-between">
+          <div className="px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 text-xs font-bold text-white font-mono tracking-wider shadow-lg">
+            {roundNumber} / {totalRounds}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Color blind selector */}
+            <button
+              onClick={() => {
+                const modes: ColorBlindType[] = [
+                  "none",
+                  "protanopia",
+                  "deuteranopia",
+                  "tritanopia",
+                ];
+                const next = modes[(modes.indexOf(colorBlindMode) + 1) % modes.length];
+                onColorBlindToggle(next);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 text-xs text-white/80 hover:bg-black/50 transition-colors shadow-lg"
+            >
+              <Eye className="w-3.5 h-3.5 text-indigo-300" />
+              <span className="capitalize text-[11px]">
+                {colorBlindMode === "none" ? "Normal" : colorBlindMode}
+              </span>
+            </button>
+
+            <div className="px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 text-xs font-mono font-extrabold text-white shadow-lg">
+              {rawHex.toUpperCase()}
+            </div>
+          </div>
+        </div>
+
+        {/* Center Subtitle or Prompt */}
+        <div className="text-center my-auto pointer-events-none">
+          <div className="inline-block px-5 py-2 rounded-2xl bg-black/25 backdrop-blur-md border border-white/10 text-white/80 text-xs sm:text-sm font-medium shadow-xl">
+            Sol çubuklardan Ton, Doygunluk ve Parlaklığı ayarlayın
+          </div>
+        </div>
+
+        {/* Bottom Actions Bar */}
+        <div className="flex items-center justify-between">
+          <div className="text-[11px] font-mono text-white/50 bg-black/25 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+            HubSense · Renk Disiplini
+          </div>
+
+          {/* Floating Confirm / Submit Button (Dialed.gg Target Style) */}
+          <motion.button
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={handleSubmit}
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
+            style={{
+              boxShadow: "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(255,255,255,0.4)",
+            }}
+            title="Bu Rengi Seç ve Onayla"
+          >
+            <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
+          </motion.button>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── Color Display (Stimulus) ─────────────────────────────────────────────────
+// ─── Color Display (Stimulus Reveal Phase - Dialed.gg Style) ───────────────────
 interface ColorDisplayProps {
   h: number;
   s: number;
@@ -252,17 +357,40 @@ interface ColorDisplayProps {
   onHide: () => void;
   revealDurationMs: number;
   colorBlindMode?: ColorBlindType;
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
 export function ColorDisplay({
-  h, s, b, onHide, revealDurationMs
+  h,
+  s,
+  b,
+  onHide,
+  revealDurationMs,
+  colorBlindMode = "none",
+  roundNumber = 1,
+  totalRounds = 5,
 }: ColorDisplayProps) {
+  const [timeLeft, setTimeLeft] = useState(revealDurationMs / 1000);
+  const rawHex = hsbToHex(h, s, b);
+
+  const [red, green, blue] = hsbToRgb(h, s, b);
+  const displayRgb =
+    colorBlindMode !== "none"
+      ? simulateColorBlindness(red, green, blue, colorBlindMode)
+      : [red, green, blue];
+  const displayHex =
+    colorBlindMode !== "none"
+      ? `#${displayRgb.map((c) => c.toString(16).padStart(2, "0")).join("")}`
+      : rawHex;
+
   useEffect(() => {
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const p = elapsed / revealDurationMs;
-      if (p >= 1) {
+      const remaining = Math.max(0, (revealDurationMs - elapsed) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
         clearInterval(interval);
         onHide();
       }
@@ -270,29 +398,61 @@ export function ColorDisplay({
     return () => clearInterval(interval);
   }, [revealDurationMs, onHide]);
 
-  const hex = hsbToHex(h, s, b);
-
   return (
     <motion.div
-      className="fixed inset-0 flex flex-col items-center justify-center"
-      style={{ background: hex }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
+      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      style={{ background: displayHex }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.25 }}
     >
-      {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20">
+      {/* Top Header: Round (Left) & Large Countdown (Right) */}
+      <div className="flex items-start justify-between">
+        <div className="px-4 py-2 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
+        </div>
+
+        {/* Large Countdown (Dialed.gg Exact Typography) */}
+        <div className="text-right">
+          <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
+            {timeLeft.toFixed(2)}
+          </div>
+          <div className="text-xs sm:text-sm font-medium text-white/80 drop-shadow">
+            Hatırlamak için kalan süre
+          </div>
+        </div>
+      </div>
+
+      {/* Center Prompt Icon */}
+      <div className="flex flex-col items-center justify-center my-auto">
         <motion.div
-          className="h-full bg-white/40"
+          animate={{ scale: [1, 1.08, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="w-20 h-20 rounded-full bg-black/20 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl"
+        >
+          <Sparkles className="w-8 h-8 text-white/90" />
+        </motion.div>
+        <p className="text-white/90 text-sm font-bold mt-4 tracking-wide drop-shadow-md">
+          Bu tonu aklında tut...
+        </p>
+      </div>
+
+      {/* Bottom Bar: Watermark (Left) & Progress Bar (Bottom) */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/60 bg-black/20 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          HubSense · Renk Disiplini
+        </div>
+      </div>
+
+      {/* Progress line */}
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/30">
+        <motion.div
+          className="h-full bg-white"
           initial={{ width: "100%" }}
           animate={{ width: "0%" }}
           transition={{ duration: revealDurationMs / 1000, ease: "linear" }}
         />
-      </div>
-
-      <div className="text-center mix-blend-difference text-white/0 hover:text-white/20 transition-colors">
-        <p className="text-lg font-mono">Hatırla...</p>
       </div>
     </motion.div>
   );

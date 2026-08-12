@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * HubSense — Sound Game Component
- * Frequency slider with ERB psychoacoustic scoring
+ * HubSense — Sound Game Component (Studio Synthesizer Edition)
+ * High-precision psychoacoustic tone synthesizer with logarithmic slider,
+ * real-time harmonic waveform visualizer, musical note mapping, and fine-tune steppers.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -12,7 +13,8 @@ import {
   freqToNoteName,
   type SoundScoreResult,
 } from "../games/soundScoring";
-import { Play, Volume2 } from "lucide-react";
+import { SoundFX } from "../games/soundEffects";
+import { Play, Square, Check } from "lucide-react";
 
 const MIN_FREQ = 80;
 const MAX_FREQ = 2000;
@@ -34,6 +36,8 @@ interface SoundGameProps {
   onSubmit: (result: SoundScoreResult) => void;
   audioCtx: AudioContext | null;
   onInitAudio: () => Promise<AudioContext>;
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
 export function SoundGame({
@@ -41,16 +45,35 @@ export function SoundGame({
   onSubmit,
   audioCtx,
   onInitAudio,
+  roundNumber = 1,
+  totalRounds = 5,
 }: SoundGameProps) {
   const [sliderVal, setSliderVal] = useState(0.5);
   const [isPlaying, setIsPlaying] = useState(false);
   const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeOscRef = useRef<OscillatorNode | null>(null);
 
   const currentFreq = sliderValToFreq(sliderVal);
   const noteName = freqToNoteName(currentFreq);
 
+  const stopTone = useCallback(() => {
+    if (activeOscRef.current) {
+      try {
+        activeOscRef.current.stop();
+        activeOscRef.current.disconnect();
+      } catch {}
+      activeOscRef.current = null;
+    }
+    setIsPlaying(false);
+    if (playTimeoutRef.current) {
+      clearTimeout(playTimeoutRef.current);
+      playTimeoutRef.current = null;
+    }
+  }, []);
+
   const playTone = useCallback(
-    async (freq: number, duration = 1000) => {
+    async (freq: number, duration = 1200) => {
+      stopTone();
       let ctx = audioCtx;
       if (!ctx || ctx.state === "closed") {
         ctx = await onInitAudio();
@@ -68,139 +91,236 @@ export function SoundGame({
       osc.frequency.value = freq;
 
       gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.03);
-      gain.gain.setValueAtTime(0.4, ctx.currentTime + duration / 1000 - 0.05);
+      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + duration / 1000 - 0.06);
       gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration / 1000);
 
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + duration / 1000);
+      activeOscRef.current = osc;
 
       setIsPlaying(true);
-      if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
-      playTimeoutRef.current = setTimeout(() => setIsPlaying(false), duration);
+      playTimeoutRef.current = setTimeout(() => {
+        setIsPlaying(false);
+        activeOscRef.current = null;
+      }, duration);
     },
-    [audioCtx, onInitAudio]
+    [audioCtx, onInitAudio, stopTone]
   );
 
-  const handlePreview = () => playTone(currentFreq, 800);
+  const togglePlay = () => {
+    if (isPlaying) {
+      stopTone();
+    } else {
+      playTone(currentFreq, 1400);
+    }
+  };
 
-  // Visualizer bars
-  const BARS = 32;
+  const handleNudge = (deltaHz: number) => {
+    SoundFX.click();
+    const nextFreq = Math.max(MIN_FREQ, Math.min(MAX_FREQ, currentFreq + deltaHz));
+    setSliderVal(freqToSliderVal(nextFreq));
+    playTone(nextFreq, 500);
+  };
+
+  const handleSubmit = () => {
+    stopTone();
+    SoundFX.click();
+    const result = scoreSound(targetFreq, currentFreq);
+    onSubmit(result);
+  };
+
+  // 36-band waveform bars
+  const BARS = 36;
   const barHeights = Array.from({ length: BARS }, (_, i) => {
-    // Simulate waveform based on current freq
     const t = i / BARS;
-    const wave = Math.sin(t * Math.PI * 4 + currentFreq / 200) * 0.5 + 0.5;
-    return isPlaying ? wave : 0.1 + wave * 0.1;
+    const wave = Math.sin(t * Math.PI * 4 + currentFreq / 150) * 0.5 + 0.5;
+    return isPlaying ? 0.2 + wave * 0.8 : 0.08 + wave * 0.12;
   });
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-md mx-auto">
-      {/* Frequency Display */}
-      <div className="text-center">
-        <div className="text-5xl font-bold tabular-nums text-white">
-          {Math.round(currentFreq)}
-          <span className="text-2xl text-white/40 ml-1">Hz</span>
+    <div
+      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 30%, #1e1b4b 0%, #09090b 85%)",
+      }}
+      data-no-custom-cursor="true"
+    >
+      {/* Top Bar */}
+      <div className="flex items-center justify-between">
+        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
         </div>
-        <div className="text-sm text-white/40 font-mono mt-1">{noteName}</div>
+
+        <div className="flex items-center gap-2">
+          <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold">
+            {noteName}
+          </div>
+        </div>
       </div>
 
-      {/* Waveform Visualizer */}
-      <div
-        className="flex items-center justify-center gap-0.5 h-16 px-4 rounded-xl overflow-hidden"
-        style={{ background: "rgba(255,255,255,0.03)" }}
-      >
-        {barHeights.map((h, i) => (
-          <motion.div
-            key={i}
-            className="rounded-full"
-            style={{
-              width: `${100 / BARS - 0.5}%`,
-              background: isPlaying
-                ? `rgba(99,102,241,${0.4 + h * 0.6})`
-                : "rgba(255,255,255,0.15)",
-            }}
-            animate={{ height: `${Math.max(4, h * 56)}px` }}
-            transition={{ duration: 0.05, ease: "easeOut" }}
-          />
-        ))}
-      </div>
+      {/* Main Center Synthesizer Stage */}
+      <div className="flex flex-col items-center justify-center my-auto w-full max-w-lg mx-auto">
+        {/* Big Frequency Display */}
+        <motion.div
+          animate={{ scale: isPlaying ? [1, 1.02, 1] : 1 }}
+          transition={{ duration: 0.3 }}
+          className="text-center mb-6"
+        >
+          <div className="text-6xl sm:text-7xl font-black font-mono tracking-tight text-white flex items-baseline justify-center gap-1">
+            <span>{Math.round(currentFreq)}</span>
+            <span className="text-2xl sm:text-3xl text-indigo-400 font-normal">Hz</span>
+          </div>
+          <div className="text-xs text-white/40 font-mono mt-1">
+            ERB Psikokustik Ölçeği · {noteName}
+          </div>
+        </motion.div>
 
-      {/* Frequency Slider */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between text-xs text-white/30 font-mono">
-          <span>{MIN_FREQ}Hz</span>
-          <span>{MAX_FREQ}Hz</span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.001}
-          value={sliderVal}
-          onChange={(e) => setSliderVal(parseFloat(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
-          style={{
-            background: `linear-gradient(to right, #6366f1 ${sliderVal * 100}%, rgba(255,255,255,0.1) ${sliderVal * 100}%)`,
-          }}
-        />
-        {/* Frequency reference marks */}
-        <div className="flex justify-between text-[10px] text-white/20 font-mono px-1">
-          {[100, 200, 500, 1000, 2000].map((f) => (
+        {/* Waveform Visualizer & Play Button */}
+        <div className="w-full relative mb-6">
+          <div className="flex items-center justify-center gap-1 h-20 px-4 rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
+            {barHeights.map((h, i) => (
+              <motion.div
+                key={i}
+                className="rounded-full"
+                style={{
+                  width: `${100 / BARS - 0.4}%`,
+                  background: isPlaying
+                    ? "linear-gradient(to top, #6366f1, #a855f7)"
+                    : "rgba(255,255,255,0.15)",
+                }}
+                animate={{ height: `${Math.max(6, h * 68)}px` }}
+                transition={{ duration: 0.08, ease: "easeOut" }}
+              />
+            ))}
+          </div>
+
+          {/* Central Play/Stop Trigger */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <button
-              key={f}
-              onClick={() => setSliderVal(freqToSliderVal(f))}
-              className="hover:text-white/50 transition-colors"
+              onClick={togglePlay}
+              className="pointer-events-auto px-5 py-2.5 rounded-full bg-indigo-500/80 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-2xl backdrop-blur-md border border-white/20 transition-transform hover:scale-105 active:scale-95"
             >
-              {f < 1000 ? `${f}` : `${f / 1000}k`}
+              {isPlaying ? (
+                <>
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>Durdur</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Sesi Dinle</span>
+                </>
+              )}
             </button>
-          ))}
+          </div>
+        </div>
+
+        {/* Precision Frequency Slider */}
+        <div className="w-full flex flex-col gap-3">
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.0005}
+            value={sliderVal}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              setSliderVal(v);
+              playTone(sliderValToFreq(v), 300);
+            }}
+            className="w-full h-3 rounded-full appearance-none cursor-pointer touch-none"
+            style={{
+              background: `linear-gradient(to right, #6366f1 0%, #a855f7 ${sliderVal * 100}%, rgba(255,255,255,0.1) ${sliderVal * 100}%)`,
+            }}
+          />
+
+          {/* Stepper Buttons (-10, -1, +1, +10 Hz) */}
+          <div className="flex items-center justify-between gap-2 mt-1">
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => handleNudge(-10)}
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+              >
+                -10Hz
+              </button>
+              <button
+                onClick={() => handleNudge(-1)}
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+              >
+                -1Hz
+              </button>
+            </div>
+
+            <div className="text-[10px] text-white/30 font-mono">
+              80Hz — 2000Hz
+            </div>
+
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => handleNudge(+1)}
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+              >
+                +1Hz
+              </button>
+              <button
+                onClick={() => handleNudge(+10)}
+                className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-[11px] font-mono text-white/70"
+              >
+                +10Hz
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Preview Button */}
-      <button
-        onClick={handlePreview}
-        className="flex items-center justify-center gap-2 py-3 rounded-xl
-          bg-white/[0.04] border border-white/10 text-white/60 hover:text-white
-          hover:bg-white/[0.08] transition-all"
-      >
-        {isPlaying ? (
-          <>
-            <Volume2 className="w-4 h-4 animate-pulse text-indigo-400" />
-            <span className="text-sm">Çalıyor...</span>
-          </>
-        ) : (
-          <>
-            <Play className="w-4 h-4" />
-            <span className="text-sm">Sesi duyur (önizleme)</span>
-          </>
-        )}
-      </button>
+      {/* Bottom Bar & Floating Submit Button */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          HubSense · Ses Disiplini
+        </div>
 
-      {/* Submit */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={() => onSubmit(scoreSound(targetFreq, currentFreq))}
-        className="w-full py-4 rounded-2xl font-bold text-base tracking-wide
-          bg-white/[0.06] border border-indigo-500/30 text-white backdrop-blur-xl
-          hover:bg-indigo-500/10 hover:border-indigo-400/50 transition-all"
-      >
-        Bu frekansı seç
-      </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={handleSubmit}
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
+          style={{
+            boxShadow:
+              "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(99,102,241,0.4)",
+          }}
+          title="Frekansı Onayla"
+        >
+          <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
+        </motion.button>
+      </div>
     </div>
   );
 }
 
-// ─── Sound Display (Stimulus) ─────────────────────────────────────────────────
+// ─── Sound Display (Stimulus Reveal Phase) ────────────────────────────────────
 interface SoundDisplayProps {
   freq: number;
   onHide: () => void;
   audioCtx: AudioContext | null;
   onInitAudio: () => Promise<AudioContext>;
+  roundNumber?: number;
+  totalRounds?: number;
+  durationMs?: number;
 }
 
-export function SoundDisplay({ freq, onHide, audioCtx, onInitAudio }: SoundDisplayProps) {
+export function SoundDisplay({
+  freq,
+  onHide,
+  audioCtx,
+  onInitAudio,
+  roundNumber = 1,
+  totalRounds = 5,
+  durationMs = 2000,
+}: SoundDisplayProps) {
   const [playing, setPlaying] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(durationMs / 1000);
 
   useEffect(() => {
     let cancelled = false;
@@ -209,7 +329,7 @@ export function SoundDisplay({ freq, onHide, audioCtx, onInitAudio }: SoundDispl
       if (!ctx || ctx.state === "closed") ctx = await onInitAudio();
       if (ctx.state === "suspended") await ctx.resume();
 
-      const duration = 1.5;
+      const duration = durationMs / 1000;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -224,55 +344,102 @@ export function SoundDisplay({ freq, onHide, audioCtx, onInitAudio }: SoundDispl
       osc.stop(ctx.currentTime + duration);
 
       setPlaying(true);
-      setTimeout(() => {
-        if (!cancelled) {
-          setPlaying(false);
-          onHide();
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, (durationMs - elapsed) / 1000);
+        setTimeLeft(remaining);
+        if (remaining <= 0) {
+          clearInterval(interval);
+          if (!cancelled) {
+            setPlaying(false);
+            onHide();
+          }
         }
-      }, duration * 1000 + 300);
+      }, 16);
     }
 
     play();
     return () => {
       cancelled = true;
     };
-  }, [audioCtx, freq, onHide, onInitAudio]);
+  }, [audioCtx, durationMs, freq, onHide, onInitAudio]);
 
   const BARS = 48;
 
   return (
     <motion.div
-      className="fixed inset-0 flex flex-col items-center justify-center bg-[#09090b]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 40%, #2e1065 0%, #09090b 80%)",
+      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.25 }}
     >
-      <div className="flex items-center justify-center gap-0.5 h-24">
-        {Array.from({ length: BARS }).map((_, i) => {
-          const t = i / BARS;
-          const wave = Math.abs(Math.sin(t * Math.PI * 6 + Date.now() / 500));
-          return (
-            <motion.div
-              key={i}
-              className="rounded-full bg-indigo-400"
-              style={{ width: 5 }}
-              animate={{
-                height: playing ? `${16 + wave * 80}px` : "4px",
-                opacity: playing ? 0.6 + wave * 0.4 : 0.2,
-              }}
-              transition={{
-                duration: 0.1,
-                repeat: playing ? Infinity : 0,
-                repeatType: "mirror",
-                delay: (i / BARS) * 0.5,
-              }}
-            />
-          );
-        })}
+      {/* Top Header: Round (Left) & Countdown (Right) */}
+      <div className="flex items-start justify-between">
+        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
+        </div>
+
+        <div className="text-right">
+          <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
+            {timeLeft.toFixed(2)}
+          </div>
+          <div className="text-xs sm:text-sm font-medium text-white/70">
+            Perdeyi aklında tut
+          </div>
+        </div>
       </div>
-      <p className="text-white/40 text-sm mt-6 font-mono">
-        {playing ? "Dikkatle dinle..." : ""}
-      </p>
+
+      {/* Center Harmonic Visualizer */}
+      <div className="flex flex-col items-center justify-center my-auto">
+        <div className="flex items-center justify-center gap-1 h-32 w-full max-w-md">
+          {Array.from({ length: BARS }).map((_, i) => {
+            const t = i / BARS;
+            const wave = Math.abs(Math.sin(t * Math.PI * 6 + Date.now() / 300));
+            return (
+              <motion.div
+                key={i}
+                className="rounded-full bg-indigo-400"
+                style={{ width: `${100 / BARS - 0.5}%` }}
+                animate={{
+                  height: playing ? `${12 + wave * 110}px` : "6px",
+                  opacity: playing ? 0.6 + wave * 0.4 : 0.2,
+                }}
+                transition={{
+                  duration: 0.1,
+                  repeat: playing ? Infinity : 0,
+                  repeatType: "mirror",
+                  delay: (i / BARS) * 0.2,
+                }}
+              />
+            );
+          })}
+        </div>
+        <p className="text-indigo-300 text-sm font-bold mt-6 tracking-wide drop-shadow">
+          {playing ? "Dikkatle dinle..." : ""}
+        </p>
+      </div>
+
+      {/* Bottom Bar & Progress */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          HubSense · Ses Disiplini
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/40">
+        <motion.div
+          className="h-full bg-indigo-500"
+          initial={{ width: "100%" }}
+          animate={{ width: "0%" }}
+          transition={{ duration: durationMs / 1000, ease: "linear" }}
+        />
+      </div>
     </motion.div>
   );
 }

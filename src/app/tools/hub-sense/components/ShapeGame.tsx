@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * HubSense — Shape Game Component
- * Multi-control shape reconstruction: type, scale, rotation, position
+ * HubSense — Shape Game Component (Studio Geometry Edition)
+ * Reconstruct geometric shapes with real-time vector matrix calculations,
+ * position dragging, scale tuning, rotation angle selector, and IoU intersection scoring.
  */
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
@@ -14,11 +15,14 @@ import {
   drawShape,
   scoreShape,
 } from "../games/shapeScoring";
-import { RotateCw, ZoomIn, Move } from "lucide-react";
+import { SoundFX } from "../games/soundEffects";
+import { RotateCw, ZoomIn, Move, Check } from "lucide-react";
 
 interface ShapeGameProps {
   target: ShapeParams;
   onSubmit: (result: ShapeScoreResult) => void;
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
 const SHAPE_TYPES: { type: ShapeType; label: string }[] = [
@@ -30,7 +34,12 @@ const SHAPE_TYPES: { type: ShapeType; label: string }[] = [
   { type: "star", label: "Yıldız" },
 ];
 
-export function ShapeGame({ target, onSubmit }: ShapeGameProps) {
+export function ShapeGame({
+  target,
+  onSubmit,
+  roundNumber = 1,
+  totalRounds = 5,
+}: ShapeGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [params, setParams] = useState<ShapeParams>({
     type: "circle",
@@ -41,7 +50,7 @@ export function ShapeGame({ target, onSubmit }: ShapeGameProps) {
   });
   const [isDraggingPos, setIsDraggingPos] = useState(false);
 
-  // Draw the current guess on canvas
+  // Redraw shape on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -49,8 +58,8 @@ export function ShapeGame({ target, onSubmit }: ShapeGameProps) {
     const S = canvas.width;
     ctx.clearRect(0, 0, S, S);
 
-    // Grid
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    // Subtle alignment grid
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       ctx.beginPath();
@@ -63,162 +72,260 @@ export function ShapeGame({ target, onSubmit }: ShapeGameProps) {
       ctx.stroke();
     }
 
-    drawShape(ctx, params, S);
+    drawShape(ctx, { ...params, color: "#f59e0b" }, S);
   }, [params]);
 
   const handleCanvasPos = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / rect.width));
-    const y = Math.max(0.05, Math.min(0.95, (clientY - rect.top) / rect.height));
+    const x = Math.max(0.1, Math.min(0.9, (clientX - rect.left) / rect.width));
+    const y = Math.max(0.1, Math.min(0.9, (clientY - rect.top) / rect.height));
     setParams((p) => ({ ...p, x, y }));
   }, []);
 
+  const handleSubmit = () => {
+    SoundFX.click();
+    const result = scoreShape(target, params);
+    onSubmit(result);
+  };
+
   return (
-    <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-      {/* Shape Type Selector */}
-      <div className="grid grid-cols-3 gap-2">
-        {SHAPE_TYPES.map(({ type, label }) => (
-          <button
-            key={type}
-            onClick={() => setParams((p) => ({ ...p, type }))}
-            className={`py-2.5 rounded-xl text-sm font-medium transition-all border
-              ${params.type === type
-                ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300"
-                : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80 hover:bg-white/[0.06]"
-              }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    <div
+      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 30%, #451a03 0%, #09090b 80%)",
+      }}
+      data-no-custom-cursor="true"
+    >
+      {/* Top Bar */}
+      <div className="flex items-center justify-between">
+        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
+        </div>
 
-      {/* Canvas — position control */}
-      <div className="relative">
-        <canvas
-          ref={canvasRef}
-          width={400}
-          height={400}
-          className="w-full rounded-xl cursor-crosshair touch-none"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
-          onMouseDown={(e) => {
-            setIsDraggingPos(true);
-            handleCanvasPos(e.clientX, e.clientY);
-          }}
-          onMouseMove={(e) => isDraggingPos && handleCanvasPos(e.clientX, e.clientY)}
-          onMouseUp={() => setIsDraggingPos(false)}
-          onMouseLeave={() => setIsDraggingPos(false)}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            setIsDraggingPos(true);
-            handleCanvasPos(e.touches[0].clientX, e.touches[0].clientY);
-          }}
-          onTouchMove={(e) => {
-            e.preventDefault();
-            if (isDraggingPos) handleCanvasPos(e.touches[0].clientX, e.touches[0].clientY);
-          }}
-          onTouchEnd={() => setIsDraggingPos(false)}
-        />
-        <div className="absolute bottom-2 right-2 text-xs text-white/20 flex items-center gap-1">
-          <Move className="w-3 h-3" />
-          <span>Tıkla/sürükle: pozisyon</span>
+        <div className="flex gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none">
+          {SHAPE_TYPES.map(({ type, label }) => (
+            <button
+              key={type}
+              onClick={() => {
+                SoundFX.click();
+                setParams((p) => ({ ...p, type }));
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border
+                ${
+                  params.type === type
+                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-md"
+                    : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80"
+                }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Scale Slider */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-white/50">
-            <ZoomIn className="w-3.5 h-3.5" />
-            <span>Boyut</span>
+      {/* Main Canvas Area */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-auto">
+        {/* Interactive Vector Canvas */}
+        <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black/40">
+          <canvas
+            ref={canvasRef}
+            width={400}
+            height={400}
+            className="w-full h-full cursor-crosshair touch-none"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              setIsDraggingPos(true);
+              handleCanvasPos(e.clientX, e.clientY);
+            }}
+            onPointerMove={(e) => {
+              if (isDraggingPos) handleCanvasPos(e.clientX, e.clientY);
+            }}
+            onPointerUp={() => setIsDraggingPos(false)}
+            onPointerCancel={() => setIsDraggingPos(false)}
+          />
+          <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/60 text-[10px] text-white/40 flex items-center gap-1">
+            <Move className="w-3 h-3 text-amber-400" />
+            <span>Sürükle: Konum</span>
           </div>
-          <span className="text-xs text-white/70 font-mono">{(params.scale * 100).toFixed(0)}%</span>
         </div>
-        <input
-          type="range" min={0.3} max={1.5} step={0.01}
-          value={params.scale}
-          onChange={(e) => setParams((p) => ({ ...p, scale: parseFloat(e.target.value) }))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
-          style={{
-            background: `linear-gradient(to right, #6366f1 ${((params.scale - 0.3) / 1.2) * 100}%, rgba(255,255,255,0.1) ${((params.scale - 0.3) / 1.2) * 100}%)`,
-          }}
-        />
-      </div>
 
-      {/* Rotation Slider */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-white/50">
-            <RotateCw className="w-3.5 h-3.5" />
-            <span>Döndürme</span>
+        {/* Sliders: Scale & Rotation */}
+        <div className="flex flex-col gap-4 w-full sm:w-64">
+          {/* Scale */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs text-white/70">
+              <div className="flex items-center gap-1.5">
+                <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
+                <span>Boyut (Ölçek)</span>
+              </div>
+              <span className="font-mono text-amber-300 font-bold">
+                {(params.scale * 100).toFixed(0)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0.3}
+              max={1.6}
+              step={0.01}
+              value={params.scale}
+              onChange={(e) =>
+                setParams((p) => ({ ...p, scale: parseFloat(e.target.value) }))
+              }
+              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #f59e0b ${((params.scale - 0.3) / 1.3) * 100}%, rgba(255,255,255,0.1) ${((params.scale - 0.3) / 1.3) * 100}%)`,
+              }}
+            />
           </div>
-          <span className="text-xs text-white/70 font-mono">{Math.round(params.rotation)}°</span>
+
+          {/* Rotation */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs text-white/70">
+              <div className="flex items-center gap-1.5">
+                <RotateCw className="w-3.5 h-3.5 text-amber-400" />
+                <span>Döndürme Açısı</span>
+              </div>
+              <span className="font-mono text-amber-300 font-bold">
+                {Math.round(params.rotation)}°
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={360}
+              step={1}
+              value={params.rotation}
+              onChange={(e) =>
+                setParams((p) => ({ ...p, rotation: parseFloat(e.target.value) }))
+              }
+              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #f59e0b ${(params.rotation / 360) * 100}%, rgba(255,255,255,0.1) ${(params.rotation / 360) * 100}%)`,
+              }}
+            />
+          </div>
         </div>
-        <input
-          type="range" min={0} max={360} step={1}
-          value={params.rotation}
-          onChange={(e) => setParams((p) => ({ ...p, rotation: parseFloat(e.target.value) }))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
-          style={{
-            background: `linear-gradient(to right, #8b5cf6 ${(params.rotation / 360) * 100}%, rgba(255,255,255,0.1) ${(params.rotation / 360) * 100}%)`,
-          }}
-        />
       </div>
 
-      {/* Submit */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={() => onSubmit(scoreShape(target, params))}
-        className="w-full py-4 rounded-2xl font-bold text-base tracking-wide
-          bg-white/[0.06] border border-white/10 text-white
-          hover:bg-white/[0.10] hover:border-white/20 transition-all"
-      >
-        Bu şekli seç
-      </motion.button>
+      {/* Bottom Bar & Floating Submit */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          HubSense · Şekil Disiplini
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={handleSubmit}
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
+          style={{
+            boxShadow:
+              "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(245,158,11,0.4)",
+          }}
+          title="Şekli Onayla"
+        >
+          <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
+        </motion.button>
+      </div>
     </div>
   );
 }
 
-// ─── Shape Display (Stimulus) ─────────────────────────────────────────────────
+// ─── Shape Display (Stimulus Reveal Phase) ────────────────────────────────────
 interface ShapeDisplayProps {
   shape: ShapeParams;
   onHide: () => void;
   durationMs: number;
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
-export function ShapeDisplay({ shape, onHide, durationMs }: ShapeDisplayProps) {
+export function ShapeDisplay({
+  shape,
+  onHide,
+  durationMs,
+  roundNumber = 1,
+  totalRounds = 5,
+}: ShapeDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [timeLeft, setTimeLeft] = useState(durationMs / 1000);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawShape(ctx, { ...shape, color: "#ffffff" }, canvas.width);
+    if (canvas) {
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawShape(ctx, { ...shape, color: "#fbbf24" }, canvas.width);
+    }
 
-    const timer = setTimeout(onHide, durationMs);
-    return () => clearTimeout(timer);
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, (durationMs - elapsed) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        onHide();
+      }
+    }, 16);
+
+    return () => clearInterval(interval);
   }, [shape, durationMs, onHide]);
 
   return (
     <motion.div
-      className="fixed inset-0 flex flex-col items-center justify-center bg-[#09090b]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 40%, #451a03 0%, #09090b 80%)",
+      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.25 }}
     >
-      <div className="text-white/30 text-sm mb-8">Bu şekli hatırla</div>
-      <canvas
-        ref={canvasRef}
-        width={300}
-        height={300}
-        className="rounded-2xl"
-        style={{ background: "rgba(255,255,255,0.03)" }}
-      />
-      <div className="mt-6 h-1 w-32 bg-white/10 rounded-full overflow-hidden">
+      {/* Top Header */}
+      <div className="flex items-start justify-between">
+        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
+        </div>
+
+        <div className="text-right">
+          <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
+            {timeLeft.toFixed(2)}
+          </div>
+          <div className="text-xs sm:text-sm font-medium text-amber-300">
+            Geometriyi aklında tut
+          </div>
+        </div>
+      </div>
+
+      {/* Center Shape Canvas */}
+      <div className="flex flex-col items-center justify-center my-auto">
+        <canvas
+          ref={canvasRef}
+          width={360}
+          height={360}
+          className="w-56 h-56 sm:w-64 sm:h-64 rounded-3xl border border-white/10 bg-black/40 shadow-2xl"
+        />
+        <p className="text-amber-300 text-sm font-bold mt-4 tracking-wide drop-shadow">
+          Türü, açıyı ve boyutu incele...
+        </p>
+      </div>
+
+      {/* Bottom Progress */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          HubSense · Şekil Disiplini
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/40">
         <motion.div
-          className="h-full bg-indigo-400/60 rounded-full"
+          className="h-full bg-amber-400"
           initial={{ width: "100%" }}
           animate={{ width: "0%" }}
           transition={{ duration: durationMs / 1000, ease: "linear" }}

@@ -186,6 +186,12 @@ function DesktopUserCursor(userProps: UserCursorProps) {
   const inspectElement = useCallback((target: HTMLElement | null) => {
     if (!target) return;
 
+    // 0. Disable custom follower cursor over precision game zones
+    if (target.closest("[data-no-custom-cursor], .hubsense-game-arena, .hubsense-slider-area")) {
+      setHovering(false);
+      return;
+    }
+
     // 1. Explicit data-cursor tag
     const customCursor = target.closest("[data-cursor]")?.getAttribute("data-cursor");
     if (customCursor) {

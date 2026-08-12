@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * HubSense — Sequence Game Component
- * Harmonic short-term memory matrix game with multi-sensory feedback.
+ * HubSense — Sequence Game Component (Studio Matrix Edition)
+ * 4-Pad Harmonic Working Memory Matrix with multi-sensory feedback,
+ * tactile audio-visual pads, progressive sequence lengths, and instant evaluation.
  */
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -14,17 +15,20 @@ import {
   type SequenceScoreResult,
 } from "../games/sequenceScoring";
 import { SoundFX, playSynthesizedTone } from "../games/soundEffects";
-import { Zap, RotateCcw, CheckCircle2 } from "lucide-react";
+import { RotateCcw, Check } from "lucide-react";
 
 interface SequenceGameProps {
   targetSequence: number[];
   onSubmit: (result: SequenceScoreResult) => void;
-  difficulty?: "easy" | "hard" | "brutal";
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
 export function SequenceGame({
   targetSequence,
   onSubmit,
+  roundNumber = 1,
+  totalRounds = 5,
 }: SequenceGameProps) {
   const [playerSequence, setPlayerSequence] = useState<number[]>([]);
   const [activePad, setActivePad] = useState<number | null>(null);
@@ -33,12 +37,11 @@ export function SequenceGame({
     (node: SequenceNode) => {
       SoundFX.padPress(node.freq);
       setActivePad(node.id);
-      setTimeout(() => setActivePad(null), 200);
+      setTimeout(() => setActivePad(null), 180);
 
       const nextSeq = [...playerSequence, node.id];
       setPlayerSequence(nextSeq);
 
-      // If length reached or mistake made on brutal
       if (nextSeq.length === targetSequence.length) {
         setTimeout(() => {
           const result = scoreSequence(targetSequence, nextSeq);
@@ -48,18 +51,19 @@ export function SequenceGame({
             SoundFX.failRound();
           }
           onSubmit(result);
-        }, 400);
+        }, 350);
       }
     },
     [playerSequence, targetSequence, onSubmit]
   );
 
   const handleClear = () => {
-    SoundFX.toggle();
+    SoundFX.click();
     setPlayerSequence([]);
   };
 
   const handleForceSubmit = () => {
+    SoundFX.click();
     const result = scoreSequence(targetSequence, playerSequence);
     if (result.isPerfect) {
       SoundFX.successRound();
@@ -70,18 +74,22 @@ export function SequenceGame({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto select-none">
-      {/* Progress & instructions */}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex items-center gap-2 text-xs text-white/50 font-mono">
-          <Zap className="w-3.5 h-3.5 text-pink-400" />
-          <span>
-            {playerSequence.length} / {targetSequence.length} Adım Girildi
-          </span>
+    <div
+      className="hubsense-game-arena relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 select-none flex flex-col justify-between p-6 sm:p-8"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 30%, #500724 0%, #09090b 80%)",
+      }}
+      data-no-custom-cursor="true"
+    >
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
         </div>
 
         {/* Input step dots */}
-        <div className="flex items-center gap-2 min-h-6">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/10">
           {targetSequence.map((_, i) => {
             const hasInput = i < playerSequence.length;
             const enteredNode = hasInput ? SEQUENCE_NODES[playerSequence[i]] : null;
@@ -90,14 +98,14 @@ export function SequenceGame({
                 key={i}
                 initial={{ scale: 0.8 }}
                 animate={{
-                  scale: hasInput ? 1.15 : 1,
+                  scale: hasInput ? 1.2 : 1,
                   backgroundColor: enteredNode
                     ? enteredNode.color
-                    : "rgba(255, 255, 255, 0.1)",
+                    : "rgba(255, 255, 255, 0.15)",
                 }}
-                className="w-4 h-4 rounded-full border border-white/20 transition-colors"
+                className="w-3.5 h-3.5 rounded-full border border-white/20 transition-all"
                 style={{
-                  boxShadow: enteredNode ? `0 0 10px ${enteredNode.glow}` : "none",
+                  boxShadow: enteredNode ? `0 0 12px ${enteredNode.glow}` : "none",
                 }}
               />
             );
@@ -105,90 +113,98 @@ export function SequenceGame({
         </div>
       </div>
 
-      {/* 2x2 Interactive Pad Matrix */}
-      <div className="grid grid-cols-2 gap-3.5 w-full max-w-[340px] aspect-square">
-        {SEQUENCE_NODES.map((node) => {
-          const isActive = activePad === node.id;
-          return (
-            <motion.button
-              key={node.id}
-              whileTap={{ scale: 0.94 }}
-              onClick={() => handlePadPress(node)}
-              className="relative flex flex-col items-center justify-center p-6 rounded-3xl border transition-all text-white overflow-hidden"
-              style={{
-                background: isActive
-                  ? node.glow
-                  : "rgba(255, 255, 255, 0.03)",
-                borderColor: isActive ? node.color : "rgba(255, 255, 255, 0.1)",
-                boxShadow: isActive ? `0 0 35px ${node.glow}` : "none",
-              }}
-            >
-              {/* Inner glowing pulse */}
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg mb-2"
+      {/* Main 2x2 Pad Matrix */}
+      <div className="flex flex-col items-center justify-center my-auto">
+        <div className="grid grid-cols-2 gap-3.5 w-full max-w-[320px] sm:max-w-[360px] aspect-square">
+          {SEQUENCE_NODES.map((node) => {
+            const isActive = activePad === node.id;
+            return (
+              <motion.button
+                key={node.id}
+                whileTap={{ scale: 0.93 }}
+                onClick={() => handlePadPress(node)}
+                className="relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-3xl border-2 transition-all text-white overflow-hidden shadow-xl"
                 style={{
-                  background: `${node.color}22`,
-                  color: node.color,
-                  border: `1px solid ${node.color}44`,
+                  background: isActive
+                    ? node.glow
+                    : "rgba(255, 255, 255, 0.03)",
+                  borderColor: isActive ? node.color : "rgba(255, 255, 255, 0.1)",
+                  boxShadow: isActive ? `0 0 45px ${node.glow}` : "none",
                 }}
               >
-                {node.label[0]}
-              </div>
-              <span className="font-semibold text-sm tracking-wide text-white/90">
-                {node.label}
-              </span>
-              <span className="text-[10px] text-white/40 font-mono mt-0.5">
-                {node.note} · {Math.round(node.freq)}Hz
-              </span>
-            </motion.button>
-          );
-        })}
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl mb-2 shadow-inner"
+                  style={{
+                    background: `${node.color}25`,
+                    color: node.color,
+                    border: `1px solid ${node.color}55`,
+                  }}
+                >
+                  {node.label[0]}
+                </div>
+                <span className="font-extrabold text-sm sm:text-base tracking-wide text-white">
+                  {node.label}
+                </span>
+                <span className="text-[11px] text-white/50 font-mono mt-0.5">
+                  {node.note} · {Math.round(node.freq)}Hz
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-3 mt-5 w-full max-w-[320px] sm:max-w-[360px]">
+          <button
+            onClick={handleClear}
+            disabled={playerSequence.length === 0}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-xs text-white/70 disabled:opacity-30 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Sıfırla</span>
+          </button>
+        </div>
       </div>
 
-      {/* Action controls */}
-      <div className="flex items-center gap-3 w-full max-w-[340px]">
-        <button
-          onClick={handleClear}
-          disabled={playerSequence.length === 0}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl
-            bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all
-            text-xs text-white/60 disabled:opacity-30"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Temizle</span>
-        </button>
+      {/* Bottom Bar */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+          HubSense · Dizi Disiplini
+        </div>
 
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
           onClick={handleForceSubmit}
           disabled={playerSequence.length === 0}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl
-            font-bold text-xs text-white border transition-all disabled:opacity-30"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all disabled:opacity-30 group"
           style={{
-            background: "rgba(236, 72, 153, 0.15)",
-            borderColor: "rgba(236, 72, 153, 0.4)",
-            boxShadow: "0 0 20px rgba(236, 72, 153, 0.2)",
+            boxShadow:
+              "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(236,72,153,0.4)",
           }}
+          title="Diziyi Onayla"
         >
-          <CheckCircle2 className="w-3.5 h-3.5 text-pink-400" />
-          <span>Tamamla</span>
+          <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
         </motion.button>
       </div>
     </div>
   );
 }
 
-// ─── Sequence Display (Stimulus / Reveal Phase) ───────────────────────────────
+// ─── Sequence Display (Stimulus Reveal Phase) ─────────────────────────────────
 interface SequenceDisplayProps {
   sequence: number[];
   onHide: () => void;
   speedMs?: number;
+  roundNumber?: number;
+  totalRounds?: number;
 }
 
 export function SequenceDisplay({
   sequence,
   onHide,
   speedMs = 700,
+  roundNumber = 1,
+  totalRounds = 5,
 }: SequenceDisplayProps) {
   const [highlightedStep, setHighlightedStep] = useState<number | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -212,7 +228,7 @@ export function SequenceDisplay({
     } else {
       timeoutId = setTimeout(() => {
         onHide();
-      }, 500);
+      }, 450);
     }
 
     return () => clearTimeout(timeoutId);
@@ -220,66 +236,70 @@ export function SequenceDisplay({
 
   return (
     <motion.div
-      className="fixed inset-0 flex flex-col items-center justify-center bg-[#09090b] px-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      className="relative w-full h-[540px] sm:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col justify-between p-6 sm:p-10 select-none"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 40%, #500724 0%, #09090b 80%)",
+      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.25 }}
     >
-      <div className="text-white/40 text-sm font-mono mb-4">
-        Sırayı ve Sesleri Hatırla
+      {/* Top Header */}
+      <div className="flex items-start justify-between">
+        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+          {roundNumber} / {totalRounds}
+        </div>
+
+        <div className="text-right">
+          <div className="text-3xl sm:text-4xl font-black font-mono tracking-tighter text-pink-300 drop-shadow-lg">
+            {stepIndex + 1} / {sequence.length}
+          </div>
+          <div className="text-xs sm:text-sm font-medium text-pink-200">
+            Sırayı ve sesleri dinle
+          </div>
+        </div>
       </div>
 
-      {/* Active step progress indicator */}
-      <div className="flex items-center gap-2 mb-8">
-        {sequence.map((nodeId, idx) => {
-          const isPassed = idx < stepIndex;
-          const isCurrent = idx === stepIndex && highlightedStep !== null;
-          const node = SEQUENCE_NODES[nodeId];
-          return (
-            <motion.div
-              key={idx}
-              animate={{
-                scale: isCurrent ? 1.4 : 1,
-                backgroundColor: isCurrent || isPassed ? node.color : "rgba(255,255,255,0.1)",
-              }}
-              className="w-3.5 h-3.5 rounded-full border border-white/20"
-              style={{
-                boxShadow: isCurrent ? `0 0 15px ${node.glow}` : "none",
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* 2x2 Glowing Stimulus Grid */}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-[320px] aspect-square pointer-events-none">
-        {SEQUENCE_NODES.map((node) => {
-          const isGlowing = highlightedStep === node.id;
-          return (
-            <motion.div
-              key={node.id}
-              animate={{
-                scale: isGlowing ? 1.05 : 1,
-                borderColor: isGlowing ? node.color : "rgba(255,255,255,0.08)",
-                backgroundColor: isGlowing ? node.glow : "rgba(255,255,255,0.02)",
-                boxShadow: isGlowing ? `0 0 45px ${node.glow}` : "none",
-              }}
-              transition={{ duration: 0.1 }}
-              className="flex flex-col items-center justify-center rounded-3xl border p-5 text-white"
-            >
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg mb-2"
-                style={{
-                  background: `${node.color}22`,
-                  color: node.color,
+      {/* Center 2x2 Glowing Stimulus Grid */}
+      <div className="flex flex-col items-center justify-center my-auto">
+        <div className="grid grid-cols-2 gap-4 w-full max-w-[300px] sm:max-w-[340px] aspect-square pointer-events-none">
+          {SEQUENCE_NODES.map((node) => {
+            const isGlowing = highlightedStep === node.id;
+            return (
+              <motion.div
+                key={node.id}
+                animate={{
+                  scale: isGlowing ? 1.08 : 1,
+                  borderColor: isGlowing ? node.color : "rgba(255,255,255,0.08)",
+                  backgroundColor: isGlowing ? node.glow : "rgba(255,255,255,0.02)",
+                  boxShadow: isGlowing ? `0 0 50px ${node.glow}` : "none",
                 }}
+                transition={{ duration: 0.1 }}
+                className="flex flex-col items-center justify-center rounded-3xl border-2 p-5 text-white shadow-xl"
               >
-                {node.label[0]}
-              </div>
-              <span className="font-semibold text-sm">{node.label}</span>
-            </motion.div>
-          );
-        })}
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl mb-2"
+                  style={{
+                    background: `${node.color}25`,
+                    color: node.color,
+                  }}
+                >
+                  {node.label[0]}
+                </div>
+                <span className="font-extrabold text-sm text-white">{node.label}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-white/50 bg-white/[0.03] backdrop-blur-md px-3 py-1 rounded-xl border border-white/10">
+          HubSense · Dizi Disiplini
+        </div>
       </div>
     </motion.div>
   );
