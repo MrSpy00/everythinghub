@@ -34,6 +34,7 @@ import {
   BookOpen,
   HelpCircle,
   Cpu,
+  Gamepad2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -44,7 +45,8 @@ export type ToolCategory =
   | "text"
   | "developer"
   | "calculator"
-  | "design";
+  | "design"
+  | "game";
 
 export type ToolStatus = "live" | "coming-soon" | "beta";
 
@@ -70,6 +72,7 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   developer: "Geliştirici & Ağ",
   calculator: "Hesaplama & Finans",
   design: "Tasarım & Vektör",
+  game: "Oyun & Eğlence",
 };
 
 export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
@@ -80,9 +83,39 @@ export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
   developer: Code2,
   calculator: Calculator,
   design: Palette,
+  game: Gamepad2,
 };
 
 export const tools: Tool[] = [
+  // HubSense — Sensory Memory Game Arena (Featured)
+  {
+    slug: "hub-sense",
+    title: "HubSense — Duyu Hafızası Oyun Arenası",
+    description:
+      "Renk (CIELAB Delta-E), ses (ERB psikokustik), zaman ve şekil (IoU) hafızanı bilimsel olarak test et. Günlük meydan okuma, global skor tablosu ve viral paylaşım özelliği.",
+    icon: Gamepad2,
+    category: "game",
+    accentColor: "#6366f1",
+    accentClass: "from-indigo-500 to-violet-600",
+    status: "live",
+    tags: [
+      "oyun",
+      "hafıza",
+      "renk",
+      "ses",
+      "zaman",
+      "şekil",
+      "bilimsel",
+      "skor",
+      "günlük",
+      "meydan okuma",
+      "hubsense",
+      "dialed.gg",
+      "leaderboard",
+    ],
+    featured: true,
+    newBadge: true,
+  },
   // 0. aegisFlasher (Featured Flagship)
   {
     slug: "aegisflasher",
