@@ -550,8 +550,8 @@ function HubSenseInner() {
         }}
       />
 
-      {/* Main Container */}
-      <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col justify-center">
+      {/* Main Container (Expands to max-w-4xl on intro for generous breathing room) */}
+      <div className={`w-full ${screen === "intro" ? "max-w-4xl" : "max-w-2xl"} mx-auto flex-1 flex flex-col justify-center transition-all duration-300`}>
         <AnimatePresence mode="wait">
           {/* ─── 1. INTRO SCREEN ──────────────────────────────────────────────── */}
           {screen === "intro" && (
@@ -570,7 +570,7 @@ function HubSenseInner() {
                     <span>Hub</span>
                     <span style={{ color: accentColor }}>Sense</span>
                   </h1>
-                  <p className="text-xs sm:text-sm text-white/50 mt-0.5 leading-snug line-clamp-1 sm:line-clamp-none">
+                  <p className="text-xs sm:text-sm text-white/50 mt-0.5 leading-snug">
                     {t.subtitle}
                   </p>
                 </div>
@@ -616,12 +616,12 @@ function HubSenseInner() {
                 </div>
               </div>
 
-              {/* Game Selector Grid (Balanced 5 Disciplines Responsive Matrix) */}
+              {/* Game Selector Grid (Full, Unclipped 5 Disciplines Studio Cards) */}
               <div className="flex flex-col gap-2">
                 <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest px-1">
                   {t.selectDiscipline}
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {(
                     Object.entries(GAME_CONFIGS) as [
                       GameType,
@@ -630,8 +630,18 @@ function HubSenseInner() {
                   ).map(([type, cfg], index) => {
                     const isSelected = selectedGame === type;
                     const dInfo = t.disciplines[type];
-                    // Make 5th card span 2 cols on 2-col mobile
                     const isLastOnMobile = index === 4;
+
+                    const scienceBadge =
+                      type === "color"
+                        ? "CIELAB"
+                        : type === "sound"
+                        ? "ERB"
+                        : type === "time"
+                        ? "WEBER"
+                        : type === "shape"
+                        ? "IOU"
+                        : "MEMORY";
 
                     return (
                       <button
@@ -641,12 +651,12 @@ function HubSenseInner() {
                           setSelectedGame(type);
                         }}
                         data-cursor={`${dInfo.label} · ${lang === "tr" ? "Seç" : "Select"}`}
-                        className={`flex flex-col justify-between p-3.5 sm:p-4 rounded-3xl border text-left transition-all relative overflow-hidden backdrop-blur-2xl min-h-[110px] sm:min-h-[125px]
-                          ${isLastOnMobile ? "col-span-2 sm:col-span-1" : ""}
+                        className={`flex flex-col justify-between p-4 rounded-3xl border text-left transition-all relative overflow-hidden backdrop-blur-2xl min-h-[145px] sm:min-h-[160px] group
+                          ${isLastOnMobile ? "col-span-1 sm:col-span-2 lg:col-span-1" : ""}
                           ${
                             isSelected
                               ? "bg-white/[0.08] border-white/25 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]"
-                              : "bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06] hover:border-white/15"
+                              : "bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06] hover:border-white/20"
                           }`}
                         style={{
                           boxShadow: isSelected
@@ -655,21 +665,35 @@ function HubSenseInner() {
                           borderColor: isSelected ? `${cfg.accent}88` : undefined,
                         }}
                       >
-                        <div
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-md mb-2"
-                          style={{
-                            background: `${cfg.accent}20`,
-                            color: cfg.accent,
-                            border: `1px solid ${cfg.accent}44`,
-                          }}
-                        >
-                          {cfg.icon}
+                        <div className="flex items-center justify-between w-full mb-2.5">
+                          <div
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-md transition-transform group-hover:scale-105"
+                            style={{
+                              background: `${cfg.accent}20`,
+                              color: cfg.accent,
+                              border: `1px solid ${cfg.accent}44`,
+                            }}
+                          >
+                            {cfg.icon}
+                          </div>
+
+                          <span
+                            className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                            style={{
+                              background: `${cfg.accent}15`,
+                              color: cfg.accent,
+                              border: `1px solid ${cfg.accent}33`,
+                            }}
+                          >
+                            {scienceBadge}
+                          </span>
                         </div>
+
                         <div>
-                          <div className="font-extrabold text-sm text-white">
+                          <div className="font-extrabold text-sm sm:text-base text-white">
                             {dInfo.label}
                           </div>
-                          <div className="text-[10px] sm:text-[11px] text-white/45 leading-tight mt-0.5 line-clamp-2">
+                          <div className="text-[11px] sm:text-xs text-white/55 leading-snug mt-1">
                             {dInfo.desc}
                           </div>
                         </div>
