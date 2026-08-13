@@ -76,15 +76,18 @@ export function TimeGame({
   }, [secondsLeft, phase, holdMs, targetMs, onSubmit, t.timeUpToast]);
 
   const startHold = useCallback(
-    (e: React.PointerEvent) => {
+    (e: React.SyntheticEvent) => {
       e.preventDefault();
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // Ignore pointer capture fallback
+      if ("pointerId" in e.nativeEvent) {
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture((e.nativeEvent as PointerEvent).pointerId);
+        } catch {
+          // Ignore pointer capture fallback
+        }
       }
       if (phase !== "ready") return;
       setPhase("holding");
+      setHoldMs(0);
       SoundFX.click();
       triggerHaptic(30);
       startTimeRef.current = performance.now();
@@ -216,6 +219,9 @@ export function TimeGame({
               onPointerDown={startHold}
               onPointerUp={endHold}
               onPointerCancel={endHold}
+              onTouchStart={startHold}
+              onTouchEnd={endHold}
+              onTouchCancel={endHold}
               disabled={phase === "done"}
               data-cursor={phase === "ready" ? t.time.holdButton : phase === "holding" ? t.time.releasePrompt : formatMs(holdMs)}
               className="w-40 h-40 sm:w-44 sm:h-44 rounded-full flex flex-col items-center justify-center text-center p-4 border-2 transition-all shadow-2xl select-none touch-none"
