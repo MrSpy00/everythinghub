@@ -221,7 +221,7 @@ export function SoundGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
+      className="hubsense-game-arena relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-4 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 30%, rgba(30,27,75,0.7) 0%, rgba(9,9,11,0.85) 85%)",
@@ -470,7 +470,7 @@ export function SoundDisplay({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
+      className="hubsense-game-arena relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-4 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 30%, rgba(30,27,75,0.85) 0%, rgba(9,9,11,0.95) 85%)",

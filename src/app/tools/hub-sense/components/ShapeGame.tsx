@@ -161,7 +161,7 @@ export function ShapeGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-4 sm:p-7 backdrop-blur-3xl"
+      className="hubsense-game-arena relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-3.5 sm:p-7 backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 30%, rgba(69,26,3,0.7) 0%, rgba(9,9,11,0.85) 80%)",
@@ -172,7 +172,7 @@ export function ShapeGame({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 w-full">
         {secondsLeft !== null ? (
           <div
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
               secondsLeft <= 10
                 ? "bg-rose-500/25 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.6)]"
                 : "bg-white/[0.05] border-white/15 text-white/90"
@@ -185,7 +185,7 @@ export function ShapeGame({
           <div />
         )}
 
-        <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap sm:flex-nowrap overflow-x-auto max-w-full mx-auto text-center w-full py-0.5 px-1 scrollbar-none">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto max-w-full w-full py-1 px-1 scrollbar-none touch-pan-x justify-start sm:justify-center">
           {ALL_SHAPE_TYPES.map((type) => (
             <button
               key={type}
@@ -207,9 +207,9 @@ export function ShapeGame({
       </div>
 
       {/* Main Canvas Area */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 my-auto py-2 sm:py-0">
         {/* Interactive Vector Canvas */}
-        <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-3xl overflow-hidden border border-white/20 shadow-2xl bg-black/50">
+        <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-3xl overflow-hidden border border-white/20 shadow-2xl bg-black/50 shrink-0">
           <canvas
             ref={canvasRef}
             width={400}
@@ -226,16 +226,16 @@ export function ShapeGame({
             onPointerUp={() => setIsDraggingPos(false)}
             onPointerCancel={() => setIsDraggingPos(false)}
           />
-          <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 text-[10px] text-white/60 flex items-center gap-1.5 shadow-lg">
+          <div className="absolute bottom-2 right-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 text-[10px] text-white/60 flex items-center gap-1.5 shadow-lg">
             <Move className="w-3.5 h-3.5 text-amber-400" />
             <span>{t.shape.dragPosition} · Scroll: Boyut</span>
           </div>
         </div>
 
         {/* Sliders: Scale & Rotation */}
-        <div className="flex flex-col gap-4 w-full sm:w-64">
+        <div className="flex flex-col gap-2.5 sm:gap-4 w-full sm:w-64">
           {/* Scale */}
-          <div className="flex flex-col gap-1.5 bg-white/[0.03] p-3 rounded-2xl border border-white/10">
+          <div className="flex flex-col gap-1 sm:gap-1.5 bg-white/[0.03] p-2.5 sm:p-3 rounded-2xl border border-white/10">
             <div className="flex items-center justify-between text-xs text-white/80 font-bold">
               <div className="flex items-center gap-1.5">
                 <ZoomIn className="w-4 h-4 text-amber-400" />
@@ -263,7 +263,7 @@ export function ShapeGame({
           </div>
 
           {/* Rotation */}
-          <div className="flex flex-col gap-1.5 bg-white/[0.03] p-3 rounded-2xl border border-white/10">
+          <div className="flex flex-col gap-1 sm:gap-1.5 bg-white/[0.03] p-2.5 sm:p-3 rounded-2xl border border-white/10">
             <div className="flex items-center justify-between text-xs text-white/80 font-bold">
               <div className="flex items-center gap-1.5">
                 <RotateCw className="w-4 h-4 text-amber-400" />
@@ -293,7 +293,7 @@ export function ShapeGame({
       </div>
 
       {/* Bottom Bar & Floating Submit */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-2 sm:mt-0 pt-1">
         <div className="text-xs font-mono text-white/60 bg-white/[0.03] backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
           {t.watermark} · {t.disciplines.shape.label}
         </div>
@@ -303,14 +303,14 @@ export function ShapeGame({
           whileTap={{ scale: 0.94 }}
           onClick={handleSubmit}
           data-cursor={t.shape.confirm}
-          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
+          className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl border-2 border-white/80 hover:bg-zinc-100 transition-all group"
           style={{
             boxShadow:
               "0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(245,158,11,0.4)",
           }}
           title={t.shape.confirm}
         >
-          <Check className="w-7 h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
+          <Check className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3] text-zinc-900 group-hover:scale-110 transition-transform" />
         </motion.button>
       </div>
     </div>
@@ -363,7 +363,7 @@ export function ShapeDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
+      className="relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-4 sm:p-10 select-none backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 40%, rgba(69,26,3,0.8) 0%, rgba(9,9,11,0.9) 80%)",

@@ -151,7 +151,7 @@ export function TimeGame({
 
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
+      className="hubsense-game-arena relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-4 sm:p-8 backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 30%, rgba(6,78,59,0.7) 0%, rgba(9,9,11,0.85) 80%)",
@@ -343,7 +343,7 @@ export function TimeDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-6 sm:p-10 select-none backdrop-blur-3xl"
+      className="relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col justify-between p-4 sm:p-10 select-none backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 40%, rgba(6,78,59,0.8) 0%, rgba(9,9,11,0.9) 80%)",

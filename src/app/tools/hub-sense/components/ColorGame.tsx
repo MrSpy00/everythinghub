@@ -681,7 +681,7 @@ export function ColorDisplay({
 
   return (
     <motion.div
-      className="relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-white/20 flex flex-col justify-between p-6 sm:p-10 select-none transition-colors duration-150 ease-out"
+      className="relative w-full min-h-[480px] sm:min-h-[580px] h-auto rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-white/20 flex flex-col justify-between p-4 sm:p-10 select-none transition-colors duration-150 ease-out"
       style={{ background: displayHex }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
