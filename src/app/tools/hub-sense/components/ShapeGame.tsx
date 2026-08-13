@@ -105,10 +105,7 @@ export function ShapeGame({
       data-no-custom-cursor="true"
     >
       {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-bold text-white font-mono shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
-          {roundNumber} / {totalRounds}
-        </div>
+      <div className="flex items-center justify-end w-full">
 
         <div className="flex gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none">
           {ALL_SHAPE_TYPES.map((type) => (
@@ -299,11 +296,7 @@ export function ShapeDisplay({
       transition={{ duration: 0.25 }}
     >
       {/* Top Header */}
-      <div className="flex items-start justify-between">
-        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-bold text-white font-mono shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
-          {roundNumber} / {totalRounds}
-        </div>
-
+      <div className="flex items-start justify-end w-full">
         <div className="text-right">
           <div className="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg">
             {timeLeft.toFixed(2)}

@@ -95,10 +95,7 @@ export function SequenceGame({
       data-no-custom-cursor="true"
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between">
-        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-bold text-white font-mono shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
-          {roundNumber} / {totalRounds}
-        </div>
+      <div className="flex items-center justify-end w-full">
 
         {/* Input step dots */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg">
@@ -272,11 +269,7 @@ export function SequenceDisplay({
       transition={{ duration: 0.25 }}
     >
       {/* Top Header */}
-      <div className="flex items-start justify-between">
-        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-bold text-white font-mono shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
-          {roundNumber} / {totalRounds}
-        </div>
-
+      <div className="flex items-center justify-end w-full">
         <div className="text-right">
           <div className="text-3xl sm:text-4xl font-black font-mono tracking-tighter text-pink-300 drop-shadow-lg">
             {stepIndex + 1} / {sequence.length}
