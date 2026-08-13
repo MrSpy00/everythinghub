@@ -139,9 +139,29 @@ export function ShapeGame({
     }
   }, [secondsLeft, handleSubmit, t.timeUpToast]);
 
+  // Non-passive Mouse Scroll Wheel Scale Adjustment on Canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const step = e.deltaY < 0 ? 0.04 : -0.04;
+      setParams((p) => {
+        const nextScale = Math.max(0.25, Math.min(1.65, p.scale + step));
+        return { ...p, scale: parseFloat(nextScale.toFixed(2)) };
+      });
+    };
+
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
   return (
     <div
-      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-6 sm:p-8 backdrop-blur-3xl"
+      className="hubsense-game-arena relative w-full h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-2xl border border-white/15 select-none flex flex-col justify-between p-4 sm:p-7 backdrop-blur-3xl"
       style={{
         background:
           "radial-gradient(ellipse at 50% 30%, rgba(69,26,3,0.7) 0%, rgba(9,9,11,0.85) 80%)",
@@ -149,7 +169,7 @@ export function ShapeGame({
       data-no-custom-cursor="true"
     >
       {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 w-full">
         {secondsLeft !== null ? (
           <div
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
@@ -165,7 +185,7 @@ export function ShapeGame({
           <div />
         )}
 
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap px-2 sm:px-4 py-1.5 max-w-full mx-auto text-center w-full">
+        <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap sm:flex-nowrap overflow-x-auto max-w-full mx-auto text-center w-full py-0.5 px-1 scrollbar-none">
           {ALL_SHAPE_TYPES.map((type) => (
             <button
               key={type}
@@ -173,7 +193,7 @@ export function ShapeGame({
                 SoundFX.click();
                 setParams((p) => ({ ...p, type }));
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shrink-0 min-w-max shadow-sm
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all border shrink-0 min-w-max shadow-sm
                 ${
                   params.type === type
                     ? "bg-amber-500/20 border-amber-500/60 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] scale-105"
@@ -208,7 +228,7 @@ export function ShapeGame({
           />
           <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 text-[10px] text-white/60 flex items-center gap-1.5 shadow-lg">
             <Move className="w-3.5 h-3.5 text-amber-400" />
-            <span>{t.shape.dragPosition}</span>
+            <span>{t.shape.dragPosition} · Scroll: Boyut</span>
           </div>
         </div>
 
