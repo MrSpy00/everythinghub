@@ -75,34 +75,44 @@ export function TimeGame({
     }
   }, [secondsLeft, phase, holdMs, targetMs, onSubmit, t.timeUpToast]);
 
-  const startHold = useCallback(() => {
-    if (phase !== "ready") return;
-    setPhase("holding");
-    SoundFX.click();
-    triggerHaptic(30);
-    startTimeRef.current = performance.now();
+  const startHold = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } catch {
+        // Ignore pointer capture fallback
+      }
+      if (phase !== "ready") return;
+      setPhase("holding");
+      SoundFX.click();
+      triggerHaptic(30);
+      startTimeRef.current = performance.now();
 
-    const updateLoop = () => {
-      if (startTimeRef.current === null) return;
-      const now = performance.now();
-      const elapsed = now - startTimeRef.current;
-      setHoldMs(elapsed);
+      const updateLoop = () => {
+        if (startTimeRef.current === null) return;
+        const now = performance.now();
+        const elapsed = Math.round(now - startTimeRef.current);
+        setHoldMs(elapsed);
 
-      const ratio = Math.min(1, elapsed / (targetMs * 1.5));
-      setProgress(ratio);
+        const ratio = Math.min(1, elapsed / (targetMs * 1.5));
+        setProgress(ratio);
+
+        animFrameRef.current = requestAnimationFrame(updateLoop);
+      };
 
       animFrameRef.current = requestAnimationFrame(updateLoop);
-    };
-
-    animFrameRef.current = requestAnimationFrame(updateLoop);
-  }, [phase, targetMs]);
+    },
+    [phase, targetMs]
+  );
 
   const endHold = useCallback(() => {
     if (phase !== "holding" || startTimeRef.current === null) return;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
     const now = performance.now();
-    const elapsed = now - startTimeRef.current;
+    const elapsed = Math.round(now - startTimeRef.current);
+    startTimeRef.current = null;
     setHoldMs(elapsed);
     setPhase("done");
 
@@ -112,6 +122,29 @@ export function TimeGame({
     const result = scoreTime(targetMs, elapsed);
     onSubmit(result);
   }, [phase, targetMs, onSubmit]);
+
+  // Global window release listeners so releasing pointer anywhere immediately submits
+  useEffect(() => {
+    if (phase !== "holding") return;
+
+    const handleGlobalRelease = () => {
+      endHold();
+    };
+
+    window.addEventListener("pointerup", handleGlobalRelease);
+    window.addEventListener("pointercancel", handleGlobalRelease);
+    window.addEventListener("touchend", handleGlobalRelease);
+    window.addEventListener("touchcancel", handleGlobalRelease);
+    window.addEventListener("mouseup", handleGlobalRelease);
+
+    return () => {
+      window.removeEventListener("pointerup", handleGlobalRelease);
+      window.removeEventListener("pointercancel", handleGlobalRelease);
+      window.removeEventListener("touchend", handleGlobalRelease);
+      window.removeEventListener("touchcancel", handleGlobalRelease);
+      window.removeEventListener("mouseup", handleGlobalRelease);
+    };
+  }, [phase, endHold]);
 
   return (
     <div

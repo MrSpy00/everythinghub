@@ -165,7 +165,7 @@ export function ShapeGame({
           <div />
         )}
 
-        <div className="flex items-center justify-center gap-1.5 overflow-x-auto max-w-full sm:max-w-none mx-auto flex-wrap sm:flex-nowrap py-1">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap px-2 sm:px-4 py-1.5 max-w-full mx-auto text-center w-full">
           {ALL_SHAPE_TYPES.map((type) => (
             <button
               key={type}
@@ -173,11 +173,11 @@ export function ShapeGame({
                 SoundFX.click();
                 setParams((p) => ({ ...p, type }));
               }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border shrink-0
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shrink-0 min-w-max shadow-sm
                 ${
                   params.type === type
-                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-md scale-105"
-                    : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80"
+                    ? "bg-amber-500/20 border-amber-500/60 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] scale-105"
+                    : "bg-white/[0.04] border-white/10 text-white/60 hover:text-white hover:bg-white/10"
                 }`}
             >
               {t.shape.types[type]}
@@ -189,7 +189,7 @@ export function ShapeGame({
       {/* Main Canvas Area */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-auto">
         {/* Interactive Vector Canvas */}
-        <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border border-white/15 shadow-2xl bg-black/40">
+        <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-3xl overflow-hidden border border-white/20 shadow-2xl bg-black/50">
           <canvas
             ref={canvasRef}
             width={400}
@@ -206,8 +206,8 @@ export function ShapeGame({
             onPointerUp={() => setIsDraggingPos(false)}
             onPointerCancel={() => setIsDraggingPos(false)}
           />
-          <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/60 text-[10px] text-white/40 flex items-center gap-1 shadow">
-            <Move className="w-3 h-3 text-amber-400" />
+          <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 text-[10px] text-white/60 flex items-center gap-1.5 shadow-lg">
+            <Move className="w-3.5 h-3.5 text-amber-400" />
             <span>{t.shape.dragPosition}</span>
           </div>
         </div>
@@ -215,41 +215,41 @@ export function ShapeGame({
         {/* Sliders: Scale & Rotation */}
         <div className="flex flex-col gap-4 w-full sm:w-64">
           {/* Scale */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs text-white/70">
+          <div className="flex flex-col gap-1.5 bg-white/[0.03] p-3 rounded-2xl border border-white/10">
+            <div className="flex items-center justify-between text-xs text-white/80 font-bold">
               <div className="flex items-center gap-1.5">
-                <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
+                <ZoomIn className="w-4 h-4 text-amber-400" />
                 <span>{t.shape.scaleLabel}</span>
               </div>
-              <span className="font-mono text-amber-300 font-bold">
+              <span className="font-mono text-amber-300 font-extrabold text-sm">
                 {(params.scale * 100).toFixed(0)}%
               </span>
             </div>
             <input
               type="range"
-              min={0.3}
-              max={1.6}
+              min={0.25}
+              max={1.65}
               step={0.01}
               value={params.scale}
               data-cursor={`${t.shape.scaleLabel} · %${(params.scale * 100).toFixed(0)}`}
               onChange={(e) =>
                 setParams((p) => ({ ...p, scale: parseFloat(e.target.value) }))
               }
-              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              className="w-full h-3 rounded-full appearance-none cursor-pointer shadow-inner touch-none"
               style={{
-                background: `linear-gradient(to right, #f59e0b ${((params.scale - 0.3) / 1.3) * 100}%, rgba(255,255,255,0.1) ${((params.scale - 0.3) / 1.3) * 100}%)`,
+                background: `linear-gradient(to right, #f59e0b ${((params.scale - 0.25) / 1.4) * 100}%, rgba(255,255,255,0.1) ${((params.scale - 0.25) / 1.4) * 100}%)`,
               }}
             />
           </div>
 
           {/* Rotation */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs text-white/70">
+          <div className="flex flex-col gap-1.5 bg-white/[0.03] p-3 rounded-2xl border border-white/10">
+            <div className="flex items-center justify-between text-xs text-white/80 font-bold">
               <div className="flex items-center gap-1.5">
-                <RotateCw className="w-3.5 h-3.5 text-amber-400" />
+                <RotateCw className="w-4 h-4 text-amber-400" />
                 <span>{t.shape.rotationLabel}</span>
               </div>
-              <span className="font-mono text-amber-300 font-bold">
+              <span className="font-mono text-amber-300 font-extrabold text-sm">
                 {Math.round(params.rotation)}°
               </span>
             </div>
@@ -263,7 +263,7 @@ export function ShapeGame({
               onChange={(e) =>
                 setParams((p) => ({ ...p, rotation: parseFloat(e.target.value) }))
               }
-              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              className="w-full h-3 rounded-full appearance-none cursor-pointer shadow-inner touch-none"
               style={{
                 background: `linear-gradient(to right, #f59e0b ${(params.rotation / 360) * 100}%, rgba(255,255,255,0.1) ${(params.rotation / 360) * 100}%)`,
               }}

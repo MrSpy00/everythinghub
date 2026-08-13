@@ -79,7 +79,8 @@ export function generateTargetTime(
 
 // ─── Format helpers ───────────────────────────────────────────────────────────
 export function formatMs(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  const s = (ms / 1000).toFixed(2);
+  const rounded = Math.round(ms);
+  if (rounded < 1000) return `${rounded}ms`;
+  const s = (rounded / 1000).toFixed(2);
   return `${s}s`;
 }
