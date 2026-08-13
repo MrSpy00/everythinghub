@@ -23,25 +23,8 @@ interface StoredEntry {
   playerId?: string;
 }
 
-// Global benchmark seed entries for initial cold-start consistency
-const INITIAL_BENCHMARKS: Record<string, StoredEntry[]> = {
-  color_easy: [
-    { username: "Aegis_Prime", score: 49.4, gameType: "color", difficulty: "easy", mode: "solo", seed: 101, timestamp: Date.now() - 3600000, roundScores: [9.9, 9.9, 9.9, 9.9, 9.8], signature: "initial_1" },
-    { username: "ChronoMaster", score: 48.2, gameType: "color", difficulty: "easy", mode: "solo", seed: 102, timestamp: Date.now() - 7200000, roundScores: [9.7, 9.6, 9.6, 9.7, 9.6], signature: "initial_2" },
-    { username: "Synapse_Pro", score: 46.8, gameType: "color", difficulty: "easy", mode: "solo", seed: 103, timestamp: Date.now() - 14400000, roundScores: [9.4, 9.3, 9.4, 9.4, 9.3], signature: "initial_3" },
-  ],
-  sound_easy: [
-    { username: "PitchPerfect", score: 49.6, gameType: "sound", difficulty: "easy", mode: "solo", seed: 201, timestamp: Date.now() - 3600000, roundScores: [9.9, 10.0, 9.9, 9.9, 9.9], signature: "initial_s1" },
-    { username: "HarmonicBeats", score: 47.9, gameType: "sound", difficulty: "easy", mode: "solo", seed: 202, timestamp: Date.now() - 7200000, roundScores: [9.6, 9.6, 9.5, 9.6, 9.6], signature: "initial_s2" },
-  ],
-  time_easy: [
-    { username: "QuantumClock", score: 49.1, gameType: "time", difficulty: "easy", mode: "solo", seed: 301, timestamp: Date.now() - 3600000, roundScores: [9.8, 9.8, 9.8, 9.9, 9.9], signature: "initial_t1" },
-    { username: "MillisecMind", score: 47.5, gameType: "time", difficulty: "easy", mode: "solo", seed: 302, timestamp: Date.now() - 7200000, roundScores: [9.5, 9.5, 9.5, 9.5, 9.5], signature: "initial_t2" },
-  ],
-};
-
 // Global in-memory leaderboard partitioned by game_difficulty
-const memoryLeaderboards: Record<string, StoredEntry[]> = { ...INITIAL_BENCHMARKS };
+const memoryLeaderboards: Record<string, StoredEntry[]> = {};
 const rateLimitMap: Map<string, number> = new Map();
 const seenSubmissions: Set<string> = new Set();
 
