@@ -144,14 +144,16 @@ export function Footer() {
                 href="https://buymeacoffee.com/aegissoft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-bold text-amber-300 backdrop-blur-2xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-400/50 hover:bg-white/[0.08] hover:text-white shadow-lg"
+                className="group relative flex items-center justify-between rounded-xl border border-amber-500/40 bg-white/[0.06] px-3.5 py-2.5 text-xs font-bold text-amber-300 backdrop-blur-3xl transition-all duration-300 hover:scale-[1.02] hover:border-amber-400 hover:bg-white/15 hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] overflow-hidden"
                 data-cursor={t.buyCoffee}
               >
+                {/* Specular Highlight Refraction Line */}
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none" />
                 <div className="flex items-center gap-2.5">
                   <Coffee className="h-4 w-4 text-amber-400 transition-transform group-hover:scale-110" />
                   <span>{t.buyCoffee}</span>
                 </div>
-                <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
+                <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100 text-amber-300" />
               </a>
             </div>
           </div>

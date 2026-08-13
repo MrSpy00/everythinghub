@@ -151,7 +151,7 @@ export function Header() {
             href="https://buymeacoffee.com/aegissoft"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-bold text-amber-300 backdrop-blur-xl transition-all hover:border-amber-400 hover:bg-amber-500/20 shadow-sm"
+            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-white/[0.06] px-4 py-2 text-xs font-bold text-amber-300 backdrop-blur-3xl transition-all duration-300 hover:scale-105 hover:bg-white/15 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]"
             data-cursor={t.buyCoffee}
           >
             <Coffee className="h-4 w-4 text-amber-400" />
@@ -257,9 +257,9 @@ export function Header() {
                   href="https://buymeacoffee.com/aegissoft"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 p-2.5 text-sm font-bold text-amber-300 hover:bg-amber-500/25 transition-all"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-white/[0.06] p-3 text-sm font-extrabold text-amber-300 backdrop-blur-3xl hover:bg-white/15 hover:border-amber-400 transition-all duration-300 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]"
                 >
-                  <Coffee className="h-4 w-4" />
+                  <Coffee className="h-4 w-4 text-amber-400" />
                   <span>{t.buyCoffee}</span>
                 </a>
                 <a

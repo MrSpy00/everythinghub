@@ -996,7 +996,7 @@ function HubSenseInner() {
                     <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
                       {t.delayTitle}
                     </p>
-                    <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                    <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                       {isCustomDelay
                         ? `${customDelayInput}sn (${t.roundCustom})`
                         : selectedDelay === 0
@@ -1005,7 +1005,7 @@ function HubSenseInner() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {[0, 1, 2, 3, 5].map((sec) => {
                       const isSel = !isCustomDelay && selectedDelay === sec;
                       return (
@@ -1028,22 +1028,83 @@ function HubSenseInner() {
                         </button>
                       );
                     })}
+
+                    <button
+                      onClick={() => {
+                        SoundFX.click();
+                        setIsCustomDelay(true);
+                      }}
+                      data-cursor={t.roundCustom}
+                      className={`py-2 rounded-2xl text-xs font-bold transition-all border
+                        ${
+                          isCustomDelay
+                            ? "bg-white/15 text-white border-purple-400/50 shadow-md text-purple-300"
+                            : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
+                        }`}
+                    >
+                      {t.roundCustom}
+                    </button>
                   </div>
+
+                  {/* Custom Delay Stepper Input */}
+                  {isCustomDelay && (
+                    <div className="flex items-center justify-between gap-2 mt-1 px-1">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            SoundFX.click();
+                            const current = parseInt(customDelayInput, 10) || 3;
+                            const next = Math.max(1, current - 1);
+                            setCustomDelayInput(String(next));
+                          }}
+                          data-cursor="-1sn"
+                          className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={customDelayInput}
+                          onChange={(e) => setCustomDelayInput(e.target.value)}
+                          className="w-14 h-7 text-center font-mono font-bold text-xs bg-white/[0.05] border border-white/15 rounded-xl text-white outline-none focus:border-purple-400"
+                        />
+                        <button
+                          onClick={() => {
+                            SoundFX.click();
+                            const current = parseInt(customDelayInput, 10) || 3;
+                            const next = Math.min(30, current + 1);
+                            setCustomDelayInput(String(next));
+                          }}
+                          data-cursor="+1sn"
+                          className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-white/40 font-mono">
+                        1 — 30sn
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Daily Challenge Banner Card */}
+              {/* Daily Challenge Banner Card (Liquid Glassmorphism) */}
               <button
                 onClick={() => startGame(selectedGame, selectedDifficulty, "daily")}
                 data-cursor={t.dailyChallenge}
-                className="flex items-center justify-between p-4 rounded-3xl bg-amber-500/[0.04] border border-amber-500/20 hover:bg-amber-500/[0.08] hover:border-amber-500/40 transition-all text-left shadow-lg backdrop-blur-2xl group"
+                className="relative flex items-center justify-between p-4.5 rounded-3xl bg-white/[0.04] border border-amber-500/30 hover:bg-white/[0.1] hover:border-amber-400/80 transition-all duration-300 text-left shadow-[0_10px_35px_rgba(0,0,0,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] backdrop-blur-3xl group overflow-hidden"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                    <Calendar className="w-5 h-5" />
+                {/* Specular Highlight Refraction Line */}
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none" />
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+                    <Calendar className="w-5.5 h-5.5" />
                   </div>
                   <div>
-                    <div className="font-extrabold text-sm text-white flex items-center gap-2">
+                    <div className="font-black text-sm sm:text-base text-white flex items-center gap-2">
                       <span>{t.dailyChallenge}</span>
                       {dailyPlayed[getTodayUTCString()] && (
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -1051,28 +1112,25 @@ function HubSenseInner() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-white/50 mt-0.5 font-mono">
+                    <div className="text-xs text-white/60 mt-0.5 font-mono">
                       {getTodayUTCString()} · {t.dailyRefreshesIn}: {dailyCountdown}
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-white/40 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-5 h-5 text-amber-300/60 group-hover:translate-x-1 group-hover:text-amber-300 transition-all" />
               </button>
 
-              {/* Main Primary Action CTA Button */}
+              {/* Main Primary Action CTA Button (Centered Liquid Glassmorphism) */}
               <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                whileHover={{ scale: 1.015 }}
+                whileTap={{ scale: 0.985 }}
                 onClick={() => startGame(selectedGame, selectedDifficulty, "solo", activeRounds)}
                 data-cursor={t.startSoloGame(activeRounds)}
-                className="w-full py-4 sm:py-4.5 rounded-3xl font-black text-sm sm:text-base tracking-wide uppercase transition-all shadow-[0_10px_35px_rgba(0,0,0,0.5)] border backdrop-blur-2xl text-white"
-                style={{
-                  background: `${accentColor}25`,
-                  borderColor: `${accentColor}66`,
-                  boxShadow: `0 0 35px ${accentColor}30`,
-                }}
+                className="relative w-full py-4.5 sm:py-5 rounded-3xl font-black text-sm sm:text-base tracking-wider uppercase transition-all duration-300 shadow-[0_12px_40px_rgba(0,0,0,0.5)] border border-white/20 bg-white/[0.08] backdrop-blur-3xl hover:bg-white/15 hover:border-indigo-400/80 hover:shadow-[0_0_35px_rgba(99,102,241,0.4)] text-white overflow-hidden cursor-pointer"
               >
-                {t.startSoloGame(activeRounds)}
+                {/* Specular Highlight Refraction Line */}
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
+                <span>{t.startSoloGame(activeRounds)}</span>
               </motion.button>
             </motion.div>
           )}
