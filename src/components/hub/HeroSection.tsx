@@ -38,10 +38,13 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
 
   const scrollToTools = () => {
     if (typeof window !== "undefined") {
-      const toolsElem = document.getElementById("tools-grid") || document.getElementById("tools");
-      if (toolsElem) {
-        const headerOffset = window.innerWidth < 640 ? 55 : 80;
-        const elementPosition = toolsElem.getBoundingClientRect().top;
+      const targetElem =
+        document.getElementById("tool-cards-grid") ||
+        document.getElementById("tools-grid") ||
+        document.getElementById("tools");
+      if (targetElem) {
+        const headerOffset = window.innerWidth < 640 ? 65 : 85;
+        const elementPosition = targetElem.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
         window.scrollTo({
           top: Math.max(0, offsetPosition),
@@ -52,7 +55,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative flex flex-col items-center justify-center min-h-[calc(100dvh-4.25rem)] px-4 py-4 sm:py-10 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full pb-8 sm:pb-12">
+    <section className="relative flex flex-col items-center justify-center min-h-[calc(100dvh-4.25rem)] px-4 py-2 sm:py-10 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full pb-2 sm:pb-12">
       {/* Top Studio Badge */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -154,8 +157,8 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         </button>
       </div>
 
-      {/* 4 Feature Highlights Grid with FluidSlimeCard */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 max-w-4xl 2xl:max-w-5xl w-full">
+      {/* 4 Feature Highlights Grid with FluidSlimeCard (Desktop & Tablet) */}
+      <div className="hidden sm:grid grid-cols-2 gap-3 sm:grid-cols-4 max-w-4xl 2xl:max-w-5xl w-full mt-4">
         {[
           {
             icon: ShieldCheck,
