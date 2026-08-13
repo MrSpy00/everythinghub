@@ -10,15 +10,17 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { scoreTime, type TimeScoreResult, formatMs } from "../games/timeScoring";
 import { SoundFX, triggerHaptic } from "../games/soundEffects";
-import { Clock, Sparkles } from "lucide-react";
+import { Clock, Clock as ClockIcon, Sparkles } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { hubSenseTranslations } from "../i18n/hubSenseI18n";
+import { toast } from "sonner";
 
 interface TimeGameProps {
   targetMs: number;
   onSubmit: (result: TimeScoreResult) => void;
   roundNumber?: number;
   totalRounds?: number;
+  roundTimerSeconds?: number;
 }
 
 export function TimeGame({
@@ -26,6 +28,7 @@ export function TimeGame({
   onSubmit,
   roundNumber = 1,
   totalRounds = 5,
+  roundTimerSeconds = 0,
 }: TimeGameProps) {
   const { lang } = useLanguage();
   const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
@@ -36,6 +39,42 @@ export function TimeGame({
   const startTimeRef = useRef<number | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
+  // Per-Round Countdown Timer
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    roundTimerSeconds && roundTimerSeconds > 0 ? roundTimerSeconds : null
+  );
+
+  useEffect(() => {
+    if (!roundTimerSeconds || roundTimerSeconds <= 0) {
+      setSecondsLeft(null);
+      return;
+    }
+    setSecondsLeft(roundTimerSeconds);
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [roundNumber, roundTimerSeconds]);
+
+  // Auto-submit on timer expiry
+  useEffect(() => {
+    if (secondsLeft === 0 && phase !== "done") {
+      setPhase("done");
+      SoundFX.failRound();
+      toast.warning(t.timeUpToast);
+      const elapsed = holdMs > 0 ? holdMs : 0;
+      const result = scoreTime(targetMs, elapsed);
+      onSubmit(result);
+    }
+  }, [secondsLeft, phase, holdMs, targetMs, onSubmit, t.timeUpToast]);
+
   const startHold = useCallback(() => {
     if (phase !== "ready") return;
     setPhase("holding");
@@ -43,32 +82,35 @@ export function TimeGame({
     triggerHaptic(30);
     startTimeRef.current = performance.now();
 
-    const tick = () => {
+    const updateLoop = () => {
+      if (startTimeRef.current === null) return;
       const now = performance.now();
-      const elapsed = Math.round(now - (startTimeRef.current ?? now));
-      const p = Math.min(elapsed / (targetMs * 2), 1);
+      const elapsed = now - startTimeRef.current;
       setHoldMs(elapsed);
-      setProgress(p);
-      if (p < 1) {
-        animFrameRef.current = requestAnimationFrame(tick);
-      }
+
+      const ratio = Math.min(1, elapsed / (targetMs * 1.5));
+      setProgress(ratio);
+
+      animFrameRef.current = requestAnimationFrame(updateLoop);
     };
-    animFrameRef.current = requestAnimationFrame(tick);
+
+    animFrameRef.current = requestAnimationFrame(updateLoop);
   }, [phase, targetMs]);
 
   const endHold = useCallback(() => {
-    if (phase !== "holding" || !startTimeRef.current) return;
+    if (phase !== "holding" || startTimeRef.current === null) return;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
-    const elapsed = Math.round(performance.now() - startTimeRef.current);
+    const now = performance.now();
+    const elapsed = now - startTimeRef.current;
     setHoldMs(elapsed);
     setPhase("done");
-    SoundFX.padPress(520);
+
+    SoundFX.click();
     triggerHaptic(60);
 
-    setTimeout(() => {
-      onSubmit(scoreTime(targetMs, elapsed));
-    }, 450);
+    const result = scoreTime(targetMs, elapsed);
+    onSubmit(result);
   }, [phase, targetMs, onSubmit]);
 
   return (
@@ -81,7 +123,22 @@ export function TimeGame({
       data-no-custom-cursor="true"
     >
       {/* Top Header Bar */}
-      <div className="flex items-center justify-end w-full">
+      <div className="flex items-center justify-between w-full">
+        {secondsLeft !== null ? (
+          <div
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
+              secondsLeft <= 10
+                ? "bg-rose-500/25 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.6)]"
+                : "bg-white/[0.05] border-white/15 text-white/90"
+            }`}
+          >
+            <ClockIcon className={`w-3.5 h-3.5 shrink-0 ${secondsLeft <= 10 ? "text-rose-400" : "text-emerald-300"}`} />
+            <span>{secondsLeft}s</span>
+          </div>
+        ) : (
+          <div />
+        )}
+
         <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold shadow-lg">
           {t.time.modelName}
         </div>

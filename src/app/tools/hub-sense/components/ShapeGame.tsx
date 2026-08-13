@@ -16,15 +16,17 @@ import {
   scoreShape,
 } from "../games/shapeScoring";
 import { SoundFX } from "../games/soundEffects";
-import { RotateCw, ZoomIn, Move, Check } from "lucide-react";
+import { RotateCw, ZoomIn, Move, Check, Clock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { hubSenseTranslations } from "../i18n/hubSenseI18n";
+import { toast } from "sonner";
 
 interface ShapeGameProps {
   target: ShapeParams;
   onSubmit: (result: ShapeScoreResult) => void;
   roundNumber?: number;
   totalRounds?: number;
+  roundTimerSeconds?: number;
 }
 
 const ALL_SHAPE_TYPES: ShapeType[] = [
@@ -41,6 +43,7 @@ export function ShapeGame({
   onSubmit,
   roundNumber = 1,
   totalRounds = 5,
+  roundTimerSeconds = 0,
 }: ShapeGameProps) {
   const { lang } = useLanguage();
   const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
@@ -53,6 +56,32 @@ export function ShapeGame({
     scale: 0.8,
     rotation: 0,
   });
+
+  // Per-Round Countdown Timer
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    roundTimerSeconds && roundTimerSeconds > 0 ? roundTimerSeconds : null
+  );
+
+  useEffect(() => {
+    if (!roundTimerSeconds || roundTimerSeconds <= 0) {
+      setSecondsLeft(null);
+      return;
+    }
+    setSecondsLeft(roundTimerSeconds);
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [roundNumber, roundTimerSeconds]);
+
   const [isDraggingPos, setIsDraggingPos] = useState(false);
 
   // Redraw shape on canvas
@@ -89,11 +118,20 @@ export function ShapeGame({
     setParams((p) => ({ ...p, x, y }));
   }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     SoundFX.click();
     const result = scoreShape(target, params);
     onSubmit(result);
-  };
+  }, [target, params, onSubmit]);
+
+  // Auto-submit when time expires
+  useEffect(() => {
+    if (secondsLeft === 0) {
+      SoundFX.failRound();
+      toast.warning(t.timeUpToast);
+      handleSubmit();
+    }
+  }, [secondsLeft, handleSubmit, t.timeUpToast]);
 
   return (
     <div
@@ -105,7 +143,21 @@ export function ShapeGame({
       data-no-custom-cursor="true"
     >
       {/* Top Bar */}
-      <div className="flex items-center justify-end w-full">
+      <div className="flex items-center justify-between w-full">
+        {secondsLeft !== null ? (
+          <div
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
+              secondsLeft <= 10
+                ? "bg-rose-500/25 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.6)]"
+                : "bg-white/[0.05] border-white/15 text-white/90"
+            }`}
+          >
+            <Clock className={`w-3.5 h-3.5 shrink-0 ${secondsLeft <= 10 ? "text-rose-400" : "text-amber-300"}`} />
+            <span>{secondsLeft}s</span>
+          </div>
+        ) : (
+          <div />
+        )}
 
         <div className="flex gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none">
           {ALL_SHAPE_TYPES.map((type) => (

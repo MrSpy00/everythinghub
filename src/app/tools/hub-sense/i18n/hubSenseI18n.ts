@@ -23,6 +23,13 @@ export interface HubSenseDictionary {
   roundStandard: string;
   roundMarathon: string;
   roundCustom: string;
+  timerTitle: string;
+  timerUnlimited: string;
+  timerSec: (sec: number) => string;
+  timerMin: (min: number) => string;
+  timerCustom: string;
+  customTimerPlaceholder: string;
+  timeUpToast: string;
   customRoundsPlaceholder: string;
   delayTitle: string;
   delayInstant: string;
@@ -272,6 +279,13 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
     roundStandard: "Standart 5 tur",
     roundMarathon: "Maraton 10 tur",
     roundCustom: "Özel Tur Sayısı",
+    timerTitle: "Tur Süre Sınırı (Her Tura Özel)",
+    timerUnlimited: "Süresiz (Varsayılan)",
+    timerSec: (sec: number) => `${sec}sn`,
+    timerMin: (min: number) => `${min}dk`,
+    timerCustom: "Özel Süre",
+    customTimerPlaceholder: "Saniye girin (5-600)",
+    timeUpToast: "Tur Süresi Doldu!",
     customRoundsPlaceholder: "Tur sayısı yazın (1-20)",
     delayTitle: "Turlar Arası Bekleme Süresi",
     delayInstant: "0sn (Anında)",
@@ -338,7 +352,7 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
       satDec: "Doygunluk Azalt",
       brightInc: "Parlaklık Artır",
       brightDec: "Parlaklık Azalt",
-      instruction: "Sol çubuklardan Ton, Doygunluk ve Parlaklığı ayarlayın",
+      instruction: "Çubuklardan Ton, Doygunluk ve Parlaklığı ayarlayın",
       confirm: "Bu Rengi Seç ve Onayla",
       colorBlindModes: {
         none: "Normal",
@@ -536,6 +550,13 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
     roundStandard: "Standard 5 rounds",
     roundMarathon: "Marathon 10 rounds",
     roundCustom: "Custom Rounds",
+    timerTitle: "Per-Round Time Limit",
+    timerUnlimited: "Unlimited (Default)",
+    timerSec: (sec: number) => `${sec}s`,
+    timerMin: (min: number) => `${min}m`,
+    timerCustom: "Custom Time",
+    customTimerPlaceholder: "Enter seconds (5-600)",
+    timeUpToast: "Time Expired!",
     customRoundsPlaceholder: "Enter rounds (1-20)",
     delayTitle: "Inter-Round Prep Delay",
     delayInstant: "0s (Instant)",
@@ -602,7 +623,7 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
       satDec: "Decrease Saturation",
       brightInc: "Increase Brightness",
       brightDec: "Decrease Brightness",
-      instruction: "Adjust Hue, Saturation and Brightness using the left sliders",
+      instruction: "Adjust Hue, Saturation and Brightness from the sliders",
       confirm: "Confirm Selected Color",
       colorBlindModes: {
         none: "Normal",

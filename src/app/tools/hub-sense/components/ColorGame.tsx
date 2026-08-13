@@ -18,7 +18,7 @@ import {
   type ColorBlindType,
 } from "../games/colorScoring";
 import { SoundFX } from "../games/soundEffects";
-import { Eye, Check, ChevronUp, ChevronDown, Sparkles, Copy } from "lucide-react";
+import { Eye, Check, ChevronUp, ChevronDown, Sparkles, Copy, Clock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { hubSenseTranslations } from "../i18n/hubSenseI18n";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ interface ColorGameProps {
   onColorBlindToggle: (mode: ColorBlindType) => void;
   roundNumber?: number;
   totalRounds?: number;
+  roundTimerSeconds?: number;
 }
 
 export function ColorGame({
@@ -46,6 +47,7 @@ export function ColorGame({
   onColorBlindToggle,
   roundNumber = 1,
   totalRounds = 5,
+  roundTimerSeconds = 0,
 }: ColorGameProps) {
   const { lang } = useLanguage();
   const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
@@ -55,6 +57,54 @@ export function ColorGame({
   const [bright, setBright] = useState(50);
   const [copiedHex, setCopiedHex] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
+
+  // Per-Round Countdown Timer
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    roundTimerSeconds && roundTimerSeconds > 0 ? roundTimerSeconds : null
+  );
+
+  useEffect(() => {
+    if (!roundTimerSeconds || roundTimerSeconds <= 0) {
+      setSecondsLeft(null);
+      return;
+    }
+    setSecondsLeft(roundTimerSeconds);
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [roundNumber, roundTimerSeconds]);
+
+  // Press-and-Hold Stepper Logic
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopHoldStep = useCallback(() => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    holdTimerRef.current = null;
+    holdIntervalRef.current = null;
+  }, []);
+
+  const startHoldStep = useCallback(
+    (action: () => void) => {
+      stopHoldStep();
+      action();
+      holdTimerRef.current = setTimeout(() => {
+        holdIntervalRef.current = setInterval(() => {
+          action();
+        }, 55);
+      }, 200);
+    },
+    [stopHoldStep]
+  );
 
   // Instruction banner auto-dissolve after 2.2s
   useEffect(() => {
@@ -160,6 +210,15 @@ export function ColorGame({
     onSubmit(result);
   }, [targetColor, hue, sat, bright, onSubmit]);
 
+  // Auto-submit when time expires
+  useEffect(() => {
+    if (secondsLeft === 0) {
+      SoundFX.failRound();
+      toast.warning(t.timeUpToast);
+      handleSubmit();
+    }
+  }, [secondsLeft, handleSubmit, t.timeUpToast]);
+
   return (
     <div
       className="hubsense-game-arena relative w-full flex flex-col sm:flex-row h-auto min-h-[520px] sm:h-[580px] rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-white/20 select-none transition-colors duration-150 ease-out"
@@ -173,8 +232,11 @@ export function ColorGame({
           {/* 1. HUE SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onClick={() => setHue((h) => (h - 1 + 360) % 360)}
-              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
+              onPointerDown={() => startHoldStep(() => setHue((h) => (h - 1 + 360) % 360))}
+              onPointerUp={stopHoldStep}
+              onPointerLeave={stopHoldStep}
+              onPointerCancel={stopHoldStep}
+              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform cursor-pointer"
               title={t.color.hueDec}
               data-cursor={t.color.hueDec}
             >
@@ -206,8 +268,11 @@ export function ColorGame({
             </div>
 
             <button
-              onClick={() => setHue((h) => (h + 1) % 360)}
-              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
+              onPointerDown={() => startHoldStep(() => setHue((h) => (h + 1) % 360))}
+              onPointerUp={stopHoldStep}
+              onPointerLeave={stopHoldStep}
+              onPointerCancel={stopHoldStep}
+              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform cursor-pointer"
               title={t.color.hueInc}
               data-cursor={t.color.hueInc}
             >
@@ -223,8 +288,11 @@ export function ColorGame({
           {/* 2. SATURATION SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onClick={() => setSat((s) => Math.min(100, s + 1))}
-              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
+              onPointerDown={() => startHoldStep(() => setSat((s) => Math.min(100, s + 1)))}
+              onPointerUp={stopHoldStep}
+              onPointerLeave={stopHoldStep}
+              onPointerCancel={stopHoldStep}
+              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform cursor-pointer"
               title={t.color.satInc}
               data-cursor={t.color.satInc}
             >
@@ -255,8 +323,11 @@ export function ColorGame({
             </div>
 
             <button
-              onClick={() => setSat((s) => Math.max(0, s - 1))}
-              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
+              onPointerDown={() => startHoldStep(() => setSat((s) => Math.max(0, s - 1)))}
+              onPointerUp={stopHoldStep}
+              onPointerLeave={stopHoldStep}
+              onPointerCancel={stopHoldStep}
+              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform cursor-pointer"
               title={t.color.satDec}
               data-cursor={t.color.satDec}
             >
@@ -272,8 +343,11 @@ export function ColorGame({
           {/* 3. BRIGHTNESS SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onClick={() => setBright((b) => Math.min(100, b + 1))}
-              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
+              onPointerDown={() => startHoldStep(() => setBright((b) => Math.min(100, b + 1)))}
+              onPointerUp={stopHoldStep}
+              onPointerLeave={stopHoldStep}
+              onPointerCancel={stopHoldStep}
+              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform cursor-pointer"
               title={t.color.brightInc}
               data-cursor={t.color.brightInc}
             >
@@ -304,8 +378,11 @@ export function ColorGame({
             </div>
 
             <button
-              onClick={() => setBright((b) => Math.max(0, b - 1))}
-              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
+              onPointerDown={() => startHoldStep(() => setBright((b) => Math.max(0, b - 1)))}
+              onPointerUp={stopHoldStep}
+              onPointerLeave={stopHoldStep}
+              onPointerCancel={stopHoldStep}
+              className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform cursor-pointer"
               title={t.color.brightDec}
               data-cursor={t.color.brightDec}
             >
@@ -329,8 +406,11 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setHue((h) => (h - 1 + 360) % 360)}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
+                onPointerDown={() => startHoldStep(() => setHue((h) => (h - 1 + 360) % 360))}
+                onPointerUp={stopHoldStep}
+                onPointerLeave={stopHoldStep}
+                onPointerCancel={stopHoldStep}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0 touch-none cursor-pointer"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>
@@ -347,8 +427,11 @@ export function ColorGame({
                 }}
               />
               <button
-                onClick={() => setHue((h) => (h + 1) % 360)}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
+                onPointerDown={() => startHoldStep(() => setHue((h) => (h + 1) % 360))}
+                onPointerUp={stopHoldStep}
+                onPointerLeave={stopHoldStep}
+                onPointerCancel={stopHoldStep}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0 touch-none cursor-pointer"
               >
                 <ChevronUp className="w-4 h-4" />
               </button>
@@ -363,8 +446,11 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setSat((s) => Math.max(0, s - 1))}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
+                onPointerDown={() => startHoldStep(() => setSat((s) => Math.max(0, s - 1)))}
+                onPointerUp={stopHoldStep}
+                onPointerLeave={stopHoldStep}
+                onPointerCancel={stopHoldStep}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0 touch-none cursor-pointer"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>
@@ -380,8 +466,11 @@ export function ColorGame({
                 }}
               />
               <button
-                onClick={() => setSat((s) => Math.min(100, s + 1))}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
+                onPointerDown={() => startHoldStep(() => setSat((s) => Math.min(100, s + 1)))}
+                onPointerUp={stopHoldStep}
+                onPointerLeave={stopHoldStep}
+                onPointerCancel={stopHoldStep}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0 touch-none cursor-pointer"
               >
                 <ChevronUp className="w-4 h-4" />
               </button>
@@ -396,8 +485,11 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setBright((b) => Math.max(0, b - 1))}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
+                onPointerDown={() => startHoldStep(() => setBright((b) => Math.max(0, b - 1)))}
+                onPointerUp={stopHoldStep}
+                onPointerLeave={stopHoldStep}
+                onPointerCancel={stopHoldStep}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0 touch-none cursor-pointer"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>
@@ -413,8 +505,11 @@ export function ColorGame({
                 }}
               />
               <button
-                onClick={() => setBright((b) => Math.min(100, b + 1))}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
+                onPointerDown={() => startHoldStep(() => setBright((b) => Math.min(100, b + 1)))}
+                onPointerUp={stopHoldStep}
+                onPointerLeave={stopHoldStep}
+                onPointerCancel={stopHoldStep}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0 touch-none cursor-pointer"
               >
                 <ChevronUp className="w-4 h-4" />
               </button>
@@ -426,44 +521,62 @@ export function ColorGame({
 
       {/* ─── STAGE PANEL: Live Color Canvas & Info Bar ─── */}
       <div className="relative flex-1 w-full h-full min-h-[240px] sm:min-h-0 flex flex-col justify-between p-4 sm:p-8 order-1 sm:order-2">
-        {/* Top Controls Bar (Clean single-row header without duplicate 1/5 badge) */}
-        <div className="flex items-center justify-end gap-2 w-full">
-          {/* Color blind selector */}
-          <button
-            onClick={() => {
-              const modes: ColorBlindType[] = [
-                "none",
-                "protanopia",
-                "deuteranopia",
-                "tritanopia",
-              ];
-              const next = modes[(modes.indexOf(colorBlindMode) + 1) % modes.length];
-              onColorBlindToggle(next);
-            }}
-            data-cursor={t.color.colorBlindModes[colorBlindMode]}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/15 text-xs text-white/80 hover:bg-black/55 transition-colors shadow-lg"
-          >
-            <Eye className="w-3.5 h-3.5 text-indigo-300" />
-            <span className="capitalize text-[11px]">
-              {t.color.colorBlindModes[colorBlindMode]}
-            </span>
-          </button>
+        {/* Top Controls Bar */}
+        <div className="flex items-center justify-between gap-2 w-full">
+          {/* Per-Round Countdown Timer Badge (Red Glowing Warning <= 10s) */}
+          {secondsLeft !== null ? (
+            <div
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
+                secondsLeft <= 10
+                  ? "bg-rose-500/25 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.6)]"
+                  : "bg-black/35 border-white/15 text-white/90"
+              }`}
+            >
+              <Clock className={`w-3.5 h-3.5 shrink-0 ${secondsLeft <= 10 ? "text-rose-400" : "text-indigo-300"}`} />
+              <span>{secondsLeft}s</span>
+            </div>
+          ) : (
+            <div />
+          )}
 
-          {/* Click-to-Copy HEX Badge */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleCopyHex}
-            data-cursor={lang === "tr" ? "HEX Kopyala" : "Copy HEX"}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/20 text-xs font-mono font-extrabold text-white hover:bg-black/55 transition-colors shadow-lg"
-          >
-            <span>{rawHex.toUpperCase()}</span>
-            {copiedHex ? (
-              <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
-            ) : (
-              <Copy className="w-3 h-3 text-white/60" />
-            )}
-          </motion.button>
+          <div className="flex items-center gap-2">
+            {/* Color blind selector */}
+            <button
+              onClick={() => {
+                const modes: ColorBlindType[] = [
+                  "none",
+                  "protanopia",
+                  "deuteranopia",
+                  "tritanopia",
+                ];
+                const next = modes[(modes.indexOf(colorBlindMode) + 1) % modes.length];
+                onColorBlindToggle(next);
+              }}
+              data-cursor={t.color.colorBlindModes[colorBlindMode]}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/15 text-xs text-white/80 hover:bg-black/55 transition-colors shadow-lg"
+            >
+              <Eye className="w-3.5 h-3.5 text-indigo-300" />
+              <span className="capitalize text-[11px]">
+                {t.color.colorBlindModes[colorBlindMode]}
+              </span>
+            </button>
+
+            {/* Click-to-Copy HEX Badge */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleCopyHex}
+              data-cursor={lang === "tr" ? "HEX Kopyala" : "Copy HEX"}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/20 text-xs font-mono font-extrabold text-white hover:bg-black/55 transition-colors shadow-lg"
+            >
+              <span>{rawHex.toUpperCase()}</span>
+              {copiedHex ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
+              ) : (
+                <Copy className="w-3 h-3 text-white/60" />
+              )}
+            </motion.button>
+          </div>
         </div>
 
         {/* Center Subtitle or Prompt (Fades out smoothly after 2.2s) */}

@@ -225,6 +225,10 @@ function HubSenseInner() {
   const [customDelayInput, setCustomDelayInput] = useState<string>("3");
   const [prepSecondsLeft, setPrepSecondsLeft] = useState<number>(0);
 
+  const [selectedRoundTimer, setSelectedRoundTimer] = useState<number>(0); // 0 = Unlimited (Default)
+  const [isCustomTimer, setIsCustomTimer] = useState<boolean>(false);
+  const [customTimerInput, setCustomTimerInput] = useState<string>("30");
+
   const [session, setSession] = useState<GameSession | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
   const [roundResults, setRoundResults] = useState<RoundData[]>([]);
@@ -252,6 +256,13 @@ function HubSenseInner() {
       ? parsedCustom
       : 7
     : selectedRounds;
+
+  const parsedCustomTimer = parseInt(customTimerInput, 10);
+  const activeRoundTimer = isCustomTimer
+    ? !isNaN(parsedCustomTimer) && parsedCustomTimer >= 5 && parsedCustomTimer <= 600
+      ? parsedCustomTimer
+      : 30
+    : selectedRoundTimer;
 
   const scrollToTopOrArena = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -1092,6 +1103,106 @@ function HubSenseInner() {
                     </div>
                   )}
                 </div>
+
+                {/* 4. Per-Round Time Limit Selector (Tur Süre Sınırı) */}
+                <div className="flex flex-col gap-2 p-4 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-2xl col-span-1 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
+                      {t.timerTitle}
+                    </p>
+                    <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      {isCustomTimer
+                        ? `${customTimerInput}sn (${t.timerCustom})`
+                        : selectedRoundTimer === 0
+                        ? t.timerUnlimited
+                        : `${selectedRoundTimer}sn`}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {[0, 15, 30, 60, 120].map((sec) => {
+                      const isSel = !isCustomTimer && selectedRoundTimer === sec;
+                      return (
+                        <button
+                          key={sec}
+                          onClick={() => {
+                            SoundFX.click();
+                            setIsCustomTimer(false);
+                            setSelectedRoundTimer(sec);
+                          }}
+                          data-cursor={sec === 0 ? t.timerUnlimited : sec >= 60 ? t.timerMin(sec / 60) : t.timerSec(sec)}
+                          className={`py-2 rounded-2xl text-xs font-bold transition-all border
+                            ${
+                              isSel
+                                ? "bg-white/15 text-white border-rose-400/50 shadow-md text-rose-300"
+                                : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
+                            }`}
+                        >
+                          {sec === 0 ? t.timerUnlimited : sec >= 60 ? `${sec / 60}dk` : `${sec}sn`}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      onClick={() => {
+                        SoundFX.click();
+                        setIsCustomTimer(true);
+                      }}
+                      data-cursor={t.timerCustom}
+                      className={`py-2 rounded-2xl text-xs font-bold transition-all border
+                        ${
+                          isCustomTimer
+                            ? "bg-white/15 text-white border-rose-400/50 shadow-md text-rose-300"
+                            : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
+                        }`}
+                    >
+                      {t.timerCustom}
+                    </button>
+                  </div>
+
+                  {/* Custom Timer Stepper Input */}
+                  {isCustomTimer && (
+                    <div className="flex items-center justify-between gap-2 mt-1 px-1">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            SoundFX.click();
+                            const current = activeRoundTimer;
+                            const next = Math.max(5, current - 5);
+                            setCustomTimerInput(String(next));
+                          }}
+                          data-cursor="-5sn"
+                          className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <input
+                          type="number"
+                          min={5}
+                          max={600}
+                          value={customTimerInput}
+                          onChange={(e) => setCustomTimerInput(e.target.value)}
+                          className="w-16 h-7 text-center font-mono font-bold text-xs bg-white/[0.05] border border-white/15 rounded-xl text-white outline-none focus:border-rose-400"
+                        />
+                        <button
+                          onClick={() => {
+                            SoundFX.click();
+                            const current = activeRoundTimer;
+                            const next = Math.min(600, current + 5);
+                            setCustomTimerInput(String(next));
+                          }}
+                          data-cursor="+5sn"
+                          className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-white/40 font-mono">
+                        5 — 600 saniye
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Daily Challenge Banner Card (Liquid Glassmorphism) */}
@@ -1332,6 +1443,7 @@ function HubSenseInner() {
                   onColorBlindToggle={setColorBlindMode}
                   roundNumber={currentRound + 1}
                   totalRounds={totalRoundsCount}
+                  roundTimerSeconds={activeRoundTimer}
                 />
               )}
               {session.gameType === "sound" && soundStimulus && (
@@ -1342,6 +1454,7 @@ function HubSenseInner() {
                   onInitAudio={initAudio}
                   roundNumber={currentRound + 1}
                   totalRounds={totalRoundsCount}
+                  roundTimerSeconds={activeRoundTimer}
                 />
               )}
               {session.gameType === "time" && timeStimulus && (
@@ -1350,6 +1463,7 @@ function HubSenseInner() {
                   onSubmit={handleRoundSubmit as (r: TimeScoreResult) => void}
                   roundNumber={currentRound + 1}
                   totalRounds={totalRoundsCount}
+                  roundTimerSeconds={activeRoundTimer}
                 />
               )}
               {session.gameType === "shape" && shapeStimulus && (
@@ -1358,6 +1472,7 @@ function HubSenseInner() {
                   onSubmit={handleRoundSubmit as (r: ShapeScoreResult) => void}
                   roundNumber={currentRound + 1}
                   totalRounds={totalRoundsCount}
+                  roundTimerSeconds={activeRoundTimer}
                 />
               )}
               {session.gameType === "sequence" && sequenceStimulus && (
@@ -1366,6 +1481,7 @@ function HubSenseInner() {
                   onSubmit={handleRoundSubmit as (r: SequenceScoreResult) => void}
                   roundNumber={currentRound + 1}
                   totalRounds={totalRoundsCount}
+                  roundTimerSeconds={activeRoundTimer}
                 />
               )}
             </motion.div>

@@ -15,15 +15,17 @@ import {
   type SequenceScoreResult,
 } from "../games/sequenceScoring";
 import { SoundFX, playSynthesizedTone } from "../games/soundEffects";
-import { RotateCcw, Check } from "lucide-react";
+import { RotateCcw, Check, Clock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { hubSenseTranslations } from "../i18n/hubSenseI18n";
+import { toast } from "sonner";
 
 interface SequenceGameProps {
   targetSequence: number[];
   onSubmit: (result: SequenceScoreResult) => void;
   roundNumber?: number;
   totalRounds?: number;
+  roundTimerSeconds?: number;
 }
 
 export function SequenceGame({
@@ -31,12 +33,37 @@ export function SequenceGame({
   onSubmit,
   roundNumber = 1,
   totalRounds = 5,
+  roundTimerSeconds = 0,
 }: SequenceGameProps) {
   const { lang } = useLanguage();
   const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
 
   const [playerSequence, setPlayerSequence] = useState<number[]>([]);
   const [activePad, setActivePad] = useState<number | null>(null);
+
+  // Per-Round Countdown Timer
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    roundTimerSeconds && roundTimerSeconds > 0 ? roundTimerSeconds : null
+  );
+
+  useEffect(() => {
+    if (!roundTimerSeconds || roundTimerSeconds <= 0) {
+      setSecondsLeft(null);
+      return;
+    }
+    setSecondsLeft(roundTimerSeconds);
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [roundNumber, roundTimerSeconds]);
 
   const handlePadPress = useCallback(
     (node: SequenceNode) => {
@@ -67,7 +94,7 @@ export function SequenceGame({
     setPlayerSequence([]);
   };
 
-  const handleForceSubmit = () => {
+  const handleForceSubmit = useCallback(() => {
     SoundFX.click();
     const result = scoreSequence(targetSequence, playerSequence);
     if (result.isPerfect) {
@@ -76,7 +103,16 @@ export function SequenceGame({
       SoundFX.failRound();
     }
     onSubmit(result);
-  };
+  }, [targetSequence, playerSequence, onSubmit]);
+
+  // Auto-submit when time expires
+  useEffect(() => {
+    if (secondsLeft === 0) {
+      SoundFX.failRound();
+      toast.warning(t.timeUpToast);
+      handleForceSubmit();
+    }
+  }, [secondsLeft, handleForceSubmit, t.timeUpToast]);
 
   const nodeLabels = [
     t.sequence.nodes.c4,
@@ -95,7 +131,21 @@ export function SequenceGame({
       data-no-custom-cursor="true"
     >
       {/* Top Header */}
-      <div className="flex items-center justify-end w-full">
+      <div className="flex items-center justify-between w-full">
+        {secondsLeft !== null ? (
+          <div
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
+              secondsLeft <= 10
+                ? "bg-rose-500/25 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.6)]"
+                : "bg-white/[0.05] border-white/15 text-white/90"
+            }`}
+          >
+            <Clock className={`w-3.5 h-3.5 shrink-0 ${secondsLeft <= 10 ? "text-rose-400" : "text-pink-300"}`} />
+            <span>{secondsLeft}s</span>
+          </div>
+        ) : (
+          <div />
+        )}
 
         {/* Input step dots */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg">

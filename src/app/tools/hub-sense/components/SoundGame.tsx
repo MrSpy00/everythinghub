@@ -15,9 +15,10 @@ import {
   type SoundScoreResult,
 } from "../games/soundScoring";
 import { SoundFX } from "../games/soundEffects";
-import { Play, Square, Check } from "lucide-react";
+import { Play, Square, Check, Volume2, Clock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { hubSenseTranslations } from "../i18n/hubSenseI18n";
+import { toast } from "sonner";
 
 const MIN_FREQ = 80;
 const MAX_FREQ = 2000;
@@ -41,6 +42,7 @@ interface SoundGameProps {
   onInitAudio: () => Promise<AudioContext>;
   roundNumber?: number;
   totalRounds?: number;
+  roundTimerSeconds?: number;
 }
 
 export function SoundGame({
@@ -50,6 +52,7 @@ export function SoundGame({
   onInitAudio,
   roundNumber = 1,
   totalRounds = 5,
+  roundTimerSeconds = 0,
 }: SoundGameProps) {
   const { lang } = useLanguage();
   const t = hubSenseTranslations[lang] || hubSenseTranslations.tr;
@@ -59,6 +62,30 @@ export function SoundGame({
   const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeOscRef = useRef<OscillatorNode | null>(null);
   const activeGainRef = useRef<GainNode | null>(null);
+
+  // Per-Round Countdown Timer
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    roundTimerSeconds && roundTimerSeconds > 0 ? roundTimerSeconds : null
+  );
+
+  useEffect(() => {
+    if (!roundTimerSeconds || roundTimerSeconds <= 0) {
+      setSecondsLeft(null);
+      return;
+    }
+    setSecondsLeft(roundTimerSeconds);
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [roundNumber, roundTimerSeconds]);
 
   const currentFreq = sliderValToFreq(sliderVal);
   const noteName = freqToNoteName(currentFreq);
@@ -161,12 +188,21 @@ export function SoundGame({
     }, 700);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     stopTone();
     SoundFX.click();
     const result = scoreSound(targetFreq, currentFreq);
     onSubmit(result);
-  };
+  }, [stopTone, targetFreq, currentFreq, onSubmit]);
+
+  // Auto-submit when time expires
+  useEffect(() => {
+    if (secondsLeft === 0) {
+      SoundFX.failRound();
+      toast.warning(t.timeUpToast);
+      handleSubmit();
+    }
+  }, [secondsLeft, handleSubmit, t.timeUpToast]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -193,7 +229,22 @@ export function SoundGame({
       data-no-custom-cursor="true"
     >
       {/* Top Bar */}
-      <div className="flex items-center justify-end w-full">
+      <div className="flex items-center justify-between w-full">
+        {secondsLeft !== null ? (
+          <div
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
+              secondsLeft <= 10
+                ? "bg-rose-500/25 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.6)]"
+                : "bg-white/[0.05] border-white/15 text-white/90"
+            }`}
+          >
+            <Clock className={`w-3.5 h-3.5 shrink-0 ${secondsLeft <= 10 ? "text-rose-400" : "text-indigo-300"}`} />
+            <span>{secondsLeft}s</span>
+          </div>
+        ) : (
+          <div />
+        )}
+
         <div className="flex items-center gap-2">
           <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold shadow-lg">
             {noteName}
