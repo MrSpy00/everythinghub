@@ -36,7 +36,9 @@
 
 **EverythingHub**, modern web standartları (Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion ve Outfit tipografisi) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar stüdyosudur.
 
-Platform, sıradan hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) mofizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)** ve dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ile donatılmıştır.
+Platform, sıradan hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) morfizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)**, dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ve gerçek fizik simülasyonuyla çalışan **Venom Symbiote Engine v3.0** (`VenomSymbioteEngine`) ile donatılmıştır.
+
+Venom Symbiote Engine, Verlet-yay zinciri fiziği kullanan, elementlerin dış kenar çizgilerinde yılan gibi kayan ipliksi filamentler oluşturan, elementler arası organik köprü geçişleri çizen ve tam uyku/uyanış döngüsüyle optimize edilmiş global bir Canvas 2D motorudur.
 
 ### Temel Değerler ve Mühendislik İlkeleri
 1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
@@ -210,6 +212,21 @@ Instead of generic dashboard templates, EverythingHub delivers a **creative stud
 - **Graphics & Audio:** OGL WebGL Dotted Waves, Web Audio API AnalyserNode, Web Crypto API
 - **Internationalization:** Dynamic Turkish (`tr`) & English (`en`) context
 - **Design Standard:** Zero emoji standard, Liquid Glassmorphism, Specular Highlights, Dual-conic Neon Borders
+
+### Creative Engine: Venom Symbiote Engine v3.0
+
+The `VenomSymbioteEngine` (`src/components/creative/VenomSymbioteEngine.tsx`) is a global Canvas 2D organism engine with the following architecture:
+
+| Property | Detail |
+|---|---|
+| **Physics** | Verlet-spring chain simulation with 24 segments per filament |
+| **Visual style** | Ultra-thin tapered filaments, dark-violet/near-black palette, phosphorescent glow |
+| **Behavior** | Lives ON element border outlines — never fills inside elements |
+| **Motion** | Serpentine angular drift around perimeter, organic breathing oscillations |
+| **Transitions** | Elastic spring-chain bridge filament between hovered elements |
+| **Targeting** | Auto-detects cards, buttons, inputs, links via DOM closest() traversal |
+| **Performance** | Full sleep/wake lifecycle, RAF loop halts when idle >3s, DPR capped at 2x |
+| **Accessibility** | Disabled on `prefers-reduced-motion` and touch-only devices |
 
 ---
 
