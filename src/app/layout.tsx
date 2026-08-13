@@ -5,6 +5,7 @@ import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
 import { DottedBackground } from "@/components/creative/DottedBackground";
 import { UserCursor } from "@/components/creative/UserCursor";
+import { VenomSymbioteEngine } from "@/components/creative/VenomSymbioteEngine";
 import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -314,6 +315,9 @@ export default function RootLayout({
         <LanguageProvider>
           {/* Creative WebGL Ambient Background */}
           <DottedBackground />
+
+          {/* Global Living Venom Symbiote Engine */}
+          <VenomSymbioteEngine />
 
           {/* Studio User Follower Cursor */}
           <UserCursor name="EverythingHub" color="#8b5cf6" size={26} />
