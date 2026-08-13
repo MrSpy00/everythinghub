@@ -53,6 +53,25 @@ export const SEQUENCE_NODES: SequenceNode[] = [
   },
 ];
 
+export const SCALE_MODES: Record<string, { frequencies: number[]; notes: string[] }> = {
+  major: { frequencies: [261.63, 329.63, 392.00, 523.25], notes: ["C4", "E4", "G4", "C5"] },
+  minor: { frequencies: [220.00, 261.63, 329.63, 440.00], notes: ["A3", "C4", "E4", "A4"] },
+  pentatonic: { frequencies: [174.61, 196.00, 220.00, 261.63], notes: ["F3", "G3", "A3", "C4"] },
+  lydian: { frequencies: [293.66, 369.99, 440.00, 587.33], notes: ["D4", "F#4", "A4", "D5"] },
+};
+
+export function getRoundScaleNodes(seed: number, roundIndex: number): SequenceNode[] {
+  const modeKeys = Object.keys(SCALE_MODES);
+  const selectedKey = modeKeys[(roundIndex + Math.floor(seed % modeKeys.length)) % modeKeys.length];
+  const mode = SCALE_MODES[selectedKey];
+
+  return SEQUENCE_NODES.map((node, idx) => ({
+    ...node,
+    freq: mode.frequencies[idx],
+    note: mode.notes[idx],
+  }));
+}
+
 export interface SequenceScoreResult {
   score: number; // 0-10
   targetSequence: number[];

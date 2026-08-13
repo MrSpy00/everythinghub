@@ -179,10 +179,31 @@ function generateRoundStimulus(
 
   switch (gameType) {
     case "color": {
-      // Golden ratio hue stepping to guarantee rich color diversity across consecutive rounds
-      const baseHue = ((seed % 360) + roundIndex * 137.5 + rng() * 45) % 360;
-      const sVal = Math.round(35 + rng() * 65);
-      const bVal = Math.round(40 + rng() * 55);
+      // Golden ratio hue stepping + dynamic contrast profile rotation across rounds
+      const baseHue = ((seed % 360) + roundIndex * 137.5 + rng() * 90) % 360;
+      
+      const contrastMode = (roundIndex + Math.floor(seed % 4)) % 4;
+      let sVal: number;
+      let bVal: number;
+
+      if (contrastMode === 0) {
+        // Pastel / Muted
+        sVal = Math.round(20 + rng() * 30);
+        bVal = Math.round(75 + rng() * 20);
+      } else if (contrastMode === 1) {
+        // Vivid Neon
+        sVal = Math.round(80 + rng() * 20);
+        bVal = Math.round(80 + rng() * 20);
+      } else if (contrastMode === 2) {
+        // Deep Jewel Tone
+        sVal = Math.round(65 + rng() * 30);
+        bVal = Math.round(25 + rng() * 30);
+      } else {
+        // Mellow Earth
+        sVal = Math.round(40 + rng() * 40);
+        bVal = Math.round(45 + rng() * 45);
+      }
+
       return {
         h: Math.round(baseHue),
         s: sVal,

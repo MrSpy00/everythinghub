@@ -4,7 +4,18 @@
  * Shapes: circle, triangle, square, pentagon, hexagon, star.
  */
 
-export type ShapeType = "circle" | "triangle" | "square" | "pentagon" | "hexagon" | "star";
+export type ShapeType =
+  | "circle"
+  | "triangle"
+  | "square"
+  | "pentagon"
+  | "hexagon"
+  | "star"
+  | "diamond"
+  | "octagon"
+  | "cross"
+  | "ring"
+  | "trapezoid";
 
 export interface ShapeParams {
   type: ShapeType;
@@ -82,6 +93,22 @@ export function drawShape(
     case "star":
       star(ctx, r * 0.4, r, 5);
       break;
+    case "diamond":
+      polygon(ctx, 4, r, 0);
+      break;
+    case "octagon":
+      polygon(ctx, 8, r);
+      break;
+    case "cross":
+      drawCross(ctx, r);
+      break;
+    case "ring":
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2, true);
+      break;
+    case "trapezoid":
+      drawTrapezoid(ctx, r);
+      break;
   }
 
   ctx.closePath();
@@ -95,6 +122,29 @@ function polygon(ctx: CanvasRenderingContext2D, sides: number, r: number, offset
     if (i === 0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
     else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
   }
+}
+
+function drawCross(ctx: CanvasRenderingContext2D, r: number): void {
+  const w = r * 0.35;
+  ctx.moveTo(-w, -r);
+  ctx.lineTo(w, -r);
+  ctx.lineTo(w, -w);
+  ctx.lineTo(r, -w);
+  ctx.lineTo(r, w);
+  ctx.lineTo(w, w);
+  ctx.lineTo(w, r);
+  ctx.lineTo(-w, r);
+  ctx.lineTo(-w, w);
+  ctx.lineTo(-r, w);
+  ctx.lineTo(-r, -w);
+  ctx.lineTo(-w, -w);
+}
+
+function drawTrapezoid(ctx: CanvasRenderingContext2D, r: number): void {
+  ctx.moveTo(-r * 0.5, -r * 0.8);
+  ctx.lineTo(r * 0.5, -r * 0.8);
+  ctx.lineTo(r * 0.9, r * 0.8);
+  ctx.lineTo(-r * 0.9, r * 0.8);
 }
 
 function star(ctx: CanvasRenderingContext2D, innerR: number, outerR: number, points: number): void {
@@ -176,7 +226,19 @@ export function scoreShape(target: ShapeParams, guess: ShapeParams): ShapeScoreR
 }
 
 // ─── Shape Generation ─────────────────────────────────────────────────────────
-const SHAPES: ShapeType[] = ["circle", "triangle", "square", "pentagon", "hexagon", "star"];
+const SHAPES: ShapeType[] = [
+  "circle",
+  "triangle",
+  "square",
+  "pentagon",
+  "hexagon",
+  "star",
+  "diamond",
+  "octagon",
+  "cross",
+  "ring",
+  "trapezoid",
+];
 
 export function generateShape(
   seed: number,
@@ -196,15 +258,15 @@ export function generateShape(
   const shapeIndex = Math.floor(rng() * SHAPES.length);
   const type = SHAPES[shapeIndex];
 
-  const posRange = difficulty === "easy" ? 0.2 : difficulty === "hard" ? 0.3 : 0.4;
-  const x = 0.5 + (rng() - 0.5) * posRange;
-  const y = 0.5 + (rng() - 0.5) * posRange;
+  const posRange = difficulty === "easy" ? 0.35 : difficulty === "hard" ? 0.55 : 0.70;
+  const x = parseFloat((0.5 + (rng() - 0.5) * posRange).toFixed(2));
+  const y = parseFloat((0.5 + (rng() - 0.5) * posRange).toFixed(2));
 
-  const scaleMin = difficulty === "easy" ? 0.5 : difficulty === "hard" ? 0.4 : 0.3;
-  const scaleMax = difficulty === "easy" ? 1.0 : difficulty === "hard" ? 1.2 : 1.5;
-  const scale = scaleMin + rng() * (scaleMax - scaleMin);
+  const scaleMin = difficulty === "easy" ? 0.45 : difficulty === "hard" ? 0.35 : 0.25;
+  const scaleMax = difficulty === "easy" ? 1.15 : difficulty === "hard" ? 1.40 : 1.65;
+  const scale = parseFloat((scaleMin + rng() * (scaleMax - scaleMin)).toFixed(2));
 
-  const rotMax = difficulty === "easy" ? 90 : difficulty === "hard" ? 180 : 360;
+  const rotMax = difficulty === "easy" ? 180 : 360;
   const rotation = Math.round(rng() * rotMax);
 
   return { type, x, y, scale, rotation };

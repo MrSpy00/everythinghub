@@ -87,12 +87,12 @@ export interface SoundGameConfig {
 }
 
 export const SOUND_CONFIGS: Record<string, SoundGameConfig> = {
-  easy: { minFreq: 200, maxFreq: 1500, displayMin: 80, displayMax: 2000 },
-  hard: { minFreq: 100, maxFreq: 1800, displayMin: 80, displayMax: 2000 },
-  brutal: { minFreq: 80, maxFreq: 2000, displayMin: 80, displayMax: 2000 },
+  easy: { minFreq: 120, maxFreq: 2400, displayMin: 80, displayMax: 3500 },
+  hard: { minFreq: 90, maxFreq: 3200, displayMin: 80, displayMax: 3500 },
+  brutal: { minFreq: 80, maxFreq: 4200, displayMin: 80, displayMax: 3500 },
 };
 
-// Generate musically-meaningful frequency (from equal temperament)
+// Generate dynamic, acoustically-diverse frequencies across rounds
 export function generateFrequency(
   seed: number,
   roundIndex: number,
@@ -108,34 +108,66 @@ export function generateFrequency(
     z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35);
     return ((z ^ (z >>> 16)) >>> 0) / 4294967296;
   };
+  
+  // Partition frequency spectrum into 4 distinct acoustic register bands per round
+  const BANDS = [
+    { min: Math.max(config.minFreq, 80), max: 240 },
+    { min: 240, max: 680 },
+    { min: 680, max: 1800 },
+    { min: 1800, max: Math.min(config.maxFreq, 4200) },
+  ];
+
+  const bandIndex = (roundIndex + Math.floor(seed % 4)) % BANDS.length;
+  const targetBand = BANDS[bandIndex];
+
   const pseudo = rng();
-  // Map to frequency range with logarithmic distribution (sounds natural)
-  const logMin = Math.log(config.minFreq);
-  const logMax = Math.log(config.maxFreq);
-  return Math.exp(logMin + pseudo * (logMax - logMin));
+  const logMin = Math.log(targetBand.min);
+  const logMax = Math.log(targetBand.max);
+  const freq = Math.exp(logMin + pseudo * (logMax - logMin));
+  
+  return parseFloat(freq.toFixed(1));
 }
 
 // ─── Web Audio Tone Player ────────────────────────────────────────────────────
 export function createTonePlayer(audioCtx: AudioContext) {
   return {
-    play(freq: number, durationMs: number, volume = 0.5): void {
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
+    play(freq: number, durationMs: number, volume = 0.4): void {
+      const startTime = audioCtx.currentTime;
+      const duration = durationMs / 1000;
 
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
+      // Primary Fundamental Oscillator (Sine)
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(freq, startTime);
 
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      // Warm Overtone Oscillator (Triangle - 1 octave higher at lower volume)
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(freq * 2, startTime);
 
-      // Smooth attack/release to avoid clicking
-      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 0.03);
-      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime + durationMs / 1000 - 0.05);
-      gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + durationMs / 1000);
+      const gain1 = audioCtx.createGain();
+      const gain2 = audioCtx.createGain();
+      const masterGain = audioCtx.createGain();
 
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + durationMs / 1000);
+      osc1.connect(gain1);
+      osc2.connect(gain2);
+      gain1.connect(masterGain);
+      gain2.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      // Envelopes: Smooth 15ms attack + exponential decay curve
+      gain1.gain.setValueAtTime(0, startTime);
+      gain1.gain.linearRampToValueAtTime(volume * 0.8, startTime + 0.015);
+      gain1.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      gain2.gain.setValueAtTime(0, startTime);
+      gain2.gain.linearRampToValueAtTime(volume * 0.2, startTime + 0.015);
+      gain2.gain.exponentialRampToValueAtTime(0.0005, startTime + duration);
+
+      osc1.start(startTime);
+      osc2.start(startTime);
+      osc1.stop(startTime + duration);
+      osc2.stop(startTime + duration);
     },
 
     playChord(freqs: number[], durationMs: number, volume = 0.3): void {

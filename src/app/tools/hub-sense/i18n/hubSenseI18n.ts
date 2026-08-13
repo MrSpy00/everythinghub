@@ -113,6 +113,11 @@ export interface HubSenseDictionary {
       pentagon: string;
       hexagon: string;
       star: string;
+      diamond: string;
+      octagon: string;
+      cross: string;
+      ring: string;
+      trapezoid: string;
     };
     scaleLabel: string;
     rotationLabel: string;
@@ -393,6 +398,11 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
         pentagon: "Beşgen",
         hexagon: "Altıgen",
         star: "Yıldız",
+        diamond: "Baklava",
+        octagon: "Sekizgen",
+        cross: "Artı",
+        ring: "Halka",
+        trapezoid: "Yamuk",
       },
       scaleLabel: "Boyut (Ölçek)",
       rotationLabel: "Döndürme Açısı",
@@ -664,6 +674,11 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
         pentagon: "Pentagon",
         hexagon: "Hexagon",
         star: "Star",
+        diamond: "Diamond",
+        octagon: "Octagon",
+        cross: "Cross",
+        ring: "Ring",
+        trapezoid: "Trapezoid",
       },
       scaleLabel: "Size (Scale)",
       rotationLabel: "Rotation Angle",

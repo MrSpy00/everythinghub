@@ -36,6 +36,11 @@ const ALL_SHAPE_TYPES: ShapeType[] = [
   "pentagon",
   "hexagon",
   "star",
+  "diamond",
+  "octagon",
+  "cross",
+  "ring",
+  "trapezoid",
 ];
 
 export function ShapeGame({
