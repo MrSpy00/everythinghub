@@ -27,6 +27,7 @@ export interface LeaderboardEntry {
   roundScores: number[];
   signature: string;
   verified?: boolean;
+  playerId?: string;
 }
 
 export interface LeaderboardData {
@@ -75,21 +76,32 @@ export function addToLocalLeaderboard(
     ? (deobfuscate<LeaderboardData>(raw) ?? { entries: [], lastUpdated: 0, totalSubmissions: 0 })
     : { entries: [], lastUpdated: 0, totalSubmissions: 0 };
 
-  // Deduplication: same username + seed + game can only appear once
+  // Sync existing entries from the same player ID to the new username
+  if (entry.playerId) {
+    data.entries.forEach((e) => {
+      if (e.playerId === entry.playerId) {
+        e.username = entry.username;
+      }
+    });
+  }
+
+  // Deduplication: same player/username + seed + game can only appear once
   const isDupe = data.entries.some(
     (e) =>
-      e.username.toLowerCase() === entry.username.toLowerCase() &&
+      ((e.playerId && e.playerId === entry.playerId) ||
+        e.username.toLowerCase() === entry.username.toLowerCase()) &&
       e.seed === entry.seed &&
       e.gameType === entry.gameType
   );
 
   if (!isDupe) {
     data.entries.push(entry);
-    data.entries = data.entries.sort((a, b) => b.score - a.score).slice(0, 500);
-    data.lastUpdated = Date.now();
-    data.totalSubmissions++;
-    localStorage.setItem(key, obfuscate(data));
   }
+
+  data.entries = data.entries.sort((a, b) => b.score - a.score).slice(0, 500);
+  data.lastUpdated = Date.now();
+  data.totalSubmissions++;
+  localStorage.setItem(key, obfuscate(data));
 }
 
 // ─── Main Leaderboard API ──────────────────────────────────────────────────────
@@ -111,6 +123,7 @@ export async function submitScore(payload: ScorePayload): Promise<{
     roundScores: payload.roundScores,
     signature: payload.signature,
     verified: true,
+    playerId: payload.playerId,
   };
 
   // 1. Always record in local storage first for offline persistence

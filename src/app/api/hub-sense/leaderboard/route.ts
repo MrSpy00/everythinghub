@@ -17,6 +17,7 @@ interface StoredEntry {
   timestamp: number;
   roundScores: number[];
   signature: string;
+  playerId?: string;
 }
 
 // Global in-memory leaderboard partitioned by game_difficulty
@@ -36,7 +37,8 @@ async function verifyHmac(payload: ScorePayload): Promise<boolean> {
       false,
       ["sign", "verify"]
     );
-    const message = `${payload.username}|${payload.totalScore.toFixed(2)}|${payload.gameType}|${payload.difficulty}|${payload.seed}|${payload.timestamp}|${payload.roundScores.join(",")}`;
+    const pid = payload.playerId || "";
+    const message = `${payload.username}|${payload.totalScore.toFixed(2)}|${payload.gameType}|${payload.difficulty}|${payload.seed}|${payload.timestamp}|${payload.roundScores.join(",")}|${pid}`;
     const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
     const calculatedSig = btoa(String.fromCharCode(...new Uint8Array(sig)));
     return calculatedSig === payload.signature;
@@ -150,7 +152,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Replay & deduplication check
-    const dedupKey = `${payload.username.toLowerCase()}_${payload.gameType}_${payload.seed}`;
+    const dedupKey = `${payload.playerId || payload.username.toLowerCase()}_${payload.gameType}_${payload.seed}`;
     if (seenSubmissions.has(dedupKey)) {
       return NextResponse.json(
         { success: false, error: "Bu oturum skoru daha önce kaydedildi." },
@@ -167,6 +169,17 @@ export async function POST(req: NextRequest) {
       memoryLeaderboards[partitionKey] = [];
     }
 
+    // Smart username syncing across all existing records for this player ID
+    if (payload.playerId) {
+      Object.keys(memoryLeaderboards).forEach((pkey) => {
+        memoryLeaderboards[pkey].forEach((e) => {
+          if (e.playerId === payload.playerId) {
+            e.username = payload.username.trim();
+          }
+        });
+      });
+    }
+
     const newEntry: StoredEntry = {
       username: payload.username.trim(),
       score: payload.totalScore,
@@ -178,6 +191,7 @@ export async function POST(req: NextRequest) {
       timestamp: payload.timestamp || now,
       roundScores: payload.roundScores,
       signature: payload.signature,
+      playerId: payload.playerId,
     };
 
     memoryLeaderboards[partitionKey].push(newEntry);

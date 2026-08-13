@@ -328,6 +328,12 @@ function HubSenseInner() {
   const currentDiscipline = t.disciplines[selectedGame];
   const totalRoundsCount = session?.totalRounds || activeRounds;
 
+  const scrollToTopOrArena = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
+
   // ─── Game Flow ─────────────────────────────────────────────────────────────
   const startGame = useCallback(
     (
@@ -367,18 +373,21 @@ function HubSenseInner() {
       } else {
         setScreen("reveal");
       }
+      scrollToTopOrArena();
     },
-    [activeRounds]
+    [activeRounds, scrollToTopOrArena]
   );
 
   const proceedToReveal = useCallback(() => {
     SoundFX.click();
     setScreen("reveal");
-  }, []);
+    scrollToTopOrArena();
+  }, [scrollToTopOrArena]);
 
   const handleRevealComplete = useCallback(() => {
     setScreen("guess");
-  }, []);
+    scrollToTopOrArena();
+  }, [scrollToTopOrArena]);
 
   // Direct seamless flow without intermediate blocking screen
   const handleRoundSubmit = useCallback(
@@ -414,6 +423,7 @@ function HubSenseInner() {
         );
         setCurrentStimulus(nextStimulus);
         setScreen("reveal");
+        scrollToTopOrArena();
       } else {
         // Complete game -> Total Result Screen
         const allScores = newResults.map((r) => extractScore(r.result));
@@ -440,9 +450,10 @@ function HubSenseInner() {
         };
         setSharePayload(payload);
         setScreen("total-result");
+        scrollToTopOrArena();
       }
     },
-    [currentRound, roundResults, session, selectedDifficulty, selectedMode, username, lang]
+    [currentRound, roundResults, session, selectedDifficulty, selectedMode, username, lang, scrollToTopOrArena]
   );
 
   const handleScoreSubmit = useCallback(async () => {
@@ -550,7 +561,8 @@ function HubSenseInner() {
     setCurrentRound(0);
     setSession(null);
     setSharePayload(null);
-  }, []);
+    scrollToTopOrArena();
+  }, [scrollToTopOrArena]);
 
   // Current stimulus typed accessors
   const colorStimulus = currentStimulus as { h: number; s: number; b: number } | null;
@@ -603,23 +615,23 @@ function HubSenseInner() {
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-3.5 sm:gap-4.5 w-full"
             >
-              {/* Header Card */}
-              <div className="flex items-center justify-between p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
-                <div className="flex flex-col pr-2">
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tighter inline-flex items-baseline select-none">
-                    <span>Hub</span>
-                    <span style={{ color: accentColor }}>Sense</span>
-                  </h1>
-                  <p className="text-xs sm:text-sm text-white/50 mt-0.5 leading-snug">
-                    {t.subtitle}
-                  </p>
-                </div>
+              {/* Header Card (Fully Responsive: 2 Rows on Mobile, 1 Row on Desktop) */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] gap-3.5">
+                {/* Top Row / Left Section: Brand Logo & Subtitle + Name Input on Mobile */}
+                <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                  <div className="flex flex-col">
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter inline-flex items-baseline select-none">
+                      <span>Hub</span>
+                      <span style={{ color: accentColor }}>Sense</span>
+                    </h1>
+                    <p className="text-[11px] sm:text-sm text-white/50 leading-snug">
+                      {t.subtitle}
+                    </p>
+                  </div>
 
-                {/* Quick Toolbar & Global Nickname Pill */}
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  {/* Interactive Global Nickname Pill */}
+                  {/* Interactive Global Nickname Pill (Mobile View Placement) */}
                   <div
-                    className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/25 transition-all shadow-lg"
+                    className="flex sm:hidden items-center gap-1.5 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/10 focus-within:border-white/30 transition-all shadow-lg shrink-0"
                     data-cursor={lang === "tr" ? "Rumuzunu Belirle" : "Set Nickname"}
                   >
                     <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -632,7 +644,30 @@ function HubSenseInner() {
                         localStorage.setItem("hubsense_username", val.trim());
                       }}
                       placeholder={lang === "tr" ? "Rumuzun" : "Nickname"}
-                      className="bg-transparent text-xs font-bold text-white outline-none w-20 sm:w-24 placeholder:text-white/30"
+                      className="bg-transparent text-xs font-bold text-white border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus-visible:outline-none focus-visible:ring-0 shadow-none w-20 placeholder:text-white/30"
+                      maxLength={20}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Toolbar (3 Equal Buttons on Mobile, Desktop Inline Row) */}
+                <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0">
+                  {/* Interactive Global Nickname Pill (Desktop View Placement) */}
+                  <div
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/10 focus-within:border-white/30 transition-all shadow-lg"
+                    data-cursor={lang === "tr" ? "Rumuzunu Belirle" : "Set Nickname"}
+                  >
+                    <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => {
+                        const val = e.target.value.slice(0, 20);
+                        setUsername(val);
+                        localStorage.setItem("hubsense_username", val.trim());
+                      }}
+                      placeholder={lang === "tr" ? "Rumuzun" : "Nickname"}
+                      className="bg-transparent text-xs font-bold text-white border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus-visible:outline-none focus-visible:ring-0 shadow-none w-24 placeholder:text-white/30"
                       maxLength={20}
                     />
                   </div>
@@ -641,13 +676,16 @@ function HubSenseInner() {
                     onClick={toggleSound}
                     aria-label={t.soundToggle}
                     data-cursor={t.soundToggle}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-white/70 shadow-lg"
+                    className="flex items-center justify-center gap-1.5 py-2.5 sm:w-10 sm:h-10 sm:py-0 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
                     {muted ? (
-                      <VolumeX className="w-4 h-4 text-rose-400" />
+                      <VolumeX className="w-4 h-4 text-rose-400 shrink-0" />
                     ) : (
-                      <Volume2 className="w-4 h-4 text-emerald-400" />
+                      <Volume2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     )}
+                    <span className="sm:hidden text-[11px] truncate">
+                      {muted ? (lang === "tr" ? "Sessiz" : "Muted") : (lang === "tr" ? "Ses Açık" : "Audio")}
+                    </span>
                   </button>
 
                   <button
@@ -656,10 +694,10 @@ function HubSenseInner() {
                       setShowInsights(true);
                     }}
                     data-cursor={t.sensoryProfile}
-                    className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
-                    <Brain className="w-4 h-4 text-indigo-400" />
-                    <span className="hidden sm:inline">{t.sensoryProfile}</span>
+                    <Brain className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <span className="text-[11px] sm:text-xs truncate">{t.sensoryProfile}</span>
                   </button>
 
                   <button
@@ -668,10 +706,10 @@ function HubSenseInner() {
                       setShowLeaderboard(true);
                     }}
                     data-cursor={t.scores}
-                    className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
-                    <Trophy className="w-4 h-4 text-amber-400" />
-                    <span>{t.scores}</span>
+                    <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span className="text-[11px] sm:text-xs truncate">{t.scores}</span>
                   </button>
                 </div>
               </div>
@@ -1269,7 +1307,7 @@ function HubSenseInner() {
                       setUsernameError("");
                     }}
                     placeholder={t.totalResult.nicknamePlaceholder}
-                    className="flex-1 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/15 text-sm font-bold text-white placeholder:text-white/30 outline-none focus:border-indigo-400 transition-all font-mono"
+                    className="flex-1 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/15 text-sm font-bold text-white placeholder:text-white/30 outline-none focus:outline-none focus:ring-0 focus:border-white/30 focus-visible:outline-none focus-visible:ring-0 shadow-none transition-all font-mono"
                     maxLength={20}
                   />
                   <button

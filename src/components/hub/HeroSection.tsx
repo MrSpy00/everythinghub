@@ -38,9 +38,9 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
 
   const scrollToTools = () => {
     if (typeof window !== "undefined") {
-      const toolsElem = document.getElementById("tools");
+      const toolsElem = document.getElementById("tools-grid") || document.getElementById("tools");
       if (toolsElem) {
-        const headerOffset = 76;
+        const headerOffset = window.innerWidth < 640 ? 55 : 80;
         const elementPosition = toolsElem.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
         window.scrollTo({
@@ -52,7 +52,7 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative flex flex-col items-center justify-center min-h-[calc(100dvh-5rem)] px-4 py-4 sm:py-10 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full">
+    <section className="relative flex flex-col items-center justify-center min-h-[calc(100dvh-4.25rem)] px-4 py-4 sm:py-10 lg:py-16 text-center max-w-7xl 2xl:max-w-8xl mx-auto w-full pb-8 sm:pb-12">
       {/* Top Studio Badge */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -127,26 +127,26 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <button
               type="button"
               onClick={scrollToTools}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 px-3 py-1.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 backdrop-blur-2xl hover:border-indigo-400 hover:bg-indigo-500/20 px-3.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer shadow-lg hover:shadow-indigo-500/20"
             >
-              <Compass className="h-3.5 w-3.5" />
+              <Compass className="h-3.5 w-3.5 text-indigo-400" />
               <span>{t.explore}</span>
             </button>
           </div>
         </NeonBorder>
       </div>
 
-      {/* Hero Action Button (Centered) */}
+      {/* Hero Action Button (Centered Liquid Glassmorphism) */}
       <div className="mb-8 sm:mb-10 flex items-center justify-center">
         <button
           type="button"
           onClick={scrollToTools}
-          className="group inline-flex items-center justify-center gap-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-7 py-3.5 text-xs sm:text-sm font-bold text-indigo-300 backdrop-blur-2xl shadow-xl transition-all hover:scale-105 hover:bg-indigo-500/20 hover:border-indigo-400 cursor-pointer"
+          className="group inline-flex items-center justify-center gap-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-7 py-3.5 text-xs sm:text-sm font-bold text-indigo-300 backdrop-blur-2xl shadow-xl transition-all hover:scale-105 hover:bg-indigo-500/20 hover:border-indigo-400 hover:shadow-indigo-500/20 cursor-pointer"
           data-cursor={t.inspectAllTools}
         >
           <Layers className="h-4 w-4 text-indigo-400" />
           <span>{t.inspectAllTools}</span>
-          <span className="ml-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 text-[9px] font-extrabold uppercase font-mono">
+          <span className="ml-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-0.5 text-[9px] font-extrabold uppercase font-mono">
             {liveCount} {t.tools}
           </span>
         </button>

@@ -54,6 +54,8 @@ export function ToolCard({ tool }: ToolCardProps) {
         return t.calcCategory;
       case "design":
         return t.designCategory;
+      case "game":
+        return t.gameCategory;
       default:
         return tool.category;
     }

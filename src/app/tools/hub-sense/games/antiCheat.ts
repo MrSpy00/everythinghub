@@ -122,10 +122,21 @@ async function getHmacKey(): Promise<CryptoKey> {
   );
 }
 
+export function getOrCreatePlayerId(): string {
+  if (typeof window === "undefined") return "anon_device";
+  let id = localStorage.getItem("hubsense_player_id");
+  if (!id) {
+    id = "pid_" + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+    localStorage.setItem("hubsense_player_id", id);
+  }
+  return id;
+}
+
 export async function signScore(payload: ScorePayload): Promise<string> {
   const key = await getHmacKey();
   const enc = new TextEncoder();
-  const message = `${payload.username}|${payload.totalScore.toFixed(2)}|${payload.gameType}|${payload.difficulty}|${payload.seed}|${payload.timestamp}|${payload.roundScores.join(",")}`;
+  const pid = payload.playerId || "";
+  const message = `${payload.username}|${payload.totalScore.toFixed(2)}|${payload.gameType}|${payload.difficulty}|${payload.seed}|${payload.timestamp}|${payload.roundScores.join(",")}|${pid}`;
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
@@ -149,6 +160,7 @@ export interface ScorePayload {
   roundScores: number[];
   signature: string;
   clientVersion: string;
+  playerId?: string;
 }
 
 export async function buildScorePayload(
@@ -164,6 +176,7 @@ export async function buildScorePayload(
     roundScores.reduce((a, b) => a + b, 0).toFixed(2)
   );
   const timestamp = Date.now();
+  const playerId = getOrCreatePlayerId();
 
   const payload: ScorePayload = {
     username: username.trim(),
@@ -177,6 +190,7 @@ export async function buildScorePayload(
     roundScores: roundScores.map((s) => parseFloat(s.toFixed(2))),
     signature: "",
     clientVersion: "2.0.0",
+    playerId,
   };
 
   payload.signature = await signScore(payload);

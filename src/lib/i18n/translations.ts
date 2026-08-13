@@ -54,6 +54,7 @@ export interface TranslationDictionary {
   textCategory: string;
   calcCategory: string;
   designCategory: string;
+  gameCategory: string;
   viewGrid: string;
   viewShowcase: string;
   viewCompact: string;
@@ -382,6 +383,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     textCategory: "Metin & İçerik",
     calcCategory: "Hesaplama & Birim",
     designCategory: "Tasarım & Renk",
+    gameCategory: "Oyun & Eğlence",
     viewGrid: "Izgara",
     viewShowcase: "Vitrin",
     viewCompact: "Liste",
@@ -861,6 +863,7 @@ export const translations: Record<Language, TranslationDictionary> = {
     textCategory: "Text & Content",
     calcCategory: "Calculation & Units",
     designCategory: "Design & Color",
+    gameCategory: "Games & Arcade",
     viewGrid: "Grid",
     viewShowcase: "Showcase",
     viewCompact: "List",

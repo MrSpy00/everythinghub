@@ -193,22 +193,22 @@ export function Header() {
     </div>
       </header>
 
-      {/* Mobile animated dropdown drawer */}
+      {/* Mobile animated dropdown drawer floating cleanly below header in viewport */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-b border-white/10 bg-[#09090b]/95 backdrop-blur-3xl md:hidden shadow-2xl"
+            initial={{ opacity: 0, y: -12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.97 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed top-16 inset-x-3 z-50 overflow-hidden rounded-2xl border border-white/15 bg-[#09090b]/95 p-2 backdrop-blur-3xl md:hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)]"
           >
             <motion.nav
-              initial={{ y: -10 }}
+              initial={{ y: -6 }}
               animate={{ y: 0 }}
-              exit={{ y: -10 }}
-              transition={{ duration: 0.25 }}
-              className="flex flex-col gap-1.5 p-4"
+              exit={{ y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-1.5 p-3"
             >
               <Link
                 href="/"
@@ -219,18 +219,39 @@ export function Header() {
               </Link>
               <Link
                 href="/#tools"
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  setMenuOpen(false);
+                  handleCategoriesClick(e);
+                }}
                 className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
               >
                 {t.tools}
               </Link>
               <Link
                 href="/#tools"
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  setMenuOpen(false);
+                  handleCategoriesClick(e);
+                }}
                 className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
               >
                 {t.categories}
               </Link>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  setCommandPaletteOpen(true);
+                }}
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white transition-all flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-indigo-400" />
+                  <span>{t.quickAccess}</span>
+                </div>
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-zinc-400 border border-white/10">
+                  Ctrl K
+                </kbd>
+              </button>
               <div className="pt-2 flex flex-col gap-2 border-t border-white/5 mt-1">
                 <a
                   href="https://buymeacoffee.com/aegissoft"
@@ -254,7 +275,7 @@ export function Header() {
             </motion.nav>
           </motion.div>
         )}
-        </AnimatePresence>
+      </AnimatePresence>
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
