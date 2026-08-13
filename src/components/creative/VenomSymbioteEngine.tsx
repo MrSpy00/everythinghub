@@ -3,651 +3,489 @@
 import React, { useEffect, useRef } from "react";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   VENOM SYMBIOTE ENGINE  v3.0  — "Living Border Filament"
-   Philosophy:
-     · The symbiote lives ON the outer edge/outline of interactive elements —
-       it never fills inside. It clings to borders like a living organism.
-     · When the cursor hovers an element, thin thread-like tendrils spawn along
-       that element's perimeter, flowing smoothly like a snake/parasite.
-     · When moving between elements, a filament bridge is drawn between the
-       two perimeters — elastic, organic, snapping/fading as it stretches.
-     · In empty space: fully invisible / sleeping.
-     · Design language: muted dark-violet & near-black, ultra-thin lines,
-       soft phosphorescent glow, slow serpentine motion.
-   Architecture:
-     · Single offscreen Canvas overlaid on the whole viewport (pointer-events: none)
-     · requestAnimationFrame loop: sleeps when nothing is active
-     · All math: typed arrays / plain objects, no allocations in hot path
-     · Filament segments use Verlet-spring chain physics
-     · DPR capped at 2, will-change: transform for GPU composite
+   VENOM SYMBIOTE ENGINE  v3.1  — "Living Border Filament"
+   
+   Principles:
+   · Fully transparent when not on an interactive element (invisible in open space)
+   · Ultra-thin serpentine filaments live on element border outlines only
+   · Real Verlet-spring physics: soft, organic, snake-like movement
+   · Bridge filament between elements on cursor transition
+   · Full sleep/wake lifecycle — RAF loop completely halts when idle
+   · Zero opaque rendering — canvas is always transparent by nature
+   · Production-safe: try/catch guards on all canvas operations
 ────────────────────────────────────────────────────────────────────────────── */
 
-// ── Constants ──────────────────────────────────────────────────────────────────
+const SEGMENTS = 22;
+const FILAMENT_COUNT_CARD = 5;
+const FILAMENT_COUNT_BTN = 3;
+const SEG_REST_DIST = 13;
+const SPRING_K = 0.16;
+const DAMPING = 0.80;
+const FADE_IN = 5.5;
+const FADE_OUT = 3.8;
+const IDLE_SLEEP = 3200; // ms idle before sleeping
+const BRIDGE_DECAY = 2.5;
+const MAX_DROPLETS = 32;
 
-const TENDRIL_SEGMENTS = 24;      // chain segments per tendril filament
-const TENDRIL_COUNT_CARD = 6;     // simultaneous filaments on large cards
-const TENDRIL_COUNT_BUTTON = 3;   // simultaneous filaments on small controls
-const TENDRIL_SEGMENT_DIST = 14;  // resting distance between chain nodes (px)
-const SPRING_STIFFNESS = 0.18;    // Verlet spring k — lower = more elastic/lazy
-const DAMPING = 0.82;             // velocity damping per tick
-const TAIL_SPAWN_RATE = 0.28;     // probability per frame of advancing a tendril head
-const MAX_PARTICLES = 40;         // droplet pool cap
-const FADE_IN_SPEED = 5.0;        // alpha ramp-up per second
-const FADE_OUT_SPEED = 3.5;       // alpha ramp-down per second
-const IDLE_SLEEP_MS = 3000;       // ms of idle before full sleep
-const BRIDGE_DECAY = 2.2;         // bridge retraction speed
-
-// Venom palette (dark-violet / near-black / faint lavender)
-const PALETTE = [
-  "rgba(30, 10, 60, 0.95)",       // near-black violet (darkest)
-  "rgba(60, 20, 100, 0.85)",      // deep indigo
-  "rgba(100, 40, 180, 0.65)",     // mid violet
-  "rgba(140, 70, 220, 0.45)",     // lighter purple glow
-];
-
-// ── Type Definitions ───────────────────────────────────────────────────────────
-
-interface BoundRect {
-  x: number; y: number; w: number; h: number; r: number; isCard: boolean;
-}
-
-interface Vec2 { x: number; y: number; }
-
-// Verlet chain node
-interface ChainNode {
-  x: number; y: number;
-  px: number; py: number; // previous position (Verlet)
-}
-
-// A single serpentine filament living on a border
-interface Filament {
-  // nodes[0] is the root (anchored on border), nodes[n] is the free head
-  nodes: ChainNode[];
-  headAngle: number;    // current angular position around the perimeter [0, 2π)
-  angularVel: number;   // how fast it creeps around the border
-  opacity: number;      // individual fade
-  width: number;        // line width at root (tapers to 0 at tip)
-  phase: number;        // time offset for organic breathing
-  life: number;         // age in frames
-  maxLife: number;      // when it should dissolve and reset
-}
-
-// Bridge filament between two elements
-interface Bridge {
-  nodes: ChainNode[];
-  alpha: number;        // fade progress
+interface BRect { x: number; y: number; w: number; h: number; r: number; isCard: boolean; }
+interface V2 { x: number; y: number; }
+interface Node { x: number; y: number; px: number; py: number; }
+interface Fil {
+  nodes: Node[];
+  angle: number;
+  dAngle: number;
+  opacity: number;
   width: number;
-}
-
-// Tiny ambient droplet (very rare, very subtle)
-interface Droplet {
-  x: number; y: number;
-  vx: number; vy: number;
-  size: number;
-  alpha: number;
+  phase: number;
   life: number;
   maxLife: number;
 }
+interface Bridge { nodes: Node[]; alpha: number; }
+interface Drop { x: number; y: number; vx: number; vy: number; r: number; a: number; life: number; max: number; }
 
-// ── Utility helpers ────────────────────────────────────────────────────────────
-
-/** Lerp scalar */
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/** Point on rounded-rect perimeter at angle θ */
-function perimeterPoint(rect: BoundRect, angle: number): Vec2 {
-  const { x, y, w, h, r } = rect;
-  const cx = x + w / 2;
-  const cy = y + h / 2;
-
-  // Use ellipse approximation corrected by rounded corner influence
-  const hw = w / 2 - r;
-  const hh = h / 2 - r;
-  const cosA = Math.cos(angle);
-  const sinA = Math.sin(angle);
-
-  // Determine quadrant and corner offset
-  const cornerX = cx + hw * Math.sign(cosA);
-  const cornerY = cy + hh * Math.sign(sinA);
-
-  // Ratio along straight edge vs. corner arc
-  const ex = Math.abs(cosA) * (hw / (Math.max(Math.abs(cosA) * hw, Math.abs(sinA) * hh) || 1));
-  const ey = Math.abs(sinA) * (hh / (Math.max(Math.abs(cosA) * hw, Math.abs(sinA) * hh) || 1));
-
-  // Simple: scale onto border box, then nudge outward by a small offset
-  const OUTSET = 3; // px outside element boundary
-  const px = cx + (w / 2 + OUTSET) * cosA;
-  const py = cy + (h / 2 + OUTSET) * sinA;
-
-  // Clamp corners to r-radius
-  void (ex + ey + cornerX + cornerY); // suppress unused warning
-  return { x: px, y: py };
+function perimeter(rect: BRect, angle: number): V2 {
+  const cx = rect.x + rect.w / 2;
+  const cy = rect.y + rect.h / 2;
+  const OUTSET = 3.5;
+  return {
+    x: cx + (rect.w / 2 + OUTSET) * Math.cos(angle),
+    y: cy + (rect.h / 2 + OUTSET) * Math.sin(angle),
+  };
 }
 
-/** Create a fresh Verlet chain rooted at (rx, ry), extending radially outward */
-function makeChain(rx: number, ry: number, angle: number, segCount: number): ChainNode[] {
-  const chain: ChainNode[] = [];
-  for (let i = 0; i < segCount; i++) {
-    const x = rx + Math.cos(angle) * i * TENDRIL_SEGMENT_DIST * 0.3;
-    const y = ry + Math.sin(angle) * i * TENDRIL_SEGMENT_DIST * 0.3;
-    chain.push({ x, y, px: x, py: y });
+function chain(ox: number, oy: number, angle: number, n: number): Node[] {
+  const nodes: Node[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = ox + Math.cos(angle) * i * SEG_REST_DIST * 0.28;
+    const y = oy + Math.sin(angle) * i * SEG_REST_DIST * 0.28;
+    nodes.push({ x, y, px: x, py: y });
   }
-  return chain;
+  return nodes;
 }
 
-/** Resolve the best interactive element under the mouse */
-function resolveTarget(elem: HTMLElement | null): BoundRect | null {
-  if (!elem) return null;
+function verlet(nodes: Node[], anchor: V2, t: number) {
+  if (!nodes.length) return;
+  nodes[0].x = lerp(nodes[0].x, anchor.x, 0.55);
+  nodes[0].y = lerp(nodes[0].y, anchor.y, 0.55);
+  nodes[0].px = nodes[0].x;
+  nodes[0].py = nodes[0].y;
 
-  // Priority 1: large cards / containers
-  const card = elem.closest<HTMLElement>(
-    ".group, [data-venom], article, .rounded-2xl, .rounded-3xl, section > .border, .hubsense-card"
-  );
-  if (card && card.offsetWidth > 60 && card.offsetHeight > 40) {
-    const rect = card.getBoundingClientRect();
-    const style = getComputedStyle(card);
-    return {
-      x: rect.left, y: rect.top, w: rect.width, h: rect.height,
-      r: parseFloat(style.borderRadius) || 16,
-      isCard: true,
-    };
+  for (let i = 1; i < nodes.length; i++) {
+    const n = nodes[i];
+    const vx = (n.x - n.px) * DAMPING;
+    const vy = (n.y - n.py) * DAMPING;
+    const drift = Math.sin(t * 1.4 + i * 0.55) * 0.07;
+    n.px = n.x;
+    n.py = n.y;
+    n.x += vx + Math.cos(t * 0.9 + i * 0.7) * drift;
+    n.y += vy + Math.sin(t * 1.2 + i * 0.6) * drift;
   }
 
-  // Priority 2: interactive controls
-  const ctrl = elem.closest<HTMLElement>("button, a, input, select, textarea, [role='button'], label");
-  if (ctrl && ctrl.offsetWidth > 20) {
-    const rect = ctrl.getBoundingClientRect();
-    const style = getComputedStyle(ctrl);
-    return {
-      x: rect.left, y: rect.top, w: rect.width, h: rect.height,
-      r: parseFloat(style.borderRadius) || 8,
-      isCard: false,
-    };
+  for (let iter = 0; iter < 3; iter++) {
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const a = nodes[i];
+      const b = nodes[i + 1];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      const rest = SEG_REST_DIST * (0.38 + i * 0.028);
+      const diff = (d - rest) / d * SPRING_K;
+      if (i > 0) { a.x += dx * diff; a.y += dy * diff; }
+      b.x -= dx * diff;
+      b.y -= dy * diff;
+    }
   }
+}
 
+function resolveTarget(el: HTMLElement | null): BRect | null {
+  if (!el) return null;
+  try {
+    const card = el.closest<HTMLElement>(
+      ".group, [data-venom], article, .rounded-2xl, .rounded-3xl, section > .border, .hubsense-card, .neon-card"
+    );
+    if (card && card.offsetWidth > 60 && card.offsetHeight > 40) {
+      const r = card.getBoundingClientRect();
+      const s = getComputedStyle(card);
+      return { x: r.left, y: r.top, w: r.width, h: r.height, r: parseFloat(s.borderRadius) || 16, isCard: true };
+    }
+    const ctrl = el.closest<HTMLElement>("button, a, input, select, textarea, [role='button'], label");
+    if (ctrl && ctrl.offsetWidth > 20) {
+      const r = ctrl.getBoundingClientRect();
+      const s = getComputedStyle(ctrl);
+      return { x: r.left, y: r.top, w: r.width, h: r.height, r: parseFloat(s.borderRadius) || 8, isCard: false };
+    }
+  } catch (_) { /* safety guard */ }
   return null;
 }
-
-// ── Main Component ─────────────────────────────────────────────────────────────
 
 export function VenomSymbioteEngine() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (
-      window.matchMedia("(pointer: coarse)").matches &&
-      !window.matchMedia("(pointer: fine)").matches
-    ) return;
+    try {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (window.matchMedia("(pointer: coarse)").matches && !window.matchMedia("(pointer: fine)").matches) return;
+    } catch (_) { return; }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const rawCtx = canvas.getContext("2d", { alpha: true, desynchronized: true });
-    if (!rawCtx) return;
-    // Alias to a definitely-typed reference so nested closures satisfy TS narrowing
-    const g: CanvasRenderingContext2D = rawCtx;
 
-    // ── Canvas resize ──────────────────────────────────────────────────────────
+    let g: CanvasRenderingContext2D | null = null;
+    try {
+      g = canvas.getContext("2d", { alpha: true });
+    } catch (_) { return; }
+    if (!g) return;
+
+    // Pin reference so TS knows it's non-null in all closures below
+    const ctx = g;
+
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
     const resize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const W = window.innerWidth, H = window.innerHeight;
-      canvas.width = Math.floor(W * dpr);
-      canvas.height = Math.floor(H * dpr);
-      canvas.style.width = `${W}px`;
-      canvas.style.height = `${H}px`;
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      try {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        canvas.style.width = `${W}px`;
+        canvas.style.height = `${H}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      } catch (_) { /* ignore resize errors */ }
     };
     resize();
     window.addEventListener("resize", resize, { passive: true });
 
-    // ── State ──────────────────────────────────────────────────────────────────
+    // State
     const mouse = { x: -9999, y: -9999 };
-    let lastMoveTime = performance.now();
-    let currentTarget: BoundRect | null = null;
-    let prevTarget: BoundRect | null = null;
-    let globalAlpha = 0;      // master fade
+    let lastMove = performance.now();
+    let cur: BRect | null = null;
+    let prev: BRect | null = null;
+    let masterAlpha = 0;
     let rafId = 0;
-    let isRunning = false;
+    let running = false;
 
-    // Lerped rect (smooth morphing between elements)
-    const lerpRect: BoundRect = { x: -9999, y: -9999, w: 0, h: 0, r: 16, isCard: false };
+    const lerpR: BRect = { x: -9999, y: -9999, w: 0, h: 0, r: 16, isCard: false };
     let lerpActive = false;
 
-    // Filaments pool
-    let filaments: Filament[] = [];
-    const targetFilamentCount = () => currentTarget
-      ? (currentTarget.isCard ? TENDRIL_COUNT_CARD : TENDRIL_COUNT_BUTTON)
-      : 0;
-
-    // Bridge between elements
+    let fils: Fil[] = [];
     let bridge: Bridge | null = null;
+    const drops: Drop[] = [];
 
-    // Droplets pool
-    const droplets: Droplet[] = [];
+    function wantCount() {
+      return cur ? (cur.isCard ? FILAMENT_COUNT_CARD : FILAMENT_COUNT_BTN) : 0;
+    }
 
-    // ── Filament factory ────────────────────────────────────────────────────────
-    function spawnFilament(rect: BoundRect): Filament {
-      const startAngle = Math.random() * Math.PI * 2;
-      const root = perimeterPoint(rect, startAngle);
-      const segCount = TENDRIL_SEGMENTS;
+    function spawnFil(rect: BRect): Fil {
+      const a = Math.random() * Math.PI * 2;
+      const pt = perimeter(rect, a);
       return {
-        nodes: makeChain(root.x, root.y, startAngle, segCount),
-        headAngle: startAngle,
-        angularVel: (Math.random() * 0.012 + 0.004) * (Math.random() < 0.5 ? 1 : -1),
+        nodes: chain(pt.x, pt.y, a, SEGMENTS),
+        angle: a,
+        dAngle: (Math.random() * 0.013 + 0.004) * (Math.random() < 0.5 ? 1 : -1),
         opacity: 0,
-        width: (rect.isCard ? 1.4 : 0.9) + Math.random() * 0.6,
+        width: (rect.isCard ? 1.3 : 0.85) + Math.random() * 0.55,
         phase: Math.random() * Math.PI * 2,
         life: 0,
-        maxLife: 220 + Math.floor(Math.random() * 120),
+        maxLife: 200 + Math.floor(Math.random() * 130),
       };
     }
 
-    // ── Bridge factory ──────────────────────────────────────────────────────────
-    function spawnBridge(from: BoundRect, to: BoundRect): Bridge {
-      const fromPt = perimeterPoint(from, 0);
-      const toPt = perimeterPoint(to, Math.PI);
-      const segCount = 18;
-      const nodes: ChainNode[] = [];
-      for (let i = 0; i < segCount; i++) {
-        const t = i / (segCount - 1);
-        const bx = lerp(fromPt.x, toPt.x, t);
-        const by = lerp(fromPt.y, toPt.y, t);
-        nodes.push({ x: bx, y: by, px: bx, py: by });
+    function spawnBridge(from: BRect, to: BRect): Bridge {
+      const fp = perimeter(from, 0);
+      const tp = perimeter(to, Math.PI);
+      const n = 18;
+      const nodes: Node[] = [];
+      for (let i = 0; i < n; i++) {
+        const t = i / (n - 1);
+        const x = lerp(fp.x, tp.x, t);
+        const y = lerp(fp.y, tp.y, t);
+        nodes.push({ x, y, px: x, py: y });
       }
-      return { nodes, alpha: 1, width: 0.8 };
+      return { nodes, alpha: 1 };
     }
 
-    // ── Droplet spawn ───────────────────────────────────────────────────────────
-    function spawnDroplet(x: number, y: number) {
-      if (droplets.length >= MAX_PARTICLES) return;
-      const angle = Math.random() * Math.PI * 2;
-      const spd = 0.15 + Math.random() * 0.6;
-      droplets.push({
-        x, y,
-        vx: Math.cos(angle) * spd,
-        vy: Math.sin(angle) * spd,
-        size: 0.6 + Math.random() * 1.4,
-        alpha: 0.5 + Math.random() * 0.35,
-        life: 0,
-        maxLife: 30 + Math.floor(Math.random() * 40),
-      });
+    function spawnDrop(x: number, y: number) {
+      if (drops.length >= MAX_DROPLETS) return;
+      const a = Math.random() * Math.PI * 2;
+      const spd = 0.12 + Math.random() * 0.5;
+      drops.push({ x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 0.5 + Math.random() * 1.2, a: 0.4 + Math.random() * 0.3, life: 0, max: 25 + Math.floor(Math.random() * 35) });
     }
 
-    // ── Verlet chain simulation ─────────────────────────────────────────────────
-    function simulateChain(
-      nodes: ChainNode[],
-      anchor: Vec2,
-      anchorStrength: number,
-      t: number
-    ) {
-      if (nodes.length === 0) return;
+    function drawBorder(rect: BRect, ma: number, t: number) {
+      if (rect.w < 1 || rect.h < 1 || ma < 0.01) return;
+      const { x, y, w, h, r, isCard } = rect;
+      const OS = 2.5;
+      const pulse = 1 + Math.sin(t * 2.1) * 0.04;
 
-      // Constrain root to anchor
-      nodes[0].x = lerp(nodes[0].x, anchor.x, anchorStrength);
-      nodes[0].y = lerp(nodes[0].y, anchor.y, anchorStrength);
-      nodes[0].px = nodes[0].x;
-      nodes[0].py = nodes[0].y;
+      ctx.save();
 
-      // Verlet integration for body
-      for (let i = 1; i < nodes.length; i++) {
-        const n = nodes[i];
-        const vx = (n.x - n.px) * DAMPING;
-        const vy = (n.y - n.py) * DAMPING;
-
-        // Subtle organic drift force (makes it look alive / breathing)
-        const drift = Math.sin(t * 1.3 + i * 0.5) * 0.08;
-        const driftX = Math.cos(t * 0.9 + i * 0.7) * drift;
-        const driftY = Math.sin(t * 1.1 + i * 0.6) * drift;
-
-        n.px = n.x;
-        n.py = n.y;
-        n.x += vx + driftX;
-        n.y += vy + driftY;
+      // dark creep ring
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(x - OS, y - OS, w + OS * 2, h + OS * 2, r + OS);
+      } else {
+        ctx.rect(x - OS, y - OS, w + OS * 2, h + OS * 2);
       }
+      ctx.strokeStyle = `rgba(8, 2, 18, ${ma * 0.50 * pulse})`;
+      ctx.lineWidth = isCard ? 1.8 : 1.1;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
 
-      // Distance constraints (spring)
-      for (let iter = 0; iter < 3; iter++) {
-        for (let i = 0; i < nodes.length - 1; i++) {
-          const a = nodes[i];
-          const b = nodes[i + 1];
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-          const rest = TENDRIL_SEGMENT_DIST * (0.4 + i * 0.03);
-          const diff = (dist - rest) / dist * SPRING_STIFFNESS;
-          if (i > 0) {
-            a.x += dx * diff;
-            a.y += dy * diff;
-          }
-          b.x -= dx * diff;
-          b.y -= dy * diff;
-        }
+      // violet vein
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(x - OS + 0.5, y - OS + 0.5, w + OS * 2 - 1, h + OS * 2 - 1, r + OS - 0.5);
+      } else {
+        ctx.rect(x - OS + 0.5, y - OS + 0.5, w + OS * 2 - 1, h + OS * 2 - 1);
       }
+      ctx.strokeStyle = `rgba(100, 38, 175, ${ma * 0.26 * pulse})`;
+      ctx.lineWidth = isCard ? 0.9 : 0.55;
+      ctx.shadowColor = "rgba(130, 55, 240, 0.5)";
+      ctx.shadowBlur = isCard ? 7 : 3.5;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.restore();
     }
 
-    // ── Draw one filament ────────────────────────────────────────────────────────
-    function drawFilament(fil: Filament, masterAlpha: number) {
+    function drawFil(fil: Fil, ma: number) {
       const { nodes, width, opacity } = fil;
-      if (nodes.length < 2) return;
-      const alpha = opacity * masterAlpha;
-      if (alpha < 0.01) return;
+      if (nodes.length < 2 || opacity * ma < 0.01) return;
 
-      g.save();
-
-      // Draw a tapered, soft line along the chain
+      ctx.save();
       for (let i = 0; i < nodes.length - 1; i++) {
         const t = i / (nodes.length - 1);
+        const lw = width * Math.pow(1 - t, 1.6);
+        if (lw < 0.08) continue;
         const a = nodes[i];
         const b = nodes[i + 1];
+        const ca = opacity * ma * (1 - t * 0.65);
+        const ga = opacity * ma * (1 - t) * 0.50;
 
-        // Taper: thick at root, vanishes at tip (quadratic falloff)
-        const localWidth = width * Math.pow(1 - t, 1.5);
-        if (localWidth < 0.1) continue;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(6, 1, 16, ${ca})`;
+        ctx.lineWidth = lw;
+        ctx.lineCap = "round";
+        ctx.stroke();
 
-        // Layered strokes: dark core + violet glow
-        const coreAlpha = alpha * (1 - t * 0.7);
-        const glowAlpha = alpha * (1 - t) * 0.55;
-
-        // 1. Dark near-black core
-        g.beginPath();
-        g.moveTo(a.x, a.y);
-        g.lineTo(b.x, b.y);
-        g.strokeStyle = `rgba(8, 2, 18, ${coreAlpha})`;
-        g.lineWidth = localWidth;
-        g.lineCap = "round";
-        g.stroke();
-
-        // 2. Violet phosphorescent edge vein
-        if (glowAlpha > 0.03) {
-          g.beginPath();
-          g.moveTo(a.x, a.y);
-          g.lineTo(b.x, b.y);
-          g.strokeStyle = `rgba(120, 50, 200, ${glowAlpha})`;
-          g.lineWidth = Math.max(0.3, localWidth * 0.4);
-          g.shadowColor = "rgba(150, 80, 255, 0.6)";
-          g.shadowBlur = 4;
-          g.stroke();
-          g.shadowBlur = 0;
+        if (ga > 0.025) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(115, 45, 195, ${ga})`;
+          ctx.lineWidth = Math.max(0.25, lw * 0.38);
+          ctx.shadowColor = "rgba(145, 75, 245, 0.55)";
+          ctx.shadowBlur = 3.5;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
         }
       }
-
-      g.restore();
+      ctx.restore();
     }
 
-    // ── Draw border outline (the "living border") ────────────────────────────────
-    function drawBorderOutline(rect: BoundRect, masterAlpha: number, time: number) {
-      if (rect.w < 1 || rect.h < 1) return;
-      const alpha = masterAlpha;
-      if (alpha < 0.01) return;
-
-      const { x, y, w, h, r, isCard } = rect;
-      const OUTSET = 2.5;
-      const pulse = 1 + Math.sin(time * 2.2) * 0.04; // subtle breathing
-
-      g.save();
-
-      // Outer dark creep band
-      g.beginPath();
-      if (typeof g.roundRect === "function") {
-        g.roundRect(x - OUTSET, y - OUTSET, w + OUTSET * 2, h + OUTSET * 2, r + OUTSET);
-      } else {
-        g.rect(x - OUTSET, y - OUTSET, w + OUTSET * 2, h + OUTSET * 2);
-      }
-      g.strokeStyle = `rgba(10, 3, 25, ${alpha * 0.55 * pulse})`;
-      g.lineWidth = isCard ? 2.0 : 1.2;
-      g.lineCap = "round";
-      g.lineJoin = "round";
-      g.stroke();
-
-      // Inner violet vein
-      g.beginPath();
-      if (typeof g.roundRect === "function") {
-        g.roundRect(x - OUTSET + 0.5, y - OUTSET + 0.5, w + OUTSET * 2 - 1, h + OUTSET * 2 - 1, r + OUTSET - 0.5);
-      } else {
-        g.rect(x - OUTSET + 0.5, y - OUTSET + 0.5, w + OUTSET * 2 - 1, h + OUTSET * 2 - 1);
-      }
-      g.strokeStyle = `rgba(100, 40, 180, ${alpha * 0.30 * pulse})`;
-      g.lineWidth = isCard ? 1.0 : 0.6;
-      g.shadowColor = "rgba(140, 60, 255, 0.5)";
-      g.shadowBlur = isCard ? 8 : 4;
-      g.stroke();
-      g.shadowBlur = 0;
-
-      g.restore();
-    }
-
-    // ── Draw bridge ──────────────────────────────────────────────────────────────
-    function drawBridge(br: Bridge, masterAlpha: number) {
-      const alpha = br.alpha * masterAlpha;
+    function drawBridge(br: Bridge, ma: number) {
+      const alpha = br.alpha * ma;
       if (alpha < 0.01 || br.nodes.length < 2) return;
-
-      g.save();
-      g.globalAlpha = alpha;
-      g.beginPath();
-      g.moveTo(br.nodes[0].x, br.nodes[0].y);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(br.nodes[0].x, br.nodes[0].y);
       for (let i = 1; i < br.nodes.length; i++) {
-        const prev = br.nodes[i - 1];
-        const curr = br.nodes[i];
-        const mx = (prev.x + curr.x) / 2;
-        const my = (prev.y + curr.y) / 2;
-        g.quadraticCurveTo(prev.x, prev.y, mx, my);
+        const p = br.nodes[i - 1];
+        const c = br.nodes[i];
+        ctx.quadraticCurveTo(p.x, p.y, (p.x + c.x) / 2, (p.y + c.y) / 2);
       }
-      g.strokeStyle = `rgba(80, 25, 150, 0.7)`;
-      g.lineWidth = br.width;
-      g.lineCap = "round";
-      g.shadowColor = "rgba(130, 60, 220, 0.5)";
-      g.shadowBlur = 5;
-      g.stroke();
-      g.shadowBlur = 0;
-      g.restore();
+      ctx.strokeStyle = "rgba(75, 22, 145, 0.65)";
+      ctx.lineWidth = 0.75;
+      ctx.lineCap = "round";
+      ctx.shadowColor = "rgba(125, 55, 215, 0.45)";
+      ctx.shadowBlur = 4.5;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
     }
 
-    // ── Main render loop ─────────────────────────────────────────────────────────
     let lastTime = performance.now();
 
     const loop = (now: number) => {
-      const rawDt = Math.min((now - lastTime) / 1000, 0.05);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
-      const t = now * 0.001; // seconds
-
+      const t = now * 0.001;
       const W = window.innerWidth;
       const H = window.innerHeight;
-      g.clearRect(0, 0, W, H);
 
-      // ─ Master alpha fade ───────────────────────────────────────────────────
-      const hasTarget = currentTarget !== null;
-      if (hasTarget) {
-        globalAlpha = Math.min(1, globalAlpha + rawDt * FADE_IN_SPEED);
-      } else {
-        globalAlpha = Math.max(0, globalAlpha - rawDt * FADE_OUT_SPEED);
-      }
-
-      // Sleep when idle and fully transparent
-      const idleMs = now - lastMoveTime;
-      if (globalAlpha <= 0.001 && idleMs > IDLE_SLEEP_MS) {
-        isRunning = false;
-        return; // no requestAnimationFrame → sleeping
-      }
-
-      // ─ Lerp rect ─────────────────────────────────────────────────────────
-      if (currentTarget) {
-        if (!lerpActive) {
-          lerpRect.x = currentTarget.x;
-          lerpRect.y = currentTarget.y;
-          lerpRect.w = currentTarget.w;
-          lerpRect.h = currentTarget.h;
-          lerpRect.r = currentTarget.r;
-          lerpRect.isCard = currentTarget.isCard;
-          lerpActive = true;
-        } else {
-          const S = 0.14;
-          lerpRect.x = lerp(lerpRect.x, currentTarget.x, S);
-          lerpRect.y = lerp(lerpRect.y, currentTarget.y, S);
-          lerpRect.w = lerp(lerpRect.w, currentTarget.w, S);
-          lerpRect.h = lerp(lerpRect.h, currentTarget.h, S);
-          lerpRect.r = lerp(lerpRect.r, currentTarget.r, S);
-          lerpRect.isCard = currentTarget.isCard;
-        }
-      } else {
-        lerpActive = false;
-      }
-
-      if (globalAlpha <= 0.001) {
-        rafId = requestAnimationFrame(loop);
+      try {
+        ctx.clearRect(0, 0, W, H);
+      } catch (_) {
+        running = false;
         return;
       }
 
-      // ─ Manage filament pool ────────────────────────────────────────────────
-      const wantCount = targetFilamentCount();
-
-      // Age existing filaments, dissolve old ones
-      for (let i = filaments.length - 1; i >= 0; i--) {
-        filaments[i].life++;
-        if (filaments[i].life > filaments[i].maxLife) {
-          filaments.splice(i, 1);
-        }
+      // Master alpha
+      if (cur) {
+        masterAlpha = Math.min(1, masterAlpha + dt * FADE_IN);
+      } else {
+        masterAlpha = Math.max(0, masterAlpha - dt * FADE_OUT);
       }
 
-      // Spawn new if we need more
-      if (currentTarget && filaments.length < wantCount) {
-        filaments.push(spawnFilament(currentTarget));
+      // Sleep check
+      if (masterAlpha <= 0.001 && now - lastMove > IDLE_SLEEP) {
+        running = false;
+        return;
       }
 
-      // ─ Simulate & draw filaments ──────────────────────────────────────────
-      if (lerpActive) {
-        drawBorderOutline(lerpRect, globalAlpha, t);
-
-        for (const fil of filaments) {
-          // Fade in/out based on life
-          const lifeFrac = fil.life / fil.maxLife;
-          if (lifeFrac < 0.1) {
-            fil.opacity = Math.min(1, fil.opacity + rawDt * 4.0);
-          } else if (lifeFrac > 0.8) {
-            fil.opacity = Math.max(0, fil.opacity - rawDt * 3.0);
+      if (masterAlpha > 0.001) {
+        // Lerp rect
+        if (cur) {
+          if (!lerpActive) {
+            lerpR.x = cur.x; lerpR.y = cur.y;
+            lerpR.w = cur.w; lerpR.h = cur.h;
+            lerpR.r = cur.r; lerpR.isCard = cur.isCard;
+            lerpActive = true;
+          } else {
+            const S = 0.13;
+            lerpR.x = lerp(lerpR.x, cur.x, S);
+            lerpR.y = lerp(lerpR.y, cur.y, S);
+            lerpR.w = lerp(lerpR.w, cur.w, S);
+            lerpR.h = lerp(lerpR.h, cur.h, S);
+            lerpR.r = lerp(lerpR.r, cur.r, S);
+            lerpR.isCard = cur.isCard;
           }
-
-          // Advance head angle (creeping around perimeter)
-          fil.headAngle += fil.angularVel;
-          const anchor = perimeterPoint(lerpRect, fil.headAngle);
-
-          // Add subtle serpentine offset to root
-          const sway = Math.sin(t * 1.8 + fil.phase) * 3;
-          anchor.x += Math.cos(fil.headAngle + Math.PI / 2) * sway;
-          anchor.y += Math.sin(fil.headAngle + Math.PI / 2) * sway;
-
-          // Simulate chain physics
-          simulateChain(fil.nodes, anchor, 0.55, t + fil.phase);
-
-          // Occasionally spawn a subtle droplet at tip
-          const tipNode = fil.nodes[fil.nodes.length - 1];
-          if (Math.random() < 0.006) {
-            spawnDroplet(tipNode.x, tipNode.y);
-          }
-
-          drawFilament(fil, globalAlpha);
-        }
-      }
-
-      // ─ Bridge between elements ─────────────────────────────────────────────
-      if (bridge) {
-        bridge.alpha = Math.max(0, bridge.alpha - rawDt * BRIDGE_DECAY);
-
-        if (bridge.alpha > 0.01) {
-          // Simulate bridge chain (both endpoints pulled)
-          const br = bridge;
-          const last = br.nodes.length - 1;
-          simulateChain(br.nodes, { x: br.nodes[0].x, y: br.nodes[0].y }, 0.9, t);
-          // pull tail toward cursor position when near
-          br.nodes[last].x = lerp(br.nodes[last].x, mouse.x, 0.06);
-          br.nodes[last].y = lerp(br.nodes[last].y, mouse.y, 0.06);
-          drawBridge(br, globalAlpha);
         } else {
-          bridge = null;
+          lerpActive = false;
         }
-      }
 
-      // ─ Droplets ───────────────────────────────────────────────────────────
-      for (let i = droplets.length - 1; i >= 0; i--) {
-        const d = droplets[i];
-        d.life++;
-        d.x += d.vx;
-        d.y += d.vy;
-        d.vx *= 0.97;
-        d.vy *= 0.97;
-        const frac = d.life / d.maxLife;
-        if (frac >= 1) { droplets.splice(i, 1); continue; }
-        const da = d.alpha * (1 - frac) * globalAlpha;
-        if (da < 0.01) continue;
-        g.beginPath();
-        g.arc(d.x, d.y, d.size * (1 - frac * 0.4), 0, Math.PI * 2);
-        g.fillStyle = `rgba(90, 30, 160, ${da})`;
-        g.fill();
+        // Age filaments
+        for (let i = fils.length - 1; i >= 0; i--) {
+          fils[i].life++;
+          if (fils[i].life > fils[i].maxLife) fils.splice(i, 1);
+        }
+
+        // Spawn if needed
+        if (cur && fils.length < wantCount()) fils.push(spawnFil(cur));
+
+        // Draw border outline
+        if (lerpActive) {
+          drawBorder(lerpR, masterAlpha, t);
+
+          for (const fil of fils) {
+            const frac = fil.life / fil.maxLife;
+            if (frac < 0.1) fil.opacity = Math.min(1, fil.opacity + dt * 4.5);
+            else if (frac > 0.8) fil.opacity = Math.max(0, fil.opacity - dt * 3.5);
+
+            fil.angle += fil.dAngle;
+            const pt = perimeter(lerpR, fil.angle);
+            const sway = Math.sin(t * 1.9 + fil.phase) * 2.5;
+            pt.x += Math.cos(fil.angle + Math.PI / 2) * sway;
+            pt.y += Math.sin(fil.angle + Math.PI / 2) * sway;
+
+            verlet(fil.nodes, pt, t + fil.phase);
+
+            const tip = fil.nodes[fil.nodes.length - 1];
+            if (Math.random() < 0.005) spawnDrop(tip.x, tip.y);
+
+            drawFil(fil, masterAlpha);
+          }
+        }
+
+        // Bridge
+        if (bridge) {
+          bridge.alpha = Math.max(0, bridge.alpha - dt * BRIDGE_DECAY);
+          if (bridge.alpha > 0.01) {
+            const last = bridge.nodes.length - 1;
+            verlet(bridge.nodes, { x: bridge.nodes[0].x, y: bridge.nodes[0].y }, t);
+            bridge.nodes[last].x = lerp(bridge.nodes[last].x, mouse.x, 0.05);
+            bridge.nodes[last].y = lerp(bridge.nodes[last].y, mouse.y, 0.05);
+            drawBridge(bridge, masterAlpha);
+          } else {
+            bridge = null;
+          }
+        }
+
+        // Droplets
+        for (let i = drops.length - 1; i >= 0; i--) {
+          const d = drops[i];
+          d.life++;
+          d.x += d.vx; d.y += d.vy;
+          d.vx *= 0.97; d.vy *= 0.97;
+          const frac = d.life / d.max;
+          if (frac >= 1) { drops.splice(i, 1); continue; }
+          const da = d.a * (1 - frac) * masterAlpha;
+          if (da < 0.01) continue;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r * (1 - frac * 0.35), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(85, 28, 155, ${da})`;
+          ctx.fill();
+        }
       }
 
       rafId = requestAnimationFrame(loop);
     };
 
-    // ── Mouse handler ────────────────────────────────────────────────────────────
-    const onMouseMove = (e: MouseEvent) => {
+    const onMove = (e: MouseEvent) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
-      lastMoveTime = performance.now();
+      lastMove = performance.now();
 
       const newTarget = resolveTarget(e.target as HTMLElement | null);
-
-      // Detect element change
       const changed = newTarget
-        ? !currentTarget ||
-          Math.abs(newTarget.x - currentTarget.x) > 6 ||
-          Math.abs(newTarget.y - currentTarget.y) > 6 ||
-          Math.abs(newTarget.w - currentTarget.w) > 6
-        : currentTarget !== null;
+        ? !cur
+          || Math.abs(newTarget.x - cur.x) > 6
+          || Math.abs(newTarget.y - cur.y) > 6
+          || Math.abs(newTarget.w - cur.w) > 6
+        : cur !== null;
 
       if (changed) {
-        if (currentTarget && newTarget) {
-          // Spawn bridge between old and new element
-          bridge = spawnBridge(currentTarget, newTarget);
-        }
-        prevTarget = currentTarget;
-        currentTarget = newTarget;
-        // Reset filaments when changing element
-        filaments = [];
+        if (cur && newTarget) bridge = spawnBridge(cur, newTarget);
+        prev = cur; void prev;
+        cur = newTarget;
+        fils = [];
         lerpActive = false;
       }
 
-      if (!isRunning) {
-        isRunning = true;
+      if (!running) {
+        running = true;
         lastTime = performance.now();
         rafId = requestAnimationFrame(loop);
       }
     };
 
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    window.addEventListener("mousemove", onMove, { passive: true });
 
-    // Kick off loop once so fade-out works even after initial mount
-    isRunning = true;
+    // Start loop to enable fade-out on page load
+    running = true;
     rafId = requestAnimationFrame(loop);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      try { cancelAnimationFrame(rafId); } catch (_) { /* */ }
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMouseMove);
-      isRunning = false;
+      window.removeEventListener("mousemove", onMove);
+      running = false;
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none block"
       aria-hidden="true"
       style={{
-        zIndex: 12,
-        willChange: "transform",
+        position: "fixed",
+        inset: 0,
         width: "100vw",
         height: "100vh",
+        pointerEvents: "none",
+        zIndex: 12,
+        display: "block",
+        background: "transparent",
+        // NO willChange — avoids GPU layer opacity bugs
+        // NO opacity CSS — purely alpha:true canvas
       }}
     />
   );
