@@ -342,6 +342,22 @@ function HubSenseInner() {
     return () => clearInterval(timer);
   }, [screen, prepSecondsLeft, scrollToTopOrArena]);
 
+  // ── Venom Symbiote Engine: disable during active gameplay screens ──────────
+  // During "reveal" and "guess" screens the symbiote would confuse players
+  // (tendrils wrapping game UI elements). We signal the engine via a data attribute.
+  useEffect(() => {
+    const GAME_SCREENS: GameScreen[] = ["reveal", "guess", "inter-round"];
+    const isInGame = GAME_SCREENS.includes(screen);
+    if (isInGame) {
+      document.body.setAttribute("data-venom-disabled", "true");
+    } else {
+      document.body.removeAttribute("data-venom-disabled");
+    }
+    return () => {
+      document.body.removeAttribute("data-venom-disabled");
+    };
+  }, [screen]);
+
   // Check URL query parameters on mount (?share=... or ?challenge=...)
   useEffect(() => {
     if (!searchParams) return;

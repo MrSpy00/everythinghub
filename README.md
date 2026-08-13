@@ -36,7 +36,7 @@
 
 **EverythingHub**, modern web standartları (Next.js 16.3 Turbopack, React 19, Tailwind CSS v4, OGL WebGL, Framer Motion ve Outfit tipografisi) ile inşa edilmiş, kayıt veya üyelik gerektirmeyen, tamamen ücretsiz ve açık kaynaklı bir dijital araçlar stüdyosudur.
 
-Platform, sıradan hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) morfizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)**, dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ve gerçek fizik simülasyonuyla çalışan **Venom Symbiote Engine v3.0** (`VenomSymbioteEngine`) ile donatılmıştır.
+Platform, sıradan hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU hızlandırmalı WebGL kromatik nokta dalgaları (Dotted Waves), akışkan takipçi imleç (`UserCursor`), sıvı cam (Liquid Glass) morfizm, yumuşak Gauss difüzyonlu ortam ışımaları, `Ctrl+K` erişimli **Komut Paleti (Command Palette)**, dinamik dairesel ilerleme göstergeli akıllı başa dönme (`ScrollToTop`) motoru ve gerçek fizik simülasyonuyla çalışan **Venom Symbiote Engine v4.0** (`VenomSymbioteEngine`) ile donatılmıştır.
 
 Venom Symbiote Engine, Verlet-yay zinciri fiziği kullanan, elementlerin dış kenar çizgilerinde yılan gibi kayan ipliksi filamentler oluşturan, elementler arası organik köprü geçişleri çizen ve tam uyku/uyanış döngüsüyle optimize edilmiş global bir Canvas 2D motorudur.
 
@@ -213,20 +213,21 @@ Instead of generic dashboard templates, EverythingHub delivers a **creative stud
 - **Internationalization:** Dynamic Turkish (`tr`) & English (`en`) context
 - **Design Standard:** Zero emoji standard, Liquid Glassmorphism, Specular Highlights, Dual-conic Neon Borders
 
-### Creative Engine: Venom Symbiote Engine v3.0
+### Creative Engine: Venom Symbiote Engine v4.0
 
-The `VenomSymbioteEngine` (`src/components/creative/VenomSymbioteEngine.tsx`) is a global Canvas 2D organism engine with the following architecture:
+The `VenomSymbioteEngine` (`src/components/creative/VenomSymbioteEngine.tsx`) is a global Canvas 2D organism engine:
 
 | Property | Detail |
 |---|---|
-| **Physics** | Verlet-spring chain simulation with 24 segments per filament |
-| **Visual style** | Ultra-thin tapered filaments, dark-violet/near-black palette, phosphorescent glow |
-| **Behavior** | Lives ON element border outlines — never fills inside elements |
-| **Motion** | Serpentine angular drift around perimeter, organic breathing oscillations |
-| **Transitions** | Elastic spring-chain bridge filament between hovered elements |
-| **Targeting** | Auto-detects cards, buttons, inputs, links via DOM closest() traversal |
-| **Performance** | Full sleep/wake lifecycle, RAF loop halts when idle >3s, DPR capped at 2x |
-| **Accessibility** | Disabled on `prefers-reduced-motion` and touch-only devices |
+| **Physics** | Verlet-spring chain (26 nodes/filament), distance constraint solver (3 iter/frame) |
+| **Randomness** | Seeded xorshift32 PRNG per filament + Box-Muller Gaussian drift noise |
+| **Perimeter** | Ellipse-scaled border point (no corner cut-through) with sinusoidal sway |
+| **Visual** | Dark near-black core + phosphorescent violet glow vein, tapered to hair-tip |
+| **Transitions** | Elastic spring-chain bridge strand between hosts (snaps at >420px distance) |
+| **Targeting** | Auto-detects cards, buttons, inputs, links via `Element.closest()` traversal |
+| **Disable** | Reads `data-venom-disabled` on `<body>` — HubSense game screens set this flag |
+| **Performance** | Full sleep/wake (RAF halts when idle >3.5s), DPR capped at 2×, pool reuse |
+| **Safety** | `try/catch` on all canvas ops, `matchMedia` guards, zero CSS class dependencies |
 
 ---
 
