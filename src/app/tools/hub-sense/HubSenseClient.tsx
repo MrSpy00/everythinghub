@@ -727,7 +727,10 @@ function HubSenseInner() {
                     className="flex items-center justify-center gap-1.5 py-2.5 px-3 sm:py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/15 active:scale-95 transition-all text-xs font-bold text-white/80 shadow-lg"
                   >
                     <Brain className="w-4 h-4 text-indigo-400 shrink-0" />
-                    <span className="text-[11px] sm:text-xs truncate">{t.sensoryProfile}</span>
+                    <span className="text-[11px] sm:text-xs font-bold">
+                      <span className="hidden sm:inline">{t.sensoryProfile}</span>
+                      <span className="sm:hidden">{lang === "tr" ? "Profil" : "Profile"}</span>
+                    </span>
                   </button>
 
                   <button

@@ -8,7 +8,7 @@
  */
 
 import React, { useRef, useEffect, useCallback, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   hsbToHex,
   hsbToRgb,
@@ -54,6 +54,16 @@ export function ColorGame({
   const [sat, setSat] = useState(50);
   const [bright, setBright] = useState(50);
   const [copiedHex, setCopiedHex] = useState(false);
+  const [showInstruction, setShowInstruction] = useState(true);
+
+  // Instruction banner auto-dissolve after 2.2s
+  useEffect(() => {
+    setShowInstruction(true);
+    const timer = setTimeout(() => {
+      setShowInstruction(false);
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, [roundNumber]);
 
   const hueTrackRef = useRef<HTMLDivElement>(null);
   const satTrackRef = useRef<HTMLDivElement>(null);
@@ -163,7 +173,7 @@ export function ColorGame({
           {/* 1. HUE SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onClick={() => setHue((h) => (h - 5 + 360) % 360)}
+              onClick={() => setHue((h) => (h - 1 + 360) % 360)}
               className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
               title={t.color.hueDec}
               data-cursor={t.color.hueDec}
@@ -196,7 +206,7 @@ export function ColorGame({
             </div>
 
             <button
-              onClick={() => setHue((h) => (h + 5) % 360)}
+              onClick={() => setHue((h) => (h + 1) % 360)}
               className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
               title={t.color.hueInc}
               data-cursor={t.color.hueInc}
@@ -213,7 +223,7 @@ export function ColorGame({
           {/* 2. SATURATION SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onClick={() => setSat((s) => Math.min(100, s + 5))}
+              onClick={() => setSat((s) => Math.min(100, s + 1))}
               className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
               title={t.color.satInc}
               data-cursor={t.color.satInc}
@@ -245,7 +255,7 @@ export function ColorGame({
             </div>
 
             <button
-              onClick={() => setSat((s) => Math.max(0, s - 5))}
+              onClick={() => setSat((s) => Math.max(0, s - 1))}
               className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
               title={t.color.satDec}
               data-cursor={t.color.satDec}
@@ -262,7 +272,7 @@ export function ColorGame({
           {/* 3. BRIGHTNESS SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onClick={() => setBright((b) => Math.min(100, b + 5))}
+              onClick={() => setBright((b) => Math.min(100, b + 1))}
               className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
               title={t.color.brightInc}
               data-cursor={t.color.brightInc}
@@ -294,7 +304,7 @@ export function ColorGame({
             </div>
 
             <button
-              onClick={() => setBright((b) => Math.max(0, b - 5))}
+              onClick={() => setBright((b) => Math.max(0, b - 1))}
               className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
               title={t.color.brightDec}
               data-cursor={t.color.brightDec}
@@ -319,7 +329,7 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setHue((h) => (h - 5 + 360) % 360)}
+                onClick={() => setHue((h) => (h - 1 + 360) % 360)}
                 className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
               >
                 <ChevronDown className="w-4 h-4" />
@@ -337,7 +347,7 @@ export function ColorGame({
                 }}
               />
               <button
-                onClick={() => setHue((h) => (h + 5) % 360)}
+                onClick={() => setHue((h) => (h + 1) % 360)}
                 className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
               >
                 <ChevronUp className="w-4 h-4" />
@@ -353,7 +363,7 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setSat((s) => Math.max(0, s - 5))}
+                onClick={() => setSat((s) => Math.max(0, s - 1))}
                 className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
               >
                 <ChevronDown className="w-4 h-4" />
@@ -370,7 +380,7 @@ export function ColorGame({
                 }}
               />
               <button
-                onClick={() => setSat((s) => Math.min(100, s + 5))}
+                onClick={() => setSat((s) => Math.min(100, s + 1))}
                 className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
               >
                 <ChevronUp className="w-4 h-4" />
@@ -386,7 +396,7 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setBright((b) => Math.max(0, b - 5))}
+                onClick={() => setBright((b) => Math.max(0, b - 1))}
                 className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
               >
                 <ChevronDown className="w-4 h-4" />
@@ -403,7 +413,7 @@ export function ColorGame({
                 }}
               />
               <button
-                onClick={() => setBright((b) => Math.min(100, b + 5))}
+                onClick={() => setBright((b) => Math.min(100, b + 1))}
                 className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white shrink-0"
               >
                 <ChevronUp className="w-4 h-4" />
@@ -456,11 +466,25 @@ export function ColorGame({
           </motion.button>
         </div>
 
-        {/* Center Subtitle or Prompt */}
-        <div className="text-center my-auto pointer-events-none py-4">
-          <div className="inline-block px-4 sm:px-5 py-2 rounded-2xl bg-black/30 backdrop-blur-md border border-white/15 text-white/90 text-xs sm:text-sm font-medium shadow-xl">
-            {t.color.instruction}
-          </div>
+        {/* Center Subtitle or Prompt (Fades out smoothly after 2.2s) */}
+        <div className="text-center my-auto pointer-events-none py-4 min-h-[48px] flex items-center justify-center">
+          <AnimatePresence>
+            {showInstruction && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, filter: "blur(4px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.85,
+                  filter: "blur(12px)",
+                  transition: { duration: 0.85, ease: "easeOut" },
+                }}
+                className="inline-block px-4 sm:px-5 py-2 rounded-2xl bg-black/30 backdrop-blur-md border border-white/15 text-white/90 text-xs sm:text-sm font-medium shadow-xl"
+              >
+                {t.color.instruction}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Bottom Actions Bar */}
