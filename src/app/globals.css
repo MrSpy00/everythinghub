@@ -111,9 +111,17 @@ body {
 
 /* ===== Focus Ring ===== */
 :focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 2px;
-  border-radius: 8px;
+  outline: none;
+}
+input:focus,
+input:focus-visible,
+button:focus,
+button:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  ring: none !important;
 }
 
 /* ===== Liquid Glass Classes ===== */

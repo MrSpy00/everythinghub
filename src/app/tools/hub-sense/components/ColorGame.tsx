@@ -156,12 +156,12 @@ export function ColorGame({
       style={{ background: displayHex }}
     >
       {/* ─── LEFT PANEL: 3 Symmetrical Vertical Sliders (Grid Layout) ─── */}
-      <div className="hubsense-slider-area relative z-10 w-32 sm:w-40 h-full bg-black/40 backdrop-blur-2xl border-r border-white/15 p-3 grid grid-cols-3 gap-2 sm:gap-2.5 items-stretch shadow-2xl">
+      <div className="hubsense-slider-area relative z-10 w-36 sm:w-48 lg:w-56 h-full bg-black/40 backdrop-blur-2xl border-r border-white/15 p-2.5 sm:p-3.5 grid grid-cols-3 gap-1.5 sm:gap-2.5 items-stretch shadow-2xl">
         {/* 1. HUE SLIDER COLUMN */}
         <div className="flex flex-col items-center justify-between h-full">
           <button
             onClick={() => setHue((h) => (h - 5 + 360) % 360)}
-            className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
+            className="w-full h-7 sm:h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
             title={t.color.hueDec}
             data-cursor={t.color.hueDec}
           >
@@ -194,7 +194,7 @@ export function ColorGame({
 
           <button
             onClick={() => setHue((h) => (h + 5) % 360)}
-            className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
+            className="w-full h-7 sm:h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
             title={t.color.hueInc}
             data-cursor={t.color.hueInc}
           >
@@ -204,14 +204,14 @@ export function ColorGame({
           <div className="text-[10px] font-mono font-bold text-white/90 mt-1">
             {hue}°
           </div>
-          <div className="text-[9px] uppercase font-bold text-white/50">{t.color.hue}</div>
+          <div className="text-[9px] uppercase font-bold text-white/60 truncate max-w-full text-center">{t.color.hue}</div>
         </div>
 
         {/* 2. SATURATION SLIDER COLUMN */}
         <div className="flex flex-col items-center justify-between h-full">
           <button
             onClick={() => setSat((s) => Math.min(100, s + 5))}
-            className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
+            className="w-full h-7 sm:h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
             title={t.color.satInc}
             data-cursor={t.color.satInc}
           >
@@ -243,7 +243,7 @@ export function ColorGame({
 
           <button
             onClick={() => setSat((s) => Math.max(0, s - 5))}
-            className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
+            className="w-full h-7 sm:h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
             title={t.color.satDec}
             data-cursor={t.color.satDec}
           >
@@ -253,14 +253,14 @@ export function ColorGame({
           <div className="text-[10px] font-mono font-bold text-white/90 mt-1">
             %{sat}
           </div>
-          <div className="text-[9px] uppercase font-bold text-white/50">{t.color.saturation}</div>
+          <div className="text-[9px] uppercase font-bold text-white/60 text-center max-w-full"><span className="sm:hidden">DOY</span><span className="hidden sm:inline">{t.color.saturation}</span></div>
         </div>
 
         {/* 3. BRIGHTNESS SLIDER COLUMN */}
         <div className="flex flex-col items-center justify-between h-full">
           <button
             onClick={() => setBright((b) => Math.min(100, b + 5))}
-            className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
+            className="w-full h-7 sm:h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mb-1 transition-transform"
             title={t.color.brightInc}
             data-cursor={t.color.brightInc}
           >
@@ -292,7 +292,7 @@ export function ColorGame({
 
           <button
             onClick={() => setBright((b) => Math.max(0, b - 5))}
-            className="w-full h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
+            className="w-full h-7 sm:h-6 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 flex items-center justify-center text-xs mt-1 transition-transform"
             title={t.color.brightDec}
             data-cursor={t.color.brightDec}
           >
@@ -302,15 +302,15 @@ export function ColorGame({
           <div className="text-[10px] font-mono font-bold text-white/90 mt-1">
             %{bright}
           </div>
-          <div className="text-[9px] uppercase font-bold text-white/50">{t.color.brightness}</div>
+          <div className="text-[9px] uppercase font-bold text-white/60 text-center max-w-full"><span className="sm:hidden">PAR</span><span className="hidden sm:inline">{t.color.brightness}</span></div>
         </div>
       </div>
 
       {/* ─── RIGHT PANEL: Live Color Canvas & Info Bar ─── */}
-      <div className="relative flex-1 h-full flex flex-col justify-between p-6 sm:p-8">
+      <div className="relative flex-1 h-full flex flex-col justify-between p-4 sm:p-8">
         {/* Top Info Bar */}
         <div className="flex items-center justify-between">
-          <div className="px-3.5 py-1.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/15 text-xs font-bold text-white font-mono tracking-wider shadow-lg">
+          <div className="px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-xs font-bold text-white font-mono tracking-wider shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
             {roundNumber} / {totalRounds}
           </div>
 
@@ -450,7 +450,7 @@ export function ColorDisplay({
     >
       {/* Top Header */}
       <div className="flex items-start justify-between">
-        <div className="px-4 py-2 rounded-full bg-black/35 backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+        <div className="px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-xs sm:text-sm font-extrabold text-white font-mono tracking-wider shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
           {roundNumber} / {totalRounds}
         </div>
 

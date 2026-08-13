@@ -105,7 +105,8 @@ type GameScreen =
   | "reveal"
   | "guess"
   | "total-result"
-  | "daily-intro";
+  | "daily-intro"
+  | "inter-round";
 
 type AnyRoundResult =
   | ColorScoreResult
@@ -219,6 +220,11 @@ function HubSenseInner() {
   const [isCustomRounds, setIsCustomRounds] = useState<boolean>(false);
   const [customRoundsInput, setCustomRoundsInput] = useState<string>("7");
 
+  const [selectedDelay, setSelectedDelay] = useState<number>(2);
+  const [isCustomDelay, setIsCustomDelay] = useState<boolean>(false);
+  const [customDelayInput, setCustomDelayInput] = useState<string>("3");
+  const [prepSecondsLeft, setPrepSecondsLeft] = useState<number>(0);
+
   const [session, setSession] = useState<GameSession | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
   const [roundResults, setRoundResults] = useState<RoundData[]>([]);
@@ -246,6 +252,12 @@ function HubSenseInner() {
       ? parsedCustom
       : 7
     : selectedRounds;
+
+  const scrollToTopOrArena = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
 
   // Initialize mute state & username from local storage
   useEffect(() => {
@@ -277,13 +289,26 @@ function HubSenseInner() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [screen]);
 
-  // Daily countdown timer
+  // Daily countdown timer & inter-round prep timer
   useEffect(() => {
     const tick = () => setDailyCountdown(formatCountdown(getMsUntilNextUTCMidnight()));
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (screen !== "inter-round") return;
+    if (prepSecondsLeft <= 0) {
+      setScreen("reveal");
+      scrollToTopOrArena();
+      return;
+    }
+    const timer = setInterval(() => {
+      setPrepSecondsLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [screen, prepSecondsLeft, scrollToTopOrArena]);
 
   // Check URL query parameters on mount (?share=... or ?challenge=...)
   useEffect(() => {
@@ -327,12 +352,6 @@ function HubSenseInner() {
   const accentColor = config.accent;
   const currentDiscipline = t.disciplines[selectedGame];
   const totalRoundsCount = session?.totalRounds || activeRounds;
-
-  const scrollToTopOrArena = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, []);
 
   // ─── Game Flow ─────────────────────────────────────────────────────────────
   const startGame = useCallback(
@@ -413,7 +432,7 @@ function HubSenseInner() {
 
       const nextRoundIndex = currentRound + 1;
       if (nextRoundIndex < session.totalRounds) {
-        // Direct transition to next round reveal
+        // Direct transition to next round reveal or inter-round delay
         setCurrentRound(nextRoundIndex);
         const nextStimulus = generateRoundStimulus(
           session.gameType,
@@ -422,8 +441,19 @@ function HubSenseInner() {
           selectedDifficulty
         );
         setCurrentStimulus(nextStimulus);
-        setScreen("reveal");
-        scrollToTopOrArena();
+
+        const activeDelay = isCustomDelay
+          ? Math.max(0, Math.min(30, parseInt(customDelayInput, 10) || 3))
+          : selectedDelay;
+
+        if (activeDelay > 0) {
+          setPrepSecondsLeft(activeDelay);
+          setScreen("inter-round");
+          scrollToTopOrArena();
+        } else {
+          setScreen("reveal");
+          scrollToTopOrArena();
+        }
       } else {
         // Complete game -> Total Result Screen
         const allScores = newResults.map((r) => extractScore(r.result));
@@ -603,7 +633,7 @@ function HubSenseInner() {
       </AnimatePresence>
 
       {/* Main Container */}
-      <div className={`w-full ${screen === "intro" ? "max-w-4xl" : "max-w-3xl"} mx-auto flex flex-col justify-center transition-all duration-300`}>
+      <div className={`w-full ${screen === "intro" ? "max-w-4xl lg:max-w-5xl" : "max-w-3xl lg:max-w-4xl"} mx-auto flex flex-col justify-center items-center transition-all duration-300`}>
         <AnimatePresence mode="wait">
           {/* ─── 1. INTRO SCREEN ──────────────────────────────────────────────── */}
           {screen === "intro" && (
@@ -959,6 +989,47 @@ function HubSenseInner() {
                     </p>
                   )}
                 </div>
+
+                {/* 3. Inter-Round Prep Delay Selector */}
+                <div className="flex flex-col gap-2 p-4 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-2xl col-span-1 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] sm:text-[11px] font-extrabold text-white/40 uppercase tracking-widest">
+                      {t.delayTitle}
+                    </p>
+                    <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                      {isCustomDelay
+                        ? `${customDelayInput}sn (${t.roundCustom})`
+                        : selectedDelay === 0
+                        ? t.delayInstant
+                        : `${selectedDelay}sn`}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-2">
+                    {[0, 1, 2, 3, 5].map((sec) => {
+                      const isSel = !isCustomDelay && selectedDelay === sec;
+                      return (
+                        <button
+                          key={sec}
+                          onClick={() => {
+                            SoundFX.click();
+                            setIsCustomDelay(false);
+                            setSelectedDelay(sec);
+                          }}
+                          data-cursor={sec === 0 ? t.delayInstant : t.delaySec(sec)}
+                          className={`py-2 rounded-2xl text-xs font-bold transition-all border
+                            ${
+                              isSel
+                                ? "bg-white/15 text-white border-purple-400/50 shadow-md text-purple-300"
+                                : "bg-white/[0.02] text-white/50 border-white/[0.06] hover:bg-white/[0.06]"
+                            }`}
+                        >
+                          {sec === 0 ? t.delayInstant : `${sec}sn`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Daily Challenge Banner Card */}
@@ -1048,6 +1119,45 @@ function HubSenseInner() {
                 >
                   {t.dailyReadyPrompt}
                 </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─── 2.5 INTER-ROUND PREPARATION COUNTDOWN SCREEN ──────────────────── */}
+          {screen === "inter-round" && session && (
+            <motion.div
+              key="inter-round"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-col items-center justify-center p-8 sm:p-10 rounded-3xl bg-white/[0.03] border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] text-center gap-6 max-w-md mx-auto my-auto"
+            >
+              <div className="w-20 h-20 rounded-full bg-indigo-500/15 border-2 border-indigo-500/40 flex items-center justify-center text-3xl font-black font-mono text-indigo-300 shadow-[0_0_30px_rgba(99,102,241,0.35)] animate-pulse">
+                {prepSecondsLeft}
+              </div>
+
+              <div>
+                <h3 className="text-xl font-extrabold text-white">
+                  {t.nextRoundIn(prepSecondsLeft)}
+                </h3>
+                <p className="text-xs text-white/50 mt-1.5 font-mono">
+                  {currentDiscipline.label} · {currentRound + 1} / {totalRoundsCount}
+                </p>
+              </div>
+
+              <div className="flex gap-3 w-full max-w-xs">
+                <button
+                  onClick={() => {
+                    SoundFX.click();
+                    setPrepSecondsLeft(0);
+                    setScreen("reveal");
+                    scrollToTopOrArena();
+                  }}
+                  data-cursor={t.skipDelay}
+                  className="w-full py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-black text-white transition-all shadow-lg active:scale-95 uppercase tracking-wider"
+                >
+                  {t.skipDelay}
+                </button>
               </div>
             </motion.div>
           )}

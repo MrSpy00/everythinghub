@@ -82,7 +82,7 @@ export function TimeGame({
     >
       {/* Top Header Bar */}
       <div className="flex items-center justify-between">
-        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-bold text-white font-mono shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
           {roundNumber} / {totalRounds}
         </div>
 
@@ -263,7 +263,7 @@ export function TimeDisplay({
     >
       {/* Top Header */}
       <div className="flex items-start justify-between">
-        <div className="px-4 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-sm font-bold text-white font-mono shadow-lg">
+        <div className="px-3.5 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/15 text-xs sm:text-sm font-bold text-white font-mono shadow-lg whitespace-nowrap inline-flex items-center justify-center shrink-0 min-w-fit leading-none">
           {roundNumber} / {totalRounds}
         </div>
 

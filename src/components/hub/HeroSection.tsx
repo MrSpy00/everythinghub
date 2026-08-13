@@ -127,9 +127,9 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
             <button
               type="button"
               onClick={scrollToTools}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 backdrop-blur-2xl hover:border-indigo-400 hover:bg-indigo-500/20 px-3.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer shadow-lg hover:shadow-indigo-500/20"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.08] border border-white/20 text-white backdrop-blur-3xl hover:border-indigo-400/80 hover:bg-white/15 px-4 py-2 text-xs font-bold transition-all duration-300 shrink-0 cursor-pointer shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] active:scale-95"
             >
-              <Compass className="h-3.5 w-3.5 text-indigo-400" />
+              <Compass className="h-4 w-4 text-indigo-300" />
               <span>{t.explore}</span>
             </button>
           </div>
@@ -141,12 +141,14 @@ export function HeroSection({ searchQuery, onSearch }: HeroSectionProps) {
         <button
           type="button"
           onClick={scrollToTools}
-          className="group inline-flex items-center justify-center gap-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-7 py-3.5 text-xs sm:text-sm font-bold text-indigo-300 backdrop-blur-2xl shadow-xl transition-all hover:scale-105 hover:bg-indigo-500/20 hover:border-indigo-400 hover:shadow-indigo-500/20 cursor-pointer"
+          className="group relative inline-flex items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white/[0.06] px-8 py-4 text-xs sm:text-sm font-black text-white backdrop-blur-3xl shadow-[0_10px_35px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-105 hover:bg-white/15 hover:border-indigo-400/80 hover:shadow-[0_0_35px_rgba(99,102,241,0.45)] cursor-pointer overflow-hidden"
           data-cursor={t.inspectAllTools}
         >
-          <Layers className="h-4 w-4 text-indigo-400" />
+          {/* Specular Highlight Refraction Line */}
+          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+          <Layers className="h-4.5 w-4.5 text-indigo-300 transition-transform group-hover:scale-110" />
           <span>{t.inspectAllTools}</span>
-          <span className="ml-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-0.5 text-[9px] font-extrabold uppercase font-mono">
+          <span className="ml-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-3 py-0.5 text-[10px] font-extrabold uppercase font-mono shadow-inner">
             {liveCount} {t.tools}
           </span>
         </button>

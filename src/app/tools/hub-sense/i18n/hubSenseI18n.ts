@@ -24,6 +24,11 @@ export interface HubSenseDictionary {
   roundMarathon: string;
   roundCustom: string;
   customRoundsPlaceholder: string;
+  delayTitle: string;
+  delayInstant: string;
+  delaySec: (sec: number) => string;
+  nextRoundIn: (sec: number) => string;
+  skipDelay: string;
   goBack: string;
   roundCounter: string;
   watermark: string;
@@ -263,11 +268,16 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
     dailyReadyPrompt: "Hazırım, Başla",
     startSoloGame: (rounds) => `Oyuna Başla (${rounds} Tur)`,
     roundsTitle: "Tur Sayısı",
-    roundFast: "3 Tur (Hızlı)",
-    roundStandard: "5 Tur (Standart)",
-    roundMarathon: "10 Tur (Maraton)",
-    roundCustom: "Özel",
-    customRoundsPlaceholder: "Tur sayısı (1-20)",
+    roundFast: "Hızlı 3 tur",
+    roundStandard: "Standart 5 tur",
+    roundMarathon: "Maraton 10 tur",
+    roundCustom: "Özel Tur Sayısı",
+    customRoundsPlaceholder: "Tur sayısı yazın (1-20)",
+    delayTitle: "Turlar Arası Bekleme Süresi",
+    delayInstant: "0sn (Anında)",
+    delaySec: (sec: number) => `${sec}sn`,
+    nextRoundIn: (sec: number) => `Sonraki Tur ${sec}sn İçinde Başlıyor...`,
+    skipDelay: "Hemen Başlat",
     goBack: "Geri Dön",
     roundCounter: "Tur",
     watermark: "HubSense",
@@ -521,12 +531,17 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
     dailyRefreshesIn: "Refreshes in",
     dailyReadyPrompt: "I'm Ready, Start",
     startSoloGame: (rounds) => `Start Game (${rounds} Rounds)`,
-    roundsTitle: "Number of Rounds",
-    roundFast: "3 Rounds (Quick)",
-    roundStandard: "5 Rounds (Standard)",
-    roundMarathon: "10 Rounds (Marathon)",
-    roundCustom: "Custom",
-    customRoundsPlaceholder: "Round count (1-20)",
+    roundsTitle: "Round Count",
+    roundFast: "Fast 3 rounds",
+    roundStandard: "Standard 5 rounds",
+    roundMarathon: "Marathon 10 rounds",
+    roundCustom: "Custom Rounds",
+    customRoundsPlaceholder: "Enter rounds (1-20)",
+    delayTitle: "Inter-Round Prep Delay",
+    delayInstant: "0s (Instant)",
+    delaySec: (sec: number) => `${sec}s`,
+    nextRoundIn: (sec: number) => `Next Round Starts in ${sec}s...`,
+    skipDelay: "Start Now",
     goBack: "Go Back",
     roundCounter: "Round",
     watermark: "HubSense",
