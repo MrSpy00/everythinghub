@@ -164,10 +164,11 @@ export async function fetchLeaderboard(
       difficulty,
       filter,
       limit: limit.toString(),
+      _t: Date.now().toString(),
     });
 
     const res = await fetch(`/api/hub-sense/leaderboard?${params.toString()}`, {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(5000),
       cache: "no-store",
     });
 

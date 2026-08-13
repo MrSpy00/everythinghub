@@ -106,7 +106,7 @@ export function Leaderboard({
         </div>
 
         {/* Navigation Tabs (Global vs Personal) */}
-        <div className="flex items-center justify-between px-6 pt-4 pb-2 border-b border-white/5 bg-white/[0.01]">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 px-4 sm:px-6 pt-3.5 sm:pt-4 pb-2 border-b border-white/5 bg-white/[0.01]">
           <div className="flex gap-2">
             {[
               { key: "global", label: t.leaderboard.globalTab, icon: <Globe className="w-3.5 h-3.5" /> },
@@ -115,7 +115,7 @@ export function Leaderboard({
               <button
                 key={key}
                 onClick={() => setTab(key as "global" | "personal")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold transition-all border
+                className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-2xl text-xs font-extrabold transition-all border shrink-0
                   ${
                     tab === key
                       ? "bg-white/10 text-white border-white/20 shadow-md"
@@ -128,7 +128,7 @@ export function Leaderboard({
             ))}
           </div>
 
-          <div className="text-[10px] font-mono text-white/40">
+          <div className="px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[10px] font-mono font-bold text-white/50 shrink-0">
             {source === "global" ? t.leaderboard.sourceServer : t.leaderboard.sourceLocal}
           </div>
         </div>
