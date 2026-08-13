@@ -31,6 +31,7 @@ interface ShapeGameProps {
 
 const ALL_SHAPE_TYPES: ShapeType[] = [
   "circle",
+  "ellipse",
   "triangle",
   "square",
   "pentagon",
@@ -148,7 +149,7 @@ export function ShapeGame({
       data-no-custom-cursor="true"
     >
       {/* Top Bar */}
-      <div className="flex items-center justify-between w-full">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
         {secondsLeft !== null ? (
           <div
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-xl border text-xs font-mono font-extrabold shadow-lg transition-all duration-300 ${
@@ -164,7 +165,7 @@ export function ShapeGame({
           <div />
         )}
 
-        <div className="flex gap-1.5 overflow-x-auto max-w-[280px] sm:max-w-none">
+        <div className="flex items-center justify-center gap-1.5 overflow-x-auto max-w-full sm:max-w-none mx-auto flex-wrap sm:flex-nowrap py-1">
           {ALL_SHAPE_TYPES.map((type) => (
             <button
               key={type}
@@ -172,10 +173,10 @@ export function ShapeGame({
                 SoundFX.click();
                 setParams((p) => ({ ...p, type }));
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border shrink-0
                 ${
                   params.type === type
-                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-md"
+                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-md scale-105"
                     : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80"
                 }`}
             >

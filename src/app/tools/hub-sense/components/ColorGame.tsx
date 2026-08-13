@@ -94,14 +94,15 @@ export function ColorGame({
   }, []);
 
   const startHoldStep = useCallback(
-    (action: () => void) => {
+    (e: React.PointerEvent, action: () => void) => {
+      e.preventDefault();
       stopHoldStep();
       action();
       holdTimerRef.current = setTimeout(() => {
         holdIntervalRef.current = setInterval(() => {
           action();
-        }, 55);
-      }, 200);
+        }, 70);
+      }, 250);
     },
     [stopHoldStep]
   );
@@ -232,7 +233,7 @@ export function ColorGame({
           {/* 1. HUE SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onPointerDown={() => startHoldStep(() => setHue((h) => (h - 1 + 360) % 360))}
+              onPointerDown={(e) => startHoldStep(e, () => setHue((h) => (h - 1 + 360) % 360))}
               onPointerUp={stopHoldStep}
               onPointerLeave={stopHoldStep}
               onPointerCancel={stopHoldStep}
@@ -268,7 +269,7 @@ export function ColorGame({
             </div>
 
             <button
-              onPointerDown={() => startHoldStep(() => setHue((h) => (h + 1) % 360))}
+              onPointerDown={(e) => startHoldStep(e, () => setHue((h) => (h + 1) % 360))}
               onPointerUp={stopHoldStep}
               onPointerLeave={stopHoldStep}
               onPointerCancel={stopHoldStep}
@@ -288,7 +289,7 @@ export function ColorGame({
           {/* 2. SATURATION SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onPointerDown={() => startHoldStep(() => setSat((s) => Math.min(100, s + 1)))}
+              onPointerDown={(e) => startHoldStep(e, () => setSat((s) => Math.min(100, s + 1)))}
               onPointerUp={stopHoldStep}
               onPointerLeave={stopHoldStep}
               onPointerCancel={stopHoldStep}
@@ -323,7 +324,7 @@ export function ColorGame({
             </div>
 
             <button
-              onPointerDown={() => startHoldStep(() => setSat((s) => Math.max(0, s - 1)))}
+              onPointerDown={(e) => startHoldStep(e, () => setSat((s) => Math.max(0, s - 1)))}
               onPointerUp={stopHoldStep}
               onPointerLeave={stopHoldStep}
               onPointerCancel={stopHoldStep}
@@ -343,7 +344,7 @@ export function ColorGame({
           {/* 3. BRIGHTNESS SLIDER COLUMN */}
           <div className="flex flex-col items-center justify-between h-full">
             <button
-              onPointerDown={() => startHoldStep(() => setBright((b) => Math.min(100, b + 1)))}
+              onPointerDown={(e) => startHoldStep(e, () => setBright((b) => Math.min(100, b + 1)))}
               onPointerUp={stopHoldStep}
               onPointerLeave={stopHoldStep}
               onPointerCancel={stopHoldStep}
@@ -378,7 +379,7 @@ export function ColorGame({
             </div>
 
             <button
-              onPointerDown={() => startHoldStep(() => setBright((b) => Math.max(0, b - 1)))}
+              onPointerDown={(e) => startHoldStep(e, () => setBright((b) => Math.max(0, b - 1)))}
               onPointerUp={stopHoldStep}
               onPointerLeave={stopHoldStep}
               onPointerCancel={stopHoldStep}
@@ -406,7 +407,7 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onPointerDown={() => startHoldStep(() => setHue((h) => (h - 1 + 360) % 360))}
+                onPointerDown={(e) => startHoldStep(e, () => setHue((h) => (h - 1 + 360) % 360))}
                 onPointerUp={stopHoldStep}
                 onPointerLeave={stopHoldStep}
                 onPointerCancel={stopHoldStep}
@@ -427,7 +428,7 @@ export function ColorGame({
                 }}
               />
               <button
-                onPointerDown={() => startHoldStep(() => setHue((h) => (h + 1) % 360))}
+                onPointerDown={(e) => startHoldStep(e, () => setHue((h) => (h + 1) % 360))}
                 onPointerUp={stopHoldStep}
                 onPointerLeave={stopHoldStep}
                 onPointerCancel={stopHoldStep}
@@ -446,7 +447,7 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onPointerDown={() => startHoldStep(() => setSat((s) => Math.max(0, s - 1)))}
+                onPointerDown={(e) => startHoldStep(e, () => setSat((s) => Math.max(0, s - 1)))}
                 onPointerUp={stopHoldStep}
                 onPointerLeave={stopHoldStep}
                 onPointerCancel={stopHoldStep}
@@ -466,7 +467,7 @@ export function ColorGame({
                 }}
               />
               <button
-                onPointerDown={() => startHoldStep(() => setSat((s) => Math.min(100, s + 1)))}
+                onPointerDown={(e) => startHoldStep(e, () => setSat((s) => Math.min(100, s + 1)))}
                 onPointerUp={stopHoldStep}
                 onPointerLeave={stopHoldStep}
                 onPointerCancel={stopHoldStep}
@@ -485,7 +486,7 @@ export function ColorGame({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onPointerDown={() => startHoldStep(() => setBright((b) => Math.max(0, b - 1)))}
+                onPointerDown={(e) => startHoldStep(e, () => setBright((b) => Math.max(0, b - 1)))}
                 onPointerUp={stopHoldStep}
                 onPointerLeave={stopHoldStep}
                 onPointerCancel={stopHoldStep}
@@ -505,7 +506,7 @@ export function ColorGame({
                 }}
               />
               <button
-                onPointerDown={() => startHoldStep(() => setBright((b) => Math.min(100, b + 1)))}
+                onPointerDown={(e) => startHoldStep(e, () => setBright((b) => Math.min(100, b + 1)))}
                 onPointerUp={stopHoldStep}
                 onPointerLeave={stopHoldStep}
                 onPointerCancel={stopHoldStep}

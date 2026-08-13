@@ -4,11 +4,13 @@ import {
   validateUsername,
   validateScoreBounds,
 } from "@/app/tools/hub-sense/games/antiCheat";
+import fs from "fs";
+import path from "path";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// ─── In-Memory Storage & Rate Limit Cache ─────────────────────────────────────
+// ─── Persistent File & In-Memory Storage ─────────────────────────────────────
 interface StoredEntry {
   username: string;
   score: number;
@@ -23,8 +25,35 @@ interface StoredEntry {
   playerId?: string;
 }
 
+const DATA_DIR = path.join(process.cwd(), ".data");
+const FILE_PATH = path.join(DATA_DIR, "hubsense_leaderboard.json");
+
+function loadPersistentData(): Record<string, StoredEntry[]> {
+  try {
+    if (fs.existsSync(FILE_PATH)) {
+      const raw = fs.readFileSync(FILE_PATH, "utf-8");
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return {};
+}
+
+function savePersistentData(data: Record<string, StoredEntry[]>) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(FILE_PATH, JSON.stringify(data), "utf-8");
+  } catch {
+    // Ignore write errors
+  }
+}
+
 // Global in-memory leaderboard partitioned by game_difficulty
-const memoryLeaderboards: Record<string, StoredEntry[]> = {};
+const memoryLeaderboards: Record<string, StoredEntry[]> = loadPersistentData();
 const rateLimitMap: Map<string, number> = new Map();
 const seenSubmissions: Set<string> = new Set();
 
@@ -207,10 +236,11 @@ export async function POST(req: NextRequest) {
     memoryLeaderboards[partitionKey].push(newEntry);
     memoryLeaderboards[partitionKey].sort((a, b) => b.score - a.score);
 
-    // Keep top 1000 in memory
+    // Keep top 1000 in memory & save to disk
     if (memoryLeaderboards[partitionKey].length > 1000) {
       memoryLeaderboards[partitionKey] = memoryLeaderboards[partitionKey].slice(0, 1000);
     }
+    savePersistentData(memoryLeaderboards);
 
     const rank =
       memoryLeaderboards[partitionKey].findIndex(

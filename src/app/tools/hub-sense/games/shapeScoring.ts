@@ -6,6 +6,7 @@
 
 export type ShapeType =
   | "circle"
+  | "ellipse"
   | "triangle"
   | "square"
   | "pentagon"
@@ -77,6 +78,9 @@ export function drawShape(
   switch (params.type) {
     case "circle":
       ctx.arc(0, 0, r, 0, Math.PI * 2);
+      break;
+    case "ellipse":
+      ctx.ellipse(0, 0, r * 1.3, r * 0.7, 0, 0, Math.PI * 2);
       break;
     case "triangle":
       polygon(ctx, 3, r);
@@ -228,6 +232,7 @@ export function scoreShape(target: ShapeParams, guess: ShapeParams): ShapeScoreR
 // ─── Shape Generation ─────────────────────────────────────────────────────────
 const SHAPES: ShapeType[] = [
   "circle",
+  "ellipse",
   "triangle",
   "square",
   "pentagon",

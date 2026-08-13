@@ -1186,11 +1186,13 @@ function HubSenseInner() {
                     <div className="flex items-center justify-between gap-2 mt-1 px-1">
                       <div className="flex items-center gap-1.5">
                         <button
+                          type="button"
                           onClick={() => {
                             SoundFX.click();
-                            const current = activeRoundTimer;
-                            const next = Math.max(5, current - 5);
-                            setCustomTimerInput(String(next));
+                            setCustomTimerInput((prevStr) => {
+                              const current = parseInt(prevStr, 10) || 30;
+                              return String(Math.max(5, current - 5));
+                            });
                           }}
                           data-cursor="-5sn"
                           className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"
@@ -1206,11 +1208,13 @@ function HubSenseInner() {
                           className="w-16 h-7 text-center font-mono font-bold text-xs bg-white/[0.05] border border-white/15 rounded-xl text-white outline-none focus:border-rose-400"
                         />
                         <button
+                          type="button"
                           onClick={() => {
                             SoundFX.click();
-                            const current = activeRoundTimer;
-                            const next = Math.min(600, current + 5);
-                            setCustomTimerInput(String(next));
+                            setCustomTimerInput((prevStr) => {
+                              const current = parseInt(prevStr, 10) || 30;
+                              return String(Math.min(600, current + 5));
+                            });
                           }}
                           data-cursor="+5sn"
                           className="w-7 h-7 rounded-xl bg-white/[0.06] hover:bg-white/15 flex items-center justify-center text-white/70 active:scale-95 transition-all"

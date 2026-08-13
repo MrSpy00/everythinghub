@@ -108,6 +108,7 @@ export interface HubSenseDictionary {
     revealPrompt: string;
     types: {
       circle: string;
+      ellipse: string;
       triangle: string;
       square: string;
       pentagon: string;
@@ -393,6 +394,7 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
       revealPrompt: "Türü, açıyı ve boyutu incele...",
       types: {
         circle: "Daire",
+        ellipse: "Elips",
         triangle: "Üçgen",
         square: "Kare",
         pentagon: "Beşgen",
@@ -669,6 +671,7 @@ export const hubSenseTranslations: Record<"tr" | "en", HubSenseDictionary> = {
       revealPrompt: "Examine shape type, angle, and size...",
       types: {
         circle: "Circle",
+        ellipse: "Ellipse",
         triangle: "Triangle",
         square: "Square",
         pentagon: "Pentagon",
