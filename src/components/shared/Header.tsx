@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ExternalLink, Coffee, Search } from "lucide-react";
@@ -36,33 +35,24 @@ function GitHubLogo({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 export function Header() {
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { t } = useLanguage();
 
   const handleHomeClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (typeof window !== "undefined") {
-      if (window.location.pathname === "/") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        router.push("/");
-      }
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handleCategoriesClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (typeof window !== "undefined") {
-      if (window.location.pathname === "/") {
-        const toolsSection = document.getElementById("tools");
-        if (toolsSection) {
-          toolsSection.scrollIntoView({ behavior: "smooth" });
-        }
-      } else {
-        router.push("/#tools");
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
+      e.preventDefault();
+      const toolsSection = document.getElementById("tools");
+      if (toolsSection) {
+        toolsSection.scrollIntoView({ behavior: "smooth" });
       }
     }
   };
@@ -82,7 +72,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 w-full pointer-events-none pt-2 sm:pt-3">
+      <header className="fixed top-0 inset-x-0 z-50 w-full pt-2 sm:pt-3 pointer-events-none">
         <div className="mx-auto max-w-7xl 2xl:max-w-8xl px-3 sm:px-6">
           <motion.div
             initial={false}
@@ -126,15 +116,16 @@ export function Header() {
               >
                 {t.tools}
               </Link>
-              <a
+              <Link
                 href="/#tools"
                 onClick={handleCategoriesClick}
                 className="rounded-xl px-3.5 py-2 text-xs font-bold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white cursor-pointer"
                 data-cursor={t.categories}
               >
                 {t.categories}
-              </a>
+              </Link>
               <button
+                type="button"
                 onClick={() => setCommandPaletteOpen(true)}
                 className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-400 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-2 cursor-pointer"
                 data-cursor={t.quickAccess}
@@ -156,7 +147,7 @@ export function Header() {
                 href="https://buymeacoffee.com/aegissoft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-white/[0.06] px-4 py-2 text-xs font-bold text-amber-300 backdrop-blur-3xl transition-all duration-300 hover:scale-105 hover:bg-white/15 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]"
+                className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-white/[0.06] px-4 py-2 text-xs font-bold text-amber-300 backdrop-blur-3xl transition-all duration-300 hover:scale-105 hover:bg-white/15 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] cursor-pointer"
                 data-cursor={t.buyCoffee}
               >
                 <Coffee className="h-4 w-4 text-amber-400" />
@@ -167,7 +158,7 @@ export function Header() {
                 href="https://github.com/MrSpy00/everythinghub"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white backdrop-blur-xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] shadow-sm"
+                className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-white backdrop-blur-xl transition-all hover:border-indigo-500/50 hover:bg-white/[0.08] shadow-sm cursor-pointer"
                 data-cursor={t.githubRepo}
               >
                 <GitHubLogo className="h-4 w-4 text-indigo-400" />
@@ -177,7 +168,8 @@ export function Header() {
 
               {/* Mobile menu toggle */}
               <button
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] transition-all hover:text-white hover:bg-white/[0.08] md:hidden active:scale-90"
+                type="button"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-[var(--hub-text-muted)] transition-all hover:text-white hover:bg-white/[0.08] md:hidden active:scale-90 cursor-pointer"
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label="Menü"
               >
@@ -221,7 +213,7 @@ export function Header() {
                   setMenuOpen(false);
                   handleHomeClick(e);
                 }}
-                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white cursor-pointer"
               >
                 {t.home}
               </Link>
@@ -231,7 +223,7 @@ export function Header() {
                   setMenuOpen(false);
                   handleCategoriesClick(e);
                 }}
-                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white cursor-pointer"
               >
                 {t.tools}
               </Link>
@@ -241,16 +233,17 @@ export function Header() {
                   setMenuOpen(false);
                   handleCategoriesClick(e);
                 }}
-                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[var(--hub-text-muted)] transition-colors hover:bg-white/5 hover:text-white cursor-pointer"
               >
                 {t.categories}
               </Link>
               <button
+                type="button"
                 onClick={() => {
                   setMenuOpen(false);
                   setCommandPaletteOpen(true);
                 }}
-                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white transition-all flex items-center justify-between text-left"
+                className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white transition-all flex items-center justify-between text-left cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4 text-indigo-400" />
@@ -265,7 +258,7 @@ export function Header() {
                   href="https://buymeacoffee.com/aegissoft"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-white/[0.06] p-3 text-sm font-extrabold text-amber-300 backdrop-blur-3xl hover:bg-white/15 hover:border-amber-400 transition-all duration-300 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-white/[0.06] p-3 text-sm font-extrabold text-amber-300 backdrop-blur-3xl hover:bg-white/15 hover:border-amber-400 transition-all duration-300 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] cursor-pointer"
                 >
                   <Coffee className="h-4 w-4 text-amber-400" />
                   <span>{t.buyCoffee}</span>
@@ -274,7 +267,7 @@ export function Header() {
                   href="https://github.com/MrSpy00/everythinghub"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 p-2.5 text-sm font-bold text-white hover:bg-white/[0.08] transition-all"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 p-2.5 text-sm font-bold text-white hover:bg-white/[0.08] transition-all cursor-pointer"
                 >
                   <GitHubLogo className="h-4 w-4 text-indigo-400" />
                   <span>{t.githubRepo}</span>

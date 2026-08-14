@@ -17,7 +17,6 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  ArrowLeft,
 } from "lucide-react";
 import { getSpeedTier, SPEED_TIER_LABELS } from "../types";
 
@@ -123,16 +122,6 @@ export function ResultShareClient() {
 
   return (
     <div className="min-h-[85vh] w-full flex flex-col items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 pb-12 select-none">
-      <div className="w-full max-w-xl mb-4">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md cursor-pointer"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 text-cyan-400" />
-          <span>Ana Sayfaya Dön</span>
-        </Link>
-      </div>
-
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -251,7 +240,7 @@ export function ResultShareClient() {
                 "_blank"
               )
             }
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <Share2 size={13} />
             <span>Twitter / X</span>
@@ -259,7 +248,7 @@ export function ResultShareClient() {
           <button
             type="button"
             onClick={handleCopyLink}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             {copied ? <Check size={13} className="text-emerald-400" /> : <Link2 size={13} />}
             <span>{copied ? "Kopyalandı" : "Linki Kopyala"}</span>
@@ -268,7 +257,7 @@ export function ResultShareClient() {
             type="button"
             onClick={handleDownloadPng}
             disabled={downloading}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <Download size={13} />
             <span>{downloading ? "İndiriliyor" : "PNG İndir"}</span>
