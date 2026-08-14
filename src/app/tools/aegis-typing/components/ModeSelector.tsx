@@ -35,6 +35,12 @@ interface ModeSelectorProps {
   onModeValueChange: (val: number | string) => void;
   onFunboxChange: (funbox: Funbox) => void;
   disabled?: boolean;
+  punctuation?: boolean;
+  numbers?: boolean;
+  capitalization?: boolean;
+  onTogglePunctuation?: () => void;
+  onToggleNumbers?: () => void;
+  onToggleCapitalization?: () => void;
 }
 
 const MODES: Array<{
@@ -107,6 +113,12 @@ export function ModeSelector({
   onModeValueChange,
   onFunboxChange,
   disabled = false,
+  punctuation = false,
+  numbers = false,
+  capitalization = false,
+  onTogglePunctuation,
+  onToggleNumbers,
+  onToggleCapitalization,
 }: ModeSelectorProps) {
   const [customInput, setCustomInput] = useState(
     typeof modeValue === "number" ? String(modeValue) : ""
@@ -137,55 +149,118 @@ export function ModeSelector({
     setIsEditingCustom(false);
   };
 
+  const showModifiers = mode === "time" || mode === "words";
+
   return (
     <div className="flex flex-col items-center gap-3.5 w-full max-w-4xl mx-auto select-none">
-      {/* Primary Mode Glass Bar */}
-      <div
-        className="flex items-center justify-center flex-wrap gap-1.5 p-1.5 rounded-2xl max-w-full"
-        style={{
-          background: "rgba(255, 255, 255, 0.04)",
-          border: "1px solid rgba(255, 255, 255, 0.09)",
-          backdropFilter: "blur(24px)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
-        }}
-        role="tablist"
-        aria-label="Yazma Testi Modu"
-      >
-        {MODES.map((m) => {
-          const isActive = mode === m.id;
-          return (
-            <motion.button
-              key={m.id}
-              role="tab"
-              aria-selected={isActive}
-              id={`mode-tab-${m.id}`}
-              onClick={() => handleModeChange(m.id)}
-              disabled={disabled}
-              whileHover={disabled ? {} : { scale: 1.03 }}
-              whileTap={disabled ? {} : { scale: 0.97 }}
-              className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors focus:outline-none disabled:opacity-40"
-              style={{
-                color: isActive ? "#09090b" : "var(--at-muted, #94a3b8)",
-              }}
-            >
-              {isActive && (
-                <motion.span
-                  layoutId="mode-tab-active-pill"
-                  className="absolute inset-0 rounded-xl"
-                  style={{
-                    background: "var(--at-accent, #22d3ee)",
-                    boxShadow: "0 0 20px rgba(34, 211, 238, 0.45)",
-                  }}
-                  transition={{ type: "spring", stiffness: 450, damping: 32 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-1.5">
-                {m.icon}
-                <span>{m.label}</span>
-              </span>
-            </motion.button>
-          );
-        })}
+      {/* Primary Mode Glass Bar + Modifiers */}
+      <div className="flex items-center justify-center flex-wrap gap-2 max-w-full">
+        {/* Modes Bar */}
+        <div
+          className="flex items-center justify-center flex-wrap gap-1.5 p-1.5 rounded-2xl"
+          style={{
+            background: "rgba(255, 255, 255, 0.04)",
+            border: "1px solid rgba(255, 255, 255, 0.09)",
+            backdropFilter: "blur(24px)",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
+          }}
+          role="tablist"
+          aria-label="Yazma Testi Modu"
+        >
+          {MODES.map((m) => {
+            const isActive = mode === m.id;
+            return (
+              <motion.button
+                key={m.id}
+                role="tab"
+                aria-selected={isActive}
+                id={`mode-tab-${m.id}`}
+                onClick={() => handleModeChange(m.id)}
+                disabled={disabled}
+                whileHover={disabled ? {} : { scale: 1.03 }}
+                whileTap={disabled ? {} : { scale: 0.97 }}
+                className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors focus:outline-none disabled:opacity-40"
+                style={{
+                  color: isActive ? "#09090b" : "var(--at-muted, #94a3b8)",
+                }}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="mode-tab-active-pill"
+                    className="absolute inset-0 rounded-xl"
+                    style={{
+                      background: "var(--at-accent, #22d3ee)",
+                      boxShadow: "0 0 20px rgba(34, 211, 238, 0.45)",
+                    }}
+                    transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  {m.icon}
+                  <span>{m.label}</span>
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Modifiers (Punctuation, Numbers, Capitalization) */}
+        {showModifiers && (
+          <div
+            className="flex items-center gap-1 p-1.5 rounded-2xl"
+            style={{
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(255, 255, 255, 0.09)",
+              backdropFilter: "blur(24px)",
+            }}
+          >
+            {onTogglePunctuation && (
+              <button
+                type="button"
+                onClick={onTogglePunctuation}
+                disabled={disabled}
+                className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all focus:outline-none disabled:opacity-40"
+                style={{
+                  background: punctuation ? "var(--at-accent)" : "transparent",
+                  color: punctuation ? "#09090b" : "var(--at-muted)",
+                }}
+                title="Noktalama İşaretleri (.,!?)"
+              >
+                @!
+              </button>
+            )}
+            {onToggleNumbers && (
+              <button
+                type="button"
+                onClick={onToggleNumbers}
+                disabled={disabled}
+                className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all focus:outline-none disabled:opacity-40"
+                style={{
+                  background: numbers ? "var(--at-accent)" : "transparent",
+                  color: numbers ? "#09090b" : "var(--at-muted)",
+                }}
+                title="Rakamlar (123)"
+              >
+                123
+              </button>
+            )}
+            {onToggleCapitalization && (
+              <button
+                type="button"
+                onClick={onToggleCapitalization}
+                disabled={disabled}
+                className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all focus:outline-none disabled:opacity-40"
+                style={{
+                  background: capitalization ? "var(--at-accent)" : "transparent",
+                  color: capitalization ? "#09090b" : "var(--at-muted)",
+                }}
+                title="Büyük Harfler (Aa)"
+              >
+                Aa
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Sub-values container */}
