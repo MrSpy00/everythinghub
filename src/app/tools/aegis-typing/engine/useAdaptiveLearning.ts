@@ -4,104 +4,122 @@
 // ============================================================
 import { useCallback, useRef } from "react";
 import type { AdaptiveKeyStats } from "../types";
-import { weightedRandom } from "../utils/textProcessing";
 
-// ─── Lessons (QWERTY-based) ───────────────────────────────
-export const LESSONS = [
+export interface LessonDef {
+  id: string;
+  title: string;
+  description: string;
+  keys: string[];
+  allKeys: string[];
+  targetWpm: number;
+  targetAccuracy: number;
+  sampleWords: string[];
+}
+
+export const LESSONS: LessonDef[] = [
   {
     id: "homerow",
-    title: "Ana Sıra",
-    description: "ASDF ve JKL; tuşlarını öğren",
+    title: "Ev Sırası (Home Row)",
+    description: "A S D F ve J K L ; temel parmak pozisyonu",
     keys: ["a", "s", "d", "f", "j", "k", "l", ";"],
     allKeys: ["a", "s", "d", "f", "j", "k", "l", ";"],
-    targetWpm: 20,
+    targetWpm: 25,
     targetAccuracy: 95,
+    sampleWords: [
+      "asdf", "jkl;", "sad", "fads", "lass", "fall", "glad", "lads", "flask",
+      "salsa", "salad", "alfalfa", "mask", "alas", "dada", "flak", "skal",
+      "all", "ask", "fall", "flask", "jack", "half", "flash", "hall", "fall"
+    ],
   },
   {
-    id: "upper",
-    title: "Üst Sıra",
-    description: "QWERT ve YUIOP tuşlarını ekle",
+    id: "upperrow",
+    title: "Üst Sıra (Top Row)",
+    description: "Q W E R T ve Y U I O P üst tuş uzanımları",
     keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
     allKeys: ["a", "s", "d", "f", "j", "k", "l", ";", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-    targetWpm: 30,
+    targetWpm: 35,
     targetAccuracy: 93,
+    sampleWords: [
+      "wire", "type", "port", "tree", "pour", "power", "tower", "quiet", "root",
+      "peer", "equip", "pure", "trip", "prep", "post", "wrap", "quote", "write",
+      "water", "outer", "proper", "report", "writer", "require", "people", "output"
+    ],
   },
   {
-    id: "lower",
-    title: "Alt Sıra",
-    description: "ZXCV ve BNM tuşlarını ekle",
-    keys: ["z", "x", "c", "v", "b", "n", "m", ",", "."],
+    id: "bottomrow",
+    title: "Alt Sıra (Bottom Row)",
+    description: "Z X C V ve B N M alt tuş uzanımları",
+    keys: ["z", "x", "c", "v", "b", "n", "m"],
     allKeys: ["a", "s", "d", "f", "j", "k", "l", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "z", "x", "c", "v", "b", "n", "m"],
     targetWpm: 40,
-    targetAccuracy: 93,
+    targetAccuracy: 92,
+    sampleWords: [
+      "man", "scan", "calm", "zoom", "ban", "cab", "zinc", "moon", "mob",
+      "vacuum", "mix", "buzz", "maze", "size", "climb", "verb", "back", "next",
+      "box", "van", "zone", "basic", "cover", "carbon", "common", "combine"
+    ],
   },
   {
     id: "numbers",
-    title: "Sayılar",
-    description: "1-0 rakamlarını ekle",
-    keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-    allKeys: ["a","s","d","f","j","k","l","q","w","e","r","t","y","u","i","o","p","z","x","c","v","b","n","m","1","2","3","4","5","6","7","8","9","0"],
-    targetWpm: 40,
+    title: "Rakamlar & Noktalama",
+    description: "1-0 sayı satırı ve temel noktalama işaretleri",
+    keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", ",", "!", "?"],
+    allKeys: ["a","s","d","f","j","k","l","q","w","e","r","t","y","u","i","o","p","z","x","c","v","b","n","m","1","2","3","4","5","6","7","8","9","0",".",",","!","?"],
+    targetWpm: 35,
     targetAccuracy: 90,
+    sampleWords: [
+      "kod42", "2026", "test99", "100km", "500ms", "24saat", "365gün", "10fast",
+      "80wpm", "1999", "madde1.", "adım2,", "oran: %50", "hız=120", "sayı: 3.14",
+      "fiyat: 450", "kod: 7890", "ip: 192.168.1.1", "yıl: 2025!"
+    ],
   },
   {
     id: "capitals",
     title: "Büyük Harfler",
-    description: "Shift + harf kombinasyonları",
+    description: "Shift tuşu ile büyük harf geçişleri",
     keys: ["A","S","D","F","J","K","L","Q","W","E","R","T","Y","U","I","O","P","Z","X","C","V","B","N","M"],
     allKeys: ["a","s","d","f","j","k","l","q","w","e","r","t","y","u","i","o","p","z","x","c","v","b","n","m","A","S","D","F","J","K","L","Q","W","E","R","T","Y","U","I","O","P","Z","X","C","V","B","N","M"],
     targetWpm: 45,
     targetAccuracy: 90,
-  },
-  {
-    id: "punctuation",
-    title: "Noktalama",
-    description: "Noktalama işaretleri ve özel karakterler",
-    keys: [".", ",", "!", "?", ";", ":", "-", "'", '"', "(", ")"],
-    allKeys: ["a","s","d","f","j","k","l","q","w","e","r","t","y","u","i","o","p","z","x","c","v","b","n","m",".",",","!","?",";",":"," -","'",'"'],
-    targetWpm: 40,
-    targetAccuracy: 88,
+    sampleWords: [
+      "Türkiye", "EverythingHub", "Aegis", "Ankara", "İstanbul", "Avrupa", "Asya",
+      "React", "NextJS", "TypeScript", "JavaScript", "Python", "Linux", "Windows",
+      "Google", "DeepMind", "Antigravity", "Studio", "Terminal", "Developer"
+    ],
   },
   {
     id: "mixed",
-    title: "Tam Pratik",
-    description: "Tüm tuşlar — kelimeler ve cümleler",
+    title: "Karma İleri Seviye",
+    description: "Tüm klavye, harfler, sayılar ve semboller bir arada",
     keys: [],
     allKeys: [],
     targetWpm: 60,
-    targetAccuracy: 90,
+    targetAccuracy: 92,
+    sampleWords: [
+      "hızlı", "yazma", "pratiği", "parmak", "hafızasını", "geliştirir.", "Her",
+      "gün", "15", "dakika", "çalışmak,", "yazma", "hızınızı", "2", "katına",
+      "çıkarabilir!", "Doğruluk", "oranı", "%98", "üzerinde", "olduğunda,", "hız",
+      "kendiliğinden", "artacaktır.", "AegisTyping", "ile", "profesyonel", "yazın."
+    ],
   },
 ];
 
-// ─── Word Generator for Adaptive Learning ─────────────────
-// Generates words using only the allowed keys for current lesson
-function generateAdaptiveWord(
-  allowedKeys: string[],
-  adaptiveStats: AdaptiveKeyStats,
-  minLen = 3,
-  maxLen = 7
-): string {
-  const lowerAllowed = allowedKeys.map((k) => k.toLowerCase()).filter((k) => k.length === 1 && /[a-z]/.test(k));
-  
-  if (lowerAllowed.length === 0) return "asdf";
+/**
+ * Generate drill words for a specific lesson
+ */
+export function generateLessonWords(lessonId: string, count = 80): string[] {
+  const lesson = LESSONS.find((l) => l.id === lessonId) ?? LESSONS[0];
+  const pool = lesson.sampleWords;
+  const result: string[] = [];
 
-  // Weight keys by error rate (more errors = higher weight = more practice)
-  const weights = lowerAllowed.map((k) => {
-    const stats = adaptiveStats[k];
-    if (!stats || stats.attempts === 0) return 1;
-    const errorRate = stats.errors / stats.attempts;
-    return 1 + errorRate * 4;
-  });
-
-  const len = minLen + Math.floor(Math.random() * (maxLen - minLen + 1));
-  let word = "";
-  for (let i = 0; i < len; i++) {
-    word += weightedRandom(lowerAllowed, weights);
+  while (result.length < count) {
+    const w = pool[Math.floor(Math.random() * pool.length)];
+    result.push(w);
   }
-  return word;
+
+  return result.slice(0, count);
 }
 
-// ─── Hook ─────────────────────────────────────────────────
 export function useAdaptiveLearning() {
   const statsRef = useRef<AdaptiveKeyStats>({});
 
@@ -118,20 +136,6 @@ export function useAdaptiveLearning() {
     statsRef.current[k] = { attempts, errors, avgDelta };
   }, []);
 
-  const generateAdaptiveWords = useCallback(
-    (lessonId: string, count = 30): string[] => {
-      const lesson = LESSONS.find((l) => l.id === lessonId);
-      if (!lesson) return [];
-
-      const words: string[] = [];
-      for (let i = 0; i < count; i++) {
-        words.push(generateAdaptiveWord(lesson.allKeys, statsRef.current));
-      }
-      return words;
-    },
-    []
-  );
-
   const getWeakestKeys = useCallback((topN = 5): string[] => {
     const entries = Object.entries(statsRef.current)
       .filter(([, stats]) => stats.attempts >= 5)
@@ -140,39 +144,13 @@ export function useAdaptiveLearning() {
         errorRate: stats.errors / stats.attempts,
       }))
       .sort((a, b) => b.errorRate - a.errorRate);
+
     return entries.slice(0, topN).map((e) => e.key);
   }, []);
-
-  const getLessonProgress = useCallback((lessonId: string) => {
-    const lesson = LESSONS.find((l) => l.id === lessonId);
-    if (!lesson) return { mastered: false, avgAccuracy: 0 };
-
-    const relevantKeys = lesson.allKeys.filter((k) => k.length === 1);
-    if (relevantKeys.length === 0) return { mastered: false, avgAccuracy: 0 };
-
-    const stats = relevantKeys
-      .map((k) => statsRef.current[k.toLowerCase()])
-      .filter(Boolean);
-
-    if (stats.length === 0) return { mastered: false, avgAccuracy: 0 };
-
-    const avgErrorRate =
-      stats.reduce((sum, s) => sum + s!.errors / s!.attempts, 0) / stats.length;
-    const avgAccuracy = Math.round((1 - avgErrorRate) * 100);
-    const mastered = avgAccuracy >= lesson.targetAccuracy;
-
-    return { mastered, avgAccuracy };
-  }, []);
-
-  const getCurrentStats = useCallback(() => statsRef.current, []);
 
   return {
     loadStats,
     recordKeystroke,
-    generateAdaptiveWords,
     getWeakestKeys,
-    getLessonProgress,
-    getCurrentStats,
-    LESSONS,
   };
 }

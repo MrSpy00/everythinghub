@@ -1,7 +1,7 @@
 "use client";
 // ============================================================
 // aegisTyping — Mode Selector
-// Glassmorphism tab bar for mode + sub-value selection
+// Glassmorphism tab bar for mode + rich sub-value selection
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -22,6 +22,7 @@ import {
   PauseCircle,
   CloudRain,
   Delete,
+  Check,
 } from "lucide-react";
 import type { TestMode, Funbox } from "../types";
 import { CODE_LANGUAGES } from "../utils/codeGenerator";
@@ -41,14 +42,14 @@ const MODES: Array<{
   label: string;
   icon: React.ReactNode;
 }> = [
-  { id: "time", label: "Süre", icon: <Clock size={13} /> },
-  { id: "words", label: "Kelime", icon: <Hash size={13} /> },
-  { id: "quote", label: "Alıntı", icon: <Quote size={13} /> },
-  { id: "custom", label: "Özel", icon: <FileText size={13} /> },
-  { id: "zen", label: "Zen", icon: <Infinity size={13} /> },
-  { id: "code", label: "Kod", icon: <Code2 size={13} /> },
-  { id: "learn", label: "Öğren", icon: <GraduationCap size={13} /> },
-  { id: "challenge", label: "Zorluk", icon: <Zap size={13} /> },
+  { id: "time", label: "Süre", icon: <Clock size={14} /> },
+  { id: "words", label: "Kelime", icon: <Hash size={14} /> },
+  { id: "quote", label: "Alıntı", icon: <Quote size={14} /> },
+  { id: "custom", label: "Özel Metin", icon: <FileText size={14} /> },
+  { id: "zen", label: "Zen", icon: <Infinity size={14} /> },
+  { id: "code", label: "Kod", icon: <Code2 size={14} /> },
+  { id: "learn", label: "Öğren", icon: <GraduationCap size={14} /> },
+  { id: "challenge", label: "Zorluk", icon: <Zap size={14} /> },
 ];
 
 const TIME_OPTIONS = [
@@ -75,17 +76,18 @@ const QUOTE_OPTIONS = [
 const CHALLENGE_OPTIONS: Array<{
   id: Funbox;
   label: string;
+  desc: string;
   icon: React.ReactNode;
   danger?: boolean;
 }> = [
-  { id: "none", label: "Normal", icon: <Zap size={12} /> },
-  { id: "mirror", label: "Ayna", icon: <SplitSquareHorizontal size={12} /> },
-  { id: "backwards", label: "Ters", icon: <ArrowLeft size={12} /> },
-  { id: "blind", label: "Kör Mod", icon: <EyeOff size={12} /> },
-  { id: "sudden-death", label: "Ani Ölüm", icon: <Skull size={12} />, danger: true },
-  { id: "stop-on-error", label: "Hata Dur", icon: <PauseCircle size={12} /> },
-  { id: "no-backspace", label: "Güven Modu", icon: <Delete size={12} /> },
-  { id: "neon-rain", label: "Işık Yağmuru", icon: <CloudRain size={12} /> },
+  { id: "none", label: "Standart", desc: "Normal kurallar", icon: <Zap size={13} /> },
+  { id: "mirror", label: "Ayna (Mirror)", desc: "Metin yatay ayna", icon: <SplitSquareHorizontal size={13} /> },
+  { id: "backwards", label: "Ters (Backwards)", desc: "Kelimeler tersten", icon: <ArrowLeft size={13} /> },
+  { id: "blind", label: "Kör Mod (Blind)", desc: "Yazılanlar gizlenir", icon: <EyeOff size={13} /> },
+  { id: "sudden-death", label: "Ani Ölüm (Sudden Death)", desc: "1 hata = fail", icon: <Skull size={13} />, danger: true },
+  { id: "stop-on-error", label: "Hata Kilidi (Stop on Error)", desc: "Düzeltmeden geçilemez", icon: <PauseCircle size={13} /> },
+  { id: "no-backspace", label: "Güven Modu (No Backspace)", desc: "Geri silme engelli", icon: <Delete size={13} /> },
+  { id: "neon-rain", label: "Işık Yağmuru (Neon Rain)", desc: "Işıltılı parçacıklar", icon: <CloudRain size={13} /> },
 ];
 
 const LEARN_LESSONS = [
@@ -136,15 +138,15 @@ export function ModeSelector({
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 w-full max-w-2xl mx-auto select-none">
+    <div className="flex flex-col items-center gap-3.5 w-full max-w-4xl mx-auto select-none">
       {/* Primary Mode Glass Bar */}
       <div
-        className="flex items-center justify-center flex-wrap gap-1 p-1.5 rounded-2xl max-w-full"
+        className="flex items-center justify-center flex-wrap gap-1.5 p-1.5 rounded-2xl max-w-full"
         style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(20px)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+          background: "rgba(255, 255, 255, 0.04)",
+          border: "1px solid rgba(255, 255, 255, 0.09)",
+          backdropFilter: "blur(24px)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
         }}
         role="tablist"
         aria-label="Yazma Testi Modu"
@@ -161,7 +163,7 @@ export function ModeSelector({
               disabled={disabled}
               whileHover={disabled ? {} : { scale: 1.03 }}
               whileTap={disabled ? {} : { scale: 0.97 }}
-              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors focus:outline-none disabled:opacity-40"
+              className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors focus:outline-none disabled:opacity-40"
               style={{
                 color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted, #94a3b8)",
               }}
@@ -172,7 +174,7 @@ export function ModeSelector({
                   className="absolute inset-0 rounded-xl"
                   style={{
                     background: "var(--at-accent, #22d3ee)",
-                    boxShadow: "0 0 16px rgba(34, 211, 238, 0.4)",
+                    boxShadow: "0 0 20px rgba(34, 211, 238, 0.45)",
                   }}
                   transition={{ type: "spring", stiffness: 450, damping: 32 }}
                 />
@@ -187,7 +189,7 @@ export function ModeSelector({
       </div>
 
       {/* Sub-values container */}
-      <div className="min-h-[38px] flex items-center justify-center w-full">
+      <div className="min-h-[42px] flex items-center justify-center w-full">
         {/* Time Mode Sub-options */}
         {mode === "time" && (
           <motion.div
@@ -203,10 +205,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(t.value)}
                   disabled={disabled}
-                  className="px-3.5 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none disabled:opacity-40"
+                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg)" : "var(--at-muted)",
+                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -218,7 +220,7 @@ export function ModeSelector({
             {/* Custom time input */}
             <div className="flex items-center">
               {isEditingCustom ? (
-                <div className="flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full border border-white/20">
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full border border-cyan-400/40">
                   <input
                     type="number"
                     min={5}
@@ -229,15 +231,22 @@ export function ModeSelector({
                     onBlur={handleCustomSubmit}
                     onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
                     placeholder="saniye"
-                    className="w-14 bg-transparent text-xs text-center font-mono text-white focus:outline-none"
+                    className="w-16 bg-transparent text-xs text-center font-mono text-white focus:outline-none"
                   />
-                  <span className="text-[10px] text-zinc-400">sn</span>
+                  <span className="text-[10px] text-cyan-300 font-semibold">sn</span>
+                  <button
+                    type="button"
+                    onClick={handleCustomSubmit}
+                    className="p-0.5 rounded text-cyan-400 hover:text-white"
+                  >
+                    <Check size={12} />
+                  </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => setIsEditingCustom(true)}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
                   style={{
                     background:
                       !TIME_OPTIONS.some((o) => o.value === Number(modeValue))
@@ -245,16 +254,16 @@ export function ModeSelector({
                         : "rgba(255, 255, 255, 0.05)",
                     color:
                       !TIME_OPTIONS.some((o) => o.value === Number(modeValue))
-                        ? "var(--at-bg)"
+                        ? "var(--at-bg, #09090b)"
                         : "var(--at-muted)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                   }}
                 >
-                  <Edit3 size={11} />
+                  <Edit3 size={12} />
                   <span>
                     {!TIME_OPTIONS.some((o) => o.value === Number(modeValue))
                       ? `Özel (${modeValue}s)`
-                      : "Özel"}
+                      : "Özel Süre"}
                   </span>
                 </button>
               )}
@@ -277,14 +286,14 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(w.value)}
                   disabled={disabled}
-                  className="px-3.5 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none disabled:opacity-40"
+                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg)" : "var(--at-muted)",
+                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
-                  {w.label}
+                  {w.label} Kelime
                 </button>
               );
             })}
@@ -292,7 +301,7 @@ export function ModeSelector({
             {/* Custom words input */}
             <div className="flex items-center">
               {isEditingCustom ? (
-                <div className="flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full border border-white/20">
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full border border-cyan-400/40">
                   <input
                     type="number"
                     min={5}
@@ -303,14 +312,22 @@ export function ModeSelector({
                     onBlur={handleCustomSubmit}
                     onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
                     placeholder="adet"
-                    className="w-14 bg-transparent text-xs text-center font-mono text-white focus:outline-none"
+                    className="w-16 bg-transparent text-xs text-center font-mono text-white focus:outline-none"
                   />
+                  <span className="text-[10px] text-cyan-300 font-semibold">adet</span>
+                  <button
+                    type="button"
+                    onClick={handleCustomSubmit}
+                    className="p-0.5 rounded text-cyan-400 hover:text-white"
+                  >
+                    <Check size={12} />
+                  </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => setIsEditingCustom(true)}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
                   style={{
                     background:
                       !WORD_OPTIONS.some((o) => o.value === Number(modeValue))
@@ -318,16 +335,16 @@ export function ModeSelector({
                         : "rgba(255, 255, 255, 0.05)",
                     color:
                       !WORD_OPTIONS.some((o) => o.value === Number(modeValue))
-                        ? "var(--at-bg)"
+                        ? "var(--at-bg, #09090b)"
                         : "var(--at-muted)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                   }}
                 >
-                  <Edit3 size={11} />
+                  <Edit3 size={12} />
                   <span>
                     {!WORD_OPTIONS.some((o) => o.value === Number(modeValue))
                       ? `Özel (${modeValue})`
-                      : "Özel"}
+                      : "Özel Kelime"}
                   </span>
                 </button>
               )}
@@ -350,26 +367,26 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(q.value)}
                   disabled={disabled}
-                  className="px-3.5 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg)" : "var(--at-muted)",
+                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
-                  {q.label}
+                  {q.label} Alıntı
                 </button>
               );
             })}
           </motion.div>
         )}
 
-        {/* Code Mode — Extensive 12 Programming Languages */}
+        {/* Code Mode — Extensive 16 Programming Languages */}
         {mode === "code" && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-1.5 flex-wrap justify-center py-1"
+            className="flex items-center gap-1.5 flex-wrap justify-center py-1 max-w-3xl"
           >
             {CODE_LANGUAGES.map((lang) => {
               const isActive = modeValue === lang.id;
@@ -382,7 +399,7 @@ export function ModeSelector({
                   className="px-3 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg)" : "var(--at-muted)",
+                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -408,10 +425,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(l.id)}
                   disabled={disabled}
-                  className="px-3 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg)" : "var(--at-muted)",
+                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -427,7 +444,7 @@ export function ModeSelector({
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-1.5 flex-wrap justify-center py-1"
+            className="flex items-center gap-1.5 flex-wrap justify-center py-1 max-w-3xl"
           >
             {CHALLENGE_OPTIONS.map((c) => {
               const isActive = funbox === c.id;
@@ -437,7 +454,7 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onFunboxChange(c.id)}
                   disabled={disabled}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none"
                   style={{
                     background: isActive
                       ? c.danger
@@ -453,6 +470,7 @@ export function ModeSelector({
                         : "rgba(255, 255, 255, 0.08)"
                     }`,
                   }}
+                  title={c.desc}
                 >
                   {c.icon}
                   <span>{c.label}</span>
@@ -474,8 +492,8 @@ export function ModeSelector({
               rows={3}
               className="w-full px-4 py-3 rounded-2xl text-xs resize-none focus:outline-none transition-colors"
               style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(255, 255, 255, 0.04)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
                 color: "var(--at-text)",
                 backdropFilter: "blur(16px)",
               }}

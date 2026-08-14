@@ -2,9 +2,10 @@
 // ============================================================
 // aegisTyping — Typing Arena
 // GPU-accelerated smooth word & character renderer
-// No overlapping center text artifacts. Pure liquid glass.
+// Clean line containment with zero awkward half-line clippings.
+// Pure liquid glassmorphism.
 // ============================================================
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import type {
   WordObject,
   TestPhase,
@@ -44,7 +45,7 @@ const FONT_MAP: Record<TypingFont, string> = {
   courier: '"Courier New", monospace',
 };
 
-const LINE_HEIGHT_MULTIPLIER = 1.75;
+const LINE_HEIGHT_MULTIPLIER = 1.65;
 
 // Individual Character with state-based styling
 const CharSpan = React.memo(function CharSpan({
@@ -56,7 +57,7 @@ const CharSpan = React.memo(function CharSpan({
   state: "pending" | "correct" | "incorrect" | "extra";
   blindMode: boolean;
 }) {
-  let color = "var(--at-pending, rgba(255,255,255,0.35))";
+  let color = "var(--at-pending, rgba(255,255,255,0.45))";
   let bg = "transparent";
 
   if (blindMode && (state === "correct" || state === "incorrect")) {
@@ -65,24 +66,24 @@ const CharSpan = React.memo(function CharSpan({
     color = "var(--at-correct, #22c55e)";
   } else if (state === "incorrect") {
     color = "var(--at-error, #ef4444)";
-    bg = "rgba(239, 68, 68, 0.18)";
+    bg = "rgba(239, 68, 68, 0.22)";
   } else if (state === "extra") {
     color = "#f87171";
-    bg = "rgba(239, 68, 68, 0.25)";
+    bg = "rgba(239, 68, 68, 0.3)";
   }
 
   return (
     <span
-      className="inline-block transition-colors duration-75 rounded-[2px]"
+      className="inline-block transition-colors duration-75 rounded-[3px]"
       style={{
         color,
         background: bg,
         letterSpacing: "0.02em",
         textShadow:
           state === "correct"
-            ? "0 0 10px rgba(34, 197, 94, 0.35)"
+            ? "0 0 12px rgba(34, 197, 94, 0.45)"
             : state === "incorrect"
-            ? "0 0 10px rgba(239, 68, 68, 0.4)"
+            ? "0 0 12px rgba(239, 68, 68, 0.5)"
             : "none",
       }}
     >
@@ -112,7 +113,12 @@ export function TypingArena({
   inputRef,
 }: TypingArenaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wordsWrapperRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  const lineHeight = fontSize * LINE_HEIGHT_MULTIPLIER;
+  const viewportHeight = lineHeight * lineCount;
 
   // Auto focus input on mount & click
   useEffect(() => {
@@ -124,18 +130,18 @@ export function TypingArena({
     inputRef?.current?.focus();
   };
 
-  // ─── Caret Positioning ──────────────────────────────────
+  // ─── Caret Positioning & Line Scrolling ─────────────────
   useEffect(() => {
-    if (!containerRef.current || !caretRef.current || caretStyle === "off") return;
+    if (!wordsWrapperRef.current || !caretRef.current || caretStyle === "off") return;
 
-    const currentWordEl = containerRef.current.querySelector(
+    const currentWordEl = wordsWrapperRef.current.querySelector(
       `[data-word-index="${caretPosition.wordIndex}"]`
     ) as HTMLElement | null;
 
     if (!currentWordEl) return;
 
     const charSpans = currentWordEl.querySelectorAll("span");
-    const containerRect = containerRef.current.getBoundingClientRect();
+    const wrapperRect = wordsWrapperRef.current.getBoundingClientRect();
 
     let x = 0;
     let y = 0;
@@ -144,67 +150,67 @@ export function TypingArena({
       const charEl = charSpans[caretPosition.charIndex] as HTMLElement;
       if (charEl) {
         const charRect = charEl.getBoundingClientRect();
-        x = charRect.left - containerRect.left;
-        y = charRect.top - containerRect.top;
+        x = charRect.left - wrapperRect.left;
+        y = charRect.top - wrapperRect.top;
       }
     } else if (charSpans.length > 0) {
       const lastCharEl = charSpans[charSpans.length - 1] as HTMLElement;
       const lastCharRect = lastCharEl.getBoundingClientRect();
-      x = lastCharRect.right - containerRect.left;
-      y = lastCharRect.top - containerRect.top;
+      x = lastCharRect.right - wrapperRect.left;
+      y = lastCharRect.top - wrapperRect.top;
     } else {
       const wordRect = currentWordEl.getBoundingClientRect();
-      x = wordRect.left - containerRect.left;
-      y = wordRect.top - containerRect.top;
+      x = wordRect.left - wrapperRect.left;
+      y = wordRect.top - wrapperRect.top;
     }
 
     caretRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-  }, [caretPosition, words, caretStyle]);
 
-  // ─── Caret Styling ──────────────────────────────────────
+    // Calculate line-based scroll: keep current active line inside visible window
+    const activeLine = Math.floor(y / lineHeight);
+    if (activeLine >= lineCount - 1 && activeLine > 0) {
+      const newScroll = (activeLine - (lineCount > 1 ? 1 : 0)) * lineHeight;
+      setScrollY(newScroll);
+    } else if (activeLine === 0) {
+      setScrollY(0);
+    }
+  }, [caretPosition, words, caretStyle, lineHeight, lineCount]);
+
+  // ─── Caret Dimensions & Styling ─────────────────────────
   const caretDimensions = useMemo(() => {
     const charH = fontSize * LINE_HEIGHT_MULTIPLIER;
     switch (caretStyle) {
       case "line":
-        return { width: "2.5px", height: `${charH * 0.75}px`, background: caretColor, borderRadius: "2px" };
+        return { width: "3px", height: `${charH * 0.72}px`, background: caretColor, borderRadius: "2px" };
       case "block":
-        return { width: `${fontSize * 0.6}px`, height: `${charH * 0.8}px`, background: caretColor, opacity: 0.35, borderRadius: "3px" };
+        return { width: `${fontSize * 0.62}px`, height: `${charH * 0.78}px`, background: caretColor, opacity: 0.35, borderRadius: "3px" };
       case "underscore":
-        return { width: `${fontSize * 0.6}px`, height: "3px", background: caretColor, marginTop: `${charH * 0.75}px`, borderRadius: "2px" };
+        return { width: `${fontSize * 0.62}px`, height: "3.5px", background: caretColor, marginTop: `${charH * 0.72}px`, borderRadius: "2px" };
       default:
         return { width: "0", height: "0" };
     }
   }, [caretStyle, caretColor, fontSize]);
 
   // ─── Dynamic Font and Container Styles ───────────────────
-  const containerStyle = useMemo(
+  const wordsStyle = useMemo(
     () => ({
       fontSize: `${fontSize}px`,
-      lineHeight: `${fontSize * LINE_HEIGHT_MULTIPLIER}px`,
+      lineHeight: `${lineHeight}px`,
       fontFamily: FONT_MAP[fontFamily],
       direction: rtl ? ("rtl" as const) : ("ltr" as const),
-      transform: funbox === "mirror" ? "scaleX(-1)" : "none",
+      transform: `${funbox === "mirror" ? "scaleX(-1) " : ""}translateY(-${scrollY}px)`,
+      transition: "transform 140ms cubic-bezier(0.16, 1, 0.3, 1)",
     }),
-    [fontSize, fontFamily, rtl, funbox]
+    [fontSize, lineHeight, fontFamily, rtl, funbox, scrollY]
   );
-
-  // Windowed visible slice around active word
-  const visibleWords = useMemo(() => {
-    const start = Math.max(0, currentWordIndex - 2);
-    const end = Math.min(words.length, start + 75);
-    return {
-      slice: words.slice(start, end),
-      startIdx: start,
-    };
-  }, [words, currentWordIndex]);
 
   return (
     <div
-      className="relative select-none cursor-text overflow-hidden py-2"
+      ref={containerRef}
+      className="relative select-none cursor-text overflow-hidden py-1"
       onClick={handleContainerClick}
       style={{
-        minHeight: `${fontSize * LINE_HEIGHT_MULTIPLIER * lineCount + 20}px`,
-        maxHeight: `${fontSize * LINE_HEIGHT_MULTIPLIER * (lineCount + 1) + 20}px`,
+        height: `${viewportHeight}px`,
       }}
       aria-label="Yazma alanı"
       role="textbox"
@@ -229,11 +235,11 @@ export function TypingArena({
         onCut={(e) => e.preventDefault()}
       />
 
-      {/* Word display container */}
+      {/* Words container */}
       <div
-        ref={containerRef}
-        className="relative flex flex-wrap gap-x-3 content-start transition-transform duration-150"
-        style={containerStyle}
+        ref={wordsWrapperRef}
+        className="relative flex flex-wrap gap-x-3.5 content-start will-change-transform"
+        style={wordsStyle}
       >
         {/* Caret */}
         {caretStyle !== "off" && (
@@ -242,10 +248,10 @@ export function TypingArena({
             className="absolute top-0 left-0 pointer-events-none z-20"
             style={{
               ...caretDimensions,
-              boxShadow: `0 0 10px ${caretColor}`,
+              boxShadow: `0 0 12px ${caretColor}`,
               transition:
                 smoothCaret && !reducedMotion
-                  ? "transform 75ms cubic-bezier(0.16, 1, 0.3, 1)"
+                  ? "transform 70ms cubic-bezier(0.16, 1, 0.3, 1)"
                   : "none",
               animation:
                 caretStyle === "line" && phase === "idle"
@@ -256,8 +262,7 @@ export function TypingArena({
         )}
 
         {/* Words */}
-        {visibleWords.slice.map((word, relIdx) => {
-          const absIdx = visibleWords.startIdx + relIdx;
+        {words.map((word, absIdx) => {
           const isActive = absIdx === currentWordIndex;
           const isDone = absIdx < currentWordIndex;
 
@@ -267,9 +272,9 @@ export function TypingArena({
               data-word-index={absIdx}
               className="relative inline-flex items-center rounded-lg px-0.5"
               style={{
-                background: isActive ? "var(--at-highlight, rgba(34,211,238,0.08))" : "transparent",
-                transition: "background 100ms ease",
-                opacity: isDone ? 0.45 : 1,
+                background: isActive ? "var(--at-highlight, rgba(34,211,238,0.1))" : "transparent",
+                transition: "background 90ms ease, opacity 90ms ease",
+                opacity: isDone ? 0.4 : 1,
               }}
             >
               {word.chars.map((ch, ci) => (

@@ -1,7 +1,7 @@
 // ============================================================
 // aegisTyping — Infinite Realistic Code Generator Engine
-// Supports 11+ Programming Languages with syntax tokens,
-// keywords, brackets, operators, types, and realistic snippets.
+// Supports 16 Programming Languages with real syntax tokens,
+// keywords, brackets, operators, types, and authentic snippets.
 // ============================================================
 
 export type SupportedCodeLang =
@@ -16,7 +16,11 @@ export type SupportedCodeLang =
   | "java"
   | "sql"
   | "php"
-  | "swift";
+  | "swift"
+  | "kotlin"
+  | "bash"
+  | "dart"
+  | "ruby";
 
 export interface CodeLangMeta {
   id: SupportedCodeLang;
@@ -38,6 +42,10 @@ export const CODE_LANGUAGES: CodeLangMeta[] = [
   { id: "sql", label: "SQL", name: "SQL", badge: "SQL" },
   { id: "php", label: "PHP", name: "PHP", badge: "PHP" },
   { id: "swift", label: "Swift", name: "Swift", badge: "SWIFT" },
+  { id: "kotlin", label: "Kotlin", name: "Kotlin", badge: "KT" },
+  { id: "bash", label: "Bash / Shell", name: "Bash", badge: "SH" },
+  { id: "dart", label: "Dart / Flutter", name: "Dart", badge: "DART" },
+  { id: "ruby", label: "Ruby", name: "Ruby", badge: "RB" },
 ];
 
 const SNIPPETS: Record<SupportedCodeLang, string[]> = {
@@ -56,6 +64,8 @@ const SNIPPETS: Record<SupportedCodeLang, string[]> = {
     "const sorted = [...users].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));",
     "const { id, username, email = 'default@domain.com', ...rest } = userProfile;",
     "try { await db.collection('logs').insertOne({ timestamp: Date.now(), action: 'LOGIN_SUCCESS' }); } catch (err) { console.error('Log failed:', err); }",
+    "const formatCurrency = (val, currency = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(val);",
+    "const eventEmitter = new CustomEvent('aegis:state_update', { detail: { timestamp: performance.now(), payload } });",
   ],
   ts: [
     "interface UserProfile<T = Record<string, unknown>> { id: string; name: string; email: string; metadata: T; readonly createdAt: Date; }",
@@ -64,12 +74,13 @@ const SNIPPETS: Record<SupportedCodeLang, string[]> = {
     "const result = await db.from<T>(table).select('*').match(filter);",
     "if (result.error) throw new DatabaseException(result.error.message);",
     "return result.data ?? [];",
-    "}",
     "type DeepReadonly<T> = { readonly [P in keyof T]: DeepReadonly<T[P]> };",
     "export const createHandler = <Req, Res>(handler: (req: Req) => Promise<Res>) => async (req: Req): Promise<Res> => { return await handler(req); };",
     "enum HttpStatus { OK = 200, CREATED = 201, BAD_REQUEST = 400, UNAUTHORIZED = 401, NOT_FOUND = 404, INTERNAL_ERROR = 500 }",
     "export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;",
     "const payload: Readonly<UserSession> = Object.freeze({ token: 'xyz_secret', expiresAt: Date.now() + 3600000, roles: ['admin', 'editor'] });",
+    "export type ExtractProps<TComponent> = TComponent extends React.ComponentType<infer P> ? P : never;",
+    "export type Nullable<T> = { [K in keyof T]: T[K] | null };",
   ],
   py: [
     "def calculate_moving_average(data: list[float], window_size: int = 5) -> list[float]:",
@@ -88,6 +99,8 @@ const SNIPPETS: Record<SupportedCodeLang, string[]> = {
     "formatted = {k: v.strip().lower() for k, v in raw_dict.items() if v is not None}",
     "@dataclass(frozen=True, slots=True)",
     "class MetricRecord: name: str; value: float; timestamp: int = field(default_factory=time.time_ns)",
+    "@app.get('/api/v2/stats', response_model=StatsResponse)",
+    "async def get_system_stats(user: AuthenticatedUser = Depends(get_current_user)):",
   ],
   html: [
     "<div className=\"flex items-center justify-between px-6 py-4 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-2xl\">",
@@ -100,90 +113,65 @@ const SNIPPETS: Record<SupportedCodeLang, string[]> = {
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />",
   ],
   cpp: [
-    "template <typename T>",
-    "class ThreadSafeQueue {",
-    "    private: mutable std::mutex mtx_; std::queue<T> data_queue_; std::condition_variable cv_;",
-    "    public: void push(T new_value) { std::lock_guard<std::mutex> lock(mtx_); data_queue_.push(std::move(new_value)); cv_.notify_one(); }",
-    "    bool try_pop(T& value) { std::lock_guard<std::mutex> lock(mtx_); if (data_queue_.empty()) return false; value = std::move(data_queue_.front()); data_queue_.pop(); return true; }",
-    "};",
-    "int main(int argc, char* argv[]) {",
-    "    std::vector<int> numbers = {10, 25, 45, 90, 120};",
-    "    std::sort(numbers.begin(), numbers.end(), [](int a, int b) { return a > b; });",
-    "    for (const auto& num : numbers) { std::cout << \"Value: \" << num << \"\\n\"; }",
-    "    return 0;",
-    "}",
+    "template <typename T, typename Alloc = std::allocator<T>>",
+    "class ThreadSafeQueue { private: mutable std::mutex mtx_; std::queue<T> queue_; std::condition_variable cv_;",
+    "public: void push(T value) { { std::lock_guard<std::mutex> lock(mtx_); queue_.push(std::move(value)); } cv_.notify_one(); } };",
+    "auto result = std::transform(vec.begin(), vec.end(), std::back_inserter(dest), [](const auto& item) { return item * 2; });",
     "std::unique_ptr<SocketConnection> conn = std::make_unique<SocketConnection>(\"127.0.0.1\", 8080);",
-    "if (conn->connect() != StatusCode::SUCCESS) { throw std::runtime_error(\"Connection refused!\"); }",
+    "constexpr size_t BUFFER_SIZE = 1024 * 1024;",
+    "std::vector<int> sorted_indices(indices.size());",
+    "std::iota(sorted_indices.begin(), sorted_indices.end(), 0);",
+    "std::sort(sorted_indices.begin(), sorted_indices.end(), [&](size_t i, size_t j) { return weights[i] > weights[j]; });",
   ],
   cs: [
-    "public async Task<ActionResult<UserProfileDto>> GetUserProfileAsync(Guid userId, CancellationToken ct = default)",
-    "{",
-    "    var user = await _dbContext.Users.AsNoTracking().Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct);",
-    "    if (user == null) return NotFound(new ProblemDetails { Title = \"User not found\", Status = StatusCodes.Status404NotFound });",
-    "    return Ok(_mapper.Map<UserProfileDto>(user));",
-    "}",
-    "public record UserProfileDto(Guid Id, string Username, string Email, IReadOnlyList<string> Roles, DateTime CreatedAtUtc);",
-    "public interface IRepository<TEntity, in TKey> where TEntity : class, IAggregateRoot",
-    "{ Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default); Task AddAsync(TEntity entity, CancellationToken ct = default); }",
-    "services.AddHttpClient<IWeatherService, WeatherService>(client => { client.BaseAddress = new Uri(\"https://api.weather.com/\"); client.Timeout = TimeSpan.FromSeconds(10); });",
+    "public async Task<ActionResult<ApiResponse<T>>> GetEntityByIdAsync(Guid entityId, CancellationToken cancellationToken = default)",
+    "using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);",
+    "var query = from u in _dbContext.Users.AsNoTracking() where u.IsActive && u.Role == UserRoles.Administrator orderby u.CreatedAt descending select u;",
+    "public record UserProfileDto(Guid Id, string Username, string Email, IReadOnlyList<string> Permissions);",
+    "services.AddHttpClient<IGatewayService, GatewayService>(client => { client.BaseAddress = new Uri(configuration[\"GatewayUrl\"]); client.Timeout = TimeSpan.FromSeconds(30); });",
+    "return entities.GroupBy(x => x.CategoryId).ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.Score).Take(5).ToList());",
   ],
   rust: [
-    "pub fn parse_packet_header(buffer: &[u8]) -> Result<HeaderFrame, PacketParseError> {",
-    "    if buffer.len() < 16 { return Err(PacketParseError::InsufficientBufferLength); }",
-    "    let magic = u32::from_be_bytes(buffer[0..4].try_into().unwrap());",
-    "    let payload_len = u32::from_be_bytes(buffer[4..8].try_into().unwrap()) as usize;",
-    "    Ok(HeaderFrame { magic, payload_len, flags: buffer[8], checksum: buffer[9] })",
-    "}",
-    "#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]",
-    "pub struct WorkerConfig { pub worker_id: usize, pub thread_pool_size: usize, pub queue_capacity: usize }",
-    "impl<T: Send + Sync + 'static> ChannelDispatcher<T> {",
-    "    pub async fn dispatch(&self, item: T) -> Result<(), DispatchError> { self.sender.send(item).await.map_err(|_| DispatchError::ChannelClosed) }",
-    "}",
-    "let filtered: Vec<String> = raw_entries.into_iter().filter(|e| e.starts_with(\"sys_\")).map(|mut s| { s.make_ascii_uppercase(); s }).collect();",
+    "pub async fn handle_stream<T: Stream<Item = Result<Bytes, Error>> + Unpin>(mut stream: T) -> Result<Vec<u8>, AppError> {",
+    "let mut buffer = Vec::with_capacity(1024 * 64);",
+    "while let Some(chunk) = stream.next().await { buffer.extend_from_slice(&chunk.map_err(AppError::StreamError)?); }",
+    "Ok(buffer) }",
+    "match self.status { Status::Ready(val) => write!(f, \"Ready: {}\", val), Status::Pending => write!(f, \"Pending\"), Status::Failed(err) => write!(f, \"Err: {}\", err), }",
+    "let shared_state = Arc::new(RwLock::new(HashMap::<String, WebSocketSession>::new()));",
+    "#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]",
+    "pub struct Config { pub host: String, pub port: u16, pub max_connections: usize, pub workers: u8 }",
   ],
   go: [
-    "func HandleIncomingWebhook(w http.ResponseWriter, r *http.Request) {",
-    "    if r.Method != http.MethodPost { http.Error(w, \"Method Not Allowed\", http.StatusMethodNotAllowed); return }",
-    "    var payload WebhookEventPayload",
-    "    if err := json.NewDecoder(r.Body).Decode(&payload); err != nil { http.Error(w, err.Error(), http.StatusBadRequest); return }",
-    "    ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)",
-    "    defer cancel()",
-    "    if err := processEvent(ctx, &payload); err != nil { http.Error(w, \"Internal Server Error\", http.StatusInternalServerError); return }",
-    "    w.Header().Set(\"Content-Type\", \"application/json\")",
-    "    w.WriteHeader(http.StatusOK)",
-    "    _ = json.NewEncoder(w).Encode(map[string]string{\"status\": \"accepted\"})",
-    "}",
-    "type MetricsCollector struct { mu sync.RWMutex; counter map[string]int64; active bool }",
+    "func (s *Server) HandleRequest(w http.ResponseWriter, r *http.Request) {",
+    "ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)",
+    "defer cancel()",
+    "data, err := s.service.FetchPayload(ctx, r.URL.Query().Get(\"id\"))",
+    "if err != nil { http.Error(w, err.Error(), http.StatusInternalServerError); return }",
+    "w.Header().Set(\"Content-Type\", \"application/json\")",
+    "if err := json.NewEncoder(w).Encode(data); err != nil { log.Printf(\"encode error: %v\", err) } }",
+    "type MetricPayload struct { Timestamp int64 `json:\"ts\"` Name string `json:\"name\"` Value float64 `json:\"val\"` }",
+    "go func(ch <-chan Task) { for task := range ch { task.Execute() } }(taskChannel)",
   ],
   java: [
-    "public static <T> CompletableFuture<List<T>> processBatchAsync(List<T> items, ExecutorService executor) {",
-    "    return CompletableFuture.supplyAsync(() -> items.parallelStream().filter(Objects::nonNull).distinct().collect(Collectors.toList()), executor);",
-    "}",
     "@RestController",
-    "@RequestMapping(\"/api/v2/analytics\")",
-    "public class AnalyticsController {",
-    "    private final AnalyticsService analyticsService;",
-    "    public AnalyticsController(AnalyticsService analyticsService) { this.analyticsService = analyticsService; }",
-    "    @GetMapping(\"/summary\")",
-    "    public ResponseEntity<AnalyticsSummaryDto> getSummary(@RequestParam @NotNull Instant from, @RequestParam @NotNull Instant to) {",
-    "        return ResponseEntity.ok(this.analyticsService.calculateSummary(from, to));",
-    "    }",
-    "}",
+    "@RequestMapping(\"/api/v3/orders\")",
+    "public class OrderController { private final OrderService orderService; public OrderController(OrderService orderService) { this.orderService = orderService; }",
+    "@GetMapping(\"/{orderId}\")",
+    "public ResponseEntity<OrderDto> getOrderById(@PathVariable(\"orderId\") UUID orderId) {",
+    "return orderService.findOrder(orderId).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build()); }",
+    "List<String> activeNames = users.stream().filter(User::isActive).map(User::getUsername).sorted().collect(Collectors.toList());",
+    "CompletableFuture<Void> allTasks = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));",
   ],
   sql: [
-    "SELECT u.id, u.username, u.email, COUNT(o.id) AS total_orders, SUM(o.total_amount) AS lifetime_value",
-    "FROM users u",
-    "LEFT JOIN orders o ON u.id = o.user_id AND o.status = 'COMPLETED'",
-    "WHERE u.is_active = TRUE AND u.created_at >= '2026-01-01 00:00:00'",
-    "GROUP BY u.id, u.username, u.email",
-    "HAVING COUNT(o.id) >= 3 AND SUM(o.total_amount) > 500.00",
-    "ORDER BY lifetime_value DESC, total_orders DESC",
-    "LIMIT 50 OFFSET 0;",
-    "CREATE UNIQUE INDEX CONCURRENTLY idx_users_email_lower ON users (LOWER(email)) WHERE deleted_at IS NULL;",
-    "ALTER TABLE user_sessions ADD CONSTRAINT fk_user_sessions_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;",
+    "SELECT u.id, u.username, COUNT(o.id) AS total_orders, SUM(o.amount) AS total_spent, RANK() OVER (ORDER BY SUM(o.amount) DESC) AS rank_tier",
+    "FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.status = 'COMPLETED' AND o.created_at >= NOW() - INTERVAL '30 days'",
+    "GROUP BY u.id, u.username HAVING COUNT(o.id) >= 5 ORDER BY total_spent DESC LIMIT 50;",
+    "WITH monthly_revenue AS ( SELECT DATE_TRUNC('month', created_at) AS month, SUM(amount) AS revenue FROM transactions GROUP BY 1 )",
+    "SELECT month, revenue, LAG(revenue, 1) OVER (ORDER BY month) AS prev_month_revenue FROM monthly_revenue;",
+    "CREATE INDEX CONCURRENTLY idx_users_email_active ON users (email) WHERE is_active = TRUE;",
   ],
   php: [
-    "public function handleUserRegistration(RegisterRequest $request): JsonResponse {",
+    "public function registerUser(RegisterUserRequest $request): JsonResponse {",
     "    $validated = $request->validated();",
     "    DB::beginTransaction();",
     "    try {",
@@ -197,6 +185,7 @@ const SNIPPETS: Record<SupportedCodeLang, string[]> = {
     "        return response()->json(['success' => false, 'error' => 'Registration error'], 500);",
     "    }",
     "}",
+    "$status = match ($code) { 200, 201 => 'success', 400, 422 => 'validation_error', 401, 403 => 'forbidden', default => 'server_error' };",
   ],
   swift: [
     "func fetchUserProfile(userId: String) async throws -> UserProfile {",
@@ -209,6 +198,56 @@ const SNIPPETS: Record<SupportedCodeLang, string[]> = {
     "    return try JSONDecoder().decode(UserProfile.self, from: data)",
     "}",
     "struct UserProfile: Identifiable, Codable, Sendable { let id: String; let username: String; let email: String; let avatarUrl: URL? }",
+    "@StateObject private var viewModel = WorkspaceViewModel()",
+  ],
+  kotlin: [
+    "suspend fun fetchCustomerDetails(customerId: String): Result<CustomerResponse> = withContext(Dispatchers.IO) {",
+    "    try {",
+    "        val response = apiService.getCustomer(customerId)",
+    "        if (response.isSuccessful && response.body() != null) {",
+    "            Result.success(response.body()!!)",
+    "        } else {",
+    "            Result.failure(ApiException(response.code(), response.message()))",
+    "        }",
+    "    } catch (e: Exception) { Result.failure(e) }",
+    "}",
+    "data class UserState(val isLoading: Boolean = false, val data: List<Item> = emptyList(), val error: String? = null)",
+    "sealed interface UiEvent { data class ShowToast(val msg: String) : UiEvent; object NavigateHome : UiEvent }",
+  ],
+  bash: [
+    "#!/usr/bin/env bash",
+    "set -euo pipefail",
+    "readonly APP_DIR=\"/var/www/everythinghub\"",
+    "readonly LOG_FILE=\"/var/log/deploy_$(date +%Y%m%d_%H%M%S).log\"",
+    "if [[ ! -d \"$APP_DIR\" ]]; then echo \"Error: Directory not found\" >&2; exit 1; fi",
+    "find . -type f -name \"*.ts\" -not -path \"*/node_modules/*\" | xargs -P 4 eslint --fix",
+    "docker build -t everythinghub:latest -f ./Dockerfile --build-arg NODE_ENV=production .",
+    "curl -sSf -X POST -H \"Authorization: Bearer ${API_SECRET}\" \"https://api.everythinghub.com.tr/v1/health\" | jq .",
+  ],
+  dart: [
+    "class UserProfileCard extends StatelessWidget {",
+    "  final UserModel user;",
+    "  final VoidCallback onTap;",
+    "  const UserProfileCard({Key? key, required this.user, required this.onTap}) : super(key: key);",
+    "  @override Widget build(BuildContext context) {",
+    "    return Container(margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)), child: ListTile(title: Text(user.name), subtitle: Text(user.email), onTap: onTap));",
+    "  }",
+    "}",
+    "Future<List<Article>> getLatestArticles() async => await repository.fetchFeed();",
+  ],
+  ruby: [
+    "class OrdersController < ApplicationController",
+    "  before_action :authenticate_user!",
+    "  def index",
+    "    @orders = current_user.orders.includes(:order_items).where(status: :completed).order(created_at: :desc).limit(20)",
+    "    render json: { success: true, data: @orders }, status: :ok",
+    "  end",
+    "  def create",
+    "    order = Order.process_checkout!(user: current_user, items: params[:items])",
+    "    OrderNotificationJob.perform_later(order.id)",
+    "    render json: { success: true, order_id: order.id }, status: :created",
+    "  end",
+    "end",
   ],
 };
 
@@ -219,8 +258,7 @@ export function generateCodeWords(lang: SupportedCodeLang, count: number = 80): 
   const snippets = SNIPPETS[lang] ?? SNIPPETS.js;
   const resultWords: string[] = [];
 
-  while (resultWords.length < count) {
-    // Pick random snippets and extract code words
+  while (resultWords.length < count * 2) {
     const snippet = snippets[Math.floor(Math.random() * snippets.length)];
     const wordsInSnippet = snippet.trim().split(/\s+/).filter(Boolean);
     resultWords.push(...wordsInSnippet);

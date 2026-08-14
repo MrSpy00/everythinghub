@@ -4,7 +4,7 @@
 // Glassmorphism slide-in drawer with rock-solid toggle switches
 // and instant localStorage synchronization.
 // ============================================================
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -34,6 +34,7 @@ interface SettingsPanelProps {
   onChange: (settings: AegisTypingSettings) => void;
   currentThemeName: ThemeName;
   onThemeChange: (theme: ThemeName) => void;
+  initialSection?: string;
 }
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
@@ -63,8 +64,8 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2.5">
-      <div className="pr-3">
+    <div className="flex items-center justify-between py-2.5 gap-3">
+      <div className="flex-1 pr-2">
         <p className="text-xs font-semibold" style={{ color: "var(--at-text)" }}>
           {label}
         </p>
@@ -77,9 +78,9 @@ function ToggleRow({
       <button
         type="button"
         onClick={() => onChange(!value)}
-        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none"
         style={{
-          background: value ? "var(--at-accent)" : "rgba(255,255,255,0.12)",
+          background: value ? "var(--at-accent, #22d3ee)" : "rgba(255,255,255,0.15)",
         }}
         role="switch"
         aria-checked={value}
@@ -115,7 +116,7 @@ function RadioGroup<T extends string>({
             className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all focus:outline-none"
             style={{
               background: active ? "var(--at-accent)" : "rgba(255,255,255,0.06)",
-              color: active ? "var(--at-bg)" : "var(--at-muted)",
+              color: active ? "var(--at-bg, #09090b)" : "var(--at-muted)",
               border: `1px solid ${active ? "var(--at-accent)" : "rgba(255,255,255,0.08)"}`,
             }}
             aria-pressed={active}
@@ -134,7 +135,7 @@ function SliderRow({
   max,
   step = 1,
   value,
-  unit,
+  unit = "",
   onChange,
 }: {
   label: string;
@@ -165,7 +166,7 @@ function SliderRow({
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-cyan-400"
         style={{
-          background: "rgba(255,255,255,0.12)",
+          background: "rgba(255,255,255,0.15)",
         }}
       />
     </div>
@@ -179,8 +180,19 @@ export function SettingsPanel({
   onChange,
   currentThemeName,
   onThemeChange,
+  initialSection = "appearance",
 }: SettingsPanelProps) {
-  const [activeSection, setActiveSection] = useState<string>("appearance");
+  const [activeSection, setActiveSection] = useState<string>(initialSection);
+  const nicknameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && initialSection) {
+      setActiveSection(initialSection);
+      if (initialSection === "profile") {
+        setTimeout(() => nicknameInputRef.current?.focus(), 120);
+      }
+    }
+  }, [open, initialSection]);
 
   const update = useCallback(
     <K extends keyof AegisTypingSettings>(key: K, value: AegisTypingSettings[K]) => {
@@ -219,7 +231,7 @@ export function SettingsPanel({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 35 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[450px] flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[460px] flex flex-col"
             style={{
               background: "rgba(18, 18, 24, 0.92)",
               borderLeft: "1px solid rgba(255,255,255,0.1)",
@@ -313,7 +325,7 @@ export function SettingsPanel({
                         </div>
                         <SliderRow
                           label="Yazı Boyutu"
-                          min={14}
+                          min={16}
                           max={26}
                           step={2}
                           value={settings.fontSize}
@@ -469,7 +481,7 @@ export function SettingsPanel({
                           />
                         </div>
                         <ToggleRow
-                          label="Hata Uyarı Sesi (Aktif)"
+                          label="Hata Uyarı Sesi"
                           sub="Hatalı tuş basıldığında yumuşak uyarı tonu çalar"
                           value={settings.soundOnError}
                           onChange={(v) => update("soundOnError", v)}
@@ -580,11 +592,12 @@ export function SettingsPanel({
                     {activeSection === "profile" && (
                       <>
                         <SectionHeader icon={<User size={14} />} title="Kullanıcı Profili & Rumuz" />
-                        <div className="space-y-2">
-                          <label className="text-xs font-semibold" style={{ color: "var(--at-muted)" }}>
+                        <div className="space-y-3">
+                          <label className="text-xs font-semibold block" style={{ color: "var(--at-muted)" }}>
                             Liderlik Tablosu Rumuzunuz (Max 20 karakter)
                           </label>
                           <input
+                            ref={nicknameInputRef}
                             type="text"
                             value={settings.nickname}
                             onChange={(e) => update("nickname", e.target.value.slice(0, 20))}
@@ -592,8 +605,8 @@ export function SettingsPanel({
                             placeholder="Anonim"
                             className="w-full px-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none transition-colors"
                             style={{
-                              background: "rgba(255,255,255,0.05)",
-                              border: "1px solid rgba(255,255,255,0.1)",
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.15)",
                               color: "var(--at-text)",
                             }}
                           />

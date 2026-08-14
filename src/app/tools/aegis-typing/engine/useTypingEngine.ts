@@ -2,7 +2,7 @@
 // ============================================================
 // aegisTyping — Typing Engine
 // Millisecond precision timer, accurate countdown, code generator,
-// diacritic support, and anti-cheat telemetry.
+// adaptive lesson drills, diacritic support, and anti-cheat telemetry.
 // ============================================================
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -25,6 +25,7 @@ import { assembleTestResult, liveNetWpm } from "../utils/statsCalculator";
 import { useAntiCheat } from "./useAntiCheat";
 import { useAudioEngine } from "./useAudioEngine";
 import { generateCodeWords, SupportedCodeLang } from "../utils/codeGenerator";
+import { generateLessonWords } from "./useAdaptiveLearning";
 
 function generateHash(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -40,11 +41,14 @@ function buildWords(
 ): WordObject[] {
   let rawWords: string[] = [];
 
-  if (customText && customText.trim().length > 0) {
+  if (mode === "custom" && customText && customText.trim().length > 0) {
     rawWords = customText.trim().split(/\s+/).filter(Boolean);
   } else if (mode === "code") {
     const lang = (String(modeValue || "js") as SupportedCodeLang);
     rawWords = generateCodeWords(lang, 120);
+  } else if (mode === "learn") {
+    const lessonId = String(modeValue || "homerow");
+    rawWords = generateLessonWords(lessonId, 100);
   } else if (mode === "quote" && wordListData?.quotes && wordListData.quotes.length > 0) {
     const quotes = wordListData.quotes;
     let filtered = quotes;
@@ -71,16 +75,16 @@ function buildWords(
       pool.push("the", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog");
     }
     const count =
-      mode === "words" && !isNaN(Number(modeValue)) ? Number(modeValue) : 80;
+      mode === "words" && !isNaN(Number(modeValue)) ? Number(modeValue) : 100;
     rawWords = [];
-    for (let i = 0; i < Math.max(count * 2, 80); i++) {
+    for (let i = 0; i < Math.max(count * 2, 100); i++) {
       rawWords.push(pool[Math.floor(Math.random() * pool.length)]);
     }
   } else {
-    rawWords = ["yazma", "hızı", "testi", "pratik", "kelime", "hız", "öğrenme", "stüdyo"];
+    rawWords = ["yazma", "hızı", "testi", "pratik", "kelime", "hız", "öğrenme", "stüdyo", "odaklanma", "gelişim", "performans", "klavye"];
   }
 
-  if (mode !== "code" && mode !== "quote") {
+  if (mode !== "code" && mode !== "quote" && mode !== "learn") {
     if (settings.punctuation) rawWords = injectPunctuation(rawWords);
     if (settings.numbers) rawWords = injectNumbers(rawWords);
     if (settings.capitalization) rawWords = capitalizeWords(rawWords);
@@ -179,19 +183,27 @@ export function useTypingEngine(options: {
   }, [
     options.mode,
     options.modeValue,
-    options.language,
-    options.funbox,
-    options.wordListData,
-    options.customText,
     options.settings,
+    options.funbox,
+    options.customText,
+    options.wordListData,
     resetState,
   ]);
 
-  // ─── Build final result & call onTestComplete ───────────────
+  // Sync target countdown when modeValue changes in idle
+  useEffect(() => {
+    if (phase === "idle" && options.mode === "time") {
+      const target = Number(options.modeValue) || 60;
+      setRemainingSeconds(target);
+    }
+  }, [options.mode, options.modeValue, phase]);
+
+  // ─── End Test ─────────────────────────────────────────────
   const endTest = useCallback(() => {
     if (phaseRef.current === "finished") return;
     setPhase("finished");
     phaseRef.current = "finished";
+
     if (rAFRef.current) {
       cancelAnimationFrame(rAFRef.current);
       rAFRef.current = null;
@@ -307,73 +319,58 @@ export function useTypingEngine(options: {
     resetState,
   ]);
 
-  const pauseTest = useCallback(() => {
-    if (phaseRef.current !== "running") return;
-    setPhase("paused");
-    phaseRef.current = "paused";
-    if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
-  }, []);
-
-  const resumeTest = useCallback(() => {
-    if (phaseRef.current !== "paused") return;
-    setPhase("running");
-    phaseRef.current = "running";
-    rAFRef.current = requestAnimationFrame(tick);
-  }, [tick]);
-
-  // ─── Keydown Handler ──────────────────────────────────────
+  // ─── Handle Key Down ────────────────────────────────────
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      // Allow Tab to reset
-      if (e.key === "Tab") {
-        e.preventDefault();
-        resetTest();
+      // Ignored keys
+      if (
+        e.key === "Tab" ||
+        e.key === "Alt" ||
+        e.key === "Control" ||
+        e.key === "Meta" ||
+        e.key === "CapsLock" ||
+        e.key === "Shift" ||
+        e.key === "Escape"
+      ) {
         return;
       }
 
-      if (phaseRef.current === "finished") return;
-
-      // Ignore modifier keys
-      if (["Shift", "Control", "Alt", "Meta", "CapsLock", "Escape"].includes(e.key)) {
-        return;
-      }
-
-      // Start on first key
+      // Start on first keypress
       if (phaseRef.current === "idle") {
         startTest();
       }
 
-      const curWord = words[currentWordIndex];
-      if (!curWord) return;
+      if (phaseRef.current !== "running") return;
 
-      const targetWord = curWord.original;
+      const currentWordObj = words[currentWordIndex];
+      if (!currentWordObj) return;
+
+      const targetWord = currentWordObj.original;
       let typed = currentTypedRef.current;
 
-      // ── Space / Word Completion ─────────────────────────
+      // ── Spacebar (Word Submit) ──────────────────────────
       if (e.key === " ") {
         e.preventDefault();
-        if (typed.length === 0) return; // ignore empty space
+        if (typed.length === 0) return; // Don't advance on empty space
 
         const isExactMatch = typed === targetWord;
-        antiCheat.recordKeystroke(" ", isExactMatch, performance.now());
-
-        if (isExactMatch) {
-          audio.playWordComplete();
-        } else {
-          audio.playError();
-        }
-
-        // Count correct chars for this word
-        let wordCorrect = 0;
-        for (let i = 0; i < Math.min(typed.length, targetWord.length); i++) {
-          if (typed[i] === targetWord[i]) wordCorrect++;
-        }
-        correctCharsRef.current += wordCorrect;
-        setCorrectChars(correctCharsRef.current);
-
         const nextWordIndex = currentWordIndex + 1;
+
+        // Calculate correct chars in this word
+        let matchCount = 0;
+        for (let i = 0; i < Math.min(typed.length, targetWord.length); i++) {
+          if (typed[i] === targetWord[i]) matchCount++;
+        }
+        if (isExactMatch) matchCount += 1; // count the space
+
+        correctCharsRef.current += matchCount;
+        totalTypedRef.current += 1; // space typed
+        setCorrectChars(correctCharsRef.current);
+        setTotalTypedChars(totalTypedRef.current);
+
         currentTypedRef.current = "";
 
+        // Mark word completed
         setWords((prev) => {
           const updated = [...prev];
           if (updated[currentWordIndex]) {
@@ -479,30 +476,25 @@ export function useTypingEngine(options: {
           }
           return updated;
         });
+
+        // If strict mode and wrong, reset
+        if (options.settings.strictMode && !isCorrect) {
+          resetTest();
+          return;
+        }
       }
     },
     [
       words,
       currentWordIndex,
-      options,
       startTest,
-      audio,
-      antiCheat,
       endTest,
       resetTest,
+      antiCheat,
+      audio,
+      options,
     ]
   );
-
-  const handleInput = useCallback(() => {
-    // Mobile input handled via keydown events on the hidden input
-  }, []);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
-    };
-  }, []);
 
   return {
     phase,
@@ -513,16 +505,13 @@ export function useTypingEngine(options: {
     liveAccuracy,
     elapsedSeconds,
     remainingSeconds,
+    totalErrors,
     wordCount,
     correctChars,
     totalTypedChars,
-    totalErrors,
     wpmTimeline,
-    handleKeyDown,
-    handleInput,
     startTest,
     resetTest,
-    pauseTest,
-    resumeTest,
+    handleKeyDown,
   };
 }

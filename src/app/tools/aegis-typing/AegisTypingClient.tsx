@@ -3,7 +3,7 @@
 // aegisTyping — Main Client Orchestrator
 // Pure liquid glassmorphism, transparent background, rich header
 // with keyboard SVG badge, synchronized rumuz/nickname pill,
-// accurate countdown, and 12+ programming languages code generator.
+// accurate countdown, and 16 programming languages code generator.
 // ============================================================
 import React, {
   useEffect,
@@ -11,6 +11,7 @@ import React, {
   useRef,
   useReducer,
   useMemo,
+  useState,
 } from "react";
 import { motion } from "framer-motion";
 import {
@@ -61,6 +62,7 @@ interface AppState {
   wordListData: WordListData | null;
   wordListLoading: boolean;
   showSettings: boolean;
+  settingsSection: string;
   showLeaderboard: boolean;
   testResult: TestResult | null;
   isNewRecord: boolean;
@@ -78,6 +80,8 @@ type AppAction =
   | { type: "SET_FUNBOX"; funbox: Funbox }
   | { type: "SET_SETTINGS"; settings: AegisTypingSettings }
   | { type: "SET_THEME"; name: ThemeName }
+  | { type: "OPEN_SETTINGS"; section?: string }
+  | { type: "CLOSE_SETTINGS" }
   | { type: "TOGGLE_SETTINGS" }
   | { type: "TOGGLE_LEADERBOARD" }
   | { type: "WORDLIST_LOADED"; data: WordListData | null }
@@ -134,8 +138,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, settings: action.settings };
     case "SET_THEME":
       return { ...state, themeName: action.name };
+    case "OPEN_SETTINGS":
+      return {
+        ...state,
+        showSettings: true,
+        settingsSection: action.section || "appearance",
+      };
+    case "CLOSE_SETTINGS":
+      return { ...state, showSettings: false };
     case "TOGGLE_SETTINGS":
-      return { ...state, showSettings: !state.showSettings };
+      return {
+        ...state,
+        showSettings: !state.showSettings,
+        settingsSection: "appearance",
+      };
     case "TOGGLE_LEADERBOARD":
       return { ...state, showLeaderboard: !state.showLeaderboard };
     case "WORDLIST_LOADED":
@@ -173,27 +189,41 @@ export function AegisTypingClient() {
   const shareEngine = useShareEngine();
   const audioEngine = useAudioEngine();
 
-  // Initialize settings from localStorage
+  // Initialize settings & session from localStorage
   const initialSettings = useMemo(() => {
     if (typeof window === "undefined") return DEFAULT_SETTINGS;
     return storage.loadSettings();
   }, []); // eslint-disable-line
 
+  const initialSession = useMemo(() => {
+    if (typeof window === "undefined") {
+      return {
+        mode: "time" as TestMode,
+        modeValue: 60,
+        language: "tr-q",
+        funbox: "none" as Funbox,
+        currentLesson: "homerow",
+      };
+    }
+    return storage.loadSession();
+  }, []); // eslint-disable-line
+
   const [state, dispatch] = useReducer(appReducer, {
-    mode: "time",
-    modeValue: 60,
-    language: "tr-q",
-    funbox: "none",
+    mode: initialSession.mode,
+    modeValue: initialSession.modeValue,
+    language: initialSession.language,
+    funbox: initialSession.funbox,
     settings: initialSettings,
     themeName: initialSettings.theme,
     wordListData: null,
     wordListLoading: true,
     showSettings: false,
+    settingsSection: "appearance",
     showLeaderboard: false,
     testResult: null,
     isNewRecord: false,
     prevBest: 0,
-    currentLesson: "homerow",
+    currentLesson: initialSession.currentLesson,
     localHistory: [],
     pressedKey: "",
     errorMap: {},
@@ -202,10 +232,28 @@ export function AegisTypingClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const pressedKeyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ─── Save Session when mode or language changes ──────────────
+  useEffect(() => {
+    storage.saveSession({
+      mode: state.mode,
+      modeValue: state.modeValue,
+      language: state.language,
+      funbox: state.funbox,
+      currentLesson: state.currentLesson,
+    });
+  }, [
+    state.mode,
+    state.modeValue,
+    state.language,
+    state.funbox,
+    state.currentLesson,
+    storage,
+  ]);
+
   // ─── Load wordlist when language changes ──────────────────────────────
   useEffect(() => {
     let cancelled = false;
-    if (state.mode === "code") {
+    if (state.mode === "code" || state.mode === "learn") {
       dispatch({ type: "WORDLIST_LOADED", data: null });
       return;
     }
@@ -321,7 +369,7 @@ export function AegisTypingClient() {
     settings: state.settings,
     wordListData: state.wordListData,
     lessonId: state.currentLesson,
-    customText: typeof state.modeValue === "string" ? state.modeValue : undefined,
+    customText: state.mode === "custom" ? String(state.modeValue) : undefined,
     onTestComplete: handleTestComplete,
   });
 
@@ -351,7 +399,7 @@ export function AegisTypingClient() {
         engine.resetTest();
         inputRef.current?.focus();
       } else if (e.key === "Escape") {
-        if (state.showSettings) dispatch({ type: "TOGGLE_SETTINGS" });
+        if (state.showSettings) dispatch({ type: "CLOSE_SETTINGS" });
         if (state.showLeaderboard) dispatch({ type: "TOGGLE_LEADERBOARD" });
         if (state.testResult) dispatch({ type: "CLEAR_RESULT" });
       }
@@ -367,45 +415,45 @@ export function AegisTypingClient() {
   const isRtl = state.wordListData?.rtl ?? false;
 
   return (
-    <div className="w-full flex flex-col items-center bg-transparent py-4 sm:py-6 relative select-none">
-      {/* Dynamic CSS Variables base */}
+    <div className="w-full flex flex-col items-center bg-transparent py-4 sm:py-8 relative select-none">
+      {/* Dynamic CSS Variables Base */}
       <style>{`
         :root {
-          --at-bg: rgba(9, 9, 11, 0);
+          --at-bg: transparent;
           --at-surface: rgba(18, 18, 24, 0.5);
-          --at-border: rgba(255, 255, 255, 0.08);
-          --at-text: #fafafa;
+          --at-border: rgba(255, 255, 255, 0.1);
+          --at-text: #ffffff;
           --at-muted: #94a3b8;
           --at-correct: #22c55e;
           --at-error: #ef4444;
-          --at-pending: rgba(255, 255, 255, 0.35);
+          --at-pending: rgba(255, 255, 255, 0.45);
           --at-caret: #22d3ee;
-          --at-highlight: rgba(34, 211, 238, 0.08);
+          --at-highlight: rgba(34, 211, 238, 0.12);
           --at-accent: #22d3ee;
         }
       `}</style>
 
-      <div className="w-full max-w-3xl px-4 space-y-6">
+      <div className="w-full max-w-5xl px-4 space-y-6">
         {/* ─── Header ─────────────────────────────────────── */}
         <header className="flex items-center justify-between gap-3">
           {/* Logo badge with transparent SVG keyboard */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-2xl flex items-center justify-center transition-all duration-300"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg"
               style={{
-                background: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                backdropFilter: "blur(16px)",
-                boxShadow: "0 0 20px rgba(34, 211, 238, 0.18)",
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                backdropFilter: "blur(20px)",
+                boxShadow: "0 0 24px rgba(34, 211, 238, 0.25)",
               }}
             >
               <svg
-                width="18"
-                height="18"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="var(--at-accent, #22d3ee)"
-                strokeWidth="1.75"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -414,9 +462,9 @@ export function AegisTypingClient() {
               </svg>
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+              <span className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
                 aegisTyping
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md uppercase font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20">
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded-md uppercase font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 shadow-sm">
                   Studio
                 </span>
               </span>
@@ -424,7 +472,7 @@ export function AegisTypingClient() {
           </div>
 
           {/* Header Action Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {/* Language Selector (human languages only) */}
             {state.mode !== "code" && (
               <LanguageSelector
@@ -437,17 +485,17 @@ export function AegisTypingClient() {
             {/* Synchronized Rumuz / Nickname Pill */}
             <button
               type="button"
-              onClick={() => dispatch({ type: "TOGGLE_SETTINGS" })}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold focus:outline-none transition-all hover:bg-white/10"
+              onClick={() => dispatch({ type: "OPEN_SETTINGS", section: "profile" })}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold focus:outline-none transition-all hover:bg-white/10"
               style={{
-                background: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.09)",
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
                 color: "var(--at-text)",
               }}
-              title="Rumuz / Profil Ayarı"
+              title="Rumuz / Profil Ayarını Düzenle"
             >
-              <User size={13} style={{ color: "var(--at-accent)" }} />
-              <span className="max-w-[80px] truncate">{state.settings.nickname || "Anonim"}</span>
+              <User size={14} style={{ color: "var(--at-accent)" }} />
+              <span className="max-w-[100px] truncate">{state.settings.nickname || "Anonim"}</span>
             </button>
 
             {/* Leaderboard */}
@@ -456,17 +504,17 @@ export function AegisTypingClient() {
               onClick={() => dispatch({ type: "TOGGLE_LEADERBOARD" })}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold focus:outline-none transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold focus:outline-none transition-all"
               style={{
                 background: state.showLeaderboard ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.09)",
-                color: state.showLeaderboard ? "var(--at-bg)" : "var(--at-text)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: state.showLeaderboard ? "var(--at-bg, #09090b)" : "var(--at-text)",
               }}
               title="Liderlik Tablosu"
               aria-label="Liderlik Tablosu"
             >
               <Trophy size={14} />
-              <span className="hidden md:inline">Liderlik Tablosu</span>
+              <span className="hidden sm:inline">Liderlik Tablosu</span>
             </motion.button>
 
             {/* Settings */}
@@ -478,13 +526,13 @@ export function AegisTypingClient() {
               className="p-2 rounded-xl focus:outline-none transition-all"
               style={{
                 background: state.showSettings ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.09)",
-                color: state.showSettings ? "var(--at-bg)" : "var(--at-text)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: state.showSettings ? "var(--at-bg, #09090b)" : "var(--at-text)",
               }}
               title="Ayarlar"
               aria-label="Ayarlar"
             >
-              <Settings2 size={15} />
+              <Settings2 size={16} />
             </motion.button>
           </div>
         </header>
@@ -502,12 +550,12 @@ export function AegisTypingClient() {
 
         {/* ─── Main Typing Liquid Glass Card ──────────────── */}
         <div
-          className="relative rounded-3xl p-5 sm:p-7 transition-all duration-300"
+          className="relative rounded-3xl p-6 sm:p-8 transition-all duration-300"
           style={{
             background: "rgba(18, 18, 24, 0.45)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(24px)",
-            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.4)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(28px)",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
           }}
         >
           {/* Live stats */}
@@ -528,9 +576,9 @@ export function AegisTypingClient() {
 
           {/* Word list loading */}
           {state.wordListLoading && (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-16">
               <div
-                className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+                className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
                 style={{ borderColor: "var(--at-accent)", borderTopColor: "transparent" }}
               />
             </div>
@@ -572,16 +620,16 @@ export function AegisTypingClient() {
         </div>
 
         {/* ─── Bottom Actions & Shortcuts Info ─────────────── */}
-        <div className="flex items-center justify-between text-xs px-1 text-zinc-400">
+        <div className="flex items-center justify-between text-xs px-2 text-zinc-400">
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <Sparkles size={12} className="text-cyan-400" />
-              <span>Yazmaya başla veya</span>
+            <span className="flex items-center gap-1.5">
+              <Sparkles size={13} className="text-cyan-400" />
+              <span>Yazmaya başlayın veya</span>
             </span>
-            <kbd className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-zinc-300">
+            <kbd className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[11px] font-mono font-semibold text-zinc-200">
               Tab
             </kbd>
-            <span>yeniden başlat</span>
+            <span>ile yeniden başlatın</span>
           </div>
 
           <motion.button
@@ -589,11 +637,11 @@ export function AegisTypingClient() {
             onClick={() => engine.resetTest()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all focus:outline-none"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all focus:outline-none"
             style={{
-              background: "rgba(255, 255, 255, 0.04)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              color: "var(--at-muted)",
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              color: "var(--at-text)",
             }}
             title="Yeniden Başlat (Tab)"
           >
@@ -634,11 +682,12 @@ export function AegisTypingClient() {
 
       <SettingsPanel
         open={state.showSettings}
-        onClose={() => dispatch({ type: "TOGGLE_SETTINGS" })}
+        onClose={() => dispatch({ type: "CLOSE_SETTINGS" })}
         settings={state.settings}
         onChange={handleSettingsChange}
         currentThemeName={state.themeName}
         onThemeChange={(name) => dispatch({ type: "SET_THEME", name })}
+        initialSection={state.settingsSection}
       />
 
       {state.testResult && state.settings.finishConfetti && (
