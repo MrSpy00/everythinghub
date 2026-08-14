@@ -431,6 +431,8 @@ export function applyTheme(
   themeName: ThemeName,
   customOverride?: { bg?: string; text?: string; accent?: string }
 ): void {
+  if (typeof document === "undefined") return;
+
   const theme = THEMES.find((t) => t.name === themeName) ?? THEMES[0];
   const vars = { ...theme.vars };
 
@@ -462,6 +464,8 @@ export function applyTheme(
   root.style.setProperty("--at-caret", vars.caret);
   root.style.setProperty("--at-highlight", vars.highlight);
   root.style.setProperty("--at-accent", vars.accent);
+  // Guarantee active text on accent pill is always dark and crystal clear
+  root.style.setProperty("--at-accent-fg", "#09090b");
 }
 
 export function getThemesByGroup(): Record<string, ThemeDefinition[]> {

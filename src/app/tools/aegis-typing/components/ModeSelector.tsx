@@ -1,7 +1,7 @@
 "use client";
 // ============================================================
 // aegisTyping — Mode Selector
-// Glassmorphism tab bar for mode + rich sub-value selection
+// Glassmorphism tab bar with guaranteed visible high-contrast text
 // ============================================================
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -163,9 +163,9 @@ export function ModeSelector({
               disabled={disabled}
               whileHover={disabled ? {} : { scale: 1.03 }}
               whileTap={disabled ? {} : { scale: 0.97 }}
-              className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors focus:outline-none disabled:opacity-40"
+              className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors focus:outline-none disabled:opacity-40"
               style={{
-                color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted, #94a3b8)",
+                color: isActive ? "#09090b" : "var(--at-muted, #94a3b8)",
               }}
             >
               {isActive && (
@@ -205,10 +205,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(t.value)}
                   disabled={disabled}
-                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none disabled:opacity-40"
+                  className="px-4 py-1.5 rounded-full text-xs font-bold transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
+                    color: isActive ? "#09090b" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -246,7 +246,7 @@ export function ModeSelector({
                 <button
                   type="button"
                   onClick={() => setIsEditingCustom(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors"
                   style={{
                     background:
                       !TIME_OPTIONS.some((o) => o.value === Number(modeValue))
@@ -254,7 +254,7 @@ export function ModeSelector({
                         : "rgba(255, 255, 255, 0.05)",
                     color:
                       !TIME_OPTIONS.some((o) => o.value === Number(modeValue))
-                        ? "var(--at-bg, #09090b)"
+                        ? "#09090b"
                         : "var(--at-muted)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                   }}
@@ -286,10 +286,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(w.value)}
                   disabled={disabled}
-                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none disabled:opacity-40"
+                  className="px-4 py-1.5 rounded-full text-xs font-bold transition-all focus:outline-none disabled:opacity-40"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
+                    color: isActive ? "#09090b" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -327,7 +327,7 @@ export function ModeSelector({
                 <button
                   type="button"
                   onClick={() => setIsEditingCustom(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors"
                   style={{
                     background:
                       !WORD_OPTIONS.some((o) => o.value === Number(modeValue))
@@ -335,7 +335,7 @@ export function ModeSelector({
                         : "rgba(255, 255, 255, 0.05)",
                     color:
                       !WORD_OPTIONS.some((o) => o.value === Number(modeValue))
-                        ? "var(--at-bg, #09090b)"
+                        ? "#09090b"
                         : "var(--at-muted)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                   }}
@@ -367,10 +367,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(q.value)}
                   disabled={disabled}
-                  className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="px-4 py-1.5 rounded-full text-xs font-bold transition-all focus:outline-none"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
+                    color: isActive ? "#09090b" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -396,10 +396,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(lang.id)}
                   disabled={disabled}
-                  className="px-3 py-1 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="px-3 py-1 rounded-full text-xs font-bold transition-all focus:outline-none"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
+                    color: isActive ? "#09090b" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -425,10 +425,10 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onModeValueChange(l.id)}
                   disabled={disabled}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all focus:outline-none"
                   style={{
                     background: isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "var(--at-bg, #09090b)" : "var(--at-muted)",
+                    color: isActive ? "#09090b" : "var(--at-muted)",
                     border: `1px solid ${isActive ? "var(--at-accent)" : "rgba(255, 255, 255, 0.08)"}`,
                   }}
                 >
@@ -454,14 +454,14 @@ export function ModeSelector({
                   type="button"
                   onClick={() => !disabled && onFunboxChange(c.id)}
                   disabled={disabled}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all focus:outline-none"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all focus:outline-none"
                   style={{
                     background: isActive
                       ? c.danger
                         ? "#ef4444"
                         : "var(--at-accent)"
                       : "rgba(255, 255, 255, 0.05)",
-                    color: isActive ? "#ffffff" : "var(--at-muted)",
+                    color: isActive ? "#09090b" : "var(--at-muted)",
                     border: `1px solid ${
                       isActive
                         ? c.danger

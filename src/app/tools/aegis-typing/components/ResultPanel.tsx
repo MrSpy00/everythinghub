@@ -2,12 +2,20 @@
 // ============================================================
 // aegisTyping — Result Panel
 // Detailed results overlay with stats, graph, and sharing
+// Transparent liquid glass, zero emojis, clean 2-row share grid
 // ============================================================
 import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  RotateCcw, Plus, Share2, Copy, Download, Link,
-  AlertTriangle, Trophy
+  RotateCcw,
+  Plus,
+  Share2,
+  Copy,
+  Download,
+  Link2,
+  AlertTriangle,
+  Trophy,
+  Check,
 } from "lucide-react";
 import type { TestResult } from "../types";
 import { getSpeedTier, SPEED_TIER_LABELS } from "../types";
@@ -33,8 +41,8 @@ function CountUp({ target, decimals = 0, suffix = "" }: { target: number; decima
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    const duration = 800;
-    const steps = 40;
+    const duration = 600;
+    const steps = 30;
     const increment = target / steps;
     let current = 0;
     let step = 0;
@@ -72,29 +80,29 @@ function StatBlock({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.3 }}
-      className="flex flex-col gap-1 p-3 rounded-2xl"
+      transition={{ delay, duration: 0.25 }}
+      className="flex flex-col gap-1 p-3.5 rounded-2xl"
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(255, 255, 255, 0.04)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
       }}
     >
       <span
-        className="text-xs font-medium uppercase tracking-wider"
+        className="text-[11px] font-bold uppercase tracking-wider"
         style={{ color: "var(--at-muted)" }}
       >
         {label}
       </span>
       <span
-        className="text-2xl font-bold tabular-nums font-mono"
+        className="text-2xl font-bold tabular-nums font-mono tracking-tight"
         style={{ color: color ?? "var(--at-text)" }}
       >
         {value}
       </span>
       {sub && (
-        <span className="text-xs" style={{ color: "var(--at-muted)" }}>
+        <span className="text-[11px]" style={{ color: "var(--at-muted)" }}>
           {sub}
         </span>
       )}
@@ -117,8 +125,7 @@ export function ResultPanel({
   const tierInfo = SPEED_TIER_LABELS[tier];
 
   const shareUrl = shareEngine.generateShareUrl(result);
-
-  const shareText = `aegisTyping'de ${Math.round(result.wpm)} WPM ve %${result.accuracy.toFixed(1)} doğruluk oranı elde ettim! ${shareUrl}`;
+  const shareText = `aegisTyping Studio üzerinde ${Math.round(result.wpm)} WPM hız ve %${result.accuracy.toFixed(1)} doğruluk skoru elde ettim! Test bağlantısı: ${shareUrl}`;
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -155,11 +162,12 @@ export function ResultPanel({
 
   const handleDiscord = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(shareText);
+      const discordText = `**[aegisTyping] Sonuç Raporu**\n- **Hız:** ${Math.round(result.wpm)} Net WPM (${Math.round(result.rawWpm)} Ham WPM)\n- **Doğruluk:** %${result.accuracy.toFixed(1)}\n- **Seviye:** ${tierInfo.label}\n- **Mod:** ${result.mode} (${result.modeValue}) • ${result.language.toUpperCase()}\n- **Sertifika:** ${shareUrl}`;
+      await navigator.clipboard.writeText(discordText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {}
-  }, [shareText]);
+  }, [result, tierInfo, shareUrl]);
 
   const handleNativeShare = useCallback(async () => {
     await shareEngine.shareNative(result);
@@ -175,7 +183,9 @@ export function ResultPanel({
       : result.mode === "zen"
       ? "Zen"
       : result.mode === "code"
-      ? "Kod"
+      ? `Kod (${String(result.modeValue).toUpperCase()})`
+      : result.mode === "learn"
+      ? `Ders (${result.modeValue})`
       : result.mode;
 
   const recentHistory = localHistory.slice(0, 5);
@@ -185,118 +195,116 @@ export function ResultPanel({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-40 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(14px)" }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        initial={{ opacity: 0, y: 20, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 16, scale: 0.98 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 space-y-6"
+        exit={{ opacity: 0, y: 16, scale: 0.96 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 sm:p-7 space-y-5"
         style={{
-          background: "var(--at-surface)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          backdropFilter: "blur(24px)",
-          boxShadow: "0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
+          background: "rgba(18, 18, 24, 0.92)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          backdropFilter: "blur(32px)",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)",
         }}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between">
+        {/* Header with Speed & Tier Badge */}
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <motion.div
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 mb-1"
-            >
+            <div className="flex items-center gap-2 mb-1.5">
               {isNewRecord && (
                 <div
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{
-                    background: `${tierInfo.color}20`,
-                    border: `1px solid ${tierInfo.color}50`,
+                    background: "rgba(255, 255, 255, 0.05)",
+                    border: `1px solid ${tierInfo.color}60`,
                     color: tierInfo.color,
+                    boxShadow: `0 0 15px ${tierInfo.color}20`,
                   }}
                 >
-                  <Trophy size={11} />
-                  Yeni Rekor!
+                  <Trophy size={13} />
+                  <span>Yeni Kişisel Rekor!</span>
                 </div>
               )}
               {result.antiCheat.suspicious && (
                 <div
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{
-                    background: "rgba(239,68,68,0.15)",
-                    border: "1px solid rgba(239,68,68,0.3)",
+                    background: "rgba(239, 68, 68, 0.12)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
                     color: "#f87171",
                   }}
                 >
-                  <AlertTriangle size={11} />
-                  Şüpheli
+                  <AlertTriangle size={13} />
+                  <span>Şüpheli Skor</span>
                 </div>
               )}
-            </motion.div>
+            </div>
 
-            <div className="flex items-end gap-3">
+            <div className="flex items-baseline gap-3">
               <motion.p
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
-                className="text-6xl font-bold tabular-nums font-mono"
+                transition={{ delay: 0.05, type: "spring", stiffness: 350 }}
+                className="text-6xl sm:text-7xl font-bold tabular-nums font-mono tracking-tight"
                 style={{ color: "var(--at-accent)" }}
               >
                 <CountUp target={Math.round(result.wpm)} />
               </motion.p>
-              <div className="mb-2 space-y-0.5">
-                <p className="text-sm font-semibold" style={{ color: "var(--at-muted)" }}>
-                  WPM
-                </p>
-                <p
-                  className="text-xs font-medium px-2 py-0.5 rounded-full"
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold block" style={{ color: "var(--at-muted)" }}>
+                  Net WPM
+                </span>
+                <span
+                  className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full"
                   style={{
-                    background: `${tierInfo.color}18`,
+                    background: "rgba(255, 255, 255, 0.05)",
+                    border: `1px solid ${tierInfo.color}40`,
                     color: tierInfo.color,
                   }}
                 >
                   {tierInfo.label}
-                </p>
+                </span>
               </div>
             </div>
 
-            <p className="text-xs mt-1" style={{ color: "var(--at-muted)" }}>
-              {modeLabel} • {result.language}
+            <p className="text-xs mt-1 font-medium" style={{ color: "var(--at-muted)" }}>
+              {modeLabel} • {result.language.toUpperCase()}
               {prevBest > 0 && !isNewRecord && (
-                <span> • En iyi: {Math.round(prevBest)} WPM</span>
+                <span> • Önceki En İyi: {Math.round(prevBest)} WPM</span>
               )}
             </p>
           </div>
 
-          {/* Quick action buttons */}
+          {/* Quick restart / new test action buttons */}
           <div className="flex items-center gap-2">
             <motion.button
               onClick={onRestart}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              title="Yeniden başlat (Tab)"
-              className="p-2.5 rounded-xl transition-colors focus:outline-none"
+              title="Yeniden Başlat (Tab)"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors focus:outline-none"
               style={{
                 background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.1)",
                 color: "var(--at-text)",
               }}
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={14} />
+              <span>Yeniden Başlat</span>
             </motion.button>
             <motion.button
               onClick={onNewTest}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              title="Yeni test"
-              className="p-2.5 rounded-xl transition-colors focus:outline-none"
+              title="Yeni Test Başlat"
+              className="p-2 rounded-xl transition-colors focus:outline-none"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "var(--at-text)",
+                background: "var(--at-accent)",
+                color: "#09090b",
               }}
             >
               <Plus size={16} />
@@ -304,8 +312,8 @@ export function ResultPanel({
           </div>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {/* Stats grid (6 cards) */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
           <StatBlock
             label="Ham WPM"
             value={<CountUp target={Math.round(result.rawWpm)} />}
@@ -328,7 +336,7 @@ export function ResultPanel({
             delay={0.2}
           />
           <StatBlock
-            label="Hata"
+            label="Hatalar"
             value={result.errors}
             color={result.errors > 0 ? "var(--at-error)" : "var(--at-correct)"}
             delay={0.25}
@@ -345,14 +353,15 @@ export function ResultPanel({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.35 }}
+            className="space-y-1.5"
           >
-            <p className="text-xs font-medium mb-2 uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
-              WPM Grafiği
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
+              WPM Zaman Grafiği
             </p>
             <div
-              className="p-3 rounded-2xl"
-              style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}
+              className="p-3.5 rounded-2xl"
+              style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.06)" }}
             >
               <WpmGraph
                 data={result.wpmTimeline}
@@ -364,61 +373,60 @@ export function ResultPanel({
           </motion.div>
         )}
 
-        {/* Anti-cheat warning */}
+        {/* Anti-cheat warning if flagged */}
         {result.antiCheat.suspicious && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-start gap-3 p-3 rounded-2xl"
+            transition={{ delay: 0.4 }}
+            className="flex items-start gap-3 p-3.5 rounded-2xl"
             style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
           >
             <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: "#f87171" }} />
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#f87171" }}>
+              <p className="text-xs font-bold" style={{ color: "#f87171" }}>
                 Şüpheli Aktivite Tespit Edildi
               </p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(248,113,113,0.7)" }}>
-                Bu sonuç liderboard&apos;a kaydedilmeyebilir. İşaretler:{" "}
-                {result.antiCheat.flags.join(", ")}
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(248,113,113,0.8)" }}>
+                İşaretler: {result.antiCheat.flags.join(", ")}
               </p>
             </div>
           </motion.div>
         )}
 
-        {/* Share buttons */}
+        {/* Share buttons — Clean 2-Row Uniform Grid */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.55 }}
+          transition={{ delay: 0.45 }}
           className="space-y-2"
         >
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
-            Paylaş
+          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
+            Sonucu Paylaş & Sertifika
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[
-              { label: "Twitter/X", icon: <Share2 size={13} />, action: handleTwitter },
+              { label: "Twitter / X", icon: <Share2 size={13} />, action: handleTwitter },
               { label: "WhatsApp", icon: <Share2 size={13} />, action: handleWhatsApp },
-              { label: "Discord", icon: <Copy size={13} />, action: handleDiscord },
+              { label: "Discord Formatı", icon: <Copy size={13} />, action: handleDiscord },
               {
                 label: copied ? "Kopyalandı!" : "Bağlantı Kopyala",
-                icon: <Link size={13} />,
+                icon: copied ? <Check size={13} /> : <Link2 size={13} />,
                 action: handleCopyLink,
               },
               {
-                label: downloading ? "İndiriliyor..." : "PNG İndir",
+                label: downloading ? "İndiriliyor..." : "PNG Sertifika",
                 icon: <Download size={13} />,
                 action: handleDownloadPng,
               },
-              { label: "Paylaş", icon: <Share2 size={13} />, action: handleNativeShare },
+              { label: "Sistemde Paylaş", icon: <Share2 size={13} />, action: handleNativeShare },
             ].map(({ label, icon, action }) => (
               <motion.button
                 key={label}
                 onClick={action}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors focus:outline-none"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors focus:outline-none"
                 style={{
                   background: "rgba(255,255,255,0.05)",
                   border: "1px solid rgba(255,255,255,0.09)",
@@ -426,22 +434,17 @@ export function ResultPanel({
                 }}
               >
                 {icon}
-                {label}
+                <span>{label}</span>
               </motion.button>
             ))}
           </div>
         </motion.div>
 
-        {/* Local history */}
+        {/* Recent local history list */}
         {recentHistory.length > 1 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="space-y-2"
-          >
-            <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
-              Son Testler
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
+              Son Test Geçmişiniz
             </p>
             <div className="space-y-1">
               {recentHistory.map((r, i) => (
@@ -449,42 +452,35 @@ export function ResultPanel({
                   key={r.id}
                   className="flex items-center justify-between px-3 py-2 rounded-xl text-xs"
                   style={{
-                    background: i === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
+                    background: i === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
                     border: "1px solid rgba(255,255,255,0.05)",
                   }}
                 >
                   <span style={{ color: "var(--at-muted)" }}>
                     {new Date(r.timestamp).toLocaleDateString("tr-TR")}
                   </span>
-                  <span className="font-mono font-semibold" style={{ color: "var(--at-accent)" }}>
+                  <span className="font-mono font-bold" style={{ color: "var(--at-accent)" }}>
                     {Math.round(r.wpm)} WPM
                   </span>
                   <span style={{ color: "var(--at-muted)" }}>
-                    {r.accuracy.toFixed(1)}%
+                    %{r.accuracy.toFixed(1)} Doğruluk
                   </span>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Restart hint */}
-        <p className="text-center text-xs" style={{ color: "var(--at-muted)" }}>
+        <p className="text-center text-[11px]" style={{ color: "var(--at-muted)" }}>
           Yeniden başlatmak için{" "}
           <kbd
-            className="px-1.5 py-0.5 rounded text-[10px] font-mono"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
+            className="px-2 py-0.5 rounded text-[10px] font-mono font-bold"
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
           >
             Tab
           </kbd>{" "}
-          veya{" "}
-          <kbd
-            className="px-1.5 py-0.5 rounded text-[10px] font-mono"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
-          >
-            Enter
-          </kbd>
-          {" "}tuşuna bas
+          tuşuna basın
         </p>
       </motion.div>
     </motion.div>

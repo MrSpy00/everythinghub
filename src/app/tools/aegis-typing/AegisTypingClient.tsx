@@ -11,7 +11,6 @@ import React, {
   useRef,
   useReducer,
   useMemo,
-  useState,
 } from "react";
 import { motion } from "framer-motion";
 import {
@@ -284,7 +283,7 @@ export function AegisTypingClient() {
     };
   }, [state.language, state.mode]);
 
-  // ─── Apply theme on change ─────────────────────────────────
+  // ─── Apply theme on mount and change ──────────────────────
   useEffect(() => {
     applyTheme(state.themeName);
   }, [state.themeName]);
@@ -416,23 +415,6 @@ export function AegisTypingClient() {
 
   return (
     <div className="w-full flex flex-col items-center bg-transparent py-4 sm:py-8 relative select-none">
-      {/* Dynamic CSS Variables Base */}
-      <style>{`
-        :root {
-          --at-bg: transparent;
-          --at-surface: rgba(18, 18, 24, 0.5);
-          --at-border: rgba(255, 255, 255, 0.1);
-          --at-text: #ffffff;
-          --at-muted: #94a3b8;
-          --at-correct: #22c55e;
-          --at-error: #ef4444;
-          --at-pending: rgba(255, 255, 255, 0.45);
-          --at-caret: #22d3ee;
-          --at-highlight: rgba(34, 211, 238, 0.12);
-          --at-accent: #22d3ee;
-        }
-      `}</style>
-
       <div className="w-full max-w-5xl px-4 space-y-6">
         {/* ─── Header ─────────────────────────────────────── */}
         <header className="flex items-center justify-between gap-3">
@@ -444,7 +426,7 @@ export function AegisTypingClient() {
                 background: "rgba(255, 255, 255, 0.05)",
                 border: "1px solid rgba(255, 255, 255, 0.15)",
                 backdropFilter: "blur(20px)",
-                boxShadow: "0 0 24px rgba(34, 211, 238, 0.25)",
+                boxShadow: "0 0 24px color-mix(in srgb, var(--at-accent) 25%, transparent)",
               }}
             >
               <svg
@@ -464,7 +446,15 @@ export function AegisTypingClient() {
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
                 aegisTyping
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded-md uppercase font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 shadow-sm">
+                <span
+                  className="text-[9px] font-mono px-2 py-0.5 rounded-md uppercase font-bold tracking-wider"
+                  style={{
+                    color: "var(--at-accent)",
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid color-mix(in srgb, var(--at-accent) 30%, transparent)",
+                    boxShadow: "0 0 12px color-mix(in srgb, var(--at-accent) 15%, transparent)",
+                  }}
+                >
                   Studio
                 </span>
               </span>
@@ -508,7 +498,7 @@ export function AegisTypingClient() {
               style={{
                 background: state.showLeaderboard ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
                 border: "1px solid rgba(255, 255, 255, 0.12)",
-                color: state.showLeaderboard ? "var(--at-bg, #09090b)" : "var(--at-text)",
+                color: state.showLeaderboard ? "#09090b" : "var(--at-text)",
               }}
               title="Liderlik Tablosu"
               aria-label="Liderlik Tablosu"
@@ -527,7 +517,7 @@ export function AegisTypingClient() {
               style={{
                 background: state.showSettings ? "var(--at-accent)" : "rgba(255, 255, 255, 0.05)",
                 border: "1px solid rgba(255, 255, 255, 0.12)",
-                color: state.showSettings ? "var(--at-bg, #09090b)" : "var(--at-text)",
+                color: state.showSettings ? "#09090b" : "var(--at-text)",
               }}
               title="Ayarlar"
               aria-label="Ayarlar"

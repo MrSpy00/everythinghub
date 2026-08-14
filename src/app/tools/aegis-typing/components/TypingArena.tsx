@@ -2,8 +2,7 @@
 // ============================================================
 // aegisTyping — Typing Arena
 // GPU-accelerated smooth word & character renderer
-// Clean line containment with zero awkward half-line clippings.
-// Pure liquid glassmorphism.
+// Active line stays centered with next line always visible below
 // ============================================================
 import React, { useRef, useEffect, useMemo, useState } from "react";
 import type {
@@ -166,15 +165,16 @@ export function TypingArena({
 
     caretRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 
-    // Calculate line-based scroll: keep current active line inside visible window
+    // Calculate line-based scroll: keep current active line in the middle
+    // so upcoming next lines are ALWAYS visible below it!
     const activeLine = Math.floor(y / lineHeight);
-    if (activeLine >= lineCount - 1 && activeLine > 0) {
-      const newScroll = (activeLine - (lineCount > 1 ? 1 : 0)) * lineHeight;
+    if (activeLine >= 2) {
+      const newScroll = (activeLine - 1) * lineHeight;
       setScrollY(newScroll);
-    } else if (activeLine === 0) {
+    } else {
       setScrollY(0);
     }
-  }, [caretPosition, words, caretStyle, lineHeight, lineCount]);
+  }, [caretPosition, words, caretStyle, lineHeight]);
 
   // ─── Caret Dimensions & Styling ─────────────────────────
   const caretDimensions = useMemo(() => {
@@ -216,7 +216,7 @@ export function TypingArena({
       role="textbox"
       aria-multiline="true"
     >
-      {/* Hidden input for keyboard capture (mobile-friendly) */}
+      {/* Hidden input for keyboard capture (mobile and IME friendly) */}
       <input
         ref={inputRef}
         className="absolute opacity-0 w-0 h-0 left-0 top-0 pointer-events-none"
@@ -274,7 +274,7 @@ export function TypingArena({
               style={{
                 background: isActive ? "var(--at-highlight, rgba(34,211,238,0.1))" : "transparent",
                 transition: "background 90ms ease, opacity 90ms ease",
-                opacity: isDone ? 0.4 : 1,
+                opacity: isDone ? 0.35 : 1,
               }}
             >
               {word.chars.map((ch, ci) => (
