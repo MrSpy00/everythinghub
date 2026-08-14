@@ -274,8 +274,8 @@ export const DEFAULT_SETTINGS: AegisTypingSettings = {
   suddenDeath: false,
   confidenceMode: false,
 
-  soundPack: "mechanical",
-  volume: 0.4,
+  soundPack: "silent",
+  volume: 0.3,
   soundOnError: true,
 
   preventPaste: true,

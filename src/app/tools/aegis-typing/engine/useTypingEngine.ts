@@ -1,16 +1,30 @@
-'use client';
+"use client";
 // ============================================================
-// aegisTyping — Typing Engine (Rewritten for correctness)
+// aegisTyping — Typing Engine
+// Millisecond precision timer, accurate countdown, code generator,
+// diacritic support, and anti-cheat telemetry.
 // ============================================================
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  TestMode, Funbox, AegisTypingSettings, WordListData, TestResult,
-  TestPhase, WordObject
-} from '../types';
-import { buildWordObjects, computeCharStates, injectPunctuation, injectNumbers, capitalizeWords } from '../utils/textProcessing';
-import { assembleTestResult, liveNetWpm } from '../utils/statsCalculator';
-import { useAntiCheat } from './useAntiCheat';
-import { useAudioEngine } from './useAudioEngine';
+  TestMode,
+  Funbox,
+  AegisTypingSettings,
+  WordListData,
+  TestResult,
+  TestPhase,
+  WordObject,
+} from "../types";
+import {
+  buildWordObjects,
+  computeCharStates,
+  injectPunctuation,
+  injectNumbers,
+  capitalizeWords,
+} from "../utils/textProcessing";
+import { assembleTestResult, liveNetWpm } from "../utils/statsCalculator";
+import { useAntiCheat } from "./useAntiCheat";
+import { useAudioEngine } from "./useAudioEngine";
+import { generateCodeWords, SupportedCodeLang } from "../utils/codeGenerator";
 
 function generateHash(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -22,31 +36,58 @@ function buildWords(
   modeValue: number | string,
   settings: AegisTypingSettings,
   funbox: Funbox,
-  customText?: string,
+  customText?: string
 ): WordObject[] {
   let rawWords: string[] = [];
 
-  if (customText) {
-    rawWords = customText.split(/\s+/).filter(Boolean);
+  if (customText && customText.trim().length > 0) {
+    rawWords = customText.trim().split(/\s+/).filter(Boolean);
+  } else if (mode === "code") {
+    const lang = (String(modeValue || "js") as SupportedCodeLang);
+    rawWords = generateCodeWords(lang, 120);
+  } else if (mode === "quote" && wordListData?.quotes && wordListData.quotes.length > 0) {
+    const quotes = wordListData.quotes;
+    let filtered = quotes;
+    if (modeValue === "short") {
+      filtered = quotes.filter((q) => q.text.length < 100);
+    } else if (modeValue === "medium") {
+      filtered = quotes.filter((q) => q.text.length >= 100 && q.text.length < 250);
+    } else if (modeValue === "long") {
+      filtered = quotes.filter((q) => q.text.length >= 250);
+    }
+    const chosen =
+      filtered.length > 0
+        ? filtered[Math.floor(Math.random() * filtered.length)]
+        : quotes[Math.floor(Math.random() * quotes.length)];
+    rawWords = chosen.text.split(/\s+/).filter(Boolean);
   } else if (wordListData) {
     const pool = [
       ...(wordListData.words.common ?? []),
-      ...(settings.punctuation || settings.numbers ? (wordListData.words.advanced ?? []) : []),
+      ...(settings.punctuation || settings.numbers
+        ? wordListData.words.advanced ?? []
+        : []),
     ];
-    const count = mode === 'words' && typeof modeValue === 'number' ? modeValue : 60;
-    // Random selection
+    if (pool.length === 0) {
+      pool.push("the", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog");
+    }
+    const count =
+      mode === "words" && !isNaN(Number(modeValue)) ? Number(modeValue) : 80;
     rawWords = [];
     for (let i = 0; i < Math.max(count * 2, 80); i++) {
       rawWords.push(pool[Math.floor(Math.random() * pool.length)]);
     }
+  } else {
+    rawWords = ["yazma", "hızı", "testi", "pratik", "kelime", "hız", "öğrenme", "stüdyo"];
   }
 
-  if (settings.punctuation) rawWords = injectPunctuation(rawWords);
-  if (settings.numbers) rawWords = injectNumbers(rawWords);
-  if (settings.capitalization) rawWords = capitalizeWords(rawWords);
+  if (mode !== "code" && mode !== "quote") {
+    if (settings.punctuation) rawWords = injectPunctuation(rawWords);
+    if (settings.numbers) rawWords = injectNumbers(rawWords);
+    if (settings.capitalization) rawWords = capitalizeWords(rawWords);
+  }
 
-  if (funbox === 'backwards') {
-    rawWords = rawWords.map(w => w.split('').reverse().join(''));
+  if (funbox === "backwards") {
+    rawWords = rawWords.map((w) => w.split("").reverse().join(""));
   }
 
   return buildWordObjects(rawWords);
@@ -63,16 +104,18 @@ export function useTypingEngine(options: {
   customText?: string;
   onTestComplete?: (result: TestResult) => void;
 }) {
-  const [phase, setPhase] = useState<TestPhase>('idle');
+  const [phase, setPhase] = useState<TestPhase>("idle");
   const [words, setWords] = useState<WordObject[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [caretPosition, setCaretPosition] = useState({ wordIndex: 0, charIndex: 0 });
   const [liveWpm, setLiveWpm] = useState(0);
   const [liveAccuracy, setLiveAccuracy] = useState(100);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [remainingSeconds, setRemainingSeconds] = useState(
-    options.mode === 'time' && typeof options.modeValue === 'number' ? options.modeValue : 0
-  );
+
+  const initialTargetTime =
+    options.mode === "time" ? Number(options.modeValue) || 60 : 0;
+  const [remainingSeconds, setRemainingSeconds] = useState(initialTargetTime);
+
   const [wordCount, setWordCount] = useState({ correct: 0, total: 0 });
   const [correctChars, setCorrectChars] = useState(0);
   const [totalTypedChars, setTotalTypedChars] = useState(0);
@@ -81,17 +124,47 @@ export function useTypingEngine(options: {
 
   const startTimeRef = useRef<number | null>(null);
   const rAFRef = useRef<number | null>(null);
-  const currentTypedRef = useRef<string>('');
-  const phaseRef = useRef<TestPhase>('idle');
+  const currentTypedRef = useRef<string>("");
+  const phaseRef = useRef<TestPhase>("idle");
   const correctCharsRef = useRef(0);
   const totalTypedRef = useRef(0);
   const totalErrorsRef = useRef(0);
   const wpmTimelineRef = useRef<number[]>([]);
 
-  const antiCheat = useAntiCheat({ preventPaste: options.settings.preventPaste, tabSwitchDetection: options.settings.tabSwitchDetection });
+  const antiCheat = useAntiCheat({
+    preventPaste: options.settings.preventPaste,
+    tabSwitchDetection: options.settings.tabSwitchDetection,
+  });
   const audio = useAudioEngine();
 
-  // ─── Rebuild words on option changes ──────────────────────
+  // ─── Reset / Rebuild State ────────────────────────────────
+  const resetState = useCallback(() => {
+    setPhase("idle");
+    phaseRef.current = "idle";
+    setCurrentWordIndex(0);
+    setCaretPosition({ wordIndex: 0, charIndex: 0 });
+    setElapsedSeconds(0);
+    const target = options.mode === "time" ? Number(options.modeValue) || 60 : 0;
+    setRemainingSeconds(target);
+    setLiveWpm(0);
+    setLiveAccuracy(100);
+    setCorrectChars(0);
+    setTotalTypedChars(0);
+    setTotalErrors(0);
+    setWordCount({ correct: 0, total: 0 });
+    setWpmTimeline([]);
+    currentTypedRef.current = "";
+    correctCharsRef.current = 0;
+    totalTypedRef.current = 0;
+    totalErrorsRef.current = 0;
+    wpmTimelineRef.current = [];
+    startTimeRef.current = null;
+    if (rAFRef.current) {
+      cancelAnimationFrame(rAFRef.current);
+      rAFRef.current = null;
+    }
+  }, [options.mode, options.modeValue]);
+
   useEffect(() => {
     const built = buildWords(
       options.wordListData,
@@ -103,44 +176,22 @@ export function useTypingEngine(options: {
     );
     setWords(built);
     resetState();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options.mode, options.modeValue, options.language, options.funbox,
-      options.wordListData, options.customText,
-      options.settings.punctuation, options.settings.numbers, options.settings.capitalization]);
-
-  function resetState() {
-    setPhase('idle');
-    phaseRef.current = 'idle';
-    setCurrentWordIndex(0);
-    setCaretPosition({ wordIndex: 0, charIndex: 0 });
-    setElapsedSeconds(0);
-    setLiveWpm(0);
-    setLiveAccuracy(100);
-    setCorrectChars(0);
-    setTotalTypedChars(0);
-    setTotalErrors(0);
-    setWordCount({ correct: 0, total: 0 });
-    setWpmTimeline([]);
-    currentTypedRef.current = '';
-    correctCharsRef.current = 0;
-    totalTypedRef.current = 0;
-    totalErrorsRef.current = 0;
-    wpmTimelineRef.current = [];
-    startTimeRef.current = null;
-    if (rAFRef.current) {
-      cancelAnimationFrame(rAFRef.current);
-      rAFRef.current = null;
-    }
-    if (options.mode === 'time' && typeof options.modeValue === 'number') {
-      setRemainingSeconds(options.modeValue);
-    }
-  }
+  }, [
+    options.mode,
+    options.modeValue,
+    options.language,
+    options.funbox,
+    options.wordListData,
+    options.customText,
+    options.settings,
+    resetState,
+  ]);
 
   // ─── Build final result & call onTestComplete ───────────────
   const endTest = useCallback(() => {
-    if (phaseRef.current === 'finished') return;
-    setPhase('finished');
-    phaseRef.current = 'finished';
+    if (phaseRef.current === "finished") return;
+    setPhase("finished");
+    phaseRef.current = "finished";
     if (rAFRef.current) {
       cancelAnimationFrame(rAFRef.current);
       rAFRef.current = null;
@@ -162,7 +213,12 @@ export function useTypingEngine(options: {
       modeValue: options.modeValue,
       language: options.language,
       funbox: options.funbox,
-      antiCheat: antiCheat.generateReport(liveNetWpm(correctCharsRef.current, totalErrorsRef.current, elapsed), totalTypedRef.current > 0 ? (correctCharsRef.current / totalTypedRef.current) * 100 : 100),
+      antiCheat: antiCheat.generateReport(
+        liveNetWpm(correctCharsRef.current, totalErrorsRef.current, elapsed),
+        totalTypedRef.current > 0
+          ? (correctCharsRef.current / totalTypedRef.current) * 100
+          : 100
+      ),
       wpmTimeline: wpmTimelineRef.current,
       nickname: options.settings.nickname,
     });
@@ -176,17 +232,19 @@ export function useTypingEngine(options: {
     options.onTestComplete?.(result);
   }, [antiCheat, audio, options]);
 
-  // ─── RAF tick ─────────────────────────────────────────────
+  // ─── RAF tick ref ─────────────────────────────────────────
+  const tickRef = useRef<() => void>(() => {});
+
   const tick = useCallback(() => {
-    if (phaseRef.current !== 'running' || !startTimeRef.current) return;
+    if (phaseRef.current !== "running" || !startTimeRef.current) return;
 
     const now = performance.now();
     const elapsed = (now - startTimeRef.current) / 1000;
-
     setElapsedSeconds(elapsed);
 
-    if (options.mode === 'time' && typeof options.modeValue === 'number') {
-      const remaining = Math.max(0, options.modeValue - elapsed);
+    if (options.mode === "time") {
+      const targetTime = Number(options.modeValue) || 60;
+      const remaining = Math.max(0, targetTime - elapsed);
       setRemainingSeconds(remaining);
       if (remaining <= 0) {
         endTest();
@@ -197,9 +255,10 @@ export function useTypingEngine(options: {
     const wpm = liveNetWpm(correctCharsRef.current, totalErrorsRef.current, elapsed);
     setLiveWpm(wpm);
 
-    const acc = totalTypedRef.current > 0
-      ? ((totalTypedRef.current - totalErrorsRef.current) / totalTypedRef.current) * 100
-      : 100;
+    const acc =
+      totalTypedRef.current > 0
+        ? ((totalTypedRef.current - totalErrorsRef.current) / totalTypedRef.current) * 100
+        : 100;
     setLiveAccuracy(Math.max(0, acc));
 
     const secIdx = Math.floor(elapsed);
@@ -208,19 +267,23 @@ export function useTypingEngine(options: {
       setWpmTimeline([...wpmTimelineRef.current]);
     }
 
-    rAFRef.current = requestAnimationFrame(tick);
+    rAFRef.current = requestAnimationFrame(() => tickRef.current());
   }, [options.mode, options.modeValue, endTest]);
+
+  useEffect(() => {
+    tickRef.current = tick;
+  }, [tick]);
 
   // ─── Start test ─────────────────────────────────────────
   const startTest = useCallback(() => {
-    if (phaseRef.current !== 'idle') return;
+    if (phaseRef.current !== "idle") return;
 
-    setPhase('running');
-    phaseRef.current = 'running';
+    setPhase("running");
+    phaseRef.current = "running";
     startTimeRef.current = performance.now();
     antiCheat.startTracking();
-    rAFRef.current = requestAnimationFrame(tick);
-  }, [antiCheat, tick]);
+    rAFRef.current = requestAnimationFrame(() => tickRef.current());
+  }, [antiCheat]);
 
   // ─── Reset test ─────────────────────────────────────────
   const resetTest = useCallback(() => {
@@ -234,173 +297,201 @@ export function useTypingEngine(options: {
     );
     setWords(built);
     resetState();
-    antiCheat.reset();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, antiCheat]);
+  }, [
+    options.wordListData,
+    options.mode,
+    options.modeValue,
+    options.settings,
+    options.funbox,
+    options.customText,
+    resetState,
+  ]);
 
   const pauseTest = useCallback(() => {
-    if (phaseRef.current === 'running') {
-      setPhase('paused');
-      phaseRef.current = 'paused';
-      if (rAFRef.current) {
-        cancelAnimationFrame(rAFRef.current);
-        rAFRef.current = null;
-      }
-    }
+    if (phaseRef.current !== "running") return;
+    setPhase("paused");
+    phaseRef.current = "paused";
+    if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
   }, []);
 
   const resumeTest = useCallback(() => {
-    if (phaseRef.current === 'paused') {
-      // Adjust start time to account for pause duration
-      const pausedElapsed = elapsedSeconds;
-      startTimeRef.current = performance.now() - pausedElapsed * 1000;
-      setPhase('running');
-      phaseRef.current = 'running';
-      rAFRef.current = requestAnimationFrame(tick);
-    }
-  }, [elapsedSeconds, tick]);
+    if (phaseRef.current !== "paused") return;
+    setPhase("running");
+    phaseRef.current = "running";
+    rAFRef.current = requestAnimationFrame(tick);
+  }, [tick]);
 
-  // ─── Key handler ──────────────────────────────────────────
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    const currentPhase = phaseRef.current;
+  // ─── Keydown Handler ──────────────────────────────────────
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Allow Tab to reset
+      if (e.key === "Tab") {
+        e.preventDefault();
+        resetTest();
+        return;
+      }
 
-    if (currentPhase === 'idle') {
-      startTest();
-    }
+      if (phaseRef.current === "finished") return;
 
-    if (currentPhase === 'finished') return;
+      // Ignore modifier keys
+      if (["Shift", "Control", "Alt", "Meta", "CapsLock", "Escape"].includes(e.key)) {
+        return;
+      }
 
-    const isModifier = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Enter', 'Escape'].includes(e.key);
-    if (isModifier) return;
+      // Start on first key
+      if (phaseRef.current === "idle") {
+        startTest();
+      }
 
-    e.preventDefault();
-    antiCheat.recordKeystroke(e.key, true, performance.now());
+      const curWord = words[currentWordIndex];
+      if (!curWord) return;
 
-    if (phaseRef.current !== 'running') return;
+      const targetWord = curWord.original;
+      let typed = currentTypedRef.current;
 
-    const currentWord = words[currentWordIndex];
-    if (!currentWord) return;
+      // ── Space / Word Completion ─────────────────────────
+      if (e.key === " ") {
+        e.preventDefault();
+        if (typed.length === 0) return; // ignore empty space
 
-    // ─── Backspace ──────────────────────────
-    if (e.key === 'Backspace') {
-      if (options.settings.confidenceMode) return;
-      if (options.funbox === 'no-backspace') return;
+        const isExactMatch = typed === targetWord;
+        antiCheat.recordKeystroke(" ", isExactMatch, performance.now());
 
-      if (currentTypedRef.current.length > 0) {
-        currentTypedRef.current = currentTypedRef.current.slice(0, -1);
-        const newCharIndex = currentTypedRef.current.length;
-        setCaretPosition({ wordIndex: currentWordIndex, charIndex: newCharIndex });
+        if (isExactMatch) {
+          audio.playWordComplete();
+        } else {
+          audio.playError();
+        }
 
-        // Update char states
-        setWords(prev => {
+        // Count correct chars for this word
+        let wordCorrect = 0;
+        for (let i = 0; i < Math.min(typed.length, targetWord.length); i++) {
+          if (typed[i] === targetWord[i]) wordCorrect++;
+        }
+        correctCharsRef.current += wordCorrect;
+        setCorrectChars(correctCharsRef.current);
+
+        const nextWordIndex = currentWordIndex + 1;
+        currentTypedRef.current = "";
+
+        setWords((prev) => {
           const updated = [...prev];
-          updated[currentWordIndex] = {
-            ...updated[currentWordIndex],
-            typed: currentTypedRef.current,
-            chars: computeCharStates(updated[currentWordIndex].original, currentTypedRef.current),
-          };
+          if (updated[currentWordIndex]) {
+            updated[currentWordIndex] = {
+              ...updated[currentWordIndex],
+              typed,
+              state: isExactMatch ? "correct" : "incorrect",
+              chars: computeCharStates(targetWord, typed),
+            };
+          }
           return updated;
         });
-      } else if (currentWordIndex > 0) {
-        // Go back to previous word
-        const prevIdx = currentWordIndex - 1;
-        setCurrentWordIndex(prevIdx);
-        currentTypedRef.current = words[prevIdx]?.typed ?? '';
-        const prevCharIdx = currentTypedRef.current.length;
-        setCaretPosition({ wordIndex: prevIdx, charIndex: prevCharIdx });
-      }
-      return;
-    }
 
-    // ─── Space (advance word) ───────────────
-    if (e.key === ' ') {
-      if (currentTypedRef.current.length === 0) return;
+        setWordCount((prev) => ({
+          correct: prev.correct + (isExactMatch ? 1 : 0),
+          total: prev.total + 1,
+        }));
 
-      const isCorrect = currentTypedRef.current === currentWord.original;
-      setWordCount(prev => ({
-        correct: prev.correct + (isCorrect ? 1 : 0),
-        total: prev.total + 1,
-      }));
+        setCurrentWordIndex(nextWordIndex);
+        setCaretPosition({ wordIndex: nextWordIndex, charIndex: 0 });
 
-      setWords(prev => {
-        const updated = [...prev];
-        updated[currentWordIndex] = {
-          ...updated[currentWordIndex],
-          typed: currentTypedRef.current,
-          state: isCorrect ? 'correct' : 'incorrect',
-          chars: computeCharStates(updated[currentWordIndex].original, currentTypedRef.current),
-        };
-        return updated;
-      });
-
-      const nextIdx = currentWordIndex + 1;
-      currentTypedRef.current = '';
-      setCurrentWordIndex(nextIdx);
-      setCaretPosition({ wordIndex: nextIdx, charIndex: 0 });
-
-      audio.playWordComplete();
-
-      // Check word mode end
-      if (options.mode === 'words' && nextIdx >= Number(options.modeValue)) {
-        endTest();
+        // End condition: words mode reached
+        if (options.mode === "words") {
+          const targetWordCount = Number(options.modeValue) || 25;
+          if (nextWordIndex >= targetWordCount || nextWordIndex >= words.length) {
+            endTest();
+          }
+        } else if (nextWordIndex >= words.length) {
+          endTest();
+        }
+        return;
       }
 
-      // Auto-extend words if near end
-      if (nextIdx >= words.length - 10 && options.mode !== 'words' && options.mode !== 'quote' && options.mode !== 'custom') {
-        setWords(prev => {
-          const extension = buildWords(
-            options.wordListData, options.mode, options.modeValue,
-            options.settings, options.funbox, options.customText
-          ).slice(0, 30);
-          return [...prev, ...extension];
+      // ── Backspace ───────────────────────────────────────
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        if (options.funbox === "no-backspace" || options.settings.confidenceMode) {
+          return; // No backspace in confidence/challenge mode
+        }
+
+        if (typed.length > 0) {
+          typed = typed.slice(0, -1);
+          currentTypedRef.current = typed;
+          setCaretPosition({ wordIndex: currentWordIndex, charIndex: typed.length });
+
+          setWords((prev) => {
+            const updated = [...prev];
+            if (updated[currentWordIndex]) {
+              updated[currentWordIndex] = {
+                ...updated[currentWordIndex],
+                typed,
+                chars: computeCharStates(targetWord, typed),
+              };
+            }
+            return updated;
+          });
+        }
+        return;
+      }
+
+      // ── Printable Chars ─────────────────────────────────
+      if (e.key.length === 1) {
+        e.preventDefault();
+        const nextChar = e.key;
+        const targetChar = targetWord[typed.length];
+        const isCorrect = targetChar === nextChar;
+
+        antiCheat.recordKeystroke(nextChar, isCorrect, performance.now());
+        totalTypedRef.current += 1;
+        setTotalTypedChars(totalTypedRef.current);
+
+        if (isCorrect) {
+          audio.playKeyClick(e.shiftKey);
+        } else {
+          totalErrorsRef.current += 1;
+          setTotalErrors(totalErrorsRef.current);
+          audio.playError();
+
+          // Sudden death challenge: 1 error = reset
+          if (options.funbox === "sudden-death" || options.settings.suddenDeath) {
+            resetTest();
+            return;
+          }
+
+          // Stop on error: prevent advance until correct
+          if (options.funbox === "stop-on-error") {
+            return;
+          }
+        }
+
+        typed += nextChar;
+        currentTypedRef.current = typed;
+        setCaretPosition({ wordIndex: currentWordIndex, charIndex: typed.length });
+
+        setWords((prev) => {
+          const updated = [...prev];
+          if (updated[currentWordIndex]) {
+            updated[currentWordIndex] = {
+              ...updated[currentWordIndex],
+              typed,
+              chars: computeCharStates(targetWord, typed),
+            };
+          }
+          return updated;
         });
       }
-
-      return;
-    }
-
-    // ─── Normal character ────────────────────
-    const typed = currentTypedRef.current + e.key;
-    const expectedChar = currentWord.original[currentTypedRef.current.length];
-    const isCorrectChar = e.key === expectedChar;
-
-    totalTypedRef.current += 1;
-    totalTypedRef.current = totalTypedRef.current;
-    setTotalTypedChars(prev => prev + 1);
-
-    if (isCorrectChar) {
-      correctCharsRef.current += 1;
-      setCorrectChars(prev => prev + 1);
-      audio.playKeyClick();
-    } else {
-      totalErrorsRef.current += 1;
-      setTotalErrors(prev => prev + 1);
-      audio.playError();
-
-      if (options.funbox === 'sudden-death' || options.settings.strictMode) {
-        endTest();
-        return;
-      }
-      if (options.funbox === 'stop-on-error') {
-        return;
-      }
-    }
-
-    currentTypedRef.current = typed;
-    setCaretPosition({ wordIndex: currentWordIndex, charIndex: typed.length });
-
-    setWords(prev => {
-      const updated = [...prev];
-      if (updated[currentWordIndex]) {
-        updated[currentWordIndex] = {
-          ...updated[currentWordIndex],
-          typed,
-          chars: computeCharStates(updated[currentWordIndex].original, typed),
-        };
-      }
-      return updated;
-    });
-  }, [words, currentWordIndex, options, startTest, audio, antiCheat, endTest]);
+    },
+    [
+      words,
+      currentWordIndex,
+      options,
+      startTest,
+      audio,
+      antiCheat,
+      endTest,
+      resetTest,
+    ]
+  );
 
   const handleInput = useCallback(() => {
     // Mobile input handled via keydown events on the hidden input

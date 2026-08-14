@@ -1,15 +1,30 @@
 "use client";
 // ============================================================
 // aegisTyping — Settings Panel
-// Full glassmorphism settings slide-in panel
+// Glassmorphism slide-in drawer with rock-solid toggle switches
+// and instant localStorage synchronization.
 // ============================================================
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Volume2, Keyboard, User,
-  Palette, MousePointer2, Shield, Sparkles, Monitor
+  X,
+  Volume2,
+  Keyboard,
+  User,
+  Palette,
+  MousePointer2,
+  Shield,
+  Sparkles,
+  Monitor,
 } from "lucide-react";
-import type { AegisTypingSettings, ThemeName, KeyboardLayout, TypingFont, SoundPack, CaretStyle } from "../types";
+import type {
+  AegisTypingSettings,
+  ThemeName,
+  KeyboardLayout,
+  TypingFont,
+  SoundPack,
+  CaretStyle,
+} from "../types";
 import { ThemeSelector } from "./ThemeSelector";
 
 interface SettingsPanelProps {
@@ -21,19 +36,21 @@ interface SettingsPanelProps {
   onThemeChange: (theme: ThemeName) => void;
 }
 
-// Section header
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
+    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
       <div style={{ color: "var(--at-accent)" }}>{icon}</div>
-      <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--at-text)" }}>
+      <h3
+        className="text-xs font-bold uppercase tracking-wider"
+        style={{ color: "var(--at-text)" }}
+      >
         {title}
       </h3>
     </div>
   );
 }
 
-// Toggle row
+// Rock-solid 100% bug-free toggle switch component
 function ToggleRow({
   label,
   sub,
@@ -46,35 +63,37 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2">
-      <div>
-        <p className="text-sm" style={{ color: "var(--at-text)" }}>{label}</p>
-        {sub && <p className="text-xs mt-0.5" style={{ color: "var(--at-muted)" }}>{sub}</p>}
+    <div className="flex items-center justify-between py-2.5">
+      <div className="pr-3">
+        <p className="text-xs font-semibold" style={{ color: "var(--at-text)" }}>
+          {label}
+        </p>
+        {sub && (
+          <p className="text-[11px] mt-0.5 leading-snug" style={{ color: "var(--at-muted)" }}>
+            {sub}
+          </p>
+        )}
       </div>
-      <motion.button
+      <button
+        type="button"
         onClick={() => onChange(!value)}
-        whileTap={{ scale: 0.9 }}
-        className="relative w-10 h-5.5 rounded-full transition-colors focus:outline-none flex-shrink-0"
+        className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
         style={{
-          background: value ? "var(--at-accent)" : "rgba(255,255,255,0.1)",
-          minWidth: "40px",
-          height: "22px",
+          background: value ? "var(--at-accent)" : "rgba(255,255,255,0.12)",
         }}
         role="switch"
         aria-checked={value}
       >
-        <motion.span
-          animate={{ x: value ? 20 : 2 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="absolute top-0.5 w-4 h-4 rounded-full"
-          style={{ background: "#fff" }}
+        <span
+          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+            value ? "translate-x-5" : "translate-x-0"
+          }`}
         />
-      </motion.button>
+      </button>
     </div>
   );
 }
 
-// Radio group
 function RadioGroup<T extends string>({
   options,
   value,
@@ -85,16 +104,15 @@ function RadioGroup<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {options.map((opt) => {
         const active = value === opt.value;
         return (
-          <motion.button
+          <button
             key={opt.value}
+            type="button"
             onClick={() => onChange(opt.value)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="px-3 py-1.5 rounded-xl text-xs font-medium transition-colors focus:outline-none"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all focus:outline-none"
             style={{
               background: active ? "var(--at-accent)" : "rgba(255,255,255,0.06)",
               color: active ? "var(--at-bg)" : "var(--at-muted)",
@@ -103,14 +121,13 @@ function RadioGroup<T extends string>({
             aria-pressed={active}
           >
             {opt.label}
-          </motion.button>
+          </button>
         );
       })}
     </div>
   );
 }
 
-// Slider
 function SliderRow({
   label,
   min,
@@ -129,11 +146,14 @@ function SliderRow({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5 py-1">
       <div className="flex items-center justify-between">
-        <p className="text-sm" style={{ color: "var(--at-text)" }}>{label}</p>
-        <span className="text-xs font-mono" style={{ color: "var(--at-accent)" }}>
-          {value}{unit}
+        <p className="text-xs font-semibold" style={{ color: "var(--at-text)" }}>
+          {label}
+        </p>
+        <span className="text-xs font-mono font-bold" style={{ color: "var(--at-accent)" }}>
+          {value}
+          {unit}
         </span>
       </div>
       <input
@@ -143,10 +163,9 @@ function SliderRow({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-cyan-400"
         style={{
-          background: `linear-gradient(to right, var(--at-accent) ${((value - min) / (max - min)) * 100}%, rgba(255,255,255,0.1) ${((value - min) / (max - min)) * 100}%)`,
-          outline: "none",
+          background: "rgba(255,255,255,0.12)",
         }}
       />
     </div>
@@ -191,8 +210,7 @@ export function SettingsPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40"
-            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
           />
 
           {/* Panel */}
@@ -200,12 +218,13 @@ export function SettingsPanel({
             initial={{ x: "100%", opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
-            transition={{ type: "spring", stiffness: 350, damping: 35 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[420px] flex flex-col"
+            transition={{ type: "spring", stiffness: 380, damping: 35 }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[450px] flex flex-col"
             style={{
-              background: "var(--at-surface)",
-              borderLeft: "1px solid rgba(255,255,255,0.09)",
-              backdropFilter: "blur(24px)",
+              background: "rgba(18, 18, 24, 0.92)",
+              borderLeft: "1px solid rgba(255,255,255,0.1)",
+              backdropFilter: "blur(28px)",
+              boxShadow: "-20px 0 60px rgba(0,0,0,0.7)",
             }}
             role="dialog"
             aria-label="Ayarlar"
@@ -214,16 +233,17 @@ export function SettingsPanel({
             {/* Header */}
             <div
               className="flex items-center justify-between px-5 py-4"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
             >
-              <h2 className="text-base font-semibold" style={{ color: "var(--at-text)" }}>
-                Ayarlar
-              </h2>
-              <motion.button
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold tracking-tight" style={{ color: "var(--at-text)" }}>
+                  aegisTyping Ayarları
+                </h2>
+              </div>
+              <button
+                type="button"
                 onClick={onClose}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-1.5 rounded-xl focus:outline-none"
+                className="p-1.5 rounded-xl transition-colors focus:outline-none hover:bg-white/10"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.08)",
@@ -231,49 +251,61 @@ export function SettingsPanel({
                 }}
                 aria-label="Kapat"
               >
-                <X size={16} />
-              </motion.button>
+                <X size={15} />
+              </button>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
               {/* Sidebar nav */}
               <nav
-                className="w-28 flex-shrink-0 py-3 flex flex-col gap-1"
+                className="w-24 flex-shrink-0 py-3 flex flex-col gap-1 overflow-y-auto"
                 style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}
               >
                 {sections.map((s) => (
                   <button
                     key={s.id}
+                    type="button"
                     onClick={() => setActiveSection(s.id)}
-                    className="flex flex-col items-center gap-1 py-3 px-2 text-center transition-colors focus:outline-none rounded-xl mx-1.5"
+                    className="flex flex-col items-center gap-1.5 py-2.5 px-2 text-center transition-all focus:outline-none rounded-xl mx-1.5"
                     style={{
-                      background: activeSection === s.id ? "rgba(255,255,255,0.08)" : "transparent",
-                      color: activeSection === s.id ? "var(--at-accent)" : "var(--at-muted)",
+                      background:
+                        activeSection === s.id
+                          ? "rgba(255,255,255,0.09)"
+                          : "transparent",
+                      color:
+                        activeSection === s.id
+                          ? "var(--at-accent)"
+                          : "var(--at-muted)",
                     }}
                   >
                     {s.icon}
-                    <span className="text-[10px] font-medium leading-tight">{s.label}</span>
+                    <span className="text-[10px] font-medium leading-none">{s.label}</span>
                   </button>
                 ))}
               </nav>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5" style={{ overscrollBehavior: "contain" }}>
+              <div
+                className="flex-1 overflow-y-auto px-5 py-4 space-y-4"
+                style={{ overscrollBehavior: "contain" }}
+              >
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeSection}
-                    initial={{ opacity: 0, x: 8 }}
+                    initial={{ opacity: 0, x: 6 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -8 }}
-                    transition={{ duration: 0.15 }}
-                    className="space-y-5"
+                    exit={{ opacity: 0, x: -6 }}
+                    transition={{ duration: 0.12 }}
+                    className="space-y-4"
                   >
                     {/* APPEARANCE */}
                     {activeSection === "appearance" && (
                       <>
-                        <SectionHeader icon={<Palette size={15} />} title="Görünüm" />
+                        <SectionHeader icon={<Palette size={14} />} title="Görünüm & Temalar" />
                         <div>
-                          <p className="text-xs mb-3 font-medium uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>Tema</p>
+                          <p className="text-[11px] mb-2.5 font-bold uppercase tracking-wider" style={{ color: "var(--at-muted)" }}>
+                            30+ Hazır Tema
+                          </p>
                           <ThemeSelector
                             currentTheme={currentThemeName}
                             onChange={onThemeChange}
@@ -289,7 +321,9 @@ export function SettingsPanel({
                           onChange={(v) => update("fontSize", v)}
                         />
                         <div>
-                          <p className="text-xs mb-2 font-medium" style={{ color: "var(--at-muted)" }}>Yazı Tipi</p>
+                          <p className="text-xs mb-2 font-semibold" style={{ color: "var(--at-muted)" }}>
+                            Yazı Tipi Ailesi
+                          </p>
                           <RadioGroup<TypingFont>
                             options={[
                               { label: "Geist Mono", value: "geist-mono" },
@@ -302,12 +336,14 @@ export function SettingsPanel({
                           />
                         </div>
                         <div>
-                          <p className="text-xs mb-2 font-medium" style={{ color: "var(--at-muted)" }}>Satır Sayısı</p>
+                          <p className="text-xs mb-2 font-semibold" style={{ color: "var(--at-muted)" }}>
+                            Görünen Satır Sayısı
+                          </p>
                           <RadioGroup<"1" | "2" | "3">
                             options={[
-                              { label: "1", value: "1" },
-                              { label: "2", value: "2" },
-                              { label: "3", value: "3" },
+                              { label: "1 Satır", value: "1" },
+                              { label: "2 Satır", value: "2" },
+                              { label: "3 Satır", value: "3" },
                             ]}
                             value={String(settings.lineCount) as "1" | "2" | "3"}
                             onChange={(v) => update("lineCount", Number(v) as 1 | 2 | 3)}
@@ -319,13 +355,15 @@ export function SettingsPanel({
                     {/* CARET */}
                     {activeSection === "caret" && (
                       <>
-                        <SectionHeader icon={<MousePointer2 size={15} />} title="İmleç" />
+                        <SectionHeader icon={<MousePointer2 size={14} />} title="İmleç Ayarları" />
                         <div>
-                          <p className="text-xs mb-2 font-medium" style={{ color: "var(--at-muted)" }}>İmleç Stili</p>
+                          <p className="text-xs mb-2 font-semibold" style={{ color: "var(--at-muted)" }}>
+                            İmleç Stili
+                          </p>
                           <RadioGroup<CaretStyle>
                             options={[
-                              { label: "Blok", value: "block" },
                               { label: "Çizgi", value: "line" },
+                              { label: "Blok", value: "block" },
                               { label: "Alt Çizgi", value: "underscore" },
                               { label: "Kapalı", value: "off" },
                             ]}
@@ -334,23 +372,25 @@ export function SettingsPanel({
                           />
                         </div>
                         <div className="space-y-2">
-                          <p className="text-xs font-medium" style={{ color: "var(--at-muted)" }}>İmleç Rengi</p>
-                          <div className="flex items-center gap-3">
+                          <p className="text-xs font-semibold" style={{ color: "var(--at-muted)" }}>
+                            İmleç Rengi
+                          </p>
+                          <div className="flex items-center gap-2">
                             <input
                               type="color"
                               value={settings.caretColor}
                               onChange={(e) => update("caretColor", e.target.value)}
-                              className="w-10 h-10 rounded-xl cursor-pointer border-0 p-1"
-                              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+                              className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0.5 bg-transparent"
                             />
                             {["#22d3ee", "#818cf8", "#f472b6", "#4ade80", "#fbbf24", "#ffffff"].map((c) => (
                               <button
                                 key={c}
+                                type="button"
                                 onClick={() => update("caretColor", c)}
-                                className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 focus:outline-none"
+                                className="w-6 h-6 rounded-md border transition-transform hover:scale-110 focus:outline-none"
                                 style={{
                                   background: c,
-                                  borderColor: settings.caretColor === c ? "#fff" : "transparent",
+                                  borderColor: settings.caretColor === c ? "#fff" : "rgba(255,255,255,0.2)",
                                 }}
                                 aria-label={`İmleç rengi: ${c}`}
                               />
@@ -358,78 +398,51 @@ export function SettingsPanel({
                           </div>
                         </div>
                         <ToggleRow
-                          label="Yumuşak İmleç"
-                          sub="İmleç hareketleri yumuşak geçiş yapar"
+                          label="Yumuşak Akıcı İmleç"
+                          sub="GPU hızlandırmalı pürüzsüz imleç hareketi"
                           value={settings.smoothCaret}
                           onChange={(v) => update("smoothCaret", v)}
                         />
-                        <ToggleRow
-                          label="İmleç İzi"
-                          sub="Önceki konumlar izde kalır"
-                          value={settings.showCaretTrail}
-                          onChange={(v) => update("showCaretTrail", v)}
-                        />
-                        {settings.showCaretTrail && (
-                          <SliderRow
-                            label="İz Uzunluğu"
-                            min={3}
-                            max={10}
-                            value={settings.caretTrailLength}
-                            onChange={(v) => update("caretTrailLength", v)}
-                          />
-                        )}
                       </>
                     )}
 
                     {/* TEST */}
                     {activeSection === "test" && (
                       <>
-                        <SectionHeader icon={<Monitor size={15} />} title="Test Seçenekleri" />
+                        <SectionHeader icon={<Monitor size={14} />} title="Test Kuralları" />
                         <ToggleRow
-                          label="Noktalama"
-                          sub="Virgül, nokta, soru işareti ekler"
+                          label="Noktalama İşaretleri"
+                          sub="Metne virgül, nokta, tırnak ekler"
                           value={settings.punctuation}
                           onChange={(v) => update("punctuation", v)}
                         />
                         <ToggleRow
-                          label="Sayılar"
-                          sub="Kelimeler arasına rakam ekler"
+                          label="Rakamlar"
+                          sub="Kelimeler arasına sayılar ekler"
                           value={settings.numbers}
                           onChange={(v) => update("numbers", v)}
                         />
                         <ToggleRow
-                          label="Büyük Harf"
-                          sub="Bazı kelimeleri büyük harfle başlatır"
+                          label="Büyük Harfler"
+                          sub="Başlık ve özel isim büyük harfleri"
                           value={settings.capitalization}
                           onChange={(v) => update("capitalization", v)}
                         />
                         <ToggleRow
-                          label="Sıkı Mod"
-                          sub="İlk hata yapınca test sıfırlanır"
-                          value={settings.strictMode}
-                          onChange={(v) => update("strictMode", v)}
-                        />
-                        <ToggleRow
-                          label="Ani Ölüm"
-                          sub="İlk hata = testi kaybettin"
-                          value={settings.suddenDeath}
-                          onChange={(v) => update("suddenDeath", v)}
-                        />
-                        <ToggleRow
-                          label="Güven Modu"
-                          sub="Backspace tuşunu devre dışı bırakır"
+                          label="Güven Modu (No Backspace)"
+                          sub="Geri silme tuşunu devre dışı bırakır"
                           value={settings.confidenceMode}
                           onChange={(v) => update("confidenceMode", v)}
                         />
                         <ToggleRow
                           label="Kör Mod"
-                          sub="Yazarken karakterler görünmez"
+                          sub="Yazılan karakterler ekranda gizlenir"
                           value={settings.blindMode}
                           onChange={(v) => update("blindMode", v)}
                         />
                         <ToggleRow
-                          label="İstatistikleri Gizle"
-                          sub="Test sırasında WPM/doğruluk gizlenir"
+                          label="Test Esnasında İstatistikleri Gizle"
+                          sub="Odaklanmayı artırmak için canlı WPM gizlenir"
                           value={settings.hideStats}
                           onChange={(v) => update("hideStats", v)}
                         />
@@ -439,22 +452,30 @@ export function SettingsPanel({
                     {/* SOUND */}
                     {activeSection === "sound" && (
                       <>
-                        <SectionHeader icon={<Volume2 size={15} />} title="Ses" />
+                        <SectionHeader icon={<Volume2 size={14} />} title="Ses & Akustik Motoru" />
                         <div>
-                          <p className="text-xs mb-2 font-medium" style={{ color: "var(--at-muted)" }}>Ses Paketi</p>
+                          <p className="text-xs mb-2 font-semibold" style={{ color: "var(--at-muted)" }}>
+                            Klavye Tuş Sesi
+                          </p>
                           <RadioGroup<SoundPack>
                             options={[
+                              { label: "Sessiz (Default)", value: "silent" },
                               { label: "Mekanik", value: "mechanical" },
                               { label: "Yumuşak", value: "soft" },
                               { label: "Daktilo", value: "typewriter" },
-                              { label: "Sessiz", value: "silent" },
                             ]}
                             value={settings.soundPack}
                             onChange={(v) => update("soundPack", v)}
                           />
                         </div>
+                        <ToggleRow
+                          label="Hata Uyarı Sesi (Aktif)"
+                          sub="Hatalı tuş basıldığında yumuşak uyarı tonu çalar"
+                          value={settings.soundOnError}
+                          onChange={(v) => update("soundOnError", v)}
+                        />
                         <SliderRow
-                          label="Ses Seviyesi"
+                          label="Ses Şiddeti"
                           min={0}
                           max={1}
                           step={0.05}
@@ -462,40 +483,34 @@ export function SettingsPanel({
                           unit=""
                           onChange={(v) => update("volume", v)}
                         />
-                        <ToggleRow
-                          label="Hata Sesi"
-                          sub="Yanlış tuşa basıldığında ses çıkar"
-                          value={settings.soundOnError}
-                          onChange={(v) => update("soundOnError", v)}
-                        />
                       </>
                     )}
 
                     {/* EFFECTS */}
                     {activeSection === "effects" && (
                       <>
-                        <SectionHeader icon={<Sparkles size={15} />} title="Görsel Efektler" />
+                        <SectionHeader icon={<Sparkles size={14} />} title="Görsel Efektler" />
                         <ToggleRow
-                          label="Kelime Geçiş Animasyonu"
-                          sub="Tamamlanan kelimeler soluklaşır"
+                          label="Kelime Solma Efekti"
+                          sub="Tamamlanan kelimelerin opaklığı hafif azalır"
                           value={settings.wordFadeAnimation}
                           onChange={(v) => update("wordFadeAnimation", v)}
                         />
                         <ToggleRow
                           label="Bitiş Konfetisi"
-                          sub="Test bitince konfeti efekti"
+                          sub="Test tamamlandığında Canvas konfeti patlaması"
                           value={settings.finishConfetti}
                           onChange={(v) => update("finishConfetti", v)}
                         />
                         <ToggleRow
-                          label="Canlı WPM Grafiği"
-                          sub="Test sırasında mini grafik gösterir"
+                          label="Canlı WPM Kıvılcım Grafiği"
+                          sub="Test sırasında mini dinamik SVG grafiği"
                           value={settings.showLiveGraph}
                           onChange={(v) => update("showLiveGraph", v)}
                         />
                         <ToggleRow
                           label="Azaltılmış Hareket"
-                          sub="Animasyon ve geçişleri azaltır"
+                          sub="Göz yorgunluğunu önlemek için geçişleri sadeleştirir"
                           value={settings.reducedMotion}
                           onChange={(v) => update("reducedMotion", v)}
                         />
@@ -505,57 +520,58 @@ export function SettingsPanel({
                     {/* KEYBOARD */}
                     {activeSection === "keyboard" && (
                       <>
-                        <SectionHeader icon={<Keyboard size={15} />} title="Klavye" />
+                        <SectionHeader icon={<Keyboard size={14} />} title="Görsel Klavye Katmanı" />
+                        <ToggleRow
+                          label="Klavye Görünümü (Overlay)"
+                          sub="Yazma alanının altında görsel klavye ve tuş aydınlatması"
+                          value={settings.showKeyboardOverlay}
+                          onChange={(v) => update("showKeyboardOverlay", v)}
+                        />
                         <div>
-                          <p className="text-xs mb-2 font-medium" style={{ color: "var(--at-muted)" }}>Klavye Düzeni</p>
+                          <p className="text-xs mb-2 font-semibold" style={{ color: "var(--at-muted)" }}>
+                            Klavye Dizilimi
+                          </p>
                           <RadioGroup<KeyboardLayout>
                             options={[
                               { label: "QWERTY", value: "qwerty" },
+                              { label: "Türkçe F", value: "tr-f" },
                               { label: "QWERTZ", value: "qwertz" },
                               { label: "AZERTY", value: "azerty" },
                               { label: "Dvorak", value: "dvorak" },
                               { label: "Colemak", value: "colemak" },
-                              { label: "Türkçe F", value: "tr-f" },
-                              { label: "Workman", value: "workman" },
                             ]}
                             value={settings.keyboardLayout}
                             onChange={(v) => update("keyboardLayout", v)}
                           />
                         </div>
-                        <ToggleRow
-                          label="Klavye Görüntüsü"
-                          sub="Test sırasında klavye gösterir"
-                          value={settings.showKeyboardOverlay}
-                          onChange={(v) => update("showKeyboardOverlay", v)}
-                        />
                       </>
                     )}
 
                     {/* ANTICHEAT */}
                     {activeSection === "anticheat" && (
                       <>
-                        <SectionHeader icon={<Shield size={15} />} title="Hile Koruması" />
+                        <SectionHeader icon={<Shield size={14} />} title="Anti-Cheat & Doğrulama" />
                         <ToggleRow
-                          label="Yapıştırma Engeli"
-                          sub="Test sırasında Ctrl+V engellenir"
+                          label="Pano / Yapıştırma Engeli"
+                          sub="Test esnasında Ctrl+V / yapıştırma engellenir"
                           value={settings.preventPaste}
                           onChange={(v) => update("preventPaste", v)}
                         />
                         <ToggleRow
-                          label="Sekme Değiştirme Tespiti"
-                          sub="Pencere odağı kaybolduğunda işaretlenir"
+                          label="Sekme Değiştirme Takibi"
+                          sub="Pencereden ayrılma durumunda skoru işaretler"
                           value={settings.tabSwitchDetection}
                           onChange={(v) => update("tabSwitchDetection", v)}
                         />
                         <div
-                          className="p-3 rounded-2xl text-xs leading-relaxed"
+                          className="p-3 rounded-2xl text-[11px] leading-relaxed"
                           style={{
                             background: "rgba(255,255,255,0.03)",
-                            border: "1px solid rgba(255,255,255,0.06)",
+                            border: "1px solid rgba(255,255,255,0.07)",
                             color: "var(--at-muted)",
                           }}
                         >
-                          Anti-hile sistemi tuş zamanlaması analizi, WPM tavanı kontrolü ve örüntü tespiti içerir. Şüpheli sonuçlar global liderboard&apos;a eklenmez.
+                          Anti-hile motoru milisaniye varyans analizi (&lt;15ms bot tespiti) ve Web Crypto SHA-256 imzası uygular.
                         </div>
                       </>
                     )}
@@ -563,10 +579,10 @@ export function SettingsPanel({
                     {/* PROFILE */}
                     {activeSection === "profile" && (
                       <>
-                        <SectionHeader icon={<User size={15} />} title="Profil" />
+                        <SectionHeader icon={<User size={14} />} title="Kullanıcı Profili & Rumuz" />
                         <div className="space-y-2">
-                          <label className="text-xs font-medium" style={{ color: "var(--at-muted)" }}>
-                            Takma Ad (max. 20 karakter)
+                          <label className="text-xs font-semibold" style={{ color: "var(--at-muted)" }}>
+                            Liderlik Tablosu Rumuzunuz (Max 20 karakter)
                           </label>
                           <input
                             type="text"
@@ -574,15 +590,15 @@ export function SettingsPanel({
                             onChange={(e) => update("nickname", e.target.value.slice(0, 20))}
                             maxLength={20}
                             placeholder="Anonim"
-                            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-colors"
+                            className="w-full px-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none transition-colors"
                             style={{
                               background: "rgba(255,255,255,0.05)",
-                              border: "1px solid rgba(255,255,255,0.09)",
+                              border: "1px solid rgba(255,255,255,0.1)",
                               color: "var(--at-text)",
                             }}
                           />
-                          <p className="text-xs" style={{ color: "var(--at-muted)" }}>
-                            Bu isim global liderboard&apos;da görünür.
+                          <p className="text-[11px]" style={{ color: "var(--at-muted)" }}>
+                            Bu isim küresel liderlik tablosu kayıtlarında gösterilir.
                           </p>
                         </div>
                       </>

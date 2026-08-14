@@ -304,7 +304,7 @@ export function LeaderboardPanel({
               boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
             }}
             role="dialog"
-            aria-label="Liderboard"
+            aria-label="Liderlik Tablosu"
             aria-modal="true"
           >
             {/* Header */}
@@ -315,7 +315,7 @@ export function LeaderboardPanel({
               <div className="flex items-center gap-2">
                 <Trophy size={18} style={{ color: "var(--at-accent)" }} />
                 <h2 className="text-base font-semibold" style={{ color: "var(--at-text)" }}>
-                  Liderboard
+                  Liderlik Tablosu
                 </h2>
               </div>
               <motion.button

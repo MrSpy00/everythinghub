@@ -1,7 +1,8 @@
 "use client";
 // ============================================================
 // aegisTyping — Typing Arena
-// Core visual component where the typing happens
+// GPU-accelerated smooth word & character renderer
+// No overlapping center text artifacts. Pure liquid glass.
 // ============================================================
 import React, { useRef, useEffect, useMemo } from "react";
 import type {
@@ -30,22 +31,23 @@ interface TypingArenaProps {
   funbox: Funbox;
   wordFadeAnimation: boolean;
   reducedMotion: boolean;
-  onKeyDown: (e: KeyboardEvent) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
   onFocus?: () => void;
   onBlur?: () => void;
   inputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const FONT_MAP: Record<TypingFont, string> = {
-  "geist-mono": "var(--font-geist-mono), 'Courier New', monospace",
-  "jetbrains-mono": "'JetBrains Mono', 'Courier New', monospace",
-  "fira-code": "'Fira Code', 'Courier New', monospace",
-  courier: "'Courier New', Courier, monospace",
+  "geist-mono": 'var(--font-geist-mono, "Geist Mono", monospace)',
+  "jetbrains-mono": '"JetBrains Mono", monospace',
+  "fira-code": '"Fira Code", monospace',
+  courier: '"Courier New", monospace',
 };
 
 const LINE_HEIGHT_MULTIPLIER = 1.75;
 
-function CharSpan({
+// Individual Character with state-based styling
+const CharSpan = React.memo(function CharSpan({
   char,
   state,
   blindMode,
@@ -54,36 +56,42 @@ function CharSpan({
   state: "pending" | "correct" | "incorrect" | "extra";
   blindMode: boolean;
 }) {
-  const color = useMemo(() => {
-    if (blindMode && (state === "correct" || state === "incorrect")) {
-      return "transparent";
-    }
-    switch (state) {
-      case "correct":
-        return "var(--at-correct)";
-      case "incorrect":
-        return "var(--at-error)";
-      case "extra":
-        return "#dc2626";
-      default:
-        return "var(--at-pending)";
-    }
-  }, [state, blindMode]);
+  let color = "var(--at-pending, rgba(255,255,255,0.35))";
+  let bg = "transparent";
+
+  if (blindMode && (state === "correct" || state === "incorrect")) {
+    color = "transparent";
+  } else if (state === "correct") {
+    color = "var(--at-correct, #22c55e)";
+  } else if (state === "incorrect") {
+    color = "var(--at-error, #ef4444)";
+    bg = "rgba(239, 68, 68, 0.18)";
+  } else if (state === "extra") {
+    color = "#f87171";
+    bg = "rgba(239, 68, 68, 0.25)";
+  }
 
   return (
     <span
+      className="inline-block transition-colors duration-75 rounded-[2px]"
       style={{
         color,
-        position: "relative",
-        transition: blindMode ? "none" : "color 80ms ease",
+        background: bg,
+        letterSpacing: "0.02em",
+        textShadow:
+          state === "correct"
+            ? "0 0 10px rgba(34, 197, 94, 0.35)"
+            : state === "incorrect"
+            ? "0 0 10px rgba(239, 68, 68, 0.4)"
+            : "none",
       }}
     >
-      {char === " " ? "\u00a0" : char}
+      {char}
     </span>
   );
-}
+});
 
-export const TypingArena = React.memo(function TypingArena({
+export function TypingArena({
   words,
   currentWordIndex,
   caretPosition,
@@ -101,152 +109,102 @@ export const TypingArena = React.memo(function TypingArena({
   onKeyDown,
   onFocus,
   onBlur,
-  inputRef: externalInputRef,
+  inputRef,
 }: TypingArenaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const internalInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = externalInputRef ?? internalInputRef;
   const caretRef = useRef<HTMLDivElement>(null);
 
-  // ─── Focus management ──────────────────────────────────────
+  // Auto focus input on mount & click
+  useEffect(() => {
+    inputRef?.current?.focus();
+  }, [inputRef]);
+
+  // Keep hidden input focused when typing anywhere
   const handleContainerClick = () => {
-    inputRef.current?.focus();
+    inputRef?.current?.focus();
   };
 
-  // ─── Keyboard events ───────────────────────────────────────
+  // ─── Caret Positioning ──────────────────────────────────
   useEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
+    if (!containerRef.current || !caretRef.current || caretStyle === "off") return;
 
-    const handler = (e: KeyboardEvent) => {
-      // Prevent browser shortcuts during test
-      if (phase === "running" || phase === "idle") {
-        if (e.key === "Tab") {
-          e.preventDefault();
-        }
+    const currentWordEl = containerRef.current.querySelector(
+      `[data-word-index="${caretPosition.wordIndex}"]`
+    ) as HTMLElement | null;
+
+    if (!currentWordEl) return;
+
+    const charSpans = currentWordEl.querySelectorAll("span");
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    let x = 0;
+    let y = 0;
+
+    if (caretPosition.charIndex < charSpans.length) {
+      const charEl = charSpans[caretPosition.charIndex] as HTMLElement;
+      if (charEl) {
+        const charRect = charEl.getBoundingClientRect();
+        x = charRect.left - containerRect.left;
+        y = charRect.top - containerRect.top;
       }
-      onKeyDown(e);
-    };
-
-    el.addEventListener("keydown", handler);
-    return () => el.removeEventListener("keydown", handler);
-  }, [onKeyDown, phase, inputRef]);
-
-  // ─── Auto-focus when test starts ───────────────────────────
-  useEffect(() => {
-    if (phase === "idle" || phase === "running") {
-      inputRef.current?.focus({ preventScroll: true });
-    }
-  }, [phase, inputRef]);
-
-  // ─── Caret DOM positioning ─────────────────────────────────
-  useEffect(() => {
-    if (caretStyle === "off" || !containerRef.current || !caretRef.current) return;
-
-    const wordEls = containerRef.current.querySelectorAll<HTMLElement>("[data-word-index]");
-    const wordEl = wordEls[caretPosition.wordIndex];
-    if (!wordEl) return;
-
-    const charEls = wordEl.querySelectorAll<HTMLElement>("span");
-    const charEl = charEls[caretPosition.charIndex];
-
-    let left: number;
-    let top: number;
-
-    if (charEl) {
-      const charRect = charEl.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      left = charRect.left - containerRect.left;
-      top = charRect.top - containerRect.top;
-    } else if (charEls.length > 0) {
-      // End of word
-      const lastChar = charEls[charEls.length - 1];
-      const lastRect = lastChar.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      left = lastRect.right - containerRect.left;
-      top = lastRect.top - containerRect.top;
+    } else if (charSpans.length > 0) {
+      const lastCharEl = charSpans[charSpans.length - 1] as HTMLElement;
+      const lastCharRect = lastCharEl.getBoundingClientRect();
+      x = lastCharRect.right - containerRect.left;
+      y = lastCharRect.top - containerRect.top;
     } else {
-      const wordRect = wordEl.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      left = wordRect.left - containerRect.left;
-      top = wordRect.top - containerRect.top;
+      const wordRect = currentWordEl.getBoundingClientRect();
+      x = wordRect.left - containerRect.left;
+      y = wordRect.top - containerRect.top;
     }
 
-    const caret = caretRef.current;
-    caret.style.transform = `translate(${left}px, ${top}px)`;
-  }, [caretPosition, caretStyle, words]);
+    caretRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  }, [caretPosition, words, caretStyle]);
 
-  // ─── Funbox transforms ─────────────────────────────────────
-  const containerStyle = useMemo(() => {
-    const base: React.CSSProperties = {
-      fontFamily: FONT_MAP[fontFamily],
-      fontSize: fontSize,
-      lineHeight: LINE_HEIGHT_MULTIPLIER,
-      direction: rtl ? "rtl" : "ltr",
-    };
-
-    if (funbox === "mirror") {
-      base.transform = "scaleX(-1)";
-    }
-
-    return base;
-  }, [fontFamily, fontSize, rtl, funbox]);
-
-  // ─── Visible word range (windowing) ────────────────────────
-  const { startIdx, endIdx } = useMemo(() => {
-    const wordsPerLine = 8;
-    const visibleLines = lineCount + 1;
-    const currentLine = Math.floor(currentWordIndex / wordsPerLine);
-    const start = Math.max(0, (currentLine - 1) * wordsPerLine);
-    const end = Math.min(words.length, start + visibleLines * wordsPerLine + wordsPerLine);
-    return { startIdx: start, endIdx: end };
-  }, [currentWordIndex, lineCount, words.length]);
-
-  const visibleWords = words.slice(startIdx, endIdx);
-
-  // ─── Caret dimensions ──────────────────────────────────────
+  // ─── Caret Styling ──────────────────────────────────────
   const caretDimensions = useMemo(() => {
+    const charH = fontSize * LINE_HEIGHT_MULTIPLIER;
     switch (caretStyle) {
-      case "block":
-        return {
-          width: `${fontSize * 0.6}px`,
-          height: `${fontSize * LINE_HEIGHT_MULTIPLIER}px`,
-          opacity: 0.75,
-          borderRadius: "2px",
-          background: caretColor,
-          border: "none",
-        };
       case "line":
-        return {
-          width: "2px",
-          height: `${fontSize * LINE_HEIGHT_MULTIPLIER}px`,
-          background: caretColor,
-          borderRadius: "1px",
-          opacity: 1,
-        };
+        return { width: "2.5px", height: `${charH * 0.75}px`, background: caretColor, borderRadius: "2px" };
+      case "block":
+        return { width: `${fontSize * 0.6}px`, height: `${charH * 0.8}px`, background: caretColor, opacity: 0.35, borderRadius: "3px" };
       case "underscore":
-        return {
-          width: `${fontSize * 0.6}px`,
-          height: "2px",
-          background: caretColor,
-          marginTop: `${fontSize * LINE_HEIGHT_MULTIPLIER - 2}px`,
-          borderRadius: "1px",
-        };
+        return { width: `${fontSize * 0.6}px`, height: "3px", background: caretColor, marginTop: `${charH * 0.75}px`, borderRadius: "2px" };
       default:
-        return { display: "none" as const };
+        return { width: "0", height: "0" };
     }
   }, [caretStyle, caretColor, fontSize]);
 
+  // ─── Dynamic Font and Container Styles ───────────────────
+  const containerStyle = useMemo(
+    () => ({
+      fontSize: `${fontSize}px`,
+      lineHeight: `${fontSize * LINE_HEIGHT_MULTIPLIER}px`,
+      fontFamily: FONT_MAP[fontFamily],
+      direction: rtl ? ("rtl" as const) : ("ltr" as const),
+      transform: funbox === "mirror" ? "scaleX(-1)" : "none",
+    }),
+    [fontSize, fontFamily, rtl, funbox]
+  );
+
+  // Windowed visible slice around active word
+  const visibleWords = useMemo(() => {
+    const start = Math.max(0, currentWordIndex - 2);
+    const end = Math.min(words.length, start + 75);
+    return {
+      slice: words.slice(start, end),
+      startIdx: start,
+    };
+  }, [words, currentWordIndex]);
+
   return (
     <div
-      className="relative select-none cursor-text overflow-hidden"
+      className="relative select-none cursor-text overflow-hidden py-2"
       onClick={handleContainerClick}
       style={{
-        height: `${fontSize * LINE_HEIGHT_MULTIPLIER * lineCount + 16}px`,
-        maskImage:
-          "linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%)",
-        WebkitMaskImage:
-          "linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%)",
+        minHeight: `${fontSize * LINE_HEIGHT_MULTIPLIER * lineCount + 20}px`,
+        maxHeight: `${fontSize * LINE_HEIGHT_MULTIPLIER * (lineCount + 1) + 20}px`,
       }}
       aria-label="Yazma alanı"
       role="textbox"
@@ -254,8 +212,8 @@ export const TypingArena = React.memo(function TypingArena({
     >
       {/* Hidden input for keyboard capture (mobile-friendly) */}
       <input
-        ref={inputRef as React.RefObject<HTMLInputElement>}
-        className="absolute opacity-0 w-0 h-0 left-0 top-0"
+        ref={inputRef}
+        className="absolute opacity-0 w-0 h-0 left-0 top-0 pointer-events-none"
         aria-hidden="true"
         autoComplete="off"
         autoCorrect="off"
@@ -263,7 +221,7 @@ export const TypingArena = React.memo(function TypingArena({
         spellCheck={false}
         inputMode="text"
         tabIndex={0}
-        readOnly
+        onKeyDown={onKeyDown}
         onFocus={onFocus}
         onBlur={onBlur}
         onPaste={(e) => e.preventDefault()}
@@ -271,25 +229,26 @@ export const TypingArena = React.memo(function TypingArena({
         onCut={(e) => e.preventDefault()}
       />
 
-      {/* Word display */}
+      {/* Word display container */}
       <div
         ref={containerRef}
-        className="relative flex flex-wrap gap-x-3 content-start"
+        className="relative flex flex-wrap gap-x-3 content-start transition-transform duration-150"
         style={containerStyle}
       >
         {/* Caret */}
         {caretStyle !== "off" && (
           <div
             ref={caretRef}
-            className="absolute top-0 left-0 pointer-events-none z-10"
+            className="absolute top-0 left-0 pointer-events-none z-20"
             style={{
               ...caretDimensions,
+              boxShadow: `0 0 10px ${caretColor}`,
               transition:
                 smoothCaret && !reducedMotion
-                  ? "transform 60ms cubic-bezier(0.16, 1, 0.3, 1)"
+                  ? "transform 75ms cubic-bezier(0.16, 1, 0.3, 1)"
                   : "none",
               animation:
-                caretStyle === "line" && !reducedMotion
+                caretStyle === "line" && phase === "idle"
                   ? "aegis-caret-blink 1s step-end infinite"
                   : "none",
             }}
@@ -297,8 +256,8 @@ export const TypingArena = React.memo(function TypingArena({
         )}
 
         {/* Words */}
-        {visibleWords.map((word, relIdx) => {
-          const absIdx = startIdx + relIdx;
+        {visibleWords.slice.map((word, relIdx) => {
+          const absIdx = visibleWords.startIdx + relIdx;
           const isActive = absIdx === currentWordIndex;
           const isDone = absIdx < currentWordIndex;
 
@@ -306,14 +265,11 @@ export const TypingArena = React.memo(function TypingArena({
             <div
               key={`${absIdx}-${word.original}`}
               data-word-index={absIdx}
-              className="relative inline-flex items-center rounded"
+              className="relative inline-flex items-center rounded-lg px-0.5"
               style={{
-                padding: "2px 1px",
-                background: isActive
-                  ? "var(--at-highlight)"
-                  : "transparent",
-                transition: "background 120ms ease",
-                opacity: isDone ? 0.6 : 1,
+                background: isActive ? "var(--at-highlight, rgba(34,211,238,0.08))" : "transparent",
+                transition: "background 100ms ease",
+                opacity: isDone ? 0.45 : 1,
               }}
             >
               {word.chars.map((ch, ci) => (
@@ -329,23 +285,11 @@ export const TypingArena = React.memo(function TypingArena({
         })}
       </div>
 
-      {/* Idle overlay */}
-      {phase === "idle" && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p
-            className="text-sm font-medium"
-            style={{ color: "var(--at-muted)" }}
-          >
-            Yazmaya başlamak için tıkla veya bir tuşa bas
-          </p>
-        </div>
-      )}
-
       {/* Countdown overlay */}
       {phase === "countdown" && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 backdrop-blur-sm rounded-2xl">
+        <div className="absolute inset-0 flex items-center justify-center z-30 backdrop-blur-md rounded-3xl bg-black/40">
           <p
-            className="text-6xl font-bold tabular-nums"
+            className="text-6xl font-bold tabular-nums animate-pulse"
             style={{ color: "var(--at-accent)" }}
           >
             3
@@ -362,4 +306,4 @@ export const TypingArena = React.memo(function TypingArena({
       `}</style>
     </div>
   );
-});
+}
