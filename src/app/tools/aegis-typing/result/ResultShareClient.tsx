@@ -17,6 +17,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  ArrowLeft,
 } from "lucide-react";
 import { getSpeedTier, SPEED_TIER_LABELS } from "../types";
 
@@ -121,7 +122,17 @@ export function ResultShareClient() {
   }, [wpm, accuracy, mode, lang, nickname, tierInfo]);
 
   return (
-    <div className="min-h-[85vh] w-full flex items-center justify-center p-4 sm:p-6 select-none">
+    <div className="min-h-[85vh] w-full flex flex-col items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 pb-12 select-none">
+      <div className="w-full max-w-xl mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md cursor-pointer"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 text-cyan-400" />
+          <span>Ana Sayfaya Dön</span>
+        </Link>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -223,7 +234,7 @@ export function ResultShareClient() {
         {/* Primary Call to Action */}
         <Link
           href="/tools/aegis-typing"
-          className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-sm text-zinc-950 bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_25px_rgba(34,211,238,0.35)]"
+          className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-sm text-zinc-950 bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_25px_rgba(34,211,238,0.35)] cursor-pointer"
         >
           <Sparkles size={16} />
           <span>Sen de Yazma Hızını Test Et — Hemen Başla</span>
