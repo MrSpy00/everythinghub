@@ -35,6 +35,7 @@ import {
   HelpCircle,
   Cpu,
   Gamepad2,
+  Keyboard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -87,6 +88,36 @@ export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
 };
 
 export const tools: Tool[] = [
+  // aegisTyping — Universal Typing Speed & Learning Studio (Featured Flagship)
+  {
+    slug: "aegis-typing",
+    title: "aegisTyping — Evrensel Yazma Hızı Testi & Eğitim Stüdyosu",
+    description:
+      "16+ dilde WPM testi, adaptif öğrenme (Keybr stili), anti-hile koruması, 30+ tema, ses motoru ve global/local liderlik tablosu ile Monkeytype düzeyinde özelleştirilebilir yazma stüdyosu.",
+    icon: Keyboard,
+    category: "game",
+    accentColor: "#22d3ee",
+    accentClass: "from-cyan-500 to-teal-600",
+    status: "live",
+    tags: [
+      "yazma",
+      "wpm",
+      "typing",
+      "hız testi",
+      "10fastfingers",
+      "monkeytype",
+      "keybr",
+      "türkçe",
+      "klavye",
+      "on parmak",
+      "dokunarak yazma",
+      "aegistyping",
+      "leaderboard",
+      "anti-cheat",
+    ],
+    featured: true,
+    newBadge: true,
+  },
   // HubSense — Sensory Memory Game Arena (Featured)
   {
     slug: "hub-sense",

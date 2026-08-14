@@ -83,8 +83,6 @@ export function useAudioEngine() {
         now + preset.gainAttack + preset.gainDecay
       );
 
-      let sourceNode: AudioNode = gainNode;
-
       if (preset.distortion) {
         const waveshaper = ctx.createWaveShaper();
         const curve = new Float32Array(256);

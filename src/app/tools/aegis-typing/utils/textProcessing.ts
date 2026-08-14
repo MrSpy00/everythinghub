@@ -63,19 +63,6 @@ export function isRtlLocale(locale: string): boolean {
 }
 
 // ─── Inject Punctuation ────────────────────────────────────
-const PUNCTUATION_PAIRS = [
-  [",", ","],
-  [".", "."],
-  [";", ";"],
-  [":", ":"],
-  ["!", "!"],
-  ["?", "?"],
-  ['"', '"'],
-  ["'", "'"],
-  ["-", "-"],
-  ["(", ")"],
-] as const;
-
 export function injectPunctuation(words: string[], density = 0.2): string[] {
   return words.map((word, i) => {
     if (i === 0 || Math.random() > density) return word;

@@ -2,7 +2,7 @@
 // ============================================================
 // aegisTyping — Local Storage Engine (Type-safe)
 // ============================================================
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import type {
   AegisTypingSettings,
   TestResult,
@@ -78,7 +78,6 @@ export function useLocalStorage() {
   const checkAndSaveHighScore = useCallback(
     (result: TestResult): { isNewRecord: boolean; prevBest: number } => {
       const scores = safeGet<LocalHighScore[]>(KEYS.HIGH_SCORES, []);
-      const key = `${result.mode}_${result.modeValue}_${result.language}`;
 
       const existing = scores.find(
         (s) =>

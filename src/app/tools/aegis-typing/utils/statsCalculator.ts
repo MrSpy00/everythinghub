@@ -2,7 +2,6 @@
 // aegisTyping — Stats Calculator
 // ============================================================
 import type { KeystrokeRecord, TestResult, TestMode, Funbox, AntiCheatReport } from "../types";
-import { nanoid } from "../utils/nanoid";
 
 // ─── Net WPM ───────────────────────────────────────────────
 // Standard: (correct chars / 5 - uncorrected errors) / minutes
@@ -134,7 +133,6 @@ export function assembleTestResult(params: {
     uncorrectedErrors,
     totalErrors,
     keystrokes,
-    startTimestamp,
     durationSeconds,
     mode,
     modeValue,

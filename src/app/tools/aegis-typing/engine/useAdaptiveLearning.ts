@@ -75,11 +75,6 @@ export const LESSONS = [
 
 // ─── Word Generator for Adaptive Learning ─────────────────
 // Generates words using only the allowed keys for current lesson
-const SYLLABLES = {
-  simple: ["as", "ad", "fa", "da", "sa", "ka", "la", "ja", "ak"],
-  cv: ["at", "if", "ask", "sad", "lad", "add", "fad", "jab", "jag", "lag", "lads"],
-};
-
 function generateAdaptiveWord(
   allowedKeys: string[],
   adaptiveStats: AdaptiveKeyStats,

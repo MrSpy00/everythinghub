@@ -90,6 +90,14 @@ export const metadata: Metadata = {
     "yüzde hesaplama",
     "css degrade üretici",
     "renk paleti çıkarıcı",
+    "yazma testi",
+    "wpm testi",
+    "on parmak klavye hız testi",
+    "typing speed test",
+    "monkeytype alternative",
+    "10fastfingers turkish",
+    "keybr adaptive typing",
+    "aegisTyping",
     // Tool Specific Keywords (English)
     "youtube playlist duration calculator",
     "spotify bot detector",
@@ -102,6 +110,8 @@ export const metadata: Metadata = {
     "case converter online",
     "unit converter tool",
     "percentage calculator online",
+    "typing test online free",
+    "wpm speed test",
   ],
   authors: [
     { name: "aegisSoft", url: "https://www.aegissoft.com.tr/" },
@@ -215,6 +225,7 @@ const jsonLdSchema = {
       "@type": "SiteNavigationElement",
       "@id": "https://www.everythinghub.com.tr/#navigation",
       "name": [
+        "aegisTyping Yazma Hızı Testi & Eğitim Stüdyosu",
         "HubSense Duyu Hafızası Arenası",
         "YouTube Playlist Analizörü",
         "Spotify Playlist Analizörü",
@@ -226,6 +237,7 @@ const jsonLdSchema = {
         "JWT Debugger Studio"
       ],
       "url": [
+        "https://www.everythinghub.com.tr/tools/aegis-typing",
         "https://www.everythinghub.com.tr/tools/hub-sense",
         "https://www.everythinghub.com.tr/tools/yt-playlist-length",
         "https://www.everythinghub.com.tr/tools/spotify-playlist-analyzer",

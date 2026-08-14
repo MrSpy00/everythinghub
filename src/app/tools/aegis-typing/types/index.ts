@@ -10,7 +10,8 @@ export type TestMode =
   | "custom"
   | "zen"
   | "code"
-  | "learn";
+  | "learn"
+  | "challenge";
 
 // ─── Funbox / Challenge Modifiers ──────────────────────────
 export type Funbox =
