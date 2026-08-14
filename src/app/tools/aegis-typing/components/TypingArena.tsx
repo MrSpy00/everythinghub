@@ -1,8 +1,8 @@
 "use client";
 // ============================================================
 // aegisTyping — Typing Arena
-// GPU-accelerated smooth word & character renderer
-// Active line stays centered with next line always visible below
+// Rock-solid offsetTop/offsetLeft based positioning & line scrolling.
+// Always keeps upcoming lines visible with zero oscillation or jitter.
 // ============================================================
 import React, { useRef, useEffect, useMemo, useState } from "react";
 import type {
@@ -44,7 +44,7 @@ const FONT_MAP: Record<TypingFont, string> = {
   courier: '"Courier New", monospace',
 };
 
-const LINE_HEIGHT_MULTIPLIER = 1.65;
+const LINE_HEIGHT_MULTIPLIER = 1.7;
 
 // Individual Character with state-based styling
 const CharSpan = React.memo(function CharSpan({
@@ -117,7 +117,7 @@ export function TypingArena({
   const [scrollY, setScrollY] = useState(0);
 
   const lineHeight = fontSize * LINE_HEIGHT_MULTIPLIER;
-  const viewportHeight = lineHeight * lineCount;
+  const viewportHeight = lineHeight * Math.max(2, lineCount);
 
   // Auto focus input on mount & click
   useEffect(() => {
@@ -129,7 +129,15 @@ export function TypingArena({
     inputRef?.current?.focus();
   };
 
+  // Reset scroll when test restarts
+  useEffect(() => {
+    if (phase === "idle" || currentWordIndex === 0) {
+      setScrollY(0);
+    }
+  }, [phase, currentWordIndex]);
+
   // ─── Caret Positioning & Line Scrolling ─────────────────
+  // Uses unshifted DOM offsetTop/offsetLeft to guarantee 100% stable line tracking
   useEffect(() => {
     if (!wordsWrapperRef.current || !caretRef.current || caretStyle === "off") return;
 
@@ -140,37 +148,37 @@ export function TypingArena({
     if (!currentWordEl) return;
 
     const charSpans = currentWordEl.querySelectorAll("span");
-    const wrapperRect = wordsWrapperRef.current.getBoundingClientRect();
+    const wordLeft = currentWordEl.offsetLeft;
+    const wordTop = currentWordEl.offsetTop;
 
-    let x = 0;
-    let y = 0;
-
+    let charLeft = 0;
     if (caretPosition.charIndex < charSpans.length) {
       const charEl = charSpans[caretPosition.charIndex] as HTMLElement;
       if (charEl) {
-        const charRect = charEl.getBoundingClientRect();
-        x = charRect.left - wrapperRect.left;
-        y = charRect.top - wrapperRect.top;
+        charLeft = charEl.offsetLeft;
       }
     } else if (charSpans.length > 0) {
       const lastCharEl = charSpans[charSpans.length - 1] as HTMLElement;
-      const lastCharRect = lastCharEl.getBoundingClientRect();
-      x = lastCharRect.right - wrapperRect.left;
-      y = lastCharRect.top - wrapperRect.top;
-    } else {
-      const wordRect = currentWordEl.getBoundingClientRect();
-      x = wordRect.left - wrapperRect.left;
-      y = wordRect.top - wrapperRect.top;
+      if (lastCharEl) {
+        charLeft = lastCharEl.offsetLeft + lastCharEl.offsetWidth;
+      }
     }
 
-    caretRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    const caretX = wordLeft + charLeft;
+    const caretY = wordTop;
 
-    // Calculate line-based scroll: keep current active line in the middle
-    // so upcoming next lines are ALWAYS visible below it!
-    const activeLine = Math.floor(y / lineHeight);
-    if (activeLine >= 2) {
-      const newScroll = (activeLine - 1) * lineHeight;
-      setScrollY(newScroll);
+    caretRef.current.style.transform = `translate3d(${caretX}px, ${caretY}px, 0)`;
+
+    // Calculate which row the active word is on using unshifted offsetTop
+    const lineIndex = Math.max(0, Math.round(wordTop / lineHeight));
+
+    // For lineCount >= 3 (default):
+    // lineIndex 0 -> scroll 0 (lines 0, 1, 2 visible)
+    // lineIndex 1 -> scroll 0 (lines 0, 1, 2 visible: active line is middle, line 2 visible below)
+    // lineIndex >= 2 -> scroll (lineIndex - 1) * lineHeight (active line stays middle, upcoming line visible below!)
+    if (lineIndex >= 2) {
+      const targetScroll = (lineIndex - 1) * lineHeight;
+      setScrollY(targetScroll);
     } else {
       setScrollY(0);
     }
@@ -181,11 +189,30 @@ export function TypingArena({
     const charH = fontSize * LINE_HEIGHT_MULTIPLIER;
     switch (caretStyle) {
       case "line":
-        return { width: "3px", height: `${charH * 0.72}px`, background: caretColor, borderRadius: "2px" };
+        return {
+          width: "3px",
+          height: `${charH * 0.72}px`,
+          background: caretColor,
+          borderRadius: "2px",
+          marginTop: `${charH * 0.14}px`,
+        };
       case "block":
-        return { width: `${fontSize * 0.62}px`, height: `${charH * 0.78}px`, background: caretColor, opacity: 0.35, borderRadius: "3px" };
+        return {
+          width: `${fontSize * 0.62}px`,
+          height: `${charH * 0.78}px`,
+          background: caretColor,
+          opacity: 0.35,
+          borderRadius: "3px",
+          marginTop: `${charH * 0.1}px`,
+        };
       case "underscore":
-        return { width: `${fontSize * 0.62}px`, height: "3.5px", background: caretColor, marginTop: `${charH * 0.72}px`, borderRadius: "2px" };
+        return {
+          width: `${fontSize * 0.62}px`,
+          height: "3.5px",
+          background: caretColor,
+          marginTop: `${charH * 0.76}px`,
+          borderRadius: "2px",
+        };
       default:
         return { width: "0", height: "0" };
     }
@@ -198,10 +225,10 @@ export function TypingArena({
       lineHeight: `${lineHeight}px`,
       fontFamily: FONT_MAP[fontFamily],
       direction: rtl ? ("rtl" as const) : ("ltr" as const),
-      transform: `${funbox === "mirror" ? "scaleX(-1) " : ""}translateY(-${scrollY}px)`,
-      transition: "transform 140ms cubic-bezier(0.16, 1, 0.3, 1)",
+      transform: `${funbox === "mirror" ? "scaleX(-1) " : ""}translate3d(0, -${scrollY}px, 0)`,
+      transition: reducedMotion ? "none" : "transform 180ms cubic-bezier(0.16, 1, 0.3, 1)",
     }),
-    [fontSize, lineHeight, fontFamily, rtl, funbox, scrollY]
+    [fontSize, lineHeight, fontFamily, rtl, funbox, scrollY, reducedMotion]
   );
 
   return (
