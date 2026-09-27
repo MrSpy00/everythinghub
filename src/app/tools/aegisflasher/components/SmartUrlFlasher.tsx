@@ -276,64 +276,45 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
           : `Fetching releases for ${owner}/${repo}...`
       );
 
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=15`;
-      let resp: Response;
+      // Use dedicated internal API route for server-side caching & asset classification
+      const localApiUrl = `/api/flasher/github?action=releases&owner=${encodeURIComponent(
+        owner
+      )}&repo=${encodeURIComponent(repo)}`;
 
-      try {
-        resp = await fetch(apiUrl, {
-          headers: { Accept: "application/vnd.github.v3+json" },
-        });
-      } catch {
-        const proxyUrl = `/api/flasher/proxy?url=${encodeURIComponent(apiUrl)}`;
-        resp = await fetch(proxyUrl);
-      }
-
-      if (resp.status === 403 || resp.status === 429) {
-        const proxyUrl = `/api/flasher/proxy?url=${encodeURIComponent(apiUrl)}`;
-        resp = await fetch(proxyUrl);
+      let resp = await fetch(localApiUrl);
+      if (!resp.ok) {
+        // Fallback to direct github API via proxy
+        const fallbackUrl = `/api/flasher/proxy?url=${encodeURIComponent(
+          `https://api.github.com/repos/${owner}/${repo}/releases?per_page=15`
+        )}`;
+        resp = await fetch(fallbackUrl);
       }
 
       if (!resp.ok) {
         throw new Error(`HTTP ${resp.status}`);
       }
 
-      const releasesData: GitHubReleaseInfo[] = await resp.json();
+      const data = await resp.json();
+      const releasesData: GitHubReleaseInfo[] = data.releases || data;
+
       if (!Array.isArray(releasesData) || releasesData.length === 0) {
         toast.warning(
           lang === "tr"
-            ? "Bu projede GitHub Release bulunamadı."
-            : "No GitHub releases found for this repository."
+            ? "Bu projede uygun firmware sürümü (.bin/.hex/.uf2) bulunamadı."
+            : "No firmware assets (.bin/.hex/.uf2) found for this repository."
         );
         setReleases([]);
         return;
       }
 
-      // Filter and clean assets
-      const formattedReleases = releasesData.map((r) => {
-        const filteredAssets = (r.assets || []).filter((a) => {
-          const lower = a.name.toLowerCase();
-          return (
-            lower.endsWith(".bin") ||
-            lower.endsWith(".hex") ||
-            lower.endsWith(".uf2") ||
-            lower.endsWith(".elf") ||
-            lower.endsWith(".zip")
-          );
-        });
-        return {
-          ...r,
-          assets: filteredAssets.length > 0 ? filteredAssets : r.assets || [],
-        };
-      });
-
-      setReleases(formattedReleases);
-      if (formattedReleases.length > 0) {
-        setSelectedReleaseTag(formattedReleases[0].tag_name);
-        const fwCount = formattedReleases[0].assets.length;
+      setReleases(releasesData);
+      if (releasesData.length > 0) {
+        setSelectedReleaseTag(releasesData[0].tag_name);
+        const fwCount = releasesData[0].assets.length;
         toast.success(
           lang === "tr"
-            ? `${formattedReleases[0].tag_name} için ${fwCount} firmware dosyası bulundu.`
-            : `Found ${fwCount} firmware assets for ${formattedReleases[0].tag_name}.`
+            ? `${releasesData[0].tag_name} için ${fwCount} firmware dosyası bulundu.`
+            : `Found ${fwCount} firmware assets for ${releasesData[0].tag_name}.`
         );
       }
     } catch (err: any) {
@@ -385,30 +366,11 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
     setReleases([]);
 
     try {
-      const targetUrl = `https://api.github.com/search/repositories?q=${encodeURIComponent(
-        q
-      )}+esp32+OR+arduino+OR+firmware&sort=stars&order=desc&per_page=12`;
-
-      let resp: Response;
-      try {
-        resp = await fetch(targetUrl, {
-          headers: { Accept: "application/vnd.github.v3+json" },
-          signal: abortController.signal,
-        });
-      } catch {
-        // Direct fetch failed (e.g. CORS or network), route via proxy
-        const proxyUrl = `/api/flasher/proxy?url=${encodeURIComponent(targetUrl)}`;
-        resp = await fetch(proxyUrl, { signal: abortController.signal });
-      }
-
-      if (resp.status === 403 || resp.status === 429) {
-        // Try internal proxy route if rate limit hit on direct client
-        const proxyUrl = `/api/flasher/proxy?url=${encodeURIComponent(targetUrl)}`;
-        resp = await fetch(proxyUrl, { signal: abortController.signal });
-      }
+      const searchUrl = `/api/flasher/github?action=search&q=${encodeURIComponent(q)}`;
+      const resp = await fetch(searchUrl, { signal: abortController.signal });
 
       if (!resp.ok) {
-        throw new Error(`GitHub API HTTP ${resp.status}`);
+        throw new Error(`HTTP ${resp.status}`);
       }
 
       const data = await resp.json();

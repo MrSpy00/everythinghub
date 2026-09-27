@@ -22,6 +22,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   Terminal,
   Send,
@@ -53,6 +54,7 @@ import { ConnectionStatus, SerialLogMessage, ChipTelemetry } from "@/lib/flasher
 import { parseAnsiString, AnsiToken } from "@/lib/flasher/ansi-parser";
 import { Language } from "@/lib/flasher/i18n";
 import { FlasherSelect } from "./FlasherSelect";
+import { VirtualSiliconEngine } from "@/lib/flasher/virtual-silicon-engine";
 
 export interface SerialMonitorTabProps {
   status: ConnectionStatus;
@@ -101,6 +103,11 @@ const TERMINAL_COMMANDS: CommandDef[] = [
   { command: "esptool read_efuse", syntax: "esptool read_efuse", category: "esptool", descTr: "eFuse silikon güvenlik register bloklarını analiz eder", descEn: "Inspect silicon eFuse security registers" },
   { command: "esptool get_security_info", syntax: "esptool get_security_info", category: "esptool", descTr: "Flash Şifreleme ve Secure Boot güvenlik durumunu denetler", descEn: "Audit Flash Encryption & Secure Boot security status" },
   { command: "esptool run", syntax: "esptool run", category: "esptool", descTr: "RTS/EN donanım pini ile çipi yeniden başlatır", descEn: "Hardware reset chip into user code" },
+  { command: "esptool write_flash", syntax: "esptool write_flash <addr> <data>", category: "esptool", descTr: "Flash belleğe veri/hex yazar ve MD5 doğrular", descEn: "Write payload to flash address & verify MD5", examples: ["esptool write_flash 0x10000 48656C6C6F"] },
+  { command: "esptool verify_flash", syntax: "esptool verify_flash <addr>", category: "esptool", descTr: "Flash bellek bütünlüğünü doğrular", descEn: "Verify flash memory content against source" },
+  { command: "esptool erase_region", syntax: "esptool erase_region <addr> <size>", category: "esptool", descTr: "Flash bölgesini 4KB sektör sınırıyla siler (0xFF)", descEn: "Erase sector range from flash", examples: ["esptool erase_region 0x10000 0x2000"] },
+  { command: "esptool dump_mem", syntax: "esptool dump_mem <addr> <size>", category: "esptool", descTr: "Bellek veya register bölgesini hex tablosu olarak döker", descEn: "Dump register or flash memory as hex table", examples: ["esptool dump_mem 0x1000 128"] },
+  { command: "esptool image_info", syntax: "esptool image_info [addr]", category: "esptool", descTr: "ESP firmware binary başlığını (Magic 0xE9) analiz eder", descEn: "Inspect ESP binary image header and SPI config", examples: ["esptool image_info 0x1000"] },
 
   // Hardware & Signals
   { command: "connect", syntax: "connect [terminal]", category: "hardware", descTr: "Seri port seçim penceresini açar", descEn: "Open serial port selector dialog", examples: ["connect", "connect terminal"] },
@@ -122,6 +129,11 @@ const TERMINAL_COMMANDS: CommandDef[] = [
   { command: "ctrl-z", syntax: "ctrl-z", category: "serial", descTr: "SUB (0x1A) sinyali gönderir", descEn: "Send SUB (0x1A) signal" },
   { command: "ping", syntax: "ping", category: "serial", descTr: "Temel modem testi için AT komutu iletir", descEn: "Send basic AT ping packet" },
   { command: "at", syntax: "at [cmd]", category: "serial", descTr: "Hücresel/Wi-Fi modem için AT komutu iletir", descEn: "Transmit AT command to modem", examples: ["at", "at+gmr", "at+cifsr"] },
+  { command: "analogread", syntax: "analogread <A0..A5>", category: "serial", descTr: "Simüle/bağlı ADC pin voltajını okur", descEn: "Read ADC analog pin voltage", examples: ["analogread A0"] },
+  { command: "digitalwrite", syntax: "digitalwrite <pin> <high|low>", category: "serial", descTr: "Dijital pin çıkış seviyesini günceller", descEn: "Set digital pin output state", examples: ["digitalwrite 13 high"] },
+  { command: "digitalread", syntax: "digitalread <pin>", category: "serial", descTr: "Dijital pin giriş seviyesini okur", descEn: "Read digital pin state", examples: ["digitalread 13"] },
+  { command: "millis", syntax: "millis", category: "serial", descTr: "Oturum açılışından geçen milisaniyeyi raporlar", descEn: "Return elapsed milliseconds since session start" },
+  { command: "freememory", syntax: "freememory", category: "serial", descTr: "Kullanılabilir serbest RAM miktarını bildirir", descEn: "Report available free RAM in bytes" },
 
   // Terminal Utilities
   { command: "help", syntax: "help [command]", category: "terminal", descTr: "Kullanılabilir tüm CLI komutlarını ve kılavuzu listeler", descEn: "List all terminal CLI commands and user guide" },
@@ -399,17 +411,27 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
 
   // ── Export Menu State
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [exportBtnRect, setExportBtnRect] = useState<DOMRect | null>(null);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+      if (exportButtonRef.current && !exportButtonRef.current.contains(e.target as Node)) {
         setIsExportOpen(false);
       }
     };
     if (isExportOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isExportOpen]);
+
+  const toggleExportMenu = useCallback(() => {
+    if (!isExportOpen && exportButtonRef.current) {
+      setExportBtnRect(exportButtonRef.current.getBoundingClientRect());
+      setIsExportOpen(true);
+    } else {
+      setIsExportOpen(false);
     }
   }, [isExportOpen]);
 
@@ -424,6 +446,10 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   const terminalContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const userScrolled = useRef(false);
+  const virtualSiliconRef = useRef<VirtualSiliconEngine | null>(null);
+  if (!virtualSiliconRef.current) {
+    virtualSiliconRef.current = new VirtualSiliconEngine();
+  }
 
   const isConnected = status === "connected" || status === "terminal";
 
@@ -884,19 +910,64 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           const atCmd = clean.startsWith("at+") || clean.startsWith("AT+") ? clean.toUpperCase() : "AT";
           if (isConnected) {
             onSendMessage(atCmd, "crlf");
-          } else if (isLoopbackMode) {
-            emitLog("tx", atCmd);
-            setTimeout(() => {
-              if (atCmd === "AT") {
-                emitLog("rx", "OK");
-              } else if (atCmd === "AT+GMR") {
-                emitLog("rx", "AT version:2.4.0.0(s-4c6eb9f - ESP32 - May 24 2021 16:32:00)\nSDK version:v4.4.1\nOK");
-              } else {
-                emitLog("rx", `+${atCmd.replace("AT+", "")}: OK\nOK`);
-              }
-            }, 50);
           } else {
-            emitLog("err", "[Hata] Port bağlı değil. 'connect' yazarak bağlanabilir veya 'loopback on' ile simüle edebilirsiniz.");
+            const atRes = virtualSiliconRef.current?.executeAtCommand(atCmd) || { success: true, output: "OK" };
+            emitLog(atRes.success ? "rx" : "err", atRes.output);
+          }
+          return;
+        }
+
+        case "analogread": {
+          const pin = sub || "A0";
+          if (isConnected) {
+            onSendMessage(`analogRead(${pin})`, lineEnding);
+          } else {
+            const ard = virtualSiliconRef.current?.executeArduinoCommand(`analogread ${pin}`) || { handled: true, output: "0" };
+            emitLog("rx", ard.output);
+          }
+          return;
+        }
+
+        case "digitalwrite": {
+          const pin = sub || "13";
+          const val = arg2 || "HIGH";
+          if (isConnected) {
+            onSendMessage(`digitalWrite(${pin}, ${val})`, lineEnding);
+          } else {
+            const ard = virtualSiliconRef.current?.executeArduinoCommand(`digitalwrite ${pin} ${val}`) || { handled: true, output: "OK" };
+            emitLog("rx", ard.output);
+          }
+          return;
+        }
+
+        case "digitalread": {
+          const pin = sub || "13";
+          if (isConnected) {
+            onSendMessage(`digitalRead(${pin})`, lineEnding);
+          } else {
+            const ard = virtualSiliconRef.current?.executeArduinoCommand(`digitalread ${pin}`) || { handled: true, output: "0" };
+            emitLog("rx", ard.output);
+          }
+          return;
+        }
+
+        case "millis": {
+          if (isConnected) {
+            onSendMessage("millis()", lineEnding);
+          } else {
+            const ard = virtualSiliconRef.current?.executeArduinoCommand("millis") || { handled: true, output: "0" };
+            emitLog("rx", ard.output);
+          }
+          return;
+        }
+
+        case "freememory":
+        case "freeram": {
+          if (isConnected) {
+            onSendMessage("freeMemory()", lineEnding);
+          } else {
+            const ard = virtualSiliconRef.current?.executeArduinoCommand("freememory") || { handled: true, output: "1642" };
+            emitLog("rx", ard.output);
           }
           return;
         }
@@ -936,7 +1007,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           emitLog(
             "sys",
             val
-              ? `[Loopback] Yerel simülasyon modu AÇILDI. Gönderilen tüm mesajlar ve AT komutları donanımsız test için otomatik yankılanacaktır.`
+              ? `[Loopback] Yerel simülasyon modu AÇILDI. Gönderilen tüm mesajlar donanımsız test için otomatik yankılanacaktır.`
               : `[Loopback] Yerel simülasyon modu KAPATILDI.`
           );
           return;
@@ -999,79 +1070,96 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
         // ══ ESPTOOL SUITE ══════════════════════════════════════════
         case "esptool":
         case "esptool.py": {
+          const esptoolArgs = parts.slice(1);
+          if (esptoolArgs.length === 0) {
+            emitLog(
+              "sys",
+              (virtualSiliconRef.current?.getEsptoolVersion() || "esptool.py v4.8.1-aegis") +
+                `\nKullanım: esptool chip_id | flash_id | read_mac | erase_flash | erase_region | read_flash | write_flash | verify_flash | dump_mem | read_efuse | get_security_info | image_info | run`
+            );
+            return;
+          }
+
           switch (sub) {
             case "version":
             case "-v":
             case "--version": {
-              emitLog(
-                "sys",
-                `esptool.py v4.8.1-aegis / WebSerial Universal Engine 1.0\n` +
-                `Desteklenen Çipler: ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, ESP32-C6, ESP32-H2, ESP32-P4, ESP8266\n` +
-                `Bağlantı Türü: WebSerial API (Chrome / Edge / Opera / Brave native)`
-              );
+              emitLog("sys", virtualSiliconRef.current?.getEsptoolVersion() || "esptool.py v4.8.1-aegis");
               return;
             }
 
             case "chip_id": {
-              if (!isConnected && !telemetry) {
-                emitLog("err", "esptool: Donanım bağlı değil. Önce 'connect' yazarak ESP cihazınızı bağlayın.");
-                return;
+              if (isConnected && telemetry) {
+                const fam = telemetry.family || "ESP32";
+                emitLog(
+                  "sys",
+                  `Detecting chip type... ${fam}\n` +
+                  `Chip is ${telemetry.modelName || fam} (rev ${telemetry.revision || "v3.0"})\n` +
+                  `Features: ${telemetry.features?.join(", ") || "WiFi, BT, Dual Core, 240MHz, VRef calibration"}\n` +
+                  `Crystal is ${telemetry.crystalFreq || "40MHz"}\n` +
+                  `MAC: ${telemetry.macAddress || "24:6f:28:XX:XX:XX"}`
+                );
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["chip_id"]);
+                emitLog("sys", res.output);
               }
-              const fam = telemetry?.family || "ESP32";
-              emitLog(
-                "sys",
-                `Detecting chip type... ${fam}\n` +
-                `Chip is ${telemetry?.modelName || fam} (rev ${telemetry?.revision || "v3.0"})\n` +
-                `Features: ${telemetry?.features?.join(", ") || "WiFi, BT, Dual Core, 240MHz, VRef calibration"}\n` +
-                `Crystal is ${telemetry?.crystalFreq || "40MHz"}\n` +
-                `MAC: ${telemetry?.macAddress || "24:6f:28:XX:XX:XX"}`
-              );
               return;
             }
 
             case "flash_id": {
-              if (!isConnected && !telemetry) {
-                emitLog("err", "esptool: Donanım bağlı değil. Lütfen cihazı bağlayın.");
-                return;
+              if (isConnected && telemetry) {
+                emitLog(
+                  "sys",
+                  `Manufacturer: ${telemetry.flashVendor || "0x20 (XMC / Winbond)"}\n` +
+                  `Device: ${telemetry.flashJedecId || "0x4016"}\n` +
+                  `Detected flash size: ${telemetry.flashSize || "4MB"}\n` +
+                  `Flash frequency: ${telemetry.flashFrequency || "40MHz"}\n` +
+                  `Flash mode: ${telemetry.flashMode || "DIO"}`
+                );
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["flash_id"]);
+                emitLog("sys", res.output);
               }
-              emitLog(
-                "sys",
-                `Manufacturer: ${telemetry?.flashVendor || "0x20 (XMC / Winbond)"}\n` +
-                `Device: ${telemetry?.flashJedecId || "0x4016"}\n` +
-                `Detected flash size: ${telemetry?.flashSize || "4MB"}\n` +
-                `Flash frequency: ${telemetry?.flashFrequency || "40MHz"}\n` +
-                `Flash mode: ${telemetry?.flashMode || "DIO"}`
-              );
               return;
             }
 
             case "read_mac": {
-              if (!isConnected && !telemetry) {
-                emitLog("err", "esptool: Donanım bağlı değil.");
-                return;
+              if (isConnected && telemetry) {
+                const baseMac = telemetry.macAddress || "24:6F:28:1A:3B:5C";
+                emitLog(
+                  "sys",
+                  `BASE MAC    : ${baseMac}\n` +
+                  `WIFI STA MAC: ${baseMac}\n` +
+                  `WIFI AP MAC : ${baseMac.slice(0, -2) + (parseInt(baseMac.slice(-2), 16) + 1).toString(16).toUpperCase()}\n` +
+                  `BT MAC      : ${baseMac.slice(0, -2) + (parseInt(baseMac.slice(-2), 16) + 2).toString(16).toUpperCase()}`
+                );
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["read_mac"]);
+                emitLog("sys", res.output);
               }
-              const baseMac = telemetry?.macAddress || "24:6F:28:1A:3B:5C";
-              emitLog(
-                "sys",
-                `BASE MAC    : ${baseMac}\n` +
-                `WIFI STA MAC: ${baseMac}\n` +
-                `WIFI AP MAC : ${baseMac.slice(0, -2) + (parseInt(baseMac.slice(-2), 16) + 1).toString(16).toUpperCase()}\n` +
-                `BT MAC      : ${baseMac.slice(0, -2) + (parseInt(baseMac.slice(-2), 16) + 2).toString(16).toUpperCase()}`
-              );
               return;
             }
 
             case "erase_flash": {
-              if (!isConnected) {
-                emitLog("err", "esptool: Donanım bağlı değil. Çip silinemez.");
-                return;
+              if (isConnected && onEraseChip) {
+                emitLog("warn", "esptool: Donanım çipi tamamen siliniyor (erase_flash)... Bu işlem 5-15 saniye sürebilir.");
+                try {
+                  await onEraseChip();
+                  emitLog("success", "esptool: Chip erase completed successfully (Tüm donanım flash silindi).");
+                } catch (e: any) {
+                  emitLog("err", `esptool erase_flash hatası: ${e.message}`);
+                }
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["erase_flash"]);
+                emitLog(res.success ? "success" : "err", res.output);
               }
-              emitLog("warn", "esptool: Çip tamamen siliniyor (erase_flash)... Bu işlem 5-15 saniye sürebilir.");
-              if (onEraseChip) {
-                await onEraseChip();
-                emitLog("success", "esptool: Chip erase completed successfully (Tüm flash başarıyla silindi).");
-              } else {
-                emitLog("err", "esptool: Erase motoru tanımlanmamış.");
+              return;
+            }
+
+            case "erase_region": {
+              if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["erase_region", arg2 || "0x0", arg3 || "0x1000"]);
+                emitLog(res.success ? "success" : "err", res.output);
               }
               return;
             }
@@ -1091,19 +1179,52 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
                 sizeBytes = parseInt(sizeStr, 10);
               }
 
-              emitLog("sys", `esptool: Flash okunuyor (Offset: 0x${offset.toString(16).toUpperCase()}, Boyut: ${(sizeBytes / 1024).toFixed(1)} KB)...`);
-              if (onReadFlashDump) {
+              if (isConnected && onReadFlashDump) {
+                emitLog("sys", `esptool: Flash okunuyor (Offset: 0x${offset.toString(16).toUpperCase()}, Boyut: ${(sizeBytes / 1024).toFixed(1)} KB)...`);
                 await onReadFlashDump(offset, sizeBytes);
                 emitLog("success", `esptool: Flash dökümü başarıyla indirildi.`);
-              } else {
-                emitLog("err", "esptool: Flash dump okuma motoru hazır değil.");
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["read_flash", offsetStr, sizeStr]);
+                emitLog(res.success ? "success" : "err", res.output);
+                if (res.downloadBlob) {
+                  const url = URL.createObjectURL(res.downloadBlob.blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = res.downloadBlob.filename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }
+              }
+              return;
+            }
+
+            case "write_flash": {
+              if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["write_flash", arg2 || "0x10000", ...parts.slice(3)]);
+                emitLog(res.success ? "success" : "err", res.output);
+              }
+              return;
+            }
+
+            case "verify_flash": {
+              if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["verify_flash", arg2 || "0x10000", ...parts.slice(3)]);
+                emitLog(res.success ? "success" : "err", res.output);
+              }
+              return;
+            }
+
+            case "dump_mem": {
+              if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["dump_mem", arg2 || "0x0", arg3 || "256"]);
+                emitLog(res.success ? "sys" : "err", res.output);
               }
               return;
             }
 
             case "read_efuse": {
-              emitLog("sys", "esptool: eFuse silikon güvenlik register blokları okunuyor...");
-              if (onReadEfuses) {
+              if (isConnected && onReadEfuses) {
+                emitLog("sys", "esptool: Donanım eFuse silikon güvenlik register blokları okunuyor...");
                 try {
                   const audit = await onReadEfuses();
                   emitLog(
@@ -1120,15 +1241,15 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
                 } catch (e: any) {
                   emitLog("err", `esptool read_efuse hatası: ${e.message}`);
                 }
-              } else {
-                emitLog("err", "esptool: eFuse denetim motoru hazır değil.");
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["read_efuse"]);
+                emitLog(res.success ? "sys" : "err", res.output);
               }
               return;
             }
 
             case "get_security_info": {
-              emitLog("sys", "esptool: Güvenlik mimarisi denetleniyor...");
-              if (onReadEfuses) {
+              if (isConnected && onReadEfuses) {
                 try {
                   const audit = await onReadEfuses();
                   emitLog(
@@ -1142,14 +1263,29 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
                 } catch (e: any) {
                   emitLog("err", `Hata: ${e.message}`);
                 }
+              } else if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["get_security_info"]);
+                emitLog(res.success ? "sys" : "err", res.output);
+              }
+              return;
+            }
+
+            case "image_info": {
+              if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand(["image_info", arg2 || "0x10000"]);
+                emitLog(res.success ? "sys" : "err", res.output);
               }
               return;
             }
 
             case "run":
             case "hard_reset": {
-              onHardReset();
-              emitLog("sys", "esptool: Donanımsal reset uygulandı (Hard reset via RTS/DTR).");
+              if (isConnected) {
+                onHardReset();
+                emitLog("sys", "esptool: Donanımsal reset uygulandı (Hard reset via RTS/DTR).");
+              } else if (virtualSiliconRef.current) {
+                emitLog("sys", virtualSiliconRef.current.hardReset());
+              }
               return;
             }
 
@@ -1162,36 +1298,74 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             }
 
             default: {
-              emitLog(
-                "warn",
-                `Bilinmeyen esptool komutu: '${sub}'. Kullanım:\n` +
-                `  esptool chip_id | flash_id | read_mac | erase_flash | read_flash | read_efuse | get_security_info | run | version`
-              );
+              if (virtualSiliconRef.current) {
+                const res = await virtualSiliconRef.current.executeEsptoolCommand([sub, ...parts.slice(2)]);
+                emitLog(res.success ? "sys" : "warn", res.output);
+              } else {
+                emitLog(
+                  "warn",
+                  `Bilinmeyen esptool komutu: '${sub}'. Kullanım:\n` +
+                  `  esptool chip_id | flash_id | read_mac | erase_flash | read_flash | read_efuse | get_security_info | run | version`
+                );
+              }
               return;
             }
           }
         }
 
         default: {
-          // If in Smart Mode and not recognized as a command, transmit to hardware!
+          // If connected, transmit command directly to hardware
           if (isConnected) {
             onSendMessage(clean, lineEnding);
-          } else if (isLoopbackMode) {
-            // Emulate transmission in loopback mode
-            emitLog("tx", clean);
-            setTimeout(() => {
-              if (clean.toLowerCase().includes("uname")) {
-                emitLog("rx", `(sysname='esp32', nodename='esp32', release='1.20.0', version='v1.20.0 on 2024-01-01', machine='ESP32 with ESP32')`);
-              } else if (clean.toLowerCase() === "help") {
-                emitLog("rx", "Microcontroller CLI Ready. Type commands or send packets.");
-              } else {
-                emitLog("rx", clean);
-              }
-            }, 30);
           } else {
+            // 1. Check if user typed an AT command directly (e.g. AT+CWLAP, AT+GMR, etc.)
+            if (clean.toUpperCase().startsWith("AT")) {
+              const atRes = virtualSiliconRef.current?.executeAtCommand(clean) || { success: true, output: "OK" };
+              emitLog(atRes.success ? "rx" : "err", atRes.output);
+              return;
+            }
+
+            // 2. Check if user typed an Arduino CLI command (e.g. status, reboot, version, led on, etc.)
+            const ardRes = virtualSiliconRef.current?.executeArduinoCommand(clean);
+            if (ardRes && ardRes.handled) {
+              emitLog("rx", ardRes.output);
+              return;
+            }
+
+            // 3. Check if user typed a MicroPython command / statement / expression
+            const pyRes = virtualSiliconRef.current?.executeMicroPythonCommand(clean);
+            if (pyRes && pyRes.handled) {
+              emitLog(pyRes.output.startsWith("Traceback") ? "err" : "rx", pyRes.output);
+              return;
+            }
+
+            // 4. Emulate transmission in loopback mode if enabled
+            if (isLoopbackMode) {
+              emitLog("tx", clean);
+              setTimeout(() => {
+                emitLog("rx", clean);
+              }, 30);
+              return;
+            }
+
+            // 5. Friendly offline guidance
             emitLog(
               "warn",
-              `[aegisTerminal] Port bağlı değil. '${clean}' komutunu donanıma iletmek için 'connect' yazın veya donanım olmadan test etmek için 'loopback on' yazın.`
+              lang === "en"
+                ? `[aegisTerminal] Port is offline. Connected hardware will receive: "${clean}".\n` +
+                  `Offline interactive simulation is active:\n` +
+                  `  • esptool: chip_id, flash_id, read_mac, erase_flash, write_flash, verify_flash, dump_mem, read_efuse\n` +
+                  `  • Arduino: analogread <pin>, digitalwrite <pin> <val>, millis, freememory, led on/off, status\n` +
+                  `  • AT Modem: AT, AT+GMR, AT+CWLAP, AT+CIFSR, AT+CWMODE\n` +
+                  `  • MicroPython: print("hello"), import sys; print(sys.version), os.listdir(), etc.\n` +
+                  `  • Or type 'connect' to attach physical hardware, or 'loopback on' for local echo.`
+                : `[aegisTerminal] Port çevrimdışı. Bağlı donanım şu komutu alacaktır: "${clean}".\n` +
+                  `Çevrimdışı etkileşimli sanal silikon simülasyonu devrededir:\n` +
+                  `  • esptool: chip_id, flash_id, read_mac, erase_flash, write_flash, verify_flash, dump_mem, read_efuse\n` +
+                  `  • Arduino: analogread <pin>, digitalwrite <pin> <val>, millis, freememory, led on/off, status\n` +
+                  `  • AT Modem: AT, AT+GMR, AT+CWLAP, AT+CIFSR, AT+CWMODE\n` +
+                  `  • MicroPython: print("merhaba"), import sys; print(sys.version), os.listdir(), vb.\n` +
+                  `  • Veya fiziksel cihaza bağlanmak için 'connect', yerel yankı için 'loopback on' yazın.`
             );
           }
           return;
@@ -1639,10 +1813,11 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           </button>
 
           {/* Export Dropdown */}
-          <div ref={exportMenuRef} className="relative z-50">
+          <div className="relative">
             <button
+              ref={exportButtonRef}
               type="button"
-              onClick={() => setIsExportOpen((prev) => !prev)}
+              onClick={toggleExportMenu}
               title={lang === "en" ? "Export Logs" : "Logları Dışa Aktar"}
               className={`p-2 rounded-2xl border transition-all ${
                 isExportOpen
@@ -1652,23 +1827,36 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
             >
               <Download className="w-3.5 h-3.5" />
             </button>
-            {isExportOpen && (
-              <div className="absolute right-0 bottom-full mb-1.5 z-[350] flex flex-col gap-1 p-2 rounded-2xl bg-zinc-950/98 border border-white/15 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] backdrop-blur-2xl min-w-[130px] animate-in fade-in-0 zoom-in-95 duration-150">
-                {(["txt", "csv", "json"] as const).map((fmt) => (
-                  <button
-                    key={fmt}
-                    type="button"
-                    onClick={() => {
-                      exportLogs(fmt);
-                      setIsExportOpen(false);
-                    }}
-                    className="text-left px-3 py-1.5 rounded-xl text-xs font-mono text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all"
-                  >
-                    .{fmt}
-                  </button>
-                ))}
-              </div>
-            )}
+            {isExportOpen &&
+              exportBtnRect &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <div
+                  style={{
+                    position: "fixed",
+                    top: Math.max(8, exportBtnRect.top - 110),
+                    left: Math.max(8, exportBtnRect.right - 130),
+                    zIndex: 99999,
+                  }}
+                  className="flex flex-col gap-1 p-2 rounded-2xl bg-zinc-950/98 border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.9)] backdrop-blur-2xl min-w-[130px] animate-in fade-in-0 zoom-in-95 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {(["txt", "csv", "json"] as const).map((fmt) => (
+                    <button
+                      key={fmt}
+                      type="button"
+                      onClick={() => {
+                        exportLogs(fmt);
+                        setIsExportOpen(false);
+                      }}
+                      className="text-left px-3 py-1.5 rounded-xl text-xs font-mono text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all"
+                    >
+                      .{fmt}
+                    </button>
+                  ))}
+                </div>,
+                document.body
+              )}
           </div>
 
           {/* Clear Logs */}

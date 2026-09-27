@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
 
 export interface FlasherSelectOption {
@@ -26,6 +27,15 @@ interface FlasherSelectProps {
   align?: "auto" | "left" | "right";
 }
 
+interface MenuCoords {
+  top?: number;
+  bottom?: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+  openUpward: boolean;
+}
+
 export const FlasherSelect: React.FC<FlasherSelectProps> = ({
   options,
   value,
@@ -40,70 +50,121 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
   align = "auto",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
-  const [alignRight, setAlignRight] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<MenuCoords>({
+    left: 0,
+    width: 240,
+    maxHeight: 320,
+    openUpward: false,
+  });
+
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const selectedOption = options.find((opt) => String(opt.value) === String(value));
 
-  // Intelligent collision & viewport boundary detection
+  // Intelligent collision & viewport boundary detection with Portal
   const updatePosition = useCallback(() => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
 
+    let openUpward = false;
     if (placement === "top") {
-      setOpenUpward(true);
+      openUpward = true;
     } else if (placement === "bottom") {
-      setOpenUpward(false);
+      openUpward = false;
     } else {
-      // Auto: if space below is less than 280px OR (spaceBelow < 380px and spaceAbove > spaceBelow), open upward
-      setOpenUpward(spaceBelow < 280 || (spaceBelow < 380 && spaceAbove > spaceBelow));
+      // Auto: if space below is less than 260px OR (spaceAbove > spaceBelow && spaceBelow < 340px)
+      openUpward = spaceBelow < 260 || (spaceAbove > spaceBelow && spaceBelow < 340);
     }
 
-    if (align === "right") {
-      setAlignRight(true);
-    } else if (align === "left") {
-      setAlignRight(false);
+    // Dynamic width: at least trigger width, minimum 240px, maximum window - 24px
+    const idealWidth = Math.max(rect.width, 240);
+    const menuWidth = Math.min(idealWidth, viewportWidth - 24);
+
+    let left = rect.left;
+    if (align === "right" || (align === "auto" && viewportWidth - rect.right < 180)) {
+      left = rect.right - menuWidth;
+    }
+
+    // Clamp left within viewport bounds
+    left = Math.max(12, Math.min(viewportWidth - menuWidth - 12, left));
+
+    const availableSpace = openUpward ? spaceAbove - 12 : spaceBelow - 12;
+    const maxHeight = Math.min(360, Math.max(140, availableSpace));
+
+    if (openUpward) {
+      setCoords({
+        bottom: viewportHeight - rect.top + 6,
+        left,
+        width: menuWidth,
+        maxHeight,
+        openUpward: true,
+      });
     } else {
-      // If trigger is closer to right edge of viewport, align dropdown right
-      setAlignRight(window.innerWidth - rect.right < 180);
+      setCoords({
+        top: rect.bottom + 6,
+        left,
+        width: menuWidth,
+        maxHeight,
+        openUpward: false,
+      });
     }
   }, [placement, align]);
 
+  // Reposition on open, resize, or scroll
   useEffect(() => {
-    if (isOpen) {
-      updatePosition();
-      const handleResize = () => updatePosition();
-      const handleScroll = () => updatePosition();
+    if (!isOpen) return;
 
-      window.addEventListener("resize", handleResize);
-      window.addEventListener("scroll", handleScroll, true);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        window.removeEventListener("scroll", handleScroll, true);
-      };
-    }
+    updatePosition();
+
+    const handleWindowChange = () => {
+      updatePosition();
+    };
+
+    window.addEventListener("resize", handleWindowChange);
+    window.addEventListener("scroll", handleWindowChange, true);
+
+    return () => {
+      window.removeEventListener("resize", handleWindowChange);
+      window.removeEventListener("scroll", handleWindowChange, true);
+    };
   }, [isOpen, updatePosition]);
 
-  // Outside click listener to auto-close
+  // Click outside listener that handles Portal correctly
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsOpen(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -118,12 +179,10 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`w-full ${isOpen ? "relative z-[150]" : "relative z-10"} ${className}`}
-    >
+    <div ref={containerRef} className={`w-full relative ${className}`}>
       {/* Trigger Button */}
       <button
+        ref={triggerRef}
         type="button"
         aria-label={ariaLabel || selectedOption?.label || placeholder}
         disabled={disabled}
@@ -133,7 +192,11 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
         }}
         className={`w-full flex items-center justify-between gap-2 bg-zinc-900/90 hover:bg-zinc-850 border border-white/10 hover:border-violet-500/40 text-zinc-100 font-semibold backdrop-blur-xl shadow-lg transition-all duration-200 cursor-pointer select-none active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none ${
           sizeClasses[size]
-        } ${isOpen ? "border-violet-500/60 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-zinc-850 ring-1 ring-violet-500/30" : ""} ${triggerClassName}`}
+        } ${
+          isOpen
+            ? "border-violet-500/60 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-zinc-850 ring-1 ring-violet-500/30"
+            : ""
+        } ${triggerClassName}`}
       >
         <span className="truncate flex items-center gap-1.5 min-w-0">
           {selectedOption?.icon && (
@@ -149,64 +212,82 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
         />
       </button>
 
-      {/* Floating Animated Liquid Glass Popover */}
-      {isOpen && (
-        <div
-          className={`absolute z-[300] p-2 rounded-2xl bg-zinc-950/98 border border-white/15 backdrop-blur-3xl shadow-[0_15px_50px_rgba(0,0,0,0.9)] max-h-80 overflow-y-auto scrollbar-none min-w-full sm:min-w-[280px] md:min-w-[340px] max-w-[calc(100vw-32px)] animate-in fade-in-0 zoom-in-95 duration-150 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full ${
-            openUpward
-              ? "bottom-full mb-2 origin-bottom slide-in-from-bottom-2 shadow-[0_-15px_50px_rgba(0,0,0,0.9)]"
-              : "top-full mt-2 origin-top slide-in-from-top-2"
-          } ${alignRight ? "right-0 left-auto" : "left-0 right-auto sm:left-0"}`}
-        >
-          <div className="flex flex-col gap-1.5">
-            {options.map((opt) => {
-              const isSelected = String(opt.value) === String(value);
-              const OptIcon = opt.icon;
+      {/* Floating Liquid Glass Popover Rendered Via Portal to document.body */}
+      {isOpen &&
+        mounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              position: "fixed",
+              top: coords.openUpward ? undefined : `${coords.top}px`,
+              bottom: coords.openUpward ? `${coords.bottom}px` : undefined,
+              left: `${coords.left}px`,
+              width: `${coords.width}px`,
+              maxHeight: `${coords.maxHeight}px`,
+              zIndex: 999999,
+            }}
+            className={`p-2 rounded-2xl bg-zinc-950/98 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)] overflow-y-auto scrollbar-none animate-in fade-in-0 zoom-in-95 duration-150 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full ${
+              coords.openUpward
+                ? "origin-bottom slide-in-from-bottom-2 shadow-[0_-20px_60px_rgba(0,0,0,0.95)]"
+                : "origin-top slide-in-from-top-2"
+            }`}
+          >
+            <div className="flex flex-col gap-1.5">
+              {options.map((opt) => {
+                const isSelected = String(opt.value) === String(value);
+                const OptIcon = opt.icon;
 
-              return (
-                <button
-                  key={String(opt.value)}
-                  type="button"
-                  onClick={() => {
-                    onChange(opt.value);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left p-2.5 sm:p-3 rounded-xl transition-all duration-150 flex items-center justify-between gap-3 group cursor-pointer ${
-                    isSelected
-                      ? "bg-violet-600/20 text-violet-200 border border-violet-500/40 font-bold shadow-md"
-                      : "text-zinc-300 hover:text-white hover:bg-white/[0.08] border border-transparent"
-                  }`}
-                >
-                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                    {OptIcon && (
-                      <OptIcon className={`w-4 h-4 shrink-0 mt-0.5 ${isSelected ? "text-violet-300" : "text-zinc-400"}`} />
-                    )}
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-xs font-semibold leading-relaxed break-words">{opt.label}</span>
-                      {opt.subtitle && (
-                        <span className="text-[10px] text-zinc-400 font-mono mt-0.5 line-clamp-2 opacity-80 group-hover:opacity-100">
-                          {opt.subtitle}
+                return (
+                  <button
+                    key={String(opt.value)}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left p-2.5 sm:p-3 rounded-xl transition-all duration-150 flex items-center justify-between gap-3 group cursor-pointer ${
+                      isSelected
+                        ? "bg-violet-600/25 text-violet-200 border border-violet-500/40 font-bold shadow-md"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.08] border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      {OptIcon && (
+                        <OptIcon
+                          className={`w-4 h-4 shrink-0 mt-0.5 ${
+                            isSelected ? "text-violet-300" : "text-zinc-400"
+                          }`}
+                        />
+                      )}
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-xs font-semibold leading-relaxed break-words">
+                          {opt.label}
+                        </span>
+                        {opt.subtitle && (
+                          <span className="text-[10px] text-zinc-400 font-mono mt-0.5 line-clamp-2 opacity-80 group-hover:opacity-100">
+                            {opt.subtitle}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-center">
+                      {opt.badge && (
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase bg-violet-500/20 text-violet-300 border border-violet-500/30 whitespace-nowrap">
+                          {opt.badge}
                         </span>
                       )}
+                      {isSelected && <Check className="w-4 h-4 text-violet-400 shrink-0" />}
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0 self-center">
-                    {opt.badge && (
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase bg-violet-500/20 text-violet-300 border border-violet-500/30 whitespace-nowrap">
-                        {opt.badge}
-                      </span>
-                    )}
-                    {isSelected && (
-                      <Check className="w-4 h-4 text-violet-400 shrink-0" />
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
