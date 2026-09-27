@@ -7,7 +7,6 @@ import {
   Trash2,
   Wifi,
   AlertTriangle,
-  ChevronDown,
 } from "lucide-react";
 import { ChipTelemetry, ConnectionStatus } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
@@ -25,7 +24,6 @@ interface ChipToolsTabProps {
 
 export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
   status,
-  telemetry,
   onReadFlashDump,
   onEraseChip,
   onFlashNvs,
@@ -235,15 +233,27 @@ export const ChipToolsTab: React.FC<ChipToolsTabProps> = ({
             />
           </div>
 
-          <div>
-            <label className="text-xs text-zinc-400 block mb-1">{t("mqtt_broker")}</label>
-            <input
-              type="text"
-              placeholder="192.168.1.50"
-              value={mqttHost}
-              onChange={(e) => setMqttHost(e.target.value)}
-              className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
-            />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 block mb-1">{t("mqtt_broker")}</label>
+              <input
+                type="text"
+                placeholder="192.168.1.50"
+                value={mqttHost}
+                onChange={(e) => setMqttHost(e.target.value)}
+                className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">Port</label>
+              <input
+                type="text"
+                placeholder="1883"
+                value={mqttPort}
+                onChange={(e) => setMqttPort(e.target.value)}
+                className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500"
+              />
+            </div>
           </div>
         </div>
 

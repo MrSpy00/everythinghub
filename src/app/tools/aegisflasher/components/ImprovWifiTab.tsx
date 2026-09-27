@@ -8,18 +8,13 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
-  AlertTriangle,
   RefreshCw,
   ExternalLink,
-  Sparkles,
-  Layers,
-  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
 import {
-  ImprovCommand,
   ImprovError,
   ImprovState,
   ImprovWifiEngine,

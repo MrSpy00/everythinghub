@@ -4,12 +4,9 @@ import React, { useState } from "react";
 import {
   Layers,
   Download,
-  Plus,
   Trash2,
-  CheckCircle2,
   AlertTriangle,
   FileCode,
-  Sparkles,
 } from "lucide-react";
 import {
   PARTITION_PRESETS,

@@ -7,9 +7,6 @@ import {
   HelpCircle,
   AlertTriangle,
   Usb,
-  ShieldCheck,
-  HardDrive,
-  Cpu,
 } from "lucide-react";
 import { DRIVER_CATALOG, TROUBLESHOOTING_TIPS } from "@/lib/flasher/driver-catalog";
 import { Language, useTranslation } from "@/lib/flasher/i18n";

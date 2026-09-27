@@ -98,7 +98,7 @@ export const FlasherSelect: React.FC<FlasherSelectProps> = ({
 
       {/* Floating Animated Liquid Glass Popover */}
       {isOpen && (
-        <div className="absolute left-0 sm:left-auto right-0 top-full mt-1.5 z-50 p-2 rounded-2xl bg-zinc-950/98 border border-white/15 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] max-h-80 overflow-y-auto scrollbar-none min-w-full sm:min-w-[320px] md:min-w-[380px] max-w-[90vw] animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute left-0 sm:left-auto right-0 top-full mt-1.5 z-[200] p-2 rounded-2xl bg-zinc-950/98 border border-white/15 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] max-h-80 overflow-y-auto scrollbar-none min-w-full sm:min-w-[320px] md:min-w-[380px] max-w-[90vw] animate-in fade-in-0 zoom-in-95 duration-150 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full">
           <div className="flex flex-col gap-1.5">
             {options.map((opt) => {
               const isSelected = String(opt.value) === String(value);

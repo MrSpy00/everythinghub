@@ -3,14 +3,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  Download,
   Upload,
   Terminal as TerminalIcon,
   Cpu,
   Layers,
   HelpCircle,
   HardDrive,
-  Radio,
   Sparkles,
   Activity,
   Wifi,
@@ -87,6 +85,7 @@ export const AegisFlasherClient: React.FC = () => {
   const espEngineRef = useRef<EspFlasherEngine | null>(null);
 
   const isSerialSupported = WebSerialManager.isSupported();
+  const textDecoderRef = useRef<TextDecoder>(new TextDecoder('utf-8', { fatal: false }));
 
   const handleToggleLang = () => {
     const next = lang === "tr" ? "en" : "tr";
@@ -110,7 +109,7 @@ export const AegisFlasherClient: React.FC = () => {
     manager.setOnLog(appendLog);
     manager.setOnData((chunk) => {
       setRxBytes((b) => b + chunk.length);
-      const text = new TextDecoder().decode(chunk);
+      const text = textDecoderRef.current.decode(chunk, { stream: true });
       appendLog({
         id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         timestamp: new Date().toLocaleTimeString("tr-TR", {
@@ -173,7 +172,16 @@ export const AegisFlasherClient: React.FC = () => {
         setTelemetry(detectedTelemetry);
         setStatus("connected");
         toast.success(`ESP: ${detectedTelemetry.modelName}`);
-      } catch (espErr: any) {
+      } catch {
+        // Disconnect ESP engine cleanly before opening raw serial
+        if (espEngineRef.current) {
+          try {
+            await espEngineRef.current.disconnect();
+          } catch {
+            // ignore
+          }
+          espEngineRef.current = null;
+        }
         // Fallback to open raw serial port for terminal/Arduino/Pico
         appendLog({
           id: `${Date.now()}`,
@@ -233,11 +241,21 @@ export const AegisFlasherClient: React.FC = () => {
   };
 
   const handleDisconnect = async () => {
+    // Guard: confirm disconnect during active flash to prevent bricking
+    if (status === "flashing" || status === "erasing") {
+      const confirmed = window.confirm(
+        lang === "tr"
+          ? "UYARI: Flaşlama devam ediyor! Bağlantıyı kesmek cihazı bozabilir. Yine de bağlantıyı kesmek istiyor musunuz?"
+          : "WARNING: Flashing is in progress! Disconnecting may brick the device. Are you sure you want to disconnect?"
+      );
+      if (!confirmed) return;
+    }
     if (espEngineRef.current) {
       await espEngineRef.current.disconnect();
       espEngineRef.current = null;
     }
     if (serialManagerRef.current) {
+      serialManagerRef.current.stopReading();
       await serialManagerRef.current.close();
     }
     rawPortRef.current = null;
@@ -250,6 +268,18 @@ export const AegisFlasherClient: React.FC = () => {
     if (serialManagerRef.current) {
       await serialManagerRef.current.hardResetEsp();
       toast.success(lang === "tr" ? "Donanımsal reset sinyali gönderildi." : "Hardware reset pulsed.");
+    }
+  };
+
+  const handleSetDtr = async (value: boolean) => {
+    if (serialManagerRef.current) {
+      await serialManagerRef.current.setSignals({ dataTerminalReady: value });
+    }
+  };
+
+  const handleSetRts = async (value: boolean) => {
+    if (serialManagerRef.current) {
+      await serialManagerRef.current.setSignals({ requestToSend: value });
     }
   };
 
@@ -346,7 +376,11 @@ export const AegisFlasherClient: React.FC = () => {
   };
 
   // Start Flashing
-  const handleStartFlashing = async () => {
+  const handleStartFlashing = async (advancedOptions?: {
+    flashMode?: "keep" | "dio" | "qio" | "dout" | "qout";
+    flashFreq?: "keep" | "80m" | "40m" | "26m" | "20m";
+    flashSize?: "keep" | "detect" | "512KB" | "1MB" | "2MB" | "4MB" | "8MB" | "16MB" | "32MB";
+  }) => {
     if (!rawPortRef.current) {
       toast.error(lang === "tr" ? "Önce bir porta bağlanmalısınız." : "Connect to a port first.");
       return;
@@ -395,6 +429,12 @@ export const AegisFlasherClient: React.FC = () => {
       }
     }
 
+    // Stop terminal reader before taking over port for flashing
+    if (serialManagerRef.current) {
+      serialManagerRef.current.stopReading();
+      await new Promise(r => setTimeout(r, 200));
+    }
+
     // Default ESP Flashing
     try {
       if (!espEngineRef.current) {
@@ -411,7 +451,12 @@ export const AegisFlasherClient: React.FC = () => {
       }
 
       setCurrentStatusText(lang === "tr" ? "Bölümler yazılıyor..." : "Writing partitions...");
-      await espEngineRef.current.flashFiles(validFiles, { eraseAll });
+      await espEngineRef.current.flashFiles(validFiles, {
+        eraseAll,
+        flashMode: advancedOptions?.flashMode || "keep",
+        flashFreq: advancedOptions?.flashFreq || "keep",
+        flashSize: advancedOptions?.flashSize || "keep",
+      });
       toast.success(lang === "tr" ? "Flaşlama tamamlandı!" : "Flashing completed!");
     } catch (err: any) {
       setStatus("error");
@@ -568,6 +613,13 @@ export const AegisFlasherClient: React.FC = () => {
     }
   };
 
+  const handleReadEfuses = async () => {
+    if (!espEngineRef.current) {
+      throw new Error(lang === "tr" ? "ESP cihazı bağlı değil." : "ESP device not connected.");
+    }
+    return await espEngineRef.current.readEfuses();
+  };
+
   // Studio Tabs Definition
   const tabs: { id: StudioTab; labelKey: any; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "catalog", labelKey: "tab_catalog", icon: Sparkles },
@@ -598,7 +650,30 @@ export const AegisFlasherClient: React.FC = () => {
         status={status}
         telemetry={telemetry}
         selectedBaud={selectedBaud}
-        onBaudChange={setSelectedBaud}
+        onBaudChange={async (newBaud: number) => {
+          setSelectedBaud(newBaud);
+          // If connected in terminal mode (no ESP engine), reopen port at new baud
+          if (
+            status === "connected" &&
+            !espEngineRef.current &&
+            serialManagerRef.current &&
+            rawPortRef.current
+          ) {
+            try {
+              serialManagerRef.current.stopReading();
+              await serialManagerRef.current.close();
+              await serialManagerRef.current.open(newBaud);
+              serialManagerRef.current.startReading();
+              toast.success(
+                lang === "tr"
+                  ? `Port ${newBaud.toLocaleString()} baud'a yeniden açıldı.`
+                  : `Port reopened at ${newBaud.toLocaleString()} baud.`
+              );
+            } catch (err: any) {
+              toast.error(`Baud değişimi hatası: ${err.message || err}`);
+            }
+          }
+        }}
         onConnect={handleConnect}
         onConnectTerminalOnly={handleConnectTerminalOnly}
         onDisconnect={handleDisconnect}
@@ -609,7 +684,7 @@ export const AegisFlasherClient: React.FC = () => {
       />
 
       {/* Main Studio Navigation Tabs Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto p-2 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl scrollbar-none shadow-2xl">
+      <div className="flex items-center gap-2 overflow-x-auto p-2 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-2xl shadow-2xl [&::-webkit-scrollbar]:h-0 scrollbar-none">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -618,7 +693,7 @@ export const AegisFlasherClient: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all duration-200 select-none ${
                 isActive
                   ? "bg-white/[0.1] text-zinc-100 border border-white/20 shadow-xl backdrop-blur-xl scale-[1.02]"
                   : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent"
@@ -699,8 +774,11 @@ export const AegisFlasherClient: React.FC = () => {
             status={status}
             logs={logs}
             onSendMessage={handleSendMessage}
+            onSendRawBytes={handleSendRawBytes}
             onClearLogs={() => setLogs([])}
             onHardReset={handleHardReset}
+            onSetDtr={handleSetDtr}
+            onSetRts={handleSetRts}
             selectedBaud={selectedBaud}
             onBaudChange={setSelectedBaud}
             rxBytesCount={rxBytes}
@@ -724,6 +802,7 @@ export const AegisFlasherClient: React.FC = () => {
           <EFuseInspectorTab
             status={status}
             telemetry={telemetry}
+            onReadEfuses={handleReadEfuses}
             lang={lang}
           />
         )}

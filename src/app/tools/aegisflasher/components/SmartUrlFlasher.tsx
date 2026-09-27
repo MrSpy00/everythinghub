@@ -5,11 +5,8 @@ import {
   Globe,
   Download,
   Search,
-  CheckCircle2,
-  AlertTriangle,
   GitBranch,
   FileCode,
-  Sparkles,
   RefreshCw,
   Zap,
 } from "lucide-react";
@@ -138,9 +135,35 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
 
         toast.info(lang === "tr" ? `GitHub Releases taranıyor: ${owner}/${repo}...` : `Scanning GitHub Releases: ${owner}/${repo}...`);
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
-        const resp = await fetch(apiUrl);
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15000);
+        let resp: Response;
+        try {
+          resp = await fetch(apiUrl, {
+            headers: { Accept: "application/vnd.github.v3+json" },
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
+
+        if (resp.status === 403 || resp.status === 429) {
+          const remaining = resp.headers.get("x-ratelimit-remaining");
+          const resetAt = resp.headers.get("x-ratelimit-reset");
+          const resetTime = resetAt ? new Date(parseInt(resetAt, 10) * 1000).toLocaleTimeString() : "?";
+          throw new Error(
+            lang === "tr"
+              ? `GitHub API hız sınırı aşıldı (${remaining ?? 0} istek kaldı). Sınır ${resetTime}'da sıfırlanır.`
+              : `GitHub API rate limit exceeded (${remaining ?? 0} requests left). Limit resets at ${resetTime}.`
+          );
+        }
         if (!resp.ok) {
-          throw new Error(`GitHub API ${resp.status} - Release not found.`);
+          throw new Error(
+            lang === "tr"
+              ? `GitHub API hatası ${resp.status}: Release bulunamadı veya repo özel olabilir.`
+              : `GitHub API error ${resp.status}: Release not found or repo may be private.`
+          );
         }
         const releaseData: GitHubReleaseInfo = await resp.json();
 
@@ -187,7 +210,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
     try {
       const data = await downloadBinaryWithFallback(asset.browser_download_url);
       analyzeBinary(asset.name, data);
-      toast.success(`${asset.name} ✓`);
+      toast.success(lang === "tr" ? `${asset.name} başarıyla indirildi` : `${asset.name} downloaded successfully`);
     } catch (err: any) {
       toast.error(`Error: ${err.message}`);
     } finally {
@@ -283,7 +306,7 @@ export const SmartUrlFlasher: React.FC<SmartUrlFlasherProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full">
             {gitHubReleases.assets.map((asset) => (
               <div
                 key={asset.id}

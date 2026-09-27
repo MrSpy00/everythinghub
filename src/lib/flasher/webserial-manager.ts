@@ -182,45 +182,37 @@ export class WebSerialManager {
     if (!this.port || !this.port.readable) {
       return;
     }
-
     if (this.isReading) return;
     this.isReading = true;
 
-    try {
-      while (this.port && this.port.readable && this.isReading) {
-        this.reader = this.port.readable.getReader();
-        try {
-          while (this.isReading) {
-            const { value, done } = await this.reader.read();
-            if (done) {
-              break;
-            }
-            if (value && value.length > 0) {
-              if (this.onDataCallback) {
-                this.onDataCallback(value);
-              }
-            }
+    while (this.isReading && this.port && this.port.readable) {
+      let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+      try {
+        reader = this.port.readable.getReader();
+        this.reader = reader;
+        const activeReader = reader!; // non-null: assigned above in same try block
+        while (this.isReading) {
+          const { value, done } = await activeReader.read();
+          if (done) break;
+          if (value && value.length > 0 && this.onDataCallback) {
+            this.onDataCallback(value);
           }
-        } catch (readErr: any) {
-          if (this.isReading) {
-            this.log("err", `Seri okuma hatası: ${readErr.message || readErr}`);
-          }
-        } finally {
-          try {
-            this.reader.releaseLock();
-          } catch {
-            // ignore
-          }
-          this.reader = null;
         }
+      } catch (readErr: any) {
+        if (this.isReading) {
+          this.log("err", `Seri okuma hatası: ${readErr.message || readErr}`);
+        }
+      } finally {
+        if (reader) {
+          try { reader.cancel(); } catch { /* ignore */ }
+          try { reader.releaseLock(); } catch { /* ignore */ }
+        }
+        this.reader = null;
       }
-    } catch (err: any) {
-      if (this.isReading) {
-        this.log("err", `Okuma akışı kesildi: ${err.message || err}`);
-      }
-    } finally {
-      this.isReading = false;
+      // small delay before potential retry
+      if (this.isReading) await new Promise(r => setTimeout(r, 50));
     }
+    this.isReading = false;
   }
 
   public stopReading(): void {

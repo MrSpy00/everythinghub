@@ -5,21 +5,17 @@ import {
   FileCode,
   Folder,
   Play,
-  Save,
   Trash2,
   Download,
-  Upload,
   Plus,
   RefreshCw,
   Terminal,
-  Cpu,
-  Sparkles,
-  CheckCircle2,
   FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
+import { FlasherSelect, FlasherSelectOption } from "./FlasherSelect";
 
 interface MicroPythonStudioTabProps {
   status: ConnectionStatus;
@@ -41,22 +37,131 @@ const DEFAULT_FILES: RemoteFile[] = [
   { name: "lib", sizeBytes: 0, isDir: true },
 ];
 
-const SAMPLE_MAIN_PY = `# MicroPython aegisStudio Live Script
+const MPY_SNIPPETS: { id: string; nameTr: string; nameEn: string; code: string }[] = [
+  {
+    id: "blink",
+    nameTr: "LED Yanıp Sönme (Blink Testi)",
+    nameEn: "Blink LED Test (GPIO 2)",
+    code: `# MicroPython LED Blink Test
 import machine
 import time
 
-led = machine.Pin(2, machine.Pin.OUT)
-print("[aegisStudio] Heartbeat Script Started on ESP32/Pico!")
+# ESP32 onboard LED is typically GPIO 2; Pico onboard is 'LED' or GPIO 25
+try:
+    led = machine.Pin(2, machine.Pin.OUT)
+except Exception:
+    led = machine.Pin("LED", machine.Pin.OUT)
 
+print("[aegisStudio] Starting LED Blink Test...")
 for i in range(10):
     led.value(1)
     time.sleep(0.2)
     led.value(0)
     time.sleep(0.2)
-    print(f"Cycle {i+1}/10: LED toggled successfully.")
+    print(f"Cycle {i+1}/10: LED toggled")
 
-print("[aegisStudio] Diagnostic routine complete.")
-`;
+print("[aegisStudio] Blink test completed successfully!")
+`,
+  },
+  {
+    id: "wifi_scan",
+    nameTr: "Wi-Fi Ağlarını Tara",
+    nameEn: "Scan Wi-Fi Networks",
+    code: `# MicroPython Wi-Fi Scanner
+import network
+import time
+
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+print("[aegisStudio] Scanning 2.4GHz Wi-Fi networks...")
+
+time.sleep(1)
+networks = wlan.scan()
+
+print(f"Found {len(networks)} networks:")
+for net in networks:
+    ssid = net[0].decode("utf-8", "ignore")
+    bssid = ":".join(f"{b:02X}" for b in net[1])
+    channel = net[2]
+    rssi = net[3]
+    auth = net[4]
+    print(f" - {ssid:<24} RSSI: {rssi:>3} dBm  CH: {channel:>2}")
+`,
+  },
+  {
+    id: "i2c_scan",
+    nameTr: "I2C Donanım Yolu Taraması",
+    nameEn: "I2C Bus Scanner (SDA 21, SCL 22)",
+    code: `# MicroPython I2C Scanner
+from machine import Pin, I2C
+
+# Default ESP32 I2C pins: SDA=GPIO21, SCL=GPIO22
+# For ESP32-S3/C3 or Pico, adjust pins accordingly
+i2c = I2C(0, scl=Pin(22), sda=Pin(21), freq=400000)
+
+print("[aegisStudio] Scanning I2C bus...")
+devices = i2c.scan()
+
+if devices:
+    print(f"Found {len(devices)} I2C device(s):")
+    for d in devices:
+        print(f" - Address: 0x{d:02X} (dec: {d})")
+else:
+    print("No I2C devices found. Check SDA/SCL connections and pull-up resistors.")
+`,
+  },
+  {
+    id: "sys_telemetry",
+    nameTr: "Sistem & Bellek Bilgisi",
+    nameEn: "System Info & Memory Telemetry",
+    code: `# MicroPython System & Memory Telemetry
+import sys
+import os
+import gc
+import machine
+
+print("=== aegisStudio Hardware Telemetry ===")
+print("Python Version  :", sys.version)
+print("Platform        :", sys.platform)
+print("CPU Frequency   :", machine.freq() // 1000000, "MHz")
+
+gc.collect()
+free_mem = gc.mem_free()
+alloc_mem = gc.mem_alloc()
+print(f"RAM Free        : {free_mem / 1024:.1f} KB")
+print(f"RAM Allocated   : {alloc_mem / 1024:.1f} KB")
+
+try:
+    stat = os.statvfs('/')
+    flash_free = (stat[0] * stat[3]) / 1024
+    print(f"Flash Free      : {flash_free:.1f} KB")
+except Exception:
+    pass
+
+print("Filesystem Root :", os.listdir())
+`,
+  },
+  {
+    id: "adc_read",
+    nameTr: "Analog Gerilim Okuma (ADC)",
+    nameEn: "Analog ADC Voltage Reading",
+    code: `# MicroPython ADC Pin Reader
+import machine
+import time
+
+# Pin 34 is ADC1 on classic ESP32 (input only)
+adc = machine.ADC(machine.Pin(34))
+adc.atten(machine.ADC.ATTN_11DB) # Full 0 - 3.3V range
+
+print("[aegisStudio] Reading ADC on GPIO 34 (10 samples)...")
+for i in range(10):
+    raw = adc.read()
+    voltage = (raw / 4095.0) * 3.3
+    print(f"Sample {i+1}: Raw={raw:4d}  Voltage={voltage:.3f} V")
+    time.sleep(0.3)
+`,
+  },
+];
 
 export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
   status,
@@ -67,40 +172,75 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
   const t = useTranslation(lang);
   const [fileList, setFileList] = useState<RemoteFile[]>(DEFAULT_FILES);
   const [activeFileName, setActiveFileName] = useState<string>("main.py");
-  const [codeContent, setCodeContent] = useState<string>(SAMPLE_MAIN_PY);
+  const [codeContent, setCodeContent] = useState<string>(MPY_SNIPPETS[0].code);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [inRawRepl, setInRawRepl] = useState<boolean>(false);
 
-  // Send Raw REPL sequence to run code
-  const handleSaveAndRun = () => {
+  // Send Raw REPL sequence to run code with robust promise timeouts
+  const handleSaveAndRun = async () => {
     if (status !== "connected") {
-      toast.error("Önce seri port üzerinden karta bağlanmalısınız.");
+      toast.error(
+        lang === "tr"
+          ? "Önce seri port üzerinden karta bağlanmalısınız."
+          : "Connect to the device via serial port first."
+      );
       return;
     }
 
     setIsRunning(true);
-    toast.info("MicroPython Raw REPL moduna geçiliyor ve kod yükleniyor...");
+    toast.info(
+      lang === "tr"
+        ? "MicroPython Raw REPL moduna geçiliyor ve kod yükleniyor..."
+        : "Entering MicroPython Raw REPL and uploading script..."
+    );
 
-    // Send Ctrl-C (Interrupt), Ctrl-A (Raw REPL), Send code, Ctrl-D (Soft Reboot & Run), Ctrl-B (Exit Raw REPL)
-    onSendMessage("\x03\x03", "none");
-    setTimeout(() => {
-      onSendMessage("\x01", "none"); // Enter raw REPL
-      setTimeout(() => {
-        onSendMessage(codeContent, "none");
-        setTimeout(() => {
-          onSendMessage("\x04", "none"); // Execute
-          setTimeout(() => {
-            onSendMessage("\x02", "none"); // Exit raw REPL
-            setIsRunning(false);
-            toast.success("Kod cihaza yüklendi ve çalıştırılıyor!");
-          }, 300);
-        }, 300);
-      }, 200);
-    }, 200);
+    try {
+      // 1. Send Ctrl-C twice to break any currently running loop
+      onSendMessage("\x03\x03", "none");
+      await new Promise((r) => setTimeout(r, 200));
+
+      // 2. Send Ctrl-A to enter Raw REPL
+      onSendMessage("\x01", "none");
+      await new Promise((r) => setTimeout(r, 250));
+
+      // 3. Send python code content
+      onSendMessage(codeContent, "none");
+      await new Promise((r) => setTimeout(r, 300));
+
+      // 4. Send Ctrl-D to finish input and execute
+      onSendMessage("\x04", "none");
+      await new Promise((r) => setTimeout(r, 250));
+
+      // 5. Send Ctrl-B to exit Raw REPL back to normal REPL
+      onSendMessage("\x02", "none");
+      toast.success(
+        lang === "tr"
+          ? "Kod cihaza yüklendi ve çalıştırılıyor!"
+          : "Script uploaded and executing on device!"
+      );
+    } catch (err: any) {
+      toast.error(`Yükleme hatası: ${err.message || err}`);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleSelectTemplate = (templateId: string) => {
+    const found = MPY_SNIPPETS.find((s) => s.id === templateId);
+    if (found) {
+      setCodeContent(found.code);
+      toast.success(
+        lang === "tr" ? `'${found.nameTr}' şablonu yüklendi.` : `'${found.nameEn}' template loaded.`
+      );
+    }
   };
 
   const handleCreateNewFile = () => {
-    const filename = prompt("Yeni dosya adı girin (Örn: sensor.py, config.json):", "script.py");
+    const filename = prompt(
+      lang === "tr"
+        ? "Yeni dosya adı girin (Örn: sensor.py, config.json):"
+        : "Enter new file name (e.g. sensor.py, config.json):",
+      "script.py"
+    );
     if (!filename) return;
 
     setFileList((prev) => [...prev, { name: filename, sizeBytes: 0, isDir: false }]);
@@ -110,11 +250,17 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
   };
 
   const handleDeleteFile = (name: string) => {
-    if (confirm(`'${name}' dosyasını silmek istediğinize emin misiniz?`)) {
+    if (
+      confirm(
+        lang === "tr"
+          ? `'${name}' dosyasını silmek istediğinize emin misiniz?`
+          : `Are you sure you want to delete '${name}'?`
+      )
+    ) {
       setFileList(fileList.filter((f) => f.name !== name));
       if (activeFileName === name) {
         setActiveFileName("main.py");
-        setCodeContent(SAMPLE_MAIN_PY);
+        setCodeContent(MPY_SNIPPETS[0].code);
       }
       toast.success(`'${name}' silindi.`);
     }
@@ -128,8 +274,14 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
     a.download = activeFileName;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`'${activeFileName}' bilgisayarınıza indirildi.`);
+    toast.success(`'${activeFileName}' indirildi.`);
   };
+
+  const templateOptions: FlasherSelectOption[] = MPY_SNIPPETS.map((s) => ({
+    value: s.id,
+    label: lang === "tr" ? s.nameTr : s.nameEn,
+    subtitle: s.id,
+  }));
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -150,12 +302,23 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Template Selector & Action Button */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="min-w-[200px]">
+            <FlasherSelect
+              options={templateOptions}
+              value=""
+              placeholder={lang === "tr" ? "Şablon Kod Yükle..." : "Load Code Snippet..."}
+              onChange={(val) => handleSelectTemplate(String(val))}
+              size="sm"
+            />
+          </div>
+
           <button
             type="button"
             onClick={handleSaveAndRun}
             disabled={isRunning || status !== "connected"}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold text-white bg-amber-600/30 hover:bg-amber-600/45 border border-amber-500/50 backdrop-blur-xl shadow-xl transition-all active:scale-95 disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl text-xs font-bold text-white bg-amber-600/30 hover:bg-amber-600/45 border border-amber-500/50 backdrop-blur-xl shadow-xl transition-all active:scale-95 disabled:opacity-40"
           >
             {isRunning ? (
               <RefreshCw className="w-4 h-4 animate-spin text-amber-300" />
@@ -216,7 +379,7 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
                       handleDeleteFile(file.name);
                     }}
                     className="opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-rose-400 transition-opacity"
-                    title="Sil"
+                    title={lang === "tr" ? "Sil" : "Delete"}
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -245,10 +408,10 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
                 type="button"
                 onClick={handleDownloadFileLocally}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white backdrop-blur-xl transition-all"
-                title="Yerel Olarak İndir"
+                title={lang === "tr" ? "Yerel Olarak İndir" : "Download Locally"}
               >
                 <Download className="w-3.5 h-3.5" />
-                İndir
+                {lang === "tr" ? "İndir" : "Download"}
               </button>
             </div>
           </div>
@@ -273,7 +436,7 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
               </span>
             </div>
             <div className="w-full h-32 overflow-y-auto font-mono text-xs text-emerald-300/90 flex flex-col gap-0.5">
-              {logs.slice(-15).map((l) => (
+              {logs.slice(-20).map((l) => (
                 <div key={l.id} className="leading-tight">
                   {l.text}
                 </div>

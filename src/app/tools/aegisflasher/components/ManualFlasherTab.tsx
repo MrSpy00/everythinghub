@@ -7,19 +7,20 @@ import {
   Trash2,
   FileCode,
   Zap,
-  CheckCircle2,
   AlertTriangle,
-  Play,
   Layers,
-  Settings2,
-  HardDrive,
-  Clock,
-  Activity,
-  Cpu,
-  Info,
+  ChevronDown,
+  Sliders,
 } from "lucide-react";
 import { ConnectionStatus, FlashPartitionFile } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
+import { FlasherSelect, FlasherSelectOption } from "./FlasherSelect";
+
+export interface AdvancedFlashOptions {
+  flashMode: "keep" | "dio" | "qio" | "dout" | "qout";
+  flashFreq: "keep" | "80m" | "40m" | "26m" | "20m";
+  flashSize: "keep" | "detect" | "512KB" | "1MB" | "2MB" | "4MB" | "8MB" | "16MB" | "32MB";
+}
 
 interface ManualFlasherTabProps {
   status: ConnectionStatus;
@@ -30,7 +31,7 @@ interface ManualFlasherTabProps {
   onApplyPreset: (presetId: string) => void;
   eraseAll: boolean;
   onToggleEraseAll: (val: boolean) => void;
-  onStartFlashing: () => void;
+  onStartFlashing: (options?: AdvancedFlashOptions) => void;
   progressPercent: number;
   currentStatusText: string;
   lang?: Language;
@@ -52,26 +53,32 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
 }) => {
   const t = useTranslation(lang);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [startTime, setStartTime] = useState<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
+  // Advanced flashing options
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [flashMode, setFlashMode] = useState<"keep" | "dio" | "qio" | "dout" | "qout">("keep");
+  const [flashFreq, setFlashFreq] = useState<"keep" | "80m" | "40m" | "26m" | "20m">("keep");
+  const [flashSize, setFlashSize] = useState<"keep" | "detect" | "512KB" | "1MB" | "2MB" | "4MB" | "8MB" | "16MB" | "32MB">("keep");
+
   useEffect(() => {
-    let timer: any = null;
+    let timer: ReturnType<typeof setInterval> | null = null;
     if (status === "flashing" || status === "erasing" || status === "reading") {
-      if (!startTime) setStartTime(Date.now());
+      if (startTimeRef.current === null) startTimeRef.current = Date.now();
       timer = setInterval(() => {
-        if (startTime) {
-          setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
-        }
+        setElapsedSeconds(
+          Math.floor((Date.now() - (startTimeRef.current ?? Date.now())) / 1000)
+        );
       }, 1000);
     } else {
-      setStartTime(null);
+      startTimeRef.current = null;
       setElapsedSeconds(0);
     }
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [status, startTime]);
+  }, [status]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -94,6 +101,40 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
     progressPercent > 0 && progressPercent < 100 && elapsedSeconds > 0
       ? Math.max(0, Math.round(((100 - progressPercent) / progressPercent) * elapsedSeconds))
       : 0;
+
+  const handleTriggerFlash = () => {
+    onStartFlashing({
+      flashMode,
+      flashFreq,
+      flashSize,
+    });
+  };
+
+  const flashModeOptions: FlasherSelectOption[] = [
+    { value: "keep", label: lang === "tr" ? "keep (İmaj Başlığını Koru)" : "keep (From Image Header)", subtitle: lang === "tr" ? "Varsayılan ve en güvenli seçenek" : "Default and safest choice" },
+    { value: "dio", label: "dio (Dual I/O)", subtitle: lang === "tr" ? "Tüm ESP32 modülleriyle %100 uyumlu" : "100% compatible with all ESP32/ESP8266", badge: "Tavsiye" },
+    { value: "qio", label: "qio (Quad I/O)", subtitle: lang === "tr" ? "Yüksek performanslı 4-hatlı SPI" : "High speed 4-wire SPI" },
+    { value: "dout", label: "dout (Dual Output)", subtitle: lang === "tr" ? "Eski ESP8266/ESP-01 kartları" : "Legacy ESP8266/ESP-01" },
+    { value: "qout", label: "qout (Quad Output)", subtitle: lang === "tr" ? "4-hatlı çıkış modu" : "4-wire output mode" },
+  ];
+
+  const flashFreqOptions: FlasherSelectOption[] = [
+    { value: "keep", label: lang === "tr" ? "keep (İmaj Ayarını Koru)" : "keep (From Image)", subtitle: lang === "tr" ? "Firmware başlığındaki hız" : "Speed defined in binary" },
+    { value: "80m", label: "80 MHz", subtitle: lang === "tr" ? "Yüksek hızlı çalışma" : "High performance clock", badge: "Fast" },
+    { value: "40m", label: "40 MHz", subtitle: lang === "tr" ? "Standart kararlı frekans" : "Standard compatibility clock" },
+    { value: "26m", label: "26 MHz", subtitle: lang === "tr" ? "26MHz kristal kullanan kartlar" : "26MHz crystal boards" },
+    { value: "20m", label: "20 MHz", subtitle: lang === "tr" ? "Düşük gürültülü yavaş mod" : "Low noise mode" },
+  ];
+
+  const flashSizeOptions: FlasherSelectOption[] = [
+    { value: "keep", label: lang === "tr" ? "keep (İmaj Boyutunu Koru)" : "keep (From Image)" },
+    { value: "detect", label: lang === "tr" ? "detect (Donanımdan Otomatik)" : "detect (Hardware Auto)", badge: "Auto" },
+    { value: "4MB", label: "4 MB (32 Mbit)", subtitle: lang === "tr" ? "Standart ESP32-WROOM / NodeMCU" : "Standard ESP32-WROOM" },
+    { value: "8MB", label: "8 MB (64 Mbit)", subtitle: lang === "tr" ? "ESP32-S3 / Genişletilmiş Flash" : "ESP32-S3 / Extended" },
+    { value: "16MB", label: "16 MB (128 Mbit)", subtitle: lang === "tr" ? "ESP32-S3 / ESP32-WROVER Octal" : "ESP32-S3 Octal / WROVER" },
+    { value: "2MB", label: "2 MB (16 Mbit)", subtitle: lang === "tr" ? "Kompakt modüller" : "Compact modules" },
+    { value: "1MB", label: "1 MB (8 Mbit)", subtitle: lang === "tr" ? "ESP-01 / ESP8266 1MB" : "ESP-01 / ESP8266" },
+  ];
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -242,6 +283,65 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
         </div>
       )}
 
+      {/* Advanced Flashing Settings Collapsible Panel */}
+      <div className="flex flex-col rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center justify-between p-4 px-6 text-xs font-bold text-zinc-200 hover:bg-white/[0.04] transition-colors"
+        >
+          <span className="flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-violet-400" />
+            {lang === "tr" ? "Gelişmiş Flaşlama Parametreleri (Flash Mode, Frequency, Size)" : "Advanced Flashing Parameters (Flash Mode, Frequency, Size)"}
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
+              showAdvanced ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {showAdvanced && (
+          <div className="p-6 pt-2 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-400">
+                {lang === "tr" ? "Flaş Modu (SPI Flash Mode)" : "SPI Flash Mode"}
+              </label>
+              <FlasherSelect
+                options={flashModeOptions}
+                value={flashMode}
+                onChange={(v) => setFlashMode(v as any)}
+                size="sm"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-400">
+                {lang === "tr" ? "Flaş Frekansı (SPI Speed)" : "SPI Flash Frequency"}
+              </label>
+              <FlasherSelect
+                options={flashFreqOptions}
+                value={flashFreq}
+                onChange={(v) => setFlashFreq(v as any)}
+                size="sm"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-zinc-400">
+                {lang === "tr" ? "Flaş Boyutu (Flash Size Override)" : "Flash Size Override"}
+              </label>
+              <FlasherSelect
+                options={flashSizeOptions}
+                value={flashSize}
+                onChange={(v) => setFlashSize(v as any)}
+                size="sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Progress & Live Telemetry Panel (When Flashing) */}
       {(status === "flashing" || status === "erasing" || status === "reading") && (
         <div className="flex flex-col gap-3 p-6 rounded-3xl bg-zinc-950/80 border border-violet-500/40 backdrop-blur-3xl shadow-2xl animate-in fade-in">
@@ -250,13 +350,13 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-ping" />
               {currentStatusText || t("flash_writing_in_progress")}
             </span>
-            <span className="font-mono text-sm font-bold text-violet-400">%{progressPercent}</span>
+            <span className="font-mono text-sm font-bold text-violet-400">{progressPercent}%</span>
           </div>
 
-          {/* Progress bar with neon glow */}
+          {/* Progress bar */}
           <div className="w-full h-3 rounded-full bg-zinc-900 border border-white/10 overflow-hidden relative">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 via-indigo-500 to-emerald-400 transition-all duration-300 shadow-[0_0_12px_#8b5cf6]"
+              className="h-full rounded-full bg-violet-500 transition-all duration-300 shadow-[0_0_12px_#8b5cf6]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -287,6 +387,17 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
         </div>
       )}
 
+      {(status === "flashing" || status === "erasing") && (
+        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="font-semibold">
+            {lang === "tr"
+              ? "Bağlantıyı KESMEYIN — yazım sürüyor. Bozuk firmware cihazı çökertebilir."
+              : "Do NOT disconnect — write in progress. Interrupting may brick the device."}
+          </span>
+        </div>
+      )}
+
       {/* Flashing Action Box */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-xl">
         <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -308,7 +419,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
 
         <button
           type="button"
-          onClick={onStartFlashing}
+          onClick={handleTriggerFlash}
           disabled={
             files.length === 0 ||
             status === "flashing" ||

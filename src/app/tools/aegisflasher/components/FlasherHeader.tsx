@@ -4,7 +4,6 @@ import React from "react";
 import {
   Cpu,
   Zap,
-  Activity,
   CheckCircle2,
   AlertTriangle,
   Radio,
@@ -13,7 +12,6 @@ import {
   RefreshCw,
   Sliders,
   Terminal,
-  ChevronDown,
   Languages,
 } from "lucide-react";
 import MeshText from "@/components/creative/MeshText";
@@ -113,7 +111,7 @@ export const FlasherHeader: React.FC<FlasherHeaderProps> = ({
           </div>
 
           {/* Connection Control Action Box */}
-          <div className="flex flex-col gap-3 min-w-[290px] p-5 rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-2xl shadow-2xl">
+          <div className="flex flex-col gap-3 w-full md:min-w-[290px] md:w-auto p-5 rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-2xl shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-zinc-400" />
@@ -179,15 +177,24 @@ export const FlasherHeader: React.FC<FlasherHeaderProps> = ({
 
             {/* Liquid Glass Buttons */}
             <div className="flex flex-col gap-2 mt-1">
-              {status === "disconnected" || status === "error" ? (
+              {status === "disconnected" || status === "error" || status === "connecting" ? (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={onConnect}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-zinc-100 bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 hover:border-white/30 backdrop-blur-2xl shadow-xl transition-all active:scale-95"
+                    disabled={status === 'connecting'}
+                    className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all active:scale-95 backdrop-blur-2xl shadow-xl border ${
+                      status === 'connecting'
+                        ? 'text-zinc-400 bg-white/[0.04] border-white/10 cursor-not-allowed'
+                        : 'text-zinc-100 bg-white/[0.06] hover:bg-white/[0.12] border-white/15 hover:border-white/30'
+                    }`}
                   >
-                    <Usb className="w-4 h-4 text-zinc-300" />
-                    {t("select_and_connect")}
+                    {status === 'connecting' ? (
+                      <RefreshCw className="w-4 h-4 text-zinc-400 animate-spin" />
+                    ) : (
+                      <Usb className="w-4 h-4 text-zinc-300" />
+                    )}
+                    {status === 'connecting' ? (lang === 'tr' ? 'Bağlanıyor...' : 'Connecting...') : t('select_and_connect')}
                   </button>
                   {onConnectTerminalOnly && (
                     <button

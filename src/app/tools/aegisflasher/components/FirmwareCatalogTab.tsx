@@ -7,16 +7,8 @@ import {
   Download,
   ExternalLink,
   GitBranch,
-  Sparkles,
   Layers,
-  CheckCircle2,
-  AlertCircle,
-  FileCode,
-  Globe,
-  Radio,
-  ChevronDown,
-  Info,
-  Zap,
+  RefreshCw,
 } from "lucide-react";
 import { FIRMWARE_CATALOG, getLocalizedFirmware, getLocalizedBuildDescription } from "@/lib/flasher/firmware-catalog";
 import { ChipFamily, ConnectionStatus, FirmwareProfile, FlashPartitionFile, MicrocontrollerCategory } from "@/lib/flasher/types";
@@ -33,7 +25,6 @@ interface FirmwareCatalogTabProps {
 }
 
 export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
-  status,
   onFlashFirmware,
   onLoadCustomUrl,
   onAddCustomPartition,
@@ -45,6 +36,16 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVersions, setSelectedVersions] = useState<Record<string, string>>({});
   const [selectedBuildIndexes, setSelectedBuildIndexes] = useState<Record<string, number>>({});
+  const [downloadingFwId, setDownloadingFwId] = useState<string | null>(null);
+
+  const handleFlashClick = async (fw: FirmwareProfile, ver: string, idx: number) => {
+    setDownloadingFwId(fw.id);
+    try {
+      await onFlashFirmware(fw, ver, idx);
+    } finally {
+      setDownloadingFwId(null);
+    }
+  };
 
   const filteredCatalog = useMemo(() => {
     return FIRMWARE_CATALOG.map((item) => getLocalizedFirmware(item, lang)).filter((item) => {
@@ -185,6 +186,32 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
       />
 
       {/* Firmware Cards Grid */}
+      {filteredCatalog.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-4 py-16 px-8 rounded-3xl bg-zinc-950/50 border border-white/5 text-center">
+          <div className="p-4 rounded-2xl bg-zinc-900/80 border border-white/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-zinc-300">
+              {lang === 'tr' ? 'Firmware bulunamadı' : 'No firmware found'}
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              {lang === 'tr'
+                ? 'Filtre veya arama kriterlerini değiştirerek tekrar deneyin.'
+                : 'Try changing the filter or search criteria.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setSelectedCategory('all'); setSelectedChip('all'); setSearchQuery(''); }}
+            className="px-4 py-2 rounded-2xl text-xs font-semibold bg-white/[0.06] border border-white/15 text-zinc-300 hover:text-white hover:bg-white/[0.1] transition-all backdrop-blur-xl"
+          >
+            {lang === 'tr' ? 'Filtreleri Temizle' : 'Clear Filters'}
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredCatalog.map((fw) => {
           const activeVer = selectedVersions[fw.id] || fw.latestVersion;
@@ -208,7 +235,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
           return (
             <div
               key={fw.id}
-              className="group flex flex-col justify-between p-6 rounded-3xl bg-zinc-950/70 border border-white/10 hover:border-violet-500/40 backdrop-blur-3xl transition-all duration-300 shadow-2xl hover:shadow-violet-500/5 hover:-translate-y-0.5"
+              className="group flex flex-col justify-between p-6 rounded-3xl bg-zinc-950/70 border border-white/10 hover:border-violet-500/40 backdrop-blur-3xl transition-all duration-300 shadow-2xl hover:shadow-violet-500/5 hover:-translate-y-0.5 overflow-visible"
             >
               <div className="flex flex-col gap-4">
                 {/* Header with Title & Category Badge */}
@@ -353,17 +380,27 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => onFlashFirmware(fw, activeVer, activeBuildIdx)}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 hover:border-violet-400 backdrop-blur-xl shadow-lg transition-all active:scale-95"
+                  disabled={downloadingFwId === fw.id}
+                  onClick={() => handleFlashClick(fw, activeVer, activeBuildIdx)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 hover:border-violet-400 backdrop-blur-xl shadow-lg transition-all active:scale-95 disabled:opacity-50"
                 >
-                  <Download className="w-4 h-4 text-violet-300" />
-                  {t("one_click_flash")}
+                  {downloadingFwId === fw.id ? (
+                    <RefreshCw className="w-4 h-4 text-violet-300 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 text-violet-300" />
+                  )}
+                  {downloadingFwId === fw.id
+                    ? lang === "tr"
+                      ? "İndiriliyor..."
+                      : "Downloading..."
+                    : t("one_click_flash")}
                 </button>
               </div>
             </div>
           );
         })}
       </div>
+      )}
     </div>
   );
 };

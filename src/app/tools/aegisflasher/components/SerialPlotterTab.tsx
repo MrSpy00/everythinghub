@@ -7,13 +7,7 @@ import {
   Pause,
   Download,
   Trash2,
-  Sliders,
   Maximize2,
-  Minimize2,
-  Layers,
-  Sparkles,
-  RefreshCw,
-  TrendingUp,
 } from "lucide-react";
 import { ConnectionStatus, SerialLogMessage } from "@/lib/flasher/types";
 import { Language, useTranslation } from "@/lib/flasher/i18n";
@@ -41,7 +35,6 @@ const CHANNEL_PALETTE = [
 ];
 
 export const SerialPlotterTab: React.FC<SerialPlotterTabProps> = ({
-  status,
   logs,
   lang,
 }) => {
@@ -153,7 +146,7 @@ export const SerialPlotterTab: React.FC<SerialPlotterTabProps> = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animId: number;
+    const rafIdRef = { current: 0 };
 
     const render = () => {
       const width = (canvas.width = canvas.parentElement?.clientWidth || 800);
@@ -277,11 +270,11 @@ export const SerialPlotterTab: React.FC<SerialPlotterTabProps> = ({
         ctx.shadowBlur = 0; // reset shadow
       });
 
-      animId = requestAnimationFrame(render);
+      rafIdRef.current = requestAnimationFrame(render);
     };
 
-    animId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animId);
+    rafIdRef.current = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(rafIdRef.current);
   }, [dataPoints, channels, enabledChannels, autoScale, manualMin, manualMax, timeWindowSec]);
 
   // Statistics calculation for active channels
@@ -381,6 +374,27 @@ export const SerialPlotterTab: React.FC<SerialPlotterTabProps> = ({
             <Maximize2 className="w-3 h-3" />
             {t("plotter_autoscale")}
           </button>
+
+          {!autoScale && (
+            <div className="flex items-center gap-1.5 bg-zinc-900 border border-white/10 rounded-2xl px-2 py-1 text-xs">
+              <span className="text-zinc-500 text-[10px]">Min:</span>
+              <input
+                type="number"
+                aria-label="Min Y"
+                value={manualMin}
+                onChange={(e) => setManualMin(Number(e.target.value))}
+                className="w-12 px-1 py-0.5 bg-zinc-950 border border-white/5 rounded-lg text-zinc-200 text-xs font-mono text-center focus:outline-none"
+              />
+              <span className="text-zinc-500 text-[10px]">Max:</span>
+              <input
+                type="number"
+                aria-label="Max Y"
+                value={manualMax}
+                onChange={(e) => setManualMax(Number(e.target.value))}
+                className="w-12 px-1 py-0.5 bg-zinc-950 border border-white/5 rounded-lg text-zinc-200 text-xs font-mono text-center focus:outline-none"
+              />
+            </div>
+          )}
 
           {/* Export CSV Data Logger */}
           <button

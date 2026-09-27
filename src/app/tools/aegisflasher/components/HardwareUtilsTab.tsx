@@ -7,15 +7,9 @@ import {
   Zap,
   Calculator,
   Compass,
-  CheckCircle2,
-  AlertTriangle,
-  Download,
-  Upload,
   Globe,
   RefreshCw,
   Plus,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConnectionStatus } from "@/lib/flasher/types";
@@ -62,7 +56,6 @@ const STANDARD_E24 = [
 
 export const HardwareUtilsTab: React.FC<HardwareUtilsTabProps> = ({
   status,
-  selectedBaud,
   onBaudChange,
   lang,
 }) => {
