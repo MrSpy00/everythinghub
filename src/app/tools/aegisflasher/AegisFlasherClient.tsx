@@ -726,6 +726,10 @@ export const AegisFlasherClient: React.FC = () => {
               setFiles((prev) => [...prev, part]);
               setActiveTab("manual");
             }}
+            onAddCustomPartitions={(parts) => {
+              setFiles((prev) => [...prev, ...parts]);
+              setActiveTab("manual");
+            }}
             lang={lang}
           />
         )}

@@ -302,7 +302,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
         </button>
 
         {showAdvanced && (
-          <div className="p-6 pt-2 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-6 pt-2 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-4 relative z-30 focus-within:z-50">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-medium text-zinc-400">
                 {lang === "tr" ? "Flaş Modu (SPI Flash Mode)" : "SPI Flash Mode"}
@@ -312,6 +312,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                 value={flashMode}
                 onChange={(v) => setFlashMode(v as any)}
                 size="sm"
+                placement="auto"
               />
             </div>
 
@@ -324,6 +325,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                 value={flashFreq}
                 onChange={(v) => setFlashFreq(v as any)}
                 size="sm"
+                placement="auto"
               />
             </div>
 
@@ -336,6 +338,7 @@ export const ManualFlasherTab: React.FC<ManualFlasherTabProps> = ({
                 value={flashSize}
                 onChange={(v) => setFlashSize(v as any)}
                 size="sm"
+                placement="auto"
               />
             </div>
           </div>

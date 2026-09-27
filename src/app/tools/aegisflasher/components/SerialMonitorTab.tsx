@@ -397,6 +397,22 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   const [hexInput, setHexInput] = useState("");
   const [hexError, setHexError] = useState("");
 
+  // ── Export Menu State
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setIsExportOpen(false);
+      }
+    };
+    if (isExportOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isExportOpen]);
+
   // ── Custom macro editor
   const [newMacroLabel, setNewMacroLabel] = useState("");
   const [newMacroCmd, setNewMacroCmd] = useState("");
@@ -1396,7 +1412,7 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* ══ Top Toolbar: Status, Baud, Line Ending, Filters, Tools ═ */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl">
+      <div className="relative z-30 focus-within:z-50 flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl">
         {/* Left: Port status indicator, Connect/Disconnect button & Terminal Mode */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Connection Status Pill */}
@@ -1623,26 +1639,36 @@ export const SerialMonitorTab: React.FC<SerialMonitorTabProps> = ({
           </button>
 
           {/* Export Dropdown */}
-          <div className="relative group/export">
+          <div ref={exportMenuRef} className="relative z-50">
             <button
               type="button"
+              onClick={() => setIsExportOpen((prev) => !prev)}
               title={lang === "en" ? "Export Logs" : "Logları Dışa Aktar"}
-              className="p-2 rounded-2xl bg-white/[0.03] border border-white/5 text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.08] transition-all"
+              className={`p-2 rounded-2xl border transition-all ${
+                isExportOpen
+                  ? "bg-violet-600/20 text-violet-300 border-violet-500/40"
+                  : "bg-white/[0.03] border-white/5 text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.08]"
+              }`}
             >
               <Download className="w-3.5 h-3.5" />
             </button>
-            <div className="absolute right-0 top-full mt-1 z-[300] hidden group-hover/export:flex flex-col gap-1 p-2 rounded-2xl bg-zinc-950 border border-white/15 shadow-2xl backdrop-blur-2xl min-w-[130px]">
-              {(["txt", "csv", "json"] as const).map((fmt) => (
-                <button
-                  key={fmt}
-                  type="button"
-                  onClick={() => exportLogs(fmt)}
-                  className="text-left px-3 py-1.5 rounded-xl text-xs font-mono text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all"
-                >
-                  .{fmt}
-                </button>
-              ))}
-            </div>
+            {isExportOpen && (
+              <div className="absolute right-0 bottom-full mb-1.5 z-[350] flex flex-col gap-1 p-2 rounded-2xl bg-zinc-950/98 border border-white/15 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] backdrop-blur-2xl min-w-[130px] animate-in fade-in-0 zoom-in-95 duration-150">
+                {(["txt", "csv", "json"] as const).map((fmt) => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => {
+                      exportLogs(fmt);
+                      setIsExportOpen(false);
+                    }}
+                    className="text-left px-3 py-1.5 rounded-xl text-xs font-mono text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-all"
+                  >
+                    .{fmt}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Clear Logs */}

@@ -286,7 +286,7 @@ export const MicroPythonStudioTab: React.FC<MicroPythonStudioTabProps> = ({
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl">
+      <div className="relative z-30 focus-within:z-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-6 rounded-3xl bg-zinc-950/70 border border-white/10 backdrop-blur-3xl shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
             <FileCode className="w-6 h-6" />

@@ -21,6 +21,7 @@ interface FirmwareCatalogTabProps {
   onFlashFirmware: (profile: FirmwareProfile, selectedVersion: string, buildIndex: number) => void;
   onLoadCustomUrl: (url: string, offset: number) => void;
   onAddCustomPartition?: (partition: FlashPartitionFile) => void;
+  onAddCustomPartitions?: (partitions: FlashPartitionFile[]) => void;
   lang?: Language;
 }
 
@@ -28,6 +29,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
   onFlashFirmware,
   onLoadCustomUrl,
   onAddCustomPartition,
+  onAddCustomPartitions,
   lang = "tr",
 }) => {
   const t = useTranslation(lang);
@@ -151,6 +153,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
             value={selectedChip}
             onChange={(val) => setSelectedChip(val)}
             ariaLabel="Mikrokontrolcü Çip Ailesi Filtresi"
+            placement="bottom"
           />
         </div>
       </div>
@@ -182,6 +185,15 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
             onLoadCustomUrl(part.name, part.offset);
           }
         }}
+        onLoadPartitions={(parts) => {
+          if (onAddCustomPartitions) {
+            onAddCustomPartitions(parts);
+          } else if (onAddCustomPartition) {
+            parts.forEach((p) => onAddCustomPartition(p));
+          } else if (parts.length > 0) {
+            onLoadCustomUrl(parts[0].name, parts[0].offset);
+          }
+        }}
         lang={lang}
       />
 
@@ -195,12 +207,12 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
           </div>
           <div>
             <p className="text-sm font-semibold text-zinc-300">
-              {lang === 'tr' ? 'Firmware bulunamadı' : 'No firmware found'}
+              {lang === 'tr' ? 'Katalogda firmware bulunamadı' : 'No firmware found in catalog'}
             </p>
             <p className="text-xs text-zinc-500 mt-1">
               {lang === 'tr'
-                ? 'Filtre veya arama kriterlerini değiştirerek tekrar deneyin.'
-                : 'Try changing the filter or search criteria.'}
+                ? 'Yukarıdaki canlı GitHub arama motorunu kullanarak bu projeyi doğrudan GitHub üzerinden arayabilir ve flaşlayabilirsiniz.'
+                : 'You can use the live GitHub search engine above to find and flash this project directly from GitHub.'}
             </p>
           </div>
           <button
@@ -235,7 +247,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
           return (
             <div
               key={fw.id}
-              className="group flex flex-col justify-between p-6 rounded-3xl bg-zinc-950/70 border border-white/10 hover:border-violet-500/40 backdrop-blur-3xl transition-all duration-300 shadow-2xl hover:shadow-violet-500/5 hover:-translate-y-0.5 overflow-visible"
+              className="group flex flex-col justify-between p-6 rounded-3xl bg-zinc-950/70 border border-white/10 hover:border-violet-500/40 backdrop-blur-3xl transition-all duration-300 shadow-2xl hover:shadow-violet-500/5 hover:-translate-y-0.5 overflow-visible relative focus-within:z-50 hover:z-20"
             >
               <div className="flex flex-col gap-4">
                 {/* Header with Title & Category Badge */}
@@ -287,6 +299,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                         setSelectedBuildIndexes({ ...selectedBuildIndexes, [fw.id]: 0 });
                       }}
                       size="sm"
+                      placement="auto"
                     />
                   </div>
 
@@ -307,6 +320,7 @@ export const FirmwareCatalogTab: React.FC<FirmwareCatalogTabProps> = ({
                         })
                       }
                       size="sm"
+                      placement="auto"
                     />
                   </div>
                 </div>
