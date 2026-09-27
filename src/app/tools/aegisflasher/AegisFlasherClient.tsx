@@ -271,6 +271,38 @@ export const AegisFlasherClient: React.FC = () => {
     }
   };
 
+  const handleTriggerBootloader = async () => {
+    if (serialManagerRef.current) {
+      try {
+        await serialManagerRef.current.resetEspIntoBootloader();
+        toast.success(lang === "tr" ? "ESP bootloader sinyali gönderildi." : "ESP bootloader mode pulsed.");
+      } catch (err: any) {
+        toast.error(`Bootloader hatası: ${err.message || err}`);
+      }
+    }
+  };
+
+  const handleBaudChange = async (newBaud: number) => {
+    setSelectedBaud(newBaud);
+    if (
+      status === "connected" &&
+      !espEngineRef.current &&
+      serialManagerRef.current &&
+      rawPortRef.current
+    ) {
+      try {
+        await serialManagerRef.current.changeBaudRate(newBaud);
+        toast.success(
+          lang === "tr"
+            ? `Port ${newBaud.toLocaleString()} baud olarak güncellendi.`
+            : `Port updated to ${newBaud.toLocaleString()} baud.`
+        );
+      } catch (err: any) {
+        toast.error(`Baud değişimi hatası: ${err.message || err}`);
+      }
+    }
+  };
+
   const handleSetDtr = async (value: boolean) => {
     if (serialManagerRef.current) {
       await serialManagerRef.current.setSignals({ dataTerminalReady: value });
@@ -650,30 +682,7 @@ export const AegisFlasherClient: React.FC = () => {
         status={status}
         telemetry={telemetry}
         selectedBaud={selectedBaud}
-        onBaudChange={async (newBaud: number) => {
-          setSelectedBaud(newBaud);
-          // If connected in terminal mode (no ESP engine), reopen port at new baud
-          if (
-            status === "connected" &&
-            !espEngineRef.current &&
-            serialManagerRef.current &&
-            rawPortRef.current
-          ) {
-            try {
-              serialManagerRef.current.stopReading();
-              await serialManagerRef.current.close();
-              await serialManagerRef.current.open(newBaud);
-              serialManagerRef.current.startReading();
-              toast.success(
-                lang === "tr"
-                  ? `Port ${newBaud.toLocaleString()} baud'a yeniden açıldı.`
-                  : `Port reopened at ${newBaud.toLocaleString()} baud.`
-              );
-            } catch (err: any) {
-              toast.error(`Baud değişimi hatası: ${err.message || err}`);
-            }
-          }
-        }}
+        onBaudChange={handleBaudChange}
         onConnect={handleConnect}
         onConnectTerminalOnly={handleConnectTerminalOnly}
         onDisconnect={handleDisconnect}
@@ -780,10 +789,19 @@ export const AegisFlasherClient: React.FC = () => {
             onSetDtr={handleSetDtr}
             onSetRts={handleSetRts}
             selectedBaud={selectedBaud}
-            onBaudChange={setSelectedBaud}
+            onBaudChange={handleBaudChange}
             rxBytesCount={rxBytes}
             txBytesCount={txBytes}
             lang={lang}
+            telemetry={telemetry}
+            onConnect={handleConnect}
+            onConnectTerminalOnly={handleConnectTerminalOnly}
+            onDisconnect={handleDisconnect}
+            onTriggerBootloader={handleTriggerBootloader}
+            onEraseChip={handleEraseChip}
+            onReadFlashDump={handleReadFlashDump}
+            onReadEfuses={handleReadEfuses}
+            onAppendLog={appendLog}
           />
         )}
 

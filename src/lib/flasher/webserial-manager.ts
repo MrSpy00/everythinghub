@@ -174,6 +174,45 @@ export class WebSerialManager {
     }
   }
 
+  public async changeBaudRate(newBaud: number, bufferSize: number = 255 * 1024): Promise<void> {
+    if (!this.port) {
+      throw new Error("Port bağlı değil.");
+    }
+    const currentPort = this.port;
+    this.log("sys", `Baud hızı ${newBaud} olarak güncelleniyor...`);
+    this.isReading = false;
+
+    if (this.reader) {
+      try { await this.reader.cancel(); } catch { /* ignore */ }
+      try { this.reader.releaseLock(); } catch { /* ignore */ }
+      this.reader = null;
+    }
+
+    if (this.writer) {
+      try { this.writer.releaseLock(); } catch { /* ignore */ }
+      this.writer = null;
+    }
+
+    try {
+      await currentPort.close();
+    } catch {
+      // ignore warning
+    }
+
+    await currentPort.open({
+      baudRate: newBaud,
+      bufferSize,
+      dataBits: 8,
+      stopBits: 1,
+      parity: "none",
+      flowControl: "none",
+    });
+
+    this.port = currentPort;
+    this.startReading();
+    this.log("success", `Baud hızı başarıyla ${newBaud} olarak güncellendi.`);
+  }
+
   public isConnected(): boolean {
     return this.port !== null && (this.port.readable !== null || this.port.writable !== null);
   }

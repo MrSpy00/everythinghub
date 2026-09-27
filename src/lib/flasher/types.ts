@@ -52,6 +52,8 @@ export interface ChipTelemetry {
   flashSizeInBytes?: number;
   flashFrequency?: string;
   flashMode?: "QIO" | "QOUT" | "DIO" | "DOUT";
+  flashJedecId?: string;
+  flashVendor?: string;
   crystalFreq?: string;
   features: string[];
   bootloaderVersion?: string;
