@@ -9,8 +9,8 @@
 [![License MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](./LICENSE)
 
 <p align="center">
-  <strong>Modern, ultra hızlı, login gerektirmeyen, sıfır-auth ve gizlilik odaklı hepsi-bir-arada dijital araçlar stüdyosu.</strong><br>
-  <em>Modern, ultra-fast, zero-login, zero-auth, privacy-first all-in-one digital tools studio.</em>
+  <strong>Kayıt ve üyelik gerektirmeyen, gizlilik odaklı çok amaçlı web araçları stüdyosu.</strong><br>
+  <em>Zero-login, privacy-first web utilities and developer tools studio.</em>
 </p>
 
 <p align="center">
@@ -41,19 +41,19 @@ Platform, sıradan hazır şablonlar yerine **kreatif stüdyo estetiği**, GPU h
 Venom Symbiote Engine, Verlet-yay zinciri fiziği kullanan, elementlerin dış kenar çizgilerinde yılan gibi kayan ipliksi filamentler oluşturan, elementler arası organik köprü geçişleri çizen ve tam uyku/uyanış döngüsüyle optimize edilmiş global bir Canvas 2D motorudur.
 
 ### Temel Değerler ve Mühendislik İlkeleri
-1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) veya anlık bellek üzerinden gerçekleşir. Çerezler, veritabanı kayıtları veya kullanıcı takip mekanizmaları bulunmaz.
+1. **Sıfır Veri Saklama (Zero Data Retention):** Tüm işlemler tarayıcı tarafında (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) veya anlık bellek üzerinden gerçekleşir. Veritabanı kaydı tutulmaz.
 2. **Kayıt / Login / API Key Zorunluluğu Yok:** Kredi kartı, API anahtarı veya e-posta istemez.
-3. **Işık Hızında Performans:** Next.js 16 Turbopack derleme motoru, `requestIdleCallback` tabanlı WebGL yaşam döngüsü, on-demand imleç fiziği ve optimize paket içe aktarmaları ile hem masaüstünde hem mobilde 95-100 PageSpeed/Lighthouse performansı.
+3. **İstemci Odaklı Performans:** Next.js 16 Turbopack derleme motoru, `requestIdleCallback` tabanlı WebGL yaşam döngüsü, isteğe bağlı çalışan imleç fiziği ve ağaç-silkelemeli paket içe aktarmaları ile hızlı açılış hedefler.
 4. **40+ Aktif Modüler Araç:** Oyun & Yazma, Geliştirici, Ses & Müzik, Video, Görsel, Metin, Hesaplama ve Tasarım kategorilerinde genişletilebilir araç altyapısı.
-5. **Kapsamlı Çok Dilli Altyapı:** Türkçe ve İngilizce dilleri arasında anında ve kesintisiz geçiş.
-6. **Çoklu Ekran & Kusursuz Responsive Uyum:** 320px mobil ekranlardan dikey/pivot monitörlere, tabletlerden 4K ekranlara kadar hatasız esnek yerleşim.
+5. **Türkçe ve İngilizce Arayüz:** Türkçe ve İngilizce dilleri arasında anında geçiş.
+6. **Responsive Düzen:** 320px mobil ekranlardan dikey monitörlere ve 4K ekranlara kadar uyumlu yerleşim.
 
 ---
 
-## Canlı Araç Kataloğu (40 Aktif Stüdyo Aracı)
+## Canlı Araç Kataloğu (40+ Aktif Stüdyo Aracı)
 
 ### Oyun, Yazma Testi & Hafıza Arenaları
-1. **aegisTyping — Evrensel Yazma Hızı Testi & Eğitim Stüdyosu (`/tools/aegis-typing`):** Monkeytype seviyesinde 30+ tema, 17+ dil (Türkçe Q/F, İngilizce, Almanca, Arapça RTL, Japonca, Kod dilleri), 8+ mod (Süre, Kelime, Alıntı, Özel, Zen, Kod, Keybr adaptif öğrenme, Funbox modları), prosedürel Web Audio motoru, delta varyanslı anti-hile, Web Crypto SHA-256 hash doğrulaması ve sunucusuz global liderlik tablosu.
+1. **aegisTyping — Yazma Hızı Testi & Eğitim Stüdyosu (`/tools/aegis-typing`):** 30+ tema, 17+ dil (Türkçe Q/F, İngilizce, Almanca, Arapça RTL, Japonca, Kod dilleri), 8+ mod (Süre, Kelime, Alıntı, Özel, Zen, Kod, Keybr adaptif öğrenme, Funbox modları), prosedürel Web Audio motoru, delta varyanslı anti-hile, Web Crypto SHA-256 hash doğrulaması ve sunucusuz liderlik tablosu.
 2. **HubSense — Duyu Hafızası Oyun Arenası (`/tools/hub-sense`):** Renk (CIELAB Delta-E), ses (ERB psikokustik), zaman ve şekil (IoU) duyusal hafızasını bilimsel metriklerle test eden günlük meydan okuma ve global skor tablosu.
 3. **İnteraktif Bilgi Yarışması & Trivia Arena (`/tools/trivia-quiz-arena`):** Bilim, teknoloji, tarih ve genel kültür alanlarında binlerce soruyla bilginizi test edin.
 
@@ -88,7 +88,7 @@ Venom Symbiote Engine, Verlet-yay zinciri fiziği kullanan, elementlerin dış k
 ### Ses & Müzik Stüdyoları
 26. **Web Audio Osiloskop & Spektrum Analizörü (`/tools/audio-spectrum-studio`):** Mikrofon veya ses dalgalarını Web Audio API ile gerçek zamanlı osiloskop ve FFT frekans spektrumu olarak analiz edin.
 27. **Hassas BPM Tapper & Akıllı Metronom (`/tools/bpm-tapper`):** Klavyeden veya dokunarak anlık BPM hesaplayın, tutarlılık sapmasını görün ve Web Audio milisaniye zamanlayıcılı metronom ile ritim tutun.
-28. **Spotify Playlist Analizör (`/tools/spotify-playlist-analyzer`):** Chosic & Artist.tools seviyesinde Sonic DNA radarı, bot & fraud tespiti, tür dağılımı, BPM/Key çarkı ve HD kapak stüdyosu.
+28. **Spotify Playlist Analizör (`/tools/spotify-playlist-analyzer`):** Sonic DNA radarı, bot & sahte liste göstergeleri, tür dağılımı, BPM/Key çarkı ve HD kapak stüdyosu.
 29. **Spotify Profil & Sanatçı Analizör (`/tools/spotify-profile-analyzer`):** Küratör ve sanatçı profillerini inceleyin, takipçi gücünü, diskografiyi, en popüler şarkıları ve HD avatarları çıkarın.
 
 ### Video Stüdyoları
@@ -146,19 +146,19 @@ npx eslint src/
 Instead of generic dashboard templates, EverythingHub delivers a **creative studio aesthetic** featuring GPU-accelerated WebGL chromatic dotted waves, fluid magnetic follower cursor (`UserCursor`), liquid glassmorphism, soft ambient Gaussian diffusion, `Ctrl+K` Command Palette, and intelligent circular scroll-to-top tracking.
 
 ### Core Engineering Principles
-1. **Zero Data Retention:** All actions execute client-side (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) or in ephemeral memory. No cookies, databases, or tracking telemetry.
-2. **Zero Login / Zero API Keys:** No credit card, authentication, or personal email required.
-3. **Sub-second Performance:** Built with Next.js 16 Turbopack, idle-scheduled WebGL, on-demand physics loops, and optimized package tree-shaking for 95-100 PageSpeed scores across mobile and desktop.
+1. **Zero Data Retention:** All tool operations execute client-side (Web Crypto, Web Audio, HTML5 Canvas, Web Workers) or in ephemeral memory without server-side user storage.
+2. **Zero Login / Zero API Keys:** No credit card, account, or personal email required.
+3. **Client-Side Performance:** Built with Next.js 16 Turbopack, idle-scheduled WebGL, on-demand physics loops, and tree-shaken imports.
 4. **40+ Active Production Tools:** Covering Games & Typing, Developer & Network, Audio & Music, Image, Video, Text, Math, and Vector Design.
-5. **Full Bilingual Internationalization:** Seamless real-time switching between Turkish and English.
-6. **Responsive Layout Architecture:** Flawlessly adapted from 320px mobile viewports to vertical pivot monitors and 4K screens.
+5. **Bilingual Interface:** Instant switching between Turkish and English.
+6. **Responsive Layout:** Adapts from 320px mobile viewports to vertical monitors and 4K screens.
 
 ---
 
-## Complete Tools Catalog (40 Production Tools)
+## Complete Tools Catalog (40+ Tools)
 
 ### Games, Typing & Sensory Arenas
-1. **aegisTyping — Universal Typing Speed & Learning Studio (`/tools/aegis-typing`):** Monkeytype-tier studio with 30+ themes, 17+ languages (Turkish Q/F, English, German, Arabic RTL, Japanese, Code), 8+ modes (Time, Words, Quote, Custom, Zen, Code, Keybr adaptive learning, Funbox challenges), Web Audio procedural synthesizer, timing variance anti-cheat, Web Crypto SHA-256 signing, and serverless global edge leaderboard.
+1. **aegisTyping — Typing Speed & Learning Studio (`/tools/aegis-typing`):** 30+ themes, 17+ languages (Turkish Q/F, English, German, Arabic RTL, Japanese, Code), 8+ modes (Time, Words, Quote, Custom, Zen, Code, Keybr adaptive learning, Funbox challenges), Web Audio procedural synthesizer, timing variance anti-cheat, Web Crypto SHA-256 signing, and serverless leaderboard.
 2. **HubSense — Sensory Memory Game Arena (`/tools/hub-sense`):** Scientific sensory memory tests for Color (CIELAB Delta-E), Pitch (ERB psychoacoustics), Time, and Spatial Shape (IoU) with global leaderboards.
 3. **Interactive Trivia & Quiz Arena (`/tools/trivia-quiz-arena`):** Thousands of questions across science, history, geography, and general knowledge.
 
