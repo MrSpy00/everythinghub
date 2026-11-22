@@ -2,6 +2,7 @@
 
 <div align="center">
 
+[![CI](https://github.com/MrSpy00/everythinghub/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/MrSpy00/everythinghub/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-everythinghub.com.tr-8b5cf6?style=for-the-badge&logo=vercel&logoColor=white)](https://www.everythinghub.com.tr/)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.3.0-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
